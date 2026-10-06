@@ -2,6 +2,7 @@
 
 화면(Tk)이 필요하다.  실행 (프로젝트 폴더에서):  python -m unittest tests/test_edit_ui.py
 """
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,13 +36,14 @@ def make_app():
     root.update()
     app.load_image(str(ds / "images" / "train" / "a.jpg"))
     root.update()
-    return root, app
+    return root, app, tmp
 
 
 class EditUiTest(unittest.TestCase):
     def setUp(self):
         try:
-            self.root, self.app = make_app()
+            self.root, self.app, tmp = make_app()
+            self.addCleanup(shutil.rmtree, tmp, True)
         except Exception as e:
             self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
 
@@ -70,6 +72,19 @@ class EditUiTest(unittest.TestCase):
         self.app.on_mouse_up(self.at(560, 300))
         self.app.select_box(None)
         self.assertEqual(len(c.find_withtag("handle")), 0)
+
+    def test_coordinate_bar_follows_the_selection_and_the_drag(self):
+        info = self.app.bbox_info
+        self.assertIn("선택된 BBox 없음", info.cget("text"))
+        self.app.select_box(0)
+        text = info.cget("text")
+        for part in ("x1,y1=(400, 240)", "x2,y2=(600, 360)", "W×H=200×120", "xc=0.5000", "yc=0.5000", "w=0.2000", "h=0.2000"):
+            self.assertIn(part, text)
+        self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(600, 300))
+        self.assertIn("x1,y1=(500, 240)", info.cget("text"))      # 끄는 동안 실시간으로 바뀐다
+        self.app.on_mouse_up(self.at(600, 300))
+        self.app.select_box(None)
+        self.assertIn("선택된 BBox 없음", info.cget("text"))
 
     def test_click_only_selects(self):
         self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_up(self.at(500, 300))

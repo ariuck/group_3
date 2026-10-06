@@ -42,6 +42,7 @@ from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
 from src.ui.validation_dialog import show_validation_dialog
 from src.validation.validator import inventory_markdown, scan_inventory, validate_dataset, write_report
+from src.yolo.coords import pixel_to_yolo
 from src.yolo.yolo_loader import find_raw_label, read_yolo_file
 from src.yolo.yolo_writer import write_yolo_file
 from src.ui.navigator import ImageNavigator
@@ -153,6 +154,9 @@ class Day1Labeler:
         # ③ 아래쪽 상태 표시줄 (먼저 pack 해야 창이 작아져도 안 가려진다)
         self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
         self.status.pack(side="bottom", fill="x")
+        # 선택한 BBox 의 좌표 (상태줄 바로 위) — 이동·크기 조절 중에도 실시간으로 바뀐다
+        self.bbox_info = tk.Label(self.root, text="", anchor="w", padx=8, pady=2, font=("Consolas", 9), fg="#333333")
+        self.bbox_info.pack(side="bottom", fill="x")
 
         # ④ 오른쪽 패널: 클래스 선택 + 라벨 목록 + 검수 기록 입력칸
         side = tk.Frame(self.root, width=260, padx=6, pady=4)
@@ -696,6 +700,20 @@ class Day1Labeler:
                 sx, sy = self.vp.image_to_canvas(hx, hy)
                 c.create_rectangle(sx - 4, sy - 4, sx + 4, sy + 4, fill="white", outline="#222222", width=1,
                                    tags=("box", "handle"))
+        self.update_bbox_info()
+
+    def update_bbox_info(self):
+        """선택한 BBox 의 좌표(원본 픽셀)와 YOLO 비율값을 상태줄 위에 보여 준다."""
+        if self.selected is None or self.selected >= len(self.boxes):
+            self.bbox_info.config(text="선택된 BBox 없음 — BBox 를 클릭하면 좌표가 여기에 표시됩니다")
+            return
+        b = self.boxes[self.selected]
+        xc, yc, w, h = pixel_to_yolo(b["x1"], b["y1"], b["x2"], b["y2"], self.img_w, self.img_h)
+        self.bbox_info.config(
+            text=f"BBox {self.selected + 1}번 · Class {b['cls']}   "
+                 f"x1,y1=({b['x1']:.0f}, {b['y1']:.0f})  x2,y2=({b['x2']:.0f}, {b['y2']:.0f})  "
+                 f"W×H={b['x2'] - b['x1']:.0f}×{b['y2'] - b['y1']:.0f}px   "
+                 f"YOLO xc={xc:.4f} yc={yc:.4f} w={w:.4f} h={h:.4f}")
 
     def refresh_box_list(self):
         """오른쪽 '라벨 목록'을 현재 self.boxes 와 맞춘다."""
