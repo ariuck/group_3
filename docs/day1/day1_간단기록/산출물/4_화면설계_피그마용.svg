@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1580" height="800" viewBox="0 0 1580 800" font-family="'Malgun Gothic','Noto Sans KR',Arial,sans-serif">
+  <title>교과 7 · 1일차 라벨링 프로그램 화면 설계</title>
+  <rect id="Page-BG" width="1580" height="800" fill="#e9edf2"/>
+  <text id="Title" x="20" y="28" font-size="18" font-weight="700" fill="#1f2d3d">교과 7 · 1일차 — 라벨링 프로그램 화면 설계 (이미지 1장 End-to-End)</text>
+
+  <!-- ============ Frame: 프로그램 창 ============ -->
+  <g id="Frame-Window" transform="translate(20,44)">
+    <rect id="Window" width="1200" height="740" rx="6" fill="#f0f0f0" stroke="#9aa5b1"/>
+
+    <g id="Toolbar">
+      <rect width="1200" height="48" fill="#f7f7f7" stroke="#d0d5db"/>
+      <g id="Btn-Open"><rect x="10" y="8" width="130" height="32" rx="4" fill="#fff" stroke="#8a94a0"/><text x="75" y="29" font-size="14" text-anchor="middle" fill="#222">📂 이미지 열기</text></g>
+      <g id="Btn-Save"><rect x="150" y="8" width="90" height="32" rx="4" fill="#fff" stroke="#8a94a0"/><text x="195" y="29" font-size="14" text-anchor="middle" fill="#222">💾 저장</text></g>
+      <g id="Btn-Reload"><rect x="250" y="8" width="140" height="32" rx="4" fill="#fff" stroke="#8a94a0"/><text x="320" y="29" font-size="14" text-anchor="middle" fill="#222">🔄 다시 불러오기</text></g>
+      <g id="Btn-Delete"><rect x="400" y="8" width="150" height="32" rx="4" fill="#fff" stroke="#8a94a0"/><text x="475" y="29" font-size="14" text-anchor="middle" fill="#222">🗑 선택 BBox 삭제</text></g>
+    </g>
+
+    <g id="Canvas-Area" transform="translate(0,48)">
+      <rect id="Canvas-BG" width="920" height="636" fill="#2b2b2b"/>
+      <g id="Image">
+        <rect x="0" y="82" width="920" height="518" fill="#a9c97a"/>
+        <text x="460" y="345" font-size="16" text-anchor="middle" fill="#ffffff" fill-opacity="0.55">조각김치 이미지 (화면에 맞춰 Fit)</text>
+        <g fill="#c7e07d" fill-opacity="0.6"><ellipse cx="120" cy="190" rx="60" ry="26"/><ellipse cx="300" cy="420" rx="70" ry="30"/><ellipse cx="560" cy="250" rx="64" ry="28"/><ellipse cx="760" cy="470" rx="66" ry="28"/><ellipse cx="430" cy="520" rx="58" ry="24"/></g>
+      </g>
+      <g id="BBox-Layer">
+        <g id="BBox-2-나뭇가지류"><rect x="672" y="148" width="44" height="34" fill="none" stroke="#1e88e5" stroke-width="2"/><rect x="672" y="130" width="92" height="18" fill="#1e88e5"/><text x="678" y="144" font-size="12" font-weight="700" fill="#fff">2 나뭇가지류</text><ellipse cx="694" cy="165" rx="18" ry="14" fill="#5d4037"/></g>
+        <g id="BBox-3-벌레류"><rect x="850" y="418" width="40" height="22" fill="none" stroke="#8e24aa" stroke-width="2"/><rect x="850" y="400" width="62" height="18" fill="#8e24aa"/><text x="856" y="414" font-size="12" font-weight="700" fill="#fff">3 벌레류</text><ellipse cx="870" cy="429" rx="16" ry="8" fill="#222"/></g>
+        <g id="BBox-5-병해갈변-선택됨"><rect x="150" y="104" width="70" height="60" fill="none" stroke="#ffeb3b" stroke-width="4"/><rect x="150" y="86" width="92" height="18" fill="#fb8c00"/><text x="156" y="100" font-size="12" font-weight="700" fill="#fff">5 병해·갈변</text></g>
+      </g>
+    </g>
+
+    <g id="Side-Panel" transform="translate(930,56)">
+      <text x="0" y="16" font-size="14" font-weight="700" fill="#222">클래스 선택</text>
+      <g id="Class-List"><rect y="24" width="250" height="148" fill="#fff" stroke="#9aa5b1"/>
+        <text x="8"  y="44"  font-size="13" fill="#43a047">■ 0   나뭇잎·종이류</text>
+        <text x="8"  y="64"  font-size="13" fill="#e53935">■ 1   플라스틱류·돌·금속</text>
+        <text x="8"  y="84"  font-size="13" fill="#1e88e5">■ 2   나뭇가지류</text>
+        <text x="8"  y="104" font-size="13" fill="#8e24aa">■ 3   벌레류</text>
+        <text x="8"  y="124" font-size="13" fill="#9e9e9e">■ 4   고무장갑 (사용 안 함)</text>
+        <rect y="130" width="250" height="20" fill="#0078d7"/><text x="8" y="145" font-size="13" fill="#fff">■ 5   병해·갈변</text>
+        <text x="8"  y="166" font-size="13" fill="#00897b">■ 6   파·고추</text>
+      </g>
+      <text x="0" y="204" font-size="14" font-weight="700" fill="#222">라벨 목록 (BBox)</text>
+      <g id="Label-List"><rect y="212" width="250" height="400" fill="#fff" stroke="#9aa5b1"/>
+        <text x="8" y="232" font-size="12" font-family="Consolas,monospace" fill="#222"> 1  cls 2  [2814,284,182,133]</text>
+        <text x="8" y="252" font-size="12" font-family="Consolas,monospace" fill="#222"> 2  cls 3  [3550,1420,174,91]</text>
+        <rect y="258" width="250" height="20" fill="#0078d7"/><text x="8" y="272" font-size="12" font-family="Consolas,monospace" fill="#fff"> 3  cls 5  [626,134,292,250]</text>
+      </g>
+    </g>
+
+    <g id="Status-Bar" transform="translate(0,708)">
+      <rect width="1200" height="32" fill="#e6e6e6" stroke="#c4c9cf"/>
+      <text x="10" y="21" font-size="13" fill="#333">원본 좌표 (1117, 890)  |  화면 배율 24%  |  드래그 = BBox 추가 · 클릭 = 선택 · Delete = 삭제 · 숫자 0~6 = Class</text>
+    </g>
+
+    <!-- 번호 표시 (설명용) -->
+    <g id="Callouts" font-weight="700" font-size="14" text-anchor="middle" fill="#fff">
+      <g id="Callout-1"><circle cx="575" cy="24" r="12" fill="#d63031"/><text x="575" y="29">1</text></g>
+      <g id="Callout-2"><circle cx="40" cy="96" r="12" fill="#d63031"/><text x="40" y="101">2</text></g>
+      <g id="Callout-3"><circle cx="1196" cy="96" r="12" fill="#d63031"/><text x="1196" y="101">3</text></g>
+      <g id="Callout-4"><circle cx="1196" cy="290" r="12" fill="#d63031"/><text x="1196" y="295">4</text></g>
+      <g id="Callout-5"><circle cx="1180" cy="724" r="12" fill="#d63031"/><text x="1180" y="729">5</text></g>
+    </g>
+  </g>
+
+  <!-- ============ 설명 패널 ============ -->
+  <g id="Legend" transform="translate(1240,44)">
+    <rect width="320" height="740" rx="6" fill="#fff" stroke="#9aa5b1"/>
+    <text x="16" y="30" font-size="15" font-weight="700" fill="#1f2d3d">화면 요소 설명</text>
+    <g font-size="13" fill="#222">
+      <circle cx="26" cy="64" r="11" fill="#d63031"/><text x="26" y="69" text-anchor="middle" fill="#fff" font-weight="700">1</text>
+      <text x="46" y="63" font-weight="700">버튼 줄</text><text x="46" y="82">열기 / 저장 / 다시 불러오기 / 선택 삭제</text>
+      <circle cx="26" cy="124" r="11" fill="#d63031"/><text x="26" y="129" text-anchor="middle" fill="#fff" font-weight="700">2</text>
+      <text x="46" y="123" font-weight="700">이미지 + BBox (Canvas)</text><text x="46" y="142">TXT 의 BBox 를 사진 위에 표시</text><text x="46" y="160">드래그 = 새 BBox, 클릭 = 선택</text>
+      <circle cx="26" cy="204" r="11" fill="#d63031"/><text x="26" y="209" text-anchor="middle" fill="#fff" font-weight="700">3</text>
+      <text x="46" y="203" font-weight="700">클래스 선택 (0~6)</text><text x="46" y="222">색으로 구분, 4번은 회색(사용 안 함)</text><text x="46" y="240">BBox 선택 후 클릭 → Class 변경</text>
+      <circle cx="26" cy="284" r="11" fill="#d63031"/><text x="26" y="289" text-anchor="middle" fill="#fff" font-weight="700">4</text>
+      <text x="46" y="283" font-weight="700">라벨 목록</text><text x="46" y="302">BBox 번호 · Class · 위치 [x, y, 폭, 높이]</text><text x="46" y="320">원본 이미지 픽셀 기준 좌표</text>
+      <circle cx="26" cy="364" r="11" fill="#d63031"/><text x="26" y="369" text-anchor="middle" fill="#fff" font-weight="700">5</text>
+      <text x="46" y="363" font-weight="700">상태줄</text><text x="46" y="382">안내 메시지, 마우스의 원본 좌표</text>
+    </g>
+    <line x1="16" y1="412" x2="304" y2="412" stroke="#d0d5db"/>
+    <text x="16" y="438" font-size="14" font-weight="700" fill="#1f2d3d">Class 색</text>
+    <g font-size="12" fill="#222">
+      <rect x="16" y="452" width="14" height="14" fill="#43a047"/><text x="38" y="464">0 나뭇잎·종이류</text>
+      <rect x="16" y="474" width="14" height="14" fill="#e53935"/><text x="38" y="486">1 플라스틱류·돌·금속</text>
+      <rect x="16" y="496" width="14" height="14" fill="#1e88e5"/><text x="38" y="508">2 나뭇가지류</text>
+      <rect x="16" y="518" width="14" height="14" fill="#8e24aa"/><text x="38" y="530">3 벌레류</text>
+      <rect x="170" y="452" width="14" height="14" fill="#757575"/><text x="192" y="464">4 사용 안 함</text>
+      <rect x="170" y="474" width="14" height="14" fill="#fb8c00"/><text x="192" y="486">5 병해·갈변</text>
+      <rect x="170" y="496" width="14" height="14" fill="#00897b"/><text x="192" y="508">6 파·고추</text>
+      <rect x="170" y="518" width="14" height="14" fill="#ffeb3b" stroke="#999"/><text x="192" y="530">선택된 BBox</text>
+    </g>
+    <line x1="16" y1="556" x2="304" y2="556" stroke="#d0d5db"/>
+    <text x="16" y="582" font-size="14" font-weight="700" fill="#1f2d3d">기본 흐름</text>
+    <g font-size="13" fill="#222">
+      <text x="16" y="606">이미지 열기</text><text x="16" y="624">↓ 같은 이름 TXT 자동 Load</text><text x="16" y="642">↓ BBox 표시</text>
+      <text x="16" y="660">↓ 수정 / 추가 / 삭제</text><text x="16" y="678">↓ 저장 (WORK)</text><text x="16" y="696">↓ 다시 불러오기로 확인</text>
+    </g>
+    <text x="16" y="722" font-size="11" fill="#667085">※ 화면의 이미지·BBox 는 설명용 가상 예시입니다.</text>
+  </g>
+</svg>
