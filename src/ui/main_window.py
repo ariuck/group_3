@@ -79,6 +79,8 @@ class Day1Labeler:
         self.current_class = 0     # 새 BBox 를 만들 때 쓸 Class
         self.dirty = False         # 저장 안 한 변경이 있는가?
         self._load_state = None    # 방향키 이동 중 다른 스레드에서 읽고 있는 사진 {경로, 결과, 끝났는지, ...}
+        self.manifest_ok = True    # 이 사진의 검수 기록을 읽었는가 (못 읽었으면 경고 줄에 계속 표시)
+        self._manifest_warned = "ok"   # 검수표를 못 읽어 경고를 이미 보여 준 파일의 수정 시각 (같은 파일에 경고창을 반복하지 않는다)
         self._edit_serial = 0      # BBox·검수 기록을 고칠 때마다 1 증가 — 사진을 읽는 동안 편집했는지 알아내는 데 쓴다
         self._nav_serial = 0       # 방향키 이동을 시작할 때의 편집 횟수
         self._load_seq = 0         # 사진을 화면에 올릴 때마다 1 증가 — 읽는 동안 다른 사진이 열렸으면 그 결과를 버리는 데 쓴다
@@ -935,8 +937,17 @@ class Day1Labeler:
             values = read_human(self.image_path)
         except ManifestError as e:
             self.form.clear()
-            messagebox.showwarning("검수표 읽기 실패", f"검수표(CSV)를 읽지 못해 입력칸을 비워 둡니다.\n\n{e}")
+            try:
+                stamp = Path(settings.MANIFEST_PATH).stat().st_mtime_ns
+            except OSError:
+                stamp = None
+            if self._manifest_warned != stamp:                        # 같은 상태의 파일에 대해서는 경고창을 한 번만 (사진을 넘길 때마다 뜨면 곤란)
+                self._manifest_warned = stamp
+                messagebox.showwarning("검수표 읽기 실패", f"검수표(CSV)를 읽지 못해 입력칸을 비워 둡니다.\n\n{e}")
+            self.manifest_ok = False                                  # 경고창 대신 이미지 위 경고 줄에 계속 표시한다
             return
+        self._manifest_warned = "ok"
+        self.manifest_ok = True
         self.form.set_values(values)
 
     def on_ime_mode(self, korean):
@@ -1127,6 +1138,8 @@ class Day1Labeler:
         odd = sum(1 for b in self.boxes if self.problems_of(b))
         if odd:
             parts.append(f"확인이 필요한 BBox {odd}개")
+        if not self.manifest_ok:
+            parts.append("검수표(CSV)를 읽지 못해 검수 기록 칸이 비어 있습니다 (파일을 고친 뒤 다시 열어 주세요)")
         text = "⚠ " + "  ·  ".join(parts) if parts else ""
         if self.warn_label.cget("text") != text:
             self.warn_label.config(text=text)
