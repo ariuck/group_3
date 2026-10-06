@@ -122,20 +122,18 @@ class Day1Labeler:
                            ("－", self.zoom_out), ("＋", self.zoom_in)):
             tk.Button(bar, text=text, command=func, padx=6, pady=3).pack(side="right", padx=2)
 
-        # 후영 추가
-        # (1.5) 이전 / 다음 / 진행률 (오른쪽 끝)
-        self.progress = tk.Label(bar, text="0 / 0", font=("Malgun Gothic", 11, "bold"), width=12)
-        self.progress.pack(side="right", padx=6)
-        self.btn_next = tk.Button(bar, text="다음 ▶", command=self.go_next, padx=8, pady=3, state="disabled")
-        self.btn_next.pack(side="right", padx=3)
-        self.btn_prev = tk.Button(bar, text="◀ 이전", command=self.go_prev, padx=8, pady=3, state="disabled")
-        self.btn_prev.pack(side="right", padx=3)
-
-
-
         # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
-        self.info = tk.Label(self.root, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
-        self.info.pack(side="top", fill="x")
+        #    같은 줄 오른쪽에 이전 / 진행률 / 다음 (위 버튼 줄은 꽉 차서 창이 좁으면 밀려나 안 보였다)
+        row = tk.Frame(self.root)
+        row.pack(side="top", fill="x")
+        self.btn_next = tk.Button(row, text="다음 ▶", command=self.go_next, padx=8, pady=1, state="disabled")
+        self.btn_next.pack(side="right", padx=(3, 8))
+        self.progress = tk.Label(row, text="0 / 0", font=("Malgun Gothic", 11, "bold"), width=10)
+        self.progress.pack(side="right")
+        self.btn_prev = tk.Button(row, text="◀ 이전", command=self.go_prev, padx=8, pady=1, state="disabled")
+        self.btn_prev.pack(side="right", padx=3)
+        self.info = tk.Label(row, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
+        self.info.pack(side="left", fill="x", expand=True)
 
         # ③ 아래쪽 상태 표시줄 (먼저 pack 해야 창이 작아져도 안 가려진다)
         self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
@@ -163,6 +161,18 @@ class Day1Labeler:
         tk.Label(side, text="라벨 목록 (BBox)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
         self.box_list = tk.Listbox(side, font=("Consolas", 9), activestyle="none", exportselection=False)
         self.box_list.pack(fill="both", expand=True)
+
+        # ④-2 왼쪽 패널: 같은 폴더의 사진 목록. 누르면 바로 그 사진으로 간다 (✓ = WORK 에 저장된 사진)
+        left = tk.Frame(self.root, padx=4, pady=4)
+        left.pack(side="left", fill="y")
+        tk.Label(left, text="사진 목록", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
+        scroll = tk.Scrollbar(left)
+        scroll.pack(side="right", fill="y")
+        self.file_list = tk.Listbox(left, width=26, font=("Consolas", 9), activestyle="none",
+                                    exportselection=False, yscrollcommand=scroll.set)
+        self.file_list.pack(side="left", fill="y")
+        scroll.config(command=self.file_list.yview)
+        self._listed_files = None        # 지금 목록에 보이는 사진들 (폴더가 바뀔 때만 다시 채운다)
 
         # ⑤ 가운데: 이미지를 보여 줄 도화지(Canvas)
         self.canvas = tk.Canvas(self.root, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
@@ -192,6 +202,7 @@ class Day1Labeler:
 
         self.class_list.bind("<<ListboxSelect>>", self.on_class_selected)
         self.box_list.bind("<<ListboxSelect>>", self.on_box_list_selected)
+        self.file_list.bind("<<ListboxSelect>>", self.on_file_selected)
 
         r = self.root
         # 입력칸에 글자를 치는 중에는 글자·숫자 단축키가 동작하면 안 된다
@@ -209,16 +220,15 @@ class Day1Labeler:
             r.bind(key, lambda e: None if self.is_typing(e) else self.fit_to_window())
         for i in range(len(settings.CLASSES)):              # 숫자키 0~6 = Class 선택
             r.bind(str(i), lambda e, cid=i: None if self.is_typing(e) else self.choose_class(cid))
+        # ← → = 이전/다음 사진 (입력칸에서 글자 커서를 옮기는 중에는 사진이 넘어가면 안 된다)
+        for key, func in (("<Left>", self.go_prev), ("<Prior>", self.go_prev),
+                          ("<Right>", self.go_next), ("<Next>", self.go_next)):   # Prior/Next = PageUp/PageDown
+            r.bind(key, lambda e, f=func: None if self.is_typing(e) else f())
 
     @staticmethod
     def is_typing(event):
         """키를 누른 곳이 글자 입력칸(Entry·Combobox)인가?"""
         return isinstance(event.widget, (tk.Entry, ttk.Entry))
-
-        # 방향키 추가
-        # 입력칸에서 ← → 로 글자 커서를 옮기는 중에는 사진이 넘어가면 안 된다
-        self.root.bind("<Left>", lambda e: None if self.is_typing(e) else self.go_prev())
-        self.root.bind("<Right>", lambda e: None if self.is_typing(e) else self.go_next())
 
 
     # ====================================================================
@@ -266,7 +276,7 @@ class Day1Labeler:
             stem = Path(rel_path).stem
             matches = list(settings.RAW_DIR.rglob(f"{stem}.jpg"))
             if matches:
-                self.load_image_file(matches[0])
+                self.move_to(matches[0])
             else:
                 messagebox.showinfo("안내", f"해당 이미지 파일을 찾을 수 없습니다: {rel_path}")
 
@@ -343,6 +353,30 @@ class Day1Labeler:
         self.progress.config(text=nav.progress_text())
         self.btn_prev.config(state="normal" if nav.has_prev() else "disabled")
         self.btn_next.config(state="normal" if nav.has_next() else "disabled")
+        self.refresh_file_list()
+
+    def refresh_file_list(self):
+        """왼쪽 사진 목록을 채우고 현재 사진을 표시한다."""
+        nav, lb = self.navigator, self.file_list
+        if self._listed_files != nav.files:
+            self._listed_files = list(nav.files)
+            lb.delete(0, "end")
+            for p in nav.files:
+                lb.insert("end", f"{'✓' if work_label_path(p).exists() else ' '} {p.name}")
+        elif self.image_path is not None and 0 <= nav.index < lb.size():   # 방금 저장했으면 ✓ 표시
+            lb.delete(nav.index)
+            lb.insert(nav.index, f"{'✓' if work_label_path(self.image_path).exists() else ' '} {self.image_path.name}")
+        lb.selection_clear(0, "end")
+        if 0 <= nav.index < lb.size():
+            lb.selection_set(nav.index)
+            lb.see(nav.index)
+
+    def on_file_selected(self, _event):
+        sel = self.file_list.curselection()
+        if not sel or sel[0] == self.navigator.index:
+            return
+        self.move_to(self.navigator.files[sel[0]])
+        self.refresh_file_list()          # 저장 확인에서 [취소]했으면 원래 사진에 표시를 되돌린다
 
     def load_boxes(self):
         """TXT 를 읽어 self.boxes 에 채운다.
@@ -403,6 +437,7 @@ class Day1Labeler:
         self._clean = [dict(b) for b in self.boxes]
         self.update_title()
         self.load_form()                     # 프로그램이 정한 상태(예: 수정 완료)를 입력칸에 다시 보여 준다
+        self.refresh_file_list()             # 사진 목록에 ✓ 표시
         self.set_status(f"저장 완료 → {target}   |   {note}")
         return True
 
