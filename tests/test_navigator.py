@@ -67,6 +67,15 @@ class NavigatorTest(unittest.TestCase):
         nav.set_current(ghost)
         self.assertEqual(nav.progress_text(), "1 / 1")
 
+    def test_load_folder(self):
+        folder = make_folder(["img1.jpg", "img2.jpg", "img3.jpg"])
+        nav = ImageNavigator()
+        first = nav.load_folder(folder.parents[1])
+        self.assertEqual(first.name, "img1.jpg")
+        self.assertEqual(nav.total, 3)
+        self.assertEqual(nav.progress_text(), "1 / 3")
+        self.assertEqual(nav.next_path().name, "img2.jpg")
+
 
 if __name__ == "__main__":
     unittest.main()
