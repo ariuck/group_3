@@ -84,16 +84,17 @@ Class 를 식별하기 어렵다면 REVIEW 처리합니다.
 BBox 범위나 객체 구분이 애매하면 임의로 결정하지 않습니다.
 
 ```text
-Status = REVIEW
+상태 = 수정 필요
+발견된 문제 = REVIEW: 이유 코드
 
-Reason 예:
+이유 코드 예:
 - bbox_boundary_ambiguous
 - object_separation_ambiguous
 - too_small_to_identify
 - occlusion_ambiguous
 ```
 
-REVIEW 로 보낸 이유는 Manifest 검수표의 `발견된 문제` 칸에 적습니다.
+REVIEW 로 보낸 이유는 Manifest 검수표의 `발견된 문제` 칸에 `REVIEW: 이유 코드` 로 적습니다. (작성 방법: [manifest_guide.md](manifest_guide.md))
 
 ---
 

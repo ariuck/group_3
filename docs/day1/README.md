@@ -16,7 +16,7 @@
 
 | 항목 | 1일차 초안 | 최종 (검수표) |
 |---|---|---|
-| Manifest 파일 | `manifests/manifest.csv` (14칸) | `manifests/dataset_manifest.xlsx` — 시트 `검수표` 17칸 + `Class 기준`, CSV 머리글은 `dataset_manifest.csv` |
+| Manifest 파일 | `manifests/manifest.csv` (14칸) | `manifests/dataset_manifest.xlsx` — 시트 `검수표` 19칸 + `Class 기준`, CSV 머리글은 `dataset_manifest.csv` |
 | 작업 상태 | PENDING / WORKING / PASS / EDITED / REVIEW / REVIEWED / FINAL | `상태` = 검수 전 / 검수 완료 / 수정 필요 / 수정 완료 / 제외 |
 | 검수 사유 | 자유 문장(`issue`) | `발견된 문제`, `비고(수정 내용)` 칸 |
 | Class 설정 | `config/classes.json` | `configs/classes.yaml` |
@@ -25,10 +25,11 @@
 1일차 문서의 Manifest 초안(`3_Dataset_Manifest_초안`)은 칸의 **뜻을 이해하기 위한 참고**로만 보고,
 실제 작업 기록은 검수표(`dataset_manifest.xlsx`) 틀로 합니다.
 
-### 검수표 틀에 아직 없는 것 (팀 결정 필요)
+### 검수표 틀에 더한 것 (팀 결정 반영)
 
-- **출처(`source_dataset`)·원래 split(`train`/`validation`) 칸이 없습니다.** 교과 8 에서 출처와 기존 분할을 확인해야 하므로 칸을 추가할지 정해야 합니다.
-- **REVIEW(판단이 어려움)에 해당하는 상태가 없습니다.** Class/BBox 기준서의 "애매하면 REVIEW"를 검수표에서 어떻게 표시할지 정해야 합니다. (예: 상태 `수정 필요` + `발견된 문제`에 이유)
+- **출처 데이터셋 / 원래 split 칸을 맨 끝(R, S열)에 추가했습니다.** 교과 8 에서 출처와 기존 분할을 확인하기 위한 것이며, 선택 목록(`이물검출_학습데이터1·2`, `train·validation`)이 붙어 있습니다.
+- **REVIEW 는 `상태 = 수정 필요` + `발견된 문제 = REVIEW: 이유 코드` 로 표시합니다.** 상태 목록은 그대로 두었습니다.
+- 자세한 작성 방법: [docs/manifest_guide.md](../manifest_guide.md)
 
 ## 알아 둘 점
 

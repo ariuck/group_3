@@ -30,6 +30,7 @@
 - REVIEW 최종 판단: 팀장 + 검수자 【기입】
 - 작업 중 데이터 저장 위치: `data/work/` (RAW 와 같은 폴더 구조)
 - 최종 QA 완료 데이터 저장 위치: `data/final/`
+- 작업 상태 기록: `manifests/dataset_manifest.xlsx` (작성 방법 [manifest_guide.md](manifest_guide.md))
 
 ### 역할 분담
 
@@ -73,7 +74,7 @@ fix: BBox 저장 위치 오류 수정
 
 ## 5. 완료 기준
 
-- 미처리 REVIEW: 0건
+- 미처리 REVIEW: 0건 (검수표에서 `상태 = 수정 필요` 이면서 `발견된 문제`가 `REVIEW` 로 시작하는 행이 없음)
 - Validation 오류: 0건
 - 이미지와 TXT Pair 확인 완료
 - 900장 전체 검수 완료

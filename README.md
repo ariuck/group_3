@@ -62,11 +62,12 @@ group_3/
 │   ├── project_baseline.md       팀 공통 기준
 │   ├── class_guide.md            Class 기준서
 │   ├── bbox_guide.md             BBox 기준서
+│   ├── manifest_guide.md         검수표 작성 방법
 │   └── day1/                     1일차 산출물·과정 기록
 │
 ├── manifests/
 │   ├── dataset_manifest.xlsx     검수표 (팀이 입력하는 틀)
-│   └── dataset_manifest.csv      검수표와 같은 칸의 CSV 머리글
+│   └── dataset_manifest.csv      검수표와 같은 19칸의 CSV 머리글
 │
 ├── reports/                      qa_summary.md, test_report.md (작성 예정)
 └── tests/
@@ -216,26 +217,33 @@ RAW 데이터는 직접 수정하지 않습니다. 프로그램도 RAW 안에는
 
 ## 11. 작업 상태 확인
 
-900장의 작업 상태는 다음 검수표에서 확인합니다.
+900장의 작업 상태는 다음 검수표에서 확인합니다. (이미지 1장 = 1행)
 
 ```text
 manifests/dataset_manifest.xlsx
 ```
 
-- 시트 `검수표`: 이미지 1장 = 1행, 칸 17개
+- 시트 `검수표`: 칸 19개
   - No · 이미지 파일명 · 라벨(TXT) 파일명 · 이미지 유형 · 원본 BBox 수 · 최종 BBox 수 · Class
   - TXT 줄 수 = 화면 BBox 수 · 위치 맞음 · Class 맞음 · 누락 객체 여부
   - 상태 · 발견된 문제 · 작성자 · 검수자 · 검수일 · 비고(수정 내용)
+  - 출처 데이터셋 · 원래 split
 - 시트 `Class 기준`: Class ID / 이물 종류 / 사용 기준
-- 같은 17칸의 CSV 머리글: `manifests/dataset_manifest.csv`
+- 같은 19칸의 CSV 머리글: `manifests/dataset_manifest.csv`
 
-상태(`상태` 칸)는 목록에서 고릅니다.
+상태는 목록에서 고릅니다.
 
 ```text
 검수 전 / 검수 완료 / 수정 필요 / 수정 완료 / 제외
 ```
 
-`TXT 줄 수 = 화면 BBox 수`, `위치 맞음`, `Class 맞음`, `누락 객체 여부` 칸은 O / X 로 적습니다.
+판단이 어려운 사진(REVIEW)은 `상태 = 수정 필요` + `발견된 문제 = REVIEW: 이유 코드` 로 표시합니다.
+
+작성 방법과 REVIEW 처리, FINAL 조건은 다음 문서를 확인합니다.
+
+```text
+docs/manifest_guide.md
+```
 
 (현재는 빈 틀만 있습니다. 프로그램의 상태 기록 기능은 개발 예정입니다.)
 
