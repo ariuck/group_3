@@ -5,18 +5,22 @@
     BBox 추가 / 삭제 / Class 변경
     [💾 저장]         → WORK 폴더에 "RAW 와 같은 구조"로 저장  (RAW 는 절대 수정하지 않음)
     [🔄 다시 불러오기] → 같은 위치에 BBox 가 복원되는지 확인
+    ③ Zoom·편집      → 마우스 휠 확대/축소 · 오른쪽(또는 휠) 버튼 드래그 이동 · F = 화면 맞춤
+                        Ctrl+Z 되돌리기 · Ctrl+Y 다시 실행
 
 [핵심 약속] BBox 는 "화면 좌표"가 아니라 "원본 이미지 픽셀 좌표"로 기억한다.
             화면에 그릴 때만 배율(scale)을 곱하고, 마우스 입력은 배율로 나눠서 되돌린다.
+            확대·이동 계산은 src/bbox/viewport.py (Viewport) 가 맡는다.
 
 [Tkinter 6대 개념이 나오는 곳]
-   변수 → self.boxes, self.scale ...     위젯 → Canvas, Button, Listbox, Label
+   변수 → self.boxes, self.vp ...         위젯 → Canvas, Button, Listbox, Label
    이벤트 bind → canvas.bind(...)         명령 command → Button(command=...)
    함수 → open_image(), save() ...        mainloop → 맨 아래 main()
 
-기능별 코드는 따로 나뉘어 있다:  src/yolo (TXT 읽기·쓰기·좌표) · src/bbox (BBox 만들기·선택) ·
+기능별 코드는 따로 나뉘어 있다:  src/yolo (TXT 읽기·쓰기·좌표) · src/bbox (BBox 만들기·선택·확대·Undo) ·
 src/validation (데이터 조사) · src/data_paths (RAW/WORK 경로) · src/settings (경로·Class 설정)
 """
+import math
 import os
 import tkinter as tk
 from pathlib import Path
@@ -26,6 +30,8 @@ from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이
 
 from src import settings
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
+from src.bbox.history import History
+from src.bbox.viewport import ZOOM_STEP, Viewport
 from src.data_paths import is_inside, locate_in_raw, work_label_path
 from src.manifest.manifest_writer import ManifestError, record_save
 from src.ui.validation_dialog import show_validation_dialog
@@ -52,20 +58,36 @@ class Day1Labeler:
         self.selected = None       # 선택된 BBox 번호 (없으면 None)
         self.current_class = 0     # 새 BBox 를 만들 때 쓸 Class
         self.dirty = False         # 저장 안 한 변경이 있는가?
+        self._clean = []           # 마지막으로 불러오거나 저장한 BBox 목록 (Undo 후 '변경 없음' 판단용)
 
-        self.scale = 1.0           # 화면 픽셀 = 원본 픽셀 × scale
-        self.offset_x = 0          # 이미지가 캔버스 안에서 시작하는 위치 (가운데 정렬용)
-        self.offset_y = 0
+        self.vp = Viewport()       # ★ 화면 = 원본 × scale + offset  (확대·이동 상태를 모두 여기서 관리)
+        self.auto_fit = True       # True 면 창 크기가 바뀔 때 다시 '화면 맞춤'. 사용자가 확대/이동하면 False
+        self.history = History()   # Undo / Redo 기록
         self.photo = None          # 화면에 그릴 이미지 (ImageTk). 변수에 꼭 붙들고 있어야 사라지지 않는다!
 
         self.drag = None           # 드래그 중인 정보 (시작점, 임시 사각형 등)
+        self.pan_last = None       # 화면 이동(오른쪽 드래그) 중 마지막 마우스 위치
         self._resize_job = None    # 창 크기 변경 후 다시 그리기 예약(디바운스)용
+        self._render_job = None    # 화면 이동 중 이미지 다시 그리기 예약용
 
         self.build_widgets()
         self.bind_events()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.show_image()
         self.set_status(self.start_message())
+
+    # 예전 코드·설명과의 호환용: self.scale / offset_x / offset_y 는 Viewport 값을 그대로 보여 준다.
+    @property
+    def scale(self):
+        return self.vp.scale
+
+    @property
+    def offset_x(self):
+        return self.vp.offset_x
+
+    @property
+    def offset_y(self):
+        return self.vp.offset_y
 
     def start_message(self):
         """처음 화면에 보여 줄 안내. 데이터가 아직 없으면 어디에 넣어야 하는지 알려 준다."""
@@ -87,6 +109,11 @@ class Day1Labeler:
                            ("💾 저장", self.save), ("🔄 다시 불러오기", self.reload),
                            ("🗑 선택 BBox 삭제", self.delete_selected), ("📁 WORK 폴더 열기", self.open_work_folder)):
             tk.Button(bar, text=text, command=func, padx=8, pady=3).pack(side="left", padx=3)
+
+        # ①-2 오른쪽 끝: 확대·되돌리기 버튼 (오른쪽부터 쌓이므로 역순으로 pack)
+        for text, func in (("↷ 다시", self.redo), ("↶ 되돌리기", self.undo), ("⤢ 맞춤", self.fit_to_window),
+                           ("－", self.zoom_out), ("＋", self.zoom_in)):
+            tk.Button(bar, text=text, command=func, padx=6, pady=3).pack(side="right", padx=2)
 
         # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
         self.info = tk.Label(self.root, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
@@ -130,13 +157,33 @@ class Day1Labeler:
         c.bind("<Motion>", self.on_mouse_move)              # 그냥 움직일 때 (좌표 표시용)
         c.bind("<Configure>", self.on_canvas_resize)        # 도화지 크기가 바뀔 때
 
+        # ③ 확대 / 이동
+        c.bind("<MouseWheel>", self.on_mouse_wheel)         # Windows · macOS 휠
+        c.bind("<Button-4>", self.on_mouse_wheel)           # Linux(WSL 포함) 휠 위
+        c.bind("<Button-5>", self.on_mouse_wheel)           # Linux(WSL 포함) 휠 아래
+        c.bind("<Enter>", lambda e: c.focus_set())          # 마우스가 들어오면 휠 입력을 캔버스가 받도록
+        for btn in (2, 3):                                  # 휠 버튼(2) · 오른쪽 버튼(3) 드래그 = 화면 이동
+            c.bind(f"<ButtonPress-{btn}>", self.on_pan_start)
+            c.bind(f"<B{btn}-Motion>", self.on_pan_drag)
+            c.bind(f"<ButtonRelease-{btn}>", self.on_pan_end)
+
         self.class_list.bind("<<ListboxSelect>>", self.on_class_selected)
         self.box_list.bind("<<ListboxSelect>>", self.on_box_list_selected)
 
-        self.root.bind("<Delete>", lambda e: self.delete_selected())
-        self.root.bind("<Control-s>", lambda e: self.save())
+        r = self.root
+        r.bind("<Delete>", lambda e: self.delete_selected())
+        r.bind("<Control-s>", lambda e: self.save())
+        r.bind("<Control-z>", lambda e: self.undo())
+        r.bind("<Control-y>", lambda e: self.redo())
+        r.bind("<Control-Z>", lambda e: self.redo())        # Ctrl+Shift+Z
+        for key in ("<plus>", "<equal>", "<KP_Add>"):
+            r.bind(key, lambda e: self.zoom_in())
+        for key in ("<minus>", "<KP_Subtract>"):
+            r.bind(key, lambda e: self.zoom_out())
+        for key in ("f", "F", "<Control-Key-0>"):           # 숫자 0 은 Class 0 이라 F / Ctrl+0 을 화면 맞춤으로 쓴다
+            r.bind(key, lambda e: self.fit_to_window())
         for i in range(len(settings.CLASSES)):              # 숫자키 0~6 = Class 선택
-            self.root.bind(str(i), lambda e, cid=i: self.choose_class(cid))
+            r.bind(str(i), lambda e, cid=i: self.choose_class(cid))
 
     # ====================================================================
     # 데이터 조사 / 폴더 열기
@@ -223,7 +270,7 @@ class Day1Labeler:
         self.pil_image = img
         self.img_w, self.img_h = img.size
         self.load_boxes()
-        self.show_image()
+        self.show_image()                                    # 새 이미지는 항상 '화면 맞춤'으로 시작
 
     def load_boxes(self):
         """TXT 를 읽어 self.boxes 에 채운다.
@@ -232,6 +279,8 @@ class Day1Labeler:
         ① 이 있으면 '내가 지난번에 고친 결과'를 이어서 작업한다.
         """
         self.boxes, self.selected, self.dirty = [], None, False
+        self._clean = []
+        self.history.clear()                                 # 다른 이미지(또는 다시 불러오기)면 Undo 기록은 버린다
         dataset, split = locate_in_raw(self.image_path)
         where = f"{dataset} / {split}" if dataset else "RAW 밖의 파일"
         self.info.config(text=f"출처: {where}   |   {self.image_path.name}   ({self.img_w}×{self.img_h})")
@@ -242,6 +291,7 @@ class Day1Labeler:
             self.set_status("TXT 가 없어 BBox 없이 시작합니다. (정상 이미지거나 라벨이 빠진 것일 수 있어요 → 이미지를 직접 확인)")
             return
         self.boxes, bad = read_yolo_file(source, self.img_w, self.img_h)
+        self._clean = [dict(b) for b in self.boxes]
         kind = "WORK(내가 저장한 것)" if source == work else "RAW(원본)"
         msg = f"{kind} TXT 에서 BBox {len(self.boxes)}개 로드: {source.name}"
         if not self.boxes and not bad:
@@ -265,6 +315,7 @@ class Day1Labeler:
             messagebox.showerror("저장 실패", f"저장하지 못했습니다.\n\n{e}")
             return False
         self.dirty = False
+        self._clean = [dict(b) for b in self.boxes]
         self.update_title()
         # TXT 저장이 끝난 뒤 검수표(CSV)에 이 사진의 줄을 기록한다. 실패해도 TXT 는 이미 저장되어 있다.
         note = ""
@@ -279,6 +330,7 @@ class Day1Labeler:
         """[다시 불러오기] 저장한 TXT 를 다시 읽어 BBox 가 같은 위치에 복원되는지 확인한다.
 
         '성공 기준' : 저장 → 다시 불러오기 → 같은 위치에 BBox 가 나타난다.
+        (확대·이동 상태는 그대로 둔다 → 확대한 곳에서 바로 비교할 수 있다)
         """
         if self.pil_image is None:
             return
@@ -304,45 +356,68 @@ class Day1Labeler:
 
     # ====================================================================
     # 화면 그리기
-    #    ★ 성능 팁: '이미지'와 'BBox' 를 따로 그린다.
-    #      이미지는 줄이는 계산이 무거우므로 열 때/창 크기가 바뀔 때만 다시 만들고,
-    #      BBox 는 가벼우니 바뀔 때마다 다시 그린다.  (한꺼번에 하면 마우스를 움직일 때마다 렉이 걸린다)
+    #    ★ 성능 팁 1: '이미지'와 'BBox' 를 따로 그린다.
+    #      이미지는 줄이는 계산이 무거우므로 열 때 / 창 크기 / 확대·이동이 바뀔 때만 다시 만들고,
+    #      BBox 는 가벼우니 바뀔 때마다 다시 그린다.
+    #    ★ 성능 팁 2: 확대했을 때는 '화면에 보이는 부분만' 잘라서 키운다.
+    #      4K 사진을 2000 % 로 통째로 키우면 메모리가 터진다.
     # ====================================================================
 
-    def show_image(self):
-        """이미지를 현재 캔버스 크기에 맞게 줄여서 그린다(여기서만 무거운 계산)."""
+    def canvas_size(self):
         c = self.canvas
-        c.delete("img")                                      # 이전 이미지만 지운다 (태그 'img')
+        return max(c.winfo_width(), 50), max(c.winfo_height(), 50)
+
+    def show_image(self):
+        """이미지를 현재 캔버스 크기에 맞춰(Fit to Window) 다시 그린다."""
+        c = self.canvas
         if self.pil_image is None:
+            c.delete("img")
             c.delete("box")
             c.create_text(c.winfo_width() / 2, c.winfo_height() / 2, tags="img", fill="#bbbbbb",
                           font=("Malgun Gothic", 14), justify="center",
                           text="[📂 이미지 열기] 로 시작하세요\n(데이터는 data/raw 폴더에 넣어 두세요)")
             self.refresh_box_list()
             return
-
-        cw, ch = max(c.winfo_width(), 50), max(c.winfo_height(), 50)
-        self.scale = min(cw / self.img_w, ch / self.img_h)    # 가로·세로 중 더 빡빡한 쪽에 맞춤 (Fit to Window)
-        disp_w, disp_h = int(self.img_w * self.scale), int(self.img_h * self.scale)
-        self.offset_x = (cw - disp_w) // 2                    # 캔버스 한가운데 오도록 시작 위치 계산
-        self.offset_y = (ch - disp_h) // 2
-
-        small = self.pil_image.resize((disp_w, disp_h), Image.BILINEAR)
-        self.photo = ImageTk.PhotoImage(small)               # self.photo 에 저장해 두지 않으면 화면에서 사라진다!
-        c.create_image(self.offset_x, self.offset_y, anchor="nw", image=self.photo, tags="img")
-        c.tag_lower("img")                                   # 이미지는 맨 아래, BBox 가 그 위에 오도록
-
-        self.draw_boxes()
+        cw, ch = self.canvas_size()
+        self.vp.fit(self.img_w, self.img_h, cw, ch, upscale=True)   # 가로·세로 중 더 빡빡한 쪽에 맞춤
+        self.auto_fit = True
+        self.render()
         self.refresh_box_list()
         self.update_title()
+
+    def render(self):
+        """현재 Viewport(배율·위치) 그대로 이미지 + BBox 를 다시 그린다."""
+        self._render_job = None
+        c = self.canvas
+        c.delete("img")
+        if self.pil_image is None:
+            return
+        cw, ch = self.canvas_size()
+        # 캔버스 네 귀퉁이가 원본 이미지의 어디에 해당하는지 → 그 부분만 잘라 낸다
+        ix0, iy0 = self.vp.canvas_to_image(0, 0)
+        ix1, iy1 = self.vp.canvas_to_image(cw, ch)
+        x0, y0 = max(0, math.floor(ix0)), max(0, math.floor(iy0))
+        x1, y1 = min(self.img_w, math.ceil(ix1)), min(self.img_h, math.ceil(iy1))
+        if x1 > x0 and y1 > y0:
+            disp_w = max(1, round((x1 - x0) * self.vp.scale))
+            disp_h = max(1, round((y1 - y0) * self.vp.scale))
+            # 크게 확대하면 픽셀 경계가 보이도록 NEAREST (경계를 정확히 맞추기 좋다)
+            resample = Image.NEAREST if self.vp.scale >= 2 else Image.BILINEAR
+            part = self.pil_image.crop((x0, y0, x1, y1)).resize((disp_w, disp_h), resample)
+            self.photo = ImageTk.PhotoImage(part)            # self.photo 에 저장해 두지 않으면 화면에서 사라진다!
+            sx, sy = self.vp.image_to_canvas(x0, y0)
+            c.create_image(round(sx), round(sy), anchor="nw", image=self.photo, tags="img")
+            c.tag_lower("img")                               # 이미지는 맨 아래, BBox 가 그 위에 오도록
+        else:
+            self.photo = None                                # 이미지가 화면 밖으로 완전히 나감
+        self.draw_boxes()
 
     def draw_boxes(self):
         """BBox 만 다시 그린다 (가벼움). 원본 픽셀 좌표 → 화면 좌표 변환이 핵심."""
         c = self.canvas
         c.delete("box")
         for i, b in enumerate(self.boxes):
-            x1, y1 = self.to_screen(b["x1"], b["y1"])
-            x2, y2 = self.to_screen(b["x2"], b["y2"])
+            x1, y1, x2, y2 = self.vp.box_to_canvas(b)
             color = settings.class_color(b["cls"])
             is_sel = (i == self.selected)
             c.create_rectangle(x1, y1, x2, y2, outline=("#ffeb3b" if is_sel else color),
@@ -371,15 +446,85 @@ class Day1Labeler:
 
     # ====================================================================
     # 좌표 변환 (원본 픽셀 ↔ 화면)   ★ 이 두 줄을 이해하면 라벨링 프로그램의 절반을 이해한 것
+    #    실제 계산은 Viewport 가 한다 (확대·이동해도 같은 식).
     # ====================================================================
 
     def to_screen(self, x, y):
         """원본 이미지 픽셀 → 캔버스 화면 좌표.   화면 = 원본 × scale + offset"""
-        return x * self.scale + self.offset_x, y * self.scale + self.offset_y
+        return self.vp.image_to_canvas(x, y)
 
     def to_image(self, sx, sy):
         """캔버스 화면 좌표 → 원본 이미지 픽셀.   원본 = (화면 − offset) ÷ scale"""
-        return (sx - self.offset_x) / self.scale, (sy - self.offset_y) / self.scale
+        return self.vp.canvas_to_image(sx, sy)
+
+    # ====================================================================
+    # ③ 확대 / 축소 / 화면 이동
+    # ====================================================================
+
+    def zoom(self, factor, cx=None, cy=None):
+        """(cx, cy) 화면 지점을 기준으로 확대/축소. 위치를 안 주면 캔버스 가운데 기준."""
+        if self.pil_image is None or self.drag:
+            return False
+        if cx is None:
+            cw, ch = self.canvas_size()
+            cx, cy = cw / 2, ch / 2
+        if not self.vp.zoom_at(factor, cx, cy):
+            self.set_status(f"더 이상 {'확대' if factor > 1 else '축소'}할 수 없습니다. ({self.vp.zoom_percent}%)")
+            return False
+        self.auto_fit = False
+        self.render()
+        self.set_status(f"배율 {self.vp.zoom_percent}%   |   휠 = 확대/축소 · 오른쪽 드래그 = 이동 · F = 화면 맞춤")
+        return True
+
+    def zoom_in(self):
+        return self.zoom(ZOOM_STEP)
+
+    def zoom_out(self):
+        return self.zoom(1 / ZOOM_STEP)
+
+    def fit_to_window(self):
+        """[⤢ 맞춤] / F / Ctrl+0 : 이미지 전체가 보이도록 되돌린다."""
+        if self.pil_image is None:
+            return
+        self.show_image()
+        self.set_status(f"화면 맞춤 — 배율 {self.vp.zoom_percent}%")
+
+    def on_mouse_wheel(self, event):
+        """휠 위 = 확대, 휠 아래 = 축소.  커서 아래 지점이 제자리에 머문다."""
+        up = getattr(event, "num", None) == 4 or getattr(event, "delta", 0) > 0
+        self.zoom(ZOOM_STEP if up else 1 / ZOOM_STEP, event.x, event.y)
+        return "break"
+
+    def on_pan_start(self, event):
+        if self.pil_image is None or self.drag:
+            return
+        self.pan_last = (event.x, event.y)
+        self.canvas.config(cursor="fleur")
+
+    def on_pan_drag(self, event):
+        """이동하는 동안은 이미 그려진 것을 그대로 옮기고(빠름), 잠깐 멈추면 빈 곳까지 다시 그린다."""
+        if self.pan_last is None:
+            return
+        dx, dy = event.x - self.pan_last[0], event.y - self.pan_last[1]
+        self.pan_last = (event.x, event.y)
+        if dx == 0 and dy == 0:
+            return
+        self.vp.pan(dx, dy)
+        self.auto_fit = False
+        self.canvas.move("img", dx, dy)
+        self.canvas.move("box", dx, dy)
+        if self._render_job is not None:
+            self.root.after_cancel(self._render_job)
+        self._render_job = self.root.after(40, self.render)
+
+    def on_pan_end(self, _event):
+        if self.pan_last is None:
+            return
+        self.pan_last = None
+        self.canvas.config(cursor="crosshair")
+        if self._render_job is not None:
+            self.root.after_cancel(self._render_job)
+        self.render()
 
     # ====================================================================
     # 마우스 이벤트 ([Tkinter 개념 5: 함수 = 할 일 목록])
@@ -388,7 +533,7 @@ class Day1Labeler:
 
     def on_mouse_down(self, event):
         """① 누른 순간: 시작 위치를 기억하고, 점선 임시 사각형을 만든다."""
-        if self.pil_image is None:
+        if self.pil_image is None or self.pan_last is not None:
             return
         rect = self.canvas.create_rectangle(event.x, event.y, event.x, event.y,
                                             outline="#ffeb3b", dash=(4, 2), width=2, tags="rubber")
@@ -426,25 +571,34 @@ class Day1Labeler:
                                    "이번 프로젝트에서 사용하지 않습니다.\n다른 Class 를 선택하세요.")
             return
 
+        self.history.push(self.boxes)                        # ★ 바꾸기 '직전' 상태를 Undo 기록에 남긴다
         self.boxes.append(box)
         self.selected = len(self.boxes) - 1                  # 방금 만든 BBox 를 선택 상태로
         self.mark_changed()
 
     def on_mouse_move(self, event):
         """그냥 움직일 때: 마우스가 가리키는 '원본 이미지 좌표'를 상태줄에 표시 (좌표 개념 확인용)."""
-        if self.pil_image is None or self.drag:
+        if self.pil_image is None or self.drag or self.pan_last is not None:
             return
         x, y = self.to_image(event.x, event.y)
         if 0 <= x < self.img_w and 0 <= y < self.img_h:
-            self.set_status(f"원본 좌표 ({x:.0f}, {y:.0f})   |   화면 배율 {self.scale * 100:.0f}%   |   "
-                            "드래그 = BBox 추가 · 클릭 = 선택 · Delete = 삭제 · 숫자 0~6 = Class")
+            self.set_status(f"원본 좌표 ({x:.0f}, {y:.0f})   |   배율 {self.vp.zoom_percent}%   |   "
+                            "드래그 = BBox · 클릭 = 선택 · 휠 = 확대 · 오른쪽 드래그 = 이동 · F = 맞춤 · Ctrl+Z = 되돌리기")
 
     def on_canvas_resize(self, event):
         """창 크기를 바꾸는 동안 이 이벤트가 수십 번 쏟아진다.
         매번 이미지를 다시 줄이면 렉이 걸리므로, 마지막 변경 후 0.1초 뒤에 '한 번만' 다시 그린다 (디바운스)."""
         if self._resize_job is not None:
             self.root.after_cancel(self._resize_job)
-        self._resize_job = self.root.after(100, self.show_image)
+        self._resize_job = self.root.after(100, self.on_resize_done)
+
+    def on_resize_done(self):
+        """확대하지 않은 상태면 다시 화면 맞춤, 확대 중이면 배율을 유지한 채 다시 그린다."""
+        self._resize_job = None
+        if self.auto_fit or self.pil_image is None:
+            self.show_image()
+        else:
+            self.render()
 
     # ====================================================================
     # BBox 선택 / 삭제 / Class 변경
@@ -467,6 +621,7 @@ class Day1Labeler:
         if self.selected is None:
             self.set_status("삭제할 BBox 를 먼저 클릭해서 선택하세요.")
             return
+        self.history.push(self.boxes)
         del self.boxes[self.selected]
         self.selected = None
         self.mark_changed()
@@ -485,6 +640,7 @@ class Day1Labeler:
         self.class_list.selection_clear(0, "end")
         self.class_list.selection_set(cid)
         if self.selected is not None and self.boxes[self.selected]["cls"] != cid:
+            self.history.push(self.boxes)
             self.boxes[self.selected]["cls"] = cid
             self.mark_changed()
 
@@ -504,6 +660,38 @@ class Day1Labeler:
         self.draw_boxes()
         self.refresh_box_list()
         self.update_title()
+
+    # ====================================================================
+    # ③ 되돌리기(Undo) / 다시 실행(Redo)
+    # ====================================================================
+
+    def undo(self):
+        """[↶ 되돌리기] / Ctrl+Z"""
+        prev = self.history.undo(self.boxes)
+        if prev is None:
+            self.set_status("되돌릴 작업이 없습니다.")
+            return False
+        self.boxes = prev
+        self.after_history("되돌리기")
+        return True
+
+    def redo(self):
+        """[↷ 다시] / Ctrl+Y · Ctrl+Shift+Z"""
+        nxt = self.history.redo(self.boxes)
+        if nxt is None:
+            self.set_status("다시 실행할 작업이 없습니다.")
+            return False
+        self.boxes = nxt
+        self.after_history("다시 실행")
+        return True
+
+    def after_history(self, what):
+        self.selected = None
+        self.dirty = self.boxes != self._clean           # 처음 상태까지 되돌리면 '변경 없음'
+        self.draw_boxes()
+        self.refresh_box_list()
+        self.update_title()
+        self.set_status(f"{what} — BBox {len(self.boxes)}개   (남은 되돌리기 {len(self.history)}번)")
 
 
 # ============================================================================
