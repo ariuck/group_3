@@ -23,6 +23,8 @@ src/validation (데이터 조사) · src/data_paths (RAW/WORK 경로) · src/set
 """
 import math
 import os
+import shutil
+import subprocess
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -273,10 +275,22 @@ class Day1Labeler:
     def open_work_folder(self):
         """[📁 WORK 폴더 열기] 저장 결과를 파일 탐색기에서 확인한다."""
         settings.WORK_DIR.mkdir(parents=True, exist_ok=True)
+        folder = settings.WORK_DIR
         try:
-            os.startfile(settings.WORK_DIR)           # Windows 전용
-        except (AttributeError, OSError):
-            messagebox.showinfo("WORK 폴더", str(settings.WORK_DIR))   # 그 밖의 환경에서는 경로만 알려 준다
+            if hasattr(os, "startfile"):                          # Windows
+                os.startfile(folder)
+                return
+            if shutil.which("wslpath") and shutil.which("explorer.exe"):   # WSL → Windows 탐색기로 연다
+                win_path = subprocess.run(["wslpath", "-w", str(folder)], capture_output=True, text=True,
+                                          check=True).stdout.strip()
+                subprocess.Popen(["explorer.exe", win_path])      # explorer.exe 는 성공해도 종료 코드 1 을 돌려주므로 결과는 보지 않는다
+                return
+            if shutil.which("xdg-open"):                          # 일반 Linux
+                subprocess.Popen(["xdg-open", str(folder)])
+                return
+        except (OSError, subprocess.SubprocessError):
+            pass
+        messagebox.showinfo("WORK 폴더", str(folder))             # 열 수 없는 환경에서는 경로만 알려 준다
 
     # ====================================================================
     # 파일 열기 / 저장 / 다시 불러오기
