@@ -28,7 +28,8 @@ from src import settings
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.data_paths import is_inside, locate_in_raw, work_label_path
 from src.manifest.manifest_writer import ManifestError, record_save
-from src.validation.validator import inventory_markdown, scan_inventory
+from src.ui.validation_dialog import show_validation_dialog
+from src.validation.validator import inventory_markdown, scan_inventory, validate_dataset, write_report
 from src.yolo.yolo_loader import find_raw_label, read_yolo_file
 from src.yolo.yolo_writer import write_yolo_file
 
@@ -81,7 +82,8 @@ class Day1Labeler:
         #    (주의: command=self.save  처럼 괄호 없이 함수 이름만 넘긴다. 괄호를 붙이면 지금 바로 실행돼 버린다)
         bar = tk.Frame(self.root, padx=6, pady=6)
         bar.pack(side="top", fill="x")
-        for text, func in (("📊 데이터 조사", self.show_inventory), ("📂 이미지 열기", self.open_image),
+        for text, func in (("📊 데이터 조사", self.show_inventory), ("🔍 무결성 검증(QA)", self.run_validation),
+                           ("📂 이미지 열기", self.open_image),
                            ("💾 저장", self.save), ("🔄 다시 불러오기", self.reload),
                            ("🗑 선택 BBox 삭제", self.delete_selected), ("📁 WORK 폴더 열기", self.open_work_folder)):
             tk.Button(bar, text=text, command=func, padx=8, pady=3).pack(side="left", padx=3)
@@ -166,6 +168,26 @@ class Day1Labeler:
         tk.Button(btns, text="📋 표 복사 (마크다운)", command=copy, padx=8).pack(side="left", padx=8)
         tk.Button(btns, text="닫기", command=win.destroy, padx=8).pack(side="left")
         box.pack(fill="both", expand=True)
+
+    def run_validation(self):
+        """[🔍 무결성 검증(QA)] 900장 전체 데이터셋 무결성을 정밀 검사하여 결과 다이얼로그를 띄운다."""
+        self.set_status("데이터셋 무결성 검사(Validation) 진행 중...")
+        self.root.update_idletasks()
+        report = validate_dataset(raw_dir=settings.RAW_DIR, work_dir=settings.WORK_DIR)
+        
+        out_csv = settings.PROJECT_DIR / "reports" / "validation_report.csv"
+        write_report(report, out_csv)
+        self.set_status(f"검증 완료: 총 {len(report)}건의 결과 (보고서: reports/validation_report.csv)")
+
+        def jump_to_file(rel_path):
+            stem = Path(rel_path).stem
+            matches = list(settings.RAW_DIR.rglob(f"{stem}.jpg"))
+            if matches:
+                self.load_image_file(matches[0])
+            else:
+                messagebox.showinfo("안내", f"해당 이미지 파일을 찾을 수 없습니다: {rel_path}")
+
+        show_validation_dialog(self.root, report, csv_path=out_csv, on_jump=jump_to_file)
 
     def open_work_folder(self):
         """[📁 WORK 폴더 열기] 저장 결과를 파일 탐색기에서 확인한다."""
