@@ -86,6 +86,8 @@ def setup(root):
     s.configure("CardTitle.TLabel", background=c["card"], foreground=c["text"], font=font(11, True))
     s.configure("Title.TLabel", foreground=c["text"], font=font(13, True))
     s.configure("Diff.TLabel", foreground=c["accent"], font=font(10, True))
+    s.configure("Warn.TLabel", foreground=c["danger"], font=font(10, True))
+    s.configure("Dirty.TLabel", foreground=c["warn"], font=font(10, True))
     s.configure("Status.TLabel", background=c["bar"], foreground=c["muted"], font=font(9))
     s.configure("Coord.TLabel", background=c["bg"], foreground=c["text"], font=mono(9))
     s.configure("TSeparator", background=c["border"])

@@ -24,6 +24,17 @@ def find_raw_label(image_path):
     return None
 
 
+def parse_class_id(text):
+    """Class 번호 글자를 정수로. '2' 와 '2.0' 은 받아 주고, '2.5' 같은 값은 ValueError."""
+    try:
+        return int(text)
+    except ValueError:
+        value = float(text)
+        if not value.is_integer():
+            raise
+        return int(value)
+
+
 def read_yolo_file(txt_path, img_w, img_h):
     """TXT 를 읽어 BBox 목록(원본 픽셀 좌표)으로 만든다.
 
@@ -33,7 +44,7 @@ def read_yolo_file(txt_path, img_w, img_h):
     ※ TXT 가 비어 있으면 boxes 도 빈 목록이다. 이건 '오류'가 아니라 '정상 김치(이물 없음)'일 수 있다.
     """
     boxes, bad_lines = [], 0
-    for line in Path(txt_path).read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in Path(txt_path).read_text(encoding="utf-8-sig", errors="replace").splitlines():   # utf-8-sig: Windows 가 붙이는 BOM 은 무시
         line = line.strip()
         if not line:
             continue
@@ -41,7 +52,7 @@ def read_yolo_file(txt_path, img_w, img_h):
         try:
             if len(parts) != 5:
                 raise ValueError("필드가 5개가 아님")
-            cls = int(parts[0])
+            cls = parse_class_id(parts[0])
             xc, yc, w, h = (float(p) for p in parts[1:])
         except ValueError:
             bad_lines += 1                     # 형식 오류: 개수만 세어 두고 계속 진행
@@ -58,12 +69,12 @@ def read_yolo_rows(txt_path):
     if p is None or not p.is_file():
         return []
     rows = []
-    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in p.read_text(encoding="utf-8-sig", errors="replace").splitlines():
         parts = line.split()
         try:
             if len(parts) != 5:
                 raise ValueError
-            rows.append((int(parts[0]), *(float(v) for v in parts[1:])))
+            rows.append((parse_class_id(parts[0]), *(float(v) for v in parts[1:])))
         except ValueError:
             continue
     return rows

@@ -73,6 +73,8 @@ class Day1Labeler:
         self.selected = None       # 선택된 BBox 번호 (없으면 None)
         self.current_class = 0     # 새 BBox 를 만들 때 쓸 Class
         self.dirty = False         # 저장 안 한 변경이 있는가?
+        self.unreadable = 0        # 원본 라벨에서 형식이 맞지 않아 읽지 못한 줄 수 (저장하면 WORK 파일에서 빠진다)
+        self._unreadable_ok = None  # 그래도 저장하겠다고 확인한 사진 (같은 사진은 다시 묻지 않는다)
         self._clean = []           # 마지막으로 불러오거나 저장한 BBox 목록 (Undo 후 '변경 없음' 판단용)
 
         self.vp = Viewport()       # ★ 화면 = 원본 × scale + offset  (확대·이동 상태를 모두 여기서 관리)
@@ -241,6 +243,8 @@ class Day1Labeler:
         self.info.pack(anchor="w")
         self.info_meta = ttk.Label(titles, text="", style="Muted.TLabel")
         self.info_meta.pack(anchor="w")
+        self.warn_label = ttk.Label(titles, text="", style="Warn.TLabel")      # 읽지 못한 줄 · 이상한 BBox 경고 (사라지지 않고 계속 보인다)
+        self.warn_label.pack(anchor="w")
         self.btn_next = ttk.Button(row, text="다음 ▶", command=self.go_next, style="Tool.TButton", state="disabled",
                                    takefocus=False)
         self.btn_next.pack(side="right", padx=(4, 0))
@@ -675,6 +679,7 @@ class Day1Labeler:
         """
         self.boxes, self.selected, self.dirty = [], None, False
         self._clean = []
+        self.unreadable = 0
         self.history.clear()                                 # 다른 이미지(또는 다시 불러오기)면 Undo 기록은 버린다
         raw_txt = find_raw_label(self.image_path)
         self.raw_boxes = read_yolo_file(raw_txt, self.img_w, self.img_h)[0] if raw_txt else []   # Diff 비교용 원본
@@ -690,6 +695,7 @@ class Day1Labeler:
             self.set_status("TXT 가 없어 BBox 없이 시작합니다. (정상 이미지거나 라벨이 빠진 것일 수 있어요 → 이미지를 직접 확인)")
             return
         self.boxes, bad = read_yolo_file(source, self.img_w, self.img_h)
+        self.unreadable = bad
         self._clean = [dict(b) for b in self.boxes]
         kind = "WORK(내가 저장한 것)" if source == work else "RAW(원본)"
         msg = f"{kind} TXT 에서 BBox {len(self.boxes)}개 로드: {source.name}"
@@ -707,6 +713,13 @@ class Day1Labeler:
         if self.pil_image is None:
             return False
         target = work_label_path(self.image_path)
+        if self.unreadable and self._unreadable_ok != self.image_path:
+            if not messagebox.askyesno("읽지 못한 줄이 있습니다",
+                                       f"원본 라벨에 형식이 맞지 않아 읽지 못한 줄이 {self.unreadable}개 있습니다.\n\n"
+                                       "저장하면 그 줄은 WORK 파일에 들어가지 않습니다. (원본은 그대로 남습니다)\n"
+                                       "그래도 저장할까요?"):
+                return False
+            self._unreadable_ok = self.image_path
         # ★ 안전장치: 저장 경로가 RAW 안이면 저장을 거부한다. (RAW 원본을 수정하지 않는다)
         if is_inside(target, settings.RAW_DIR):
             messagebox.showerror("저장 거부", f"RAW 폴더에는 저장할 수 없습니다.\n\n{target}")
@@ -729,8 +742,10 @@ class Day1Labeler:
             self.set_status(f"TXT 저장 완료 → {target}   |   검수표 기록 실패 (입력칸 내용 미기록)")
             return False
         self.dirty = False
+        self.unreadable = 0
         self._clean = [dict(b) for b in self.boxes]
         self.update_title()
+        self.update_warning()
         self.load_form()                     # 프로그램이 정한 상태(예: 수정 완료)를 입력칸에 다시 보여 준다
         self.strip.refresh_marks()           # 사진 목록에 ✓·상태 표시
         self.set_status(f"저장 완료 → {target}   |   {note}")
@@ -874,6 +889,18 @@ class Day1Labeler:
             self.photo = None                                # 이미지가 화면 밖으로 완전히 나감
         self.draw_boxes()
 
+    def update_warning(self):
+        """이미지 위쪽의 경고 줄: 읽지 못한 줄 · 확인이 필요한 BBox 개수. 문제가 없으면 비운다."""
+        parts = []
+        if self.unreadable:
+            parts.append(f"읽지 못한 줄 {self.unreadable}개 (저장하면 WORK 파일에서 빠집니다)")
+        odd = sum(1 for b in self.boxes if self.problems_of(b))
+        if odd:
+            parts.append(f"확인이 필요한 BBox {odd}개")
+        text = "⚠ " + "  ·  ".join(parts) if parts else ""
+        if self.warn_label.cget("text") != text:
+            self.warn_label.config(text=text)
+
     def problems_of(self, box):
         """이 BBox 에서 이상한 점 (이미지 밖·Class 범위 밖·너무 작음 등). 정상이면 빈 목록."""
         return box_problems(box, self.img_w, self.img_h, len(settings.CLASSES), settings.UNUSED_CLASSES)
@@ -920,6 +947,7 @@ class Day1Labeler:
                 c.create_rectangle(sx - 4, sy - 4, sx + 4, sy + 4, fill="white", outline="#222222", width=1,
                                    tags=("box", "handle"))
         self.update_bbox_info()
+        self.update_warning()
 
     def draw_ghost(self, b, color, text):
         """Diff 에서 원본 BBox 를 점선으로 그린다 (선택·이동 대상은 아니다)."""
