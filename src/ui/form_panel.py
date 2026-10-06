@@ -45,13 +45,15 @@ CHIP_COLUMNS = 3                      # 선택 버튼을 가로로 몇 개씩 �
 class FormPanel(tk.Frame):
     """사람이 직접 채우는 칸을 모아 둔 카드. (선택 칸은 눌러서 고르는 칩, 글자 칸은 넓은 입력칸)"""
 
-    def __init__(self, parent, on_change=None, on_mode=None):
+    def __init__(self, parent, on_change=None, on_mode=None, on_submit=None):
         C = theme.COLORS
         super().__init__(parent, bg=C["card"], highlightbackground=C["border"], highlightthickness=1, padx=12, pady=8)
         self._on_change = on_change
         self._on_mode = on_mode            # 한/영 상태가 바뀌었을 때 알림 (예: 상태줄에 안내)
+        self._on_submit = on_submit        # 글자 칸에서 Enter 를 눌렀을 때 (예: 저장하고 다음 사진으로)
         self._loading = False
         self._vars = {}
+        self._entries = {}
         self.ime = HangulIME(on_mode_change=self._show_mode)   # WSL 에서도 한글을 칠 수 있게 (hangul_input.py 참고)
         self.columnconfigure(0, weight=1)
 
@@ -95,8 +97,10 @@ class FormPanel(tk.Frame):
             entry.grid(row=0, column=n * 2 + 1, sticky="ew")
             names.columnconfigure(n * 2 + 1, weight=1)
             self.ime.attach(entry)
+            entry.bind("<Return>", self._submit)
             var.trace_add("write", self._changed)
             self._vars[key] = var
+            self._entries[key] = entry
         row += 1
 
         for key, label in (("발견된 문제", "발견된 문제"), ("비고(수정 내용)", "비고")):
@@ -106,9 +110,30 @@ class FormPanel(tk.Frame):
             entry = ttk.Entry(self, textvariable=var)
             entry.grid(row=row + 1, column=0, sticky="ew", pady=(2, 4))
             self.ime.attach(entry)
+            entry.bind("<Return>", self._submit)
             var.trace_add("write", self._changed)
             self._vars[key] = var
+            self._entries[key] = entry
             row += 2
+
+    def _submit(self, _event):
+        """글자 칸에서 Enter: 한글 조합 중인 글자를 확정하고 알려 준다."""
+        self.ime.finish()
+        if self._on_submit:
+            self._on_submit()
+        return "break"
+
+    def focus_field(self, key, select_all=False):
+        """검수 기록의 글자 칸(예: '발견된 문제')에 커서를 둔다. 맨 뒤로 가거나, select_all 이면 전체를 선택한다."""
+        entry = self._entries.get(key)
+        if entry is None:
+            return False
+        entry.focus_set()
+        if select_all:
+            entry.select_range(0, "end")
+        else:
+            entry.icursor("end")
+        return True
 
     def _show_mode(self, korean):
         self._mode_btn.config(text="한/영: 한글" if korean else "한/영: 영어")

@@ -73,8 +73,10 @@ class ThumbStrip(tk.Frame):
         self.header.pack(fill="x", pady=(0, 6))
         self.title = tk.Label(self.header, text="이미지 목록", font=theme.font(11, True), bg=C["card"], fg=C["text"])
         self.title.pack(side="left")
+        self.summary = tk.Label(self.header, text="", fg=C["accent"], font=theme.font(9, True), bg=C["card"])
+        self.summary.pack(side="left", padx=(12, 0))                      # 작업 진행 요약 (예: 작업 3/11 · 검수 완료 1 …)
         self.hint = tk.Label(self.header, text="", fg=C["muted"], font=theme.font(9), bg=C["card"])
-        self.hint.pack(side="left", padx=10)
+        self.hint.pack(side="left", padx=12)
 
         # 아랫줄: ‹ [미리보기 ...] ›
         self.row = tk.Frame(self, bg=C["card"])

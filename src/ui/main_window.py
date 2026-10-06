@@ -38,7 +38,8 @@ from src.bbox.bbox_manager import MIN_DRAG_PX, box_problems, find_box_at, make_b
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
 from src.data_paths import find_raw_image, is_inside, locate_in_raw, work_label_path
-from src.manifest.manifest_writer import ManifestError, read_human, read_status_map, record_save, status_of
+from src.manifest.manifest_writer import (STATUS_DONE, STATUS_EDITED, STATUS_REVIEW, ManifestError, read_human,
+                                          read_status_map, record_save, status_of)
 from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
 from src.ui import theme
@@ -87,6 +88,7 @@ class Day1Labeler:
         self._cursor = "crosshair"  # 지금 캔버스 마우스 모양 (바뀔 때만 다시 지정)
         self._listed_files = None  # 하단 사진 목록에 올려 둔 사진들 (폴더가 바뀔 때만 다시 올린다)
         self._status_cache = (object(), {})   # (검수표 수정 시각, {사진: 상태}) — 사진 목록 글자용
+        self._summary_key, self._summary_text = None, ""   # 작업 진행 요약 (검수표·목록이 바뀔 때만 다시 센다)
         self.raw_boxes = []        # 이 사진의 원본(RAW) BBox — Diff 보기에서 지금 BBox 와 비교한다
         self.bright_idx = 0        # 화면 보정(밝기·대비·흑백) — 화면에 보이는 모습만 바꾼다. 원본 사진과 저장 파일은 그대로
         self.contrast_idx = 0
@@ -213,7 +215,7 @@ class Day1Labeler:
         self.class_list.pack(fill="x")
 
         # 검수 기록 입력칸 — 패널 맨 아래에 둔다 (라벨 목록보다 먼저 pack 해야 창이 작아져도 안 가려진다)
-        self.form = FormPanel(side, on_change=self.on_form_changed, on_mode=self.on_ime_mode)
+        self.form = FormPanel(side, on_change=self.on_form_changed, on_mode=self.on_ime_mode, on_submit=self.on_form_submit)
         self.form.ime.bind_global(self.root)             # 한/영 키는 이미지 화면에 커서가 있어도 바뀐다
         self.form.pack(side="bottom", fill="x", pady=(8, 0))
 
@@ -239,8 +241,12 @@ class Day1Labeler:
         row.pack(side="top", fill="x", pady=(0, 8))
         titles = ttk.Frame(row)
         titles.pack(side="left", fill="x", expand=True)
-        self.info = ttk.Label(titles, text="사진을 열어 주세요", style="Title.TLabel")
-        self.info.pack(anchor="w")
+        name_row = ttk.Frame(titles)
+        name_row.pack(anchor="w")
+        self.info = ttk.Label(name_row, text="사진을 열어 주세요", style="Title.TLabel")
+        self.info.pack(side="left")
+        self.dirty_label = ttk.Label(name_row, text="", style="Dirty.TLabel")      # 저장하지 않은 변경이 있으면 눈에 띄게
+        self.dirty_label.pack(side="left", padx=(12, 0))
         self.info_meta = ttk.Label(titles, text="", style="Muted.TLabel")
         self.info_meta.pack(anchor="w")
         self.warn_label = ttk.Label(titles, text="", style="Warn.TLabel")      # 읽지 못한 줄 · 이상한 BBox 경고 (사라지지 않고 계속 보인다)
@@ -337,6 +343,14 @@ class Day1Labeler:
             r.bind(key, lambda e: None if self.is_typing(e) else self.go_prev())
         for key in ("<Right>", "<Next>", "d", "D"):
             r.bind(key, lambda e: None if self.is_typing(e) else self.go_next())
+
+        # 한 키 검수: Enter = 이상 없음(검수 완료) 후 다음 · R = 수정 필요로 표시 · N = 아직 안 한 사진으로
+        r.bind("<Return>", lambda e: None if self.is_typing(e) else self.mark_ok_and_next())
+        r.bind("<KP_Enter>", lambda e: None if self.is_typing(e) else self.mark_ok_and_next())
+        for key in ("r", "R"):
+            r.bind(key, lambda e: None if self.is_typing(e) else self.mark_review())
+        for key in ("n", "N"):
+            r.bind(key, lambda e: None if self.is_typing(e) else self.go_next_unworked())
 
         # Ctrl+G = 사진 번호 입력칸으로 커서 이동 (번호로 바로 이동)
         for key in ("<Control-g>", "<Control-G>"):
@@ -595,6 +609,29 @@ class Day1Labeler:
             self._listed_files = list(nav.files)
             self.strip.set_files(nav.files, total_all=len(nav.all_files))
         self.strip.set_current(nav.index)
+        self.update_summary()
+
+    def update_summary(self):
+        """사진 목록 제목줄에 작업 진행 요약 (예: 작업 3/11 (27%) · 검수 완료 1 · 수정 완료 1 · 수정 필요 1)."""
+        files = self.navigator.all_files
+        if not files:
+            self.strip.summary.config(text="")
+            return
+        status_map = self.status_map()
+        key = (self._status_cache[0], len(files), files[0], files[-1])
+        if self._summary_key != key:                              # 검수표나 목록이 바뀐 때만 다시 센다
+            counts = {}
+            for p in files:
+                st = status_of(p, status_map)
+                if st:
+                    counts[st] = counts.get(st, 0) + 1
+            worked = sum(counts.values())
+            parts = [f"작업 {worked}/{len(files)} ({round(worked * 100 / len(files))}%)"]
+            for name in ("검수 완료", "수정 완료", "수정 필요", "제외", "검수 전"):
+                if counts.get(name):
+                    parts.append(f"{name} {counts[name]}")
+            self._summary_key, self._summary_text = key, "  ·  ".join(parts)
+        self.strip.summary.config(text=self._summary_text)
 
     def on_thumb_selected(self, index):
         """하단 사진 목록에서 사진을 눌렀을 때. (저장 확인에서 취소하면 그대로 남는다)"""
@@ -748,6 +785,7 @@ class Day1Labeler:
         self.update_warning()
         self.load_form()                     # 프로그램이 정한 상태(예: 수정 완료)를 입력칸에 다시 보여 준다
         self.strip.refresh_marks()           # 사진 목록에 ✓·상태 표시
+        self.update_summary()                # 작업 진행 요약
         self.set_status(f"저장 완료 → {target}   |   {note}")
         return True
 
@@ -790,6 +828,52 @@ class Day1Labeler:
         self.draw_boxes()
         self.refresh_box_list()
         self.update_title()
+
+    # ── 한 키 검수 ─────────────────────────────────────────────────
+    def mark_ok_and_next(self):
+        """Enter — 이 사진은 끝: 저장하고 다음 사진으로 넘어간다.
+        원본과 같으면 상태를 '검수 완료', BBox 를 고쳤으면 '수정 완료'로 기록한다. (고친 사진이라는 정보가 검수표에서 사라지지 않도록)"""
+        if self.pil_image is None or self.drag:
+            return
+        values = self.form.get_values()
+        d = diff_boxes(self.raw_boxes, self.boxes)
+        edited = bool(d["added"] or d["modified"] or d["deleted"])
+        values["상태"] = STATUS_EDITED if edited else STATUS_DONE
+        self.form.set_values(values)
+        self.save_and_next()
+
+    def mark_review(self):
+        """R — 수정 필요: 상태를 '수정 필요'로 바꾸고 '발견된 문제'에 'REVIEW: ' 를 채운 뒤 이유를 쓰도록 커서를 옮긴다.
+        이유를 쓰고 Enter 를 누르면 저장하고 다음 사진으로 간다."""
+        if self.pil_image is None or self.drag:
+            return
+        values = self.form.get_values()
+        values["상태"] = STATUS_REVIEW
+        if not values["발견된 문제"]:
+            values["발견된 문제"] = "REVIEW: "
+        self.form.set_values(values)
+        self.on_form_changed()                                   # 저장 안 한 변경으로 표시
+        self.form.focus_field("발견된 문제")
+        self.set_status("수정 필요로 표시했습니다 — 이유를 쓰고 Enter 를 누르면 저장하고 다음 사진으로 갑니다.")
+
+    def on_form_submit(self):
+        """검수 기록 글자 칸에서 Enter: 저장하고 다음 사진으로. (이미지 화면으로 커서를 돌려 단축키가 바로 동작하게)"""
+        self.canvas.focus_set()
+        self.save_and_next()
+
+    def go_next_unworked(self):
+        """N — 아직 검수표에 기록이 없는 다음 사진으로 건너뛴다. (끝까지 없으면 처음부터 다시 찾는다)"""
+        nav = self.navigator
+        if not nav.files:
+            self.set_status("먼저 폴더나 사진을 열어 주세요.")
+            return
+        status_map = self.status_map()
+        start = nav.index
+        for i in list(range(start + 1, nav.total)) + list(range(0, max(start, 0))):
+            if status_of(nav.files[i], status_map) == "":
+                self.move_to(nav.files[i])
+                return
+        self.set_status("아직 작업하지 않은 사진이 없습니다. 모두 검수표에 기록되어 있어요.")
 
     def save_and_next(self):
         """[저장 후 다음] / W : 저장하고 바로 다음 사진으로 넘어간다. (저장에 실패하면 넘어가지 않는다)"""
@@ -1058,6 +1142,7 @@ class Day1Labeler:
             self._box_guard = False
 
     def update_title(self):
+        self.dirty_label.config(text="● 저장 안 됨 (Ctrl+S)" if self.dirty and self.pil_image is not None else "")
         name = self.image_path.name if self.image_path else ""
         self.root.title(f"교과 7 · 이미지 라벨링 — {name}{' *' if self.dirty else ''}")
 
