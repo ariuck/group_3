@@ -1,10 +1,15 @@
 # ── 회사 제공 데이터(NDA): 실제 이미지·라벨·최종 데이터는 Git 에 올리지 않는다 ──
-data/raw/*
-data/work/*
-data/final/*
-!data/raw/.gitkeep
-!data/work/.gitkeep
-!data/final/.gitkeep
+# data/ 아래는 빈 폴더가 보이도록 하는 .gitkeep 만 남기고 전부 제외한다.
+# (raw·work·final 어디에 두든, data/ 바로 아래에 두든 모두 막힌다)
+data/**
+!data/
+!data/*/
+!data/**/.gitkeep
+
+# ── 실수로 저장소 맨 위에 데이터셋 폴더를 놓은 경우도 막는다 ──
+/이물검출_학습데이터*/
+/images/
+/labels/
 
 # ── 원본 이미지·압축 파일이 실수로 들어가지 않도록 (문서용 샘플 캡처 PNG 는 허용) ──
 *.jpg
