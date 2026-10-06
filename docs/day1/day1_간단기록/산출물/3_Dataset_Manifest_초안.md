@@ -153,7 +153,7 @@ WORKING   작업 중 (상태를 고르지 않고 저장함)
 
 - **열어만 보고 저장하지 않은** 사진은 `PENDING` 으로 남습니다. (저장해야 상태가 바뀜)
 - `original_bbox_count` 는 TXT 의 **읽을 수 있는 줄**만 셉니다. 형식이 깨진 줄은 세지 않습니다. → 깨진 줄은 `issue`/이슈 기록에 따로 적습니다.
-- 현재 1일차 프로그램은 **Manifest 를 만들지 않습니다.** 상태 기록 기능은 개발 예정이며, 최종 형식은 `manifests/dataset_manifest.csv` 입니다.
+- 프로그램은 [저장]할 때 검수표 CSV(`manifests/dataset_manifest.csv`)에 객관적인 칸을 **자동으로 기록**합니다. 사람이 판단하는 칸은 직접 입력합니다. (`docs/manifest_guide.md` 참고)
 
 ---
 

@@ -9,7 +9,7 @@ BBox 와 Class 를 확인·수정하고 최종 학습데이터를 만드는 라�
 최종 목표는 교과 8 Object Detection 학습에 사용할 수 있는 검수 완료 YOLO Dataset 을 만드는 것입니다.
 
 > **개발 단계**: 현재 1일차 — 이미지 1장 End-to-End 까지 구현되어 있습니다.
-> 이전/다음 이동, Zoom/Pan, 검수 상태 기록, Validation 은 개발 예정입니다.
+> 이전/다음 이동, Zoom/Pan, 검수 상태 입력 화면, Validation 은 개발 예정입니다.
 
 ---
 
@@ -23,12 +23,13 @@ BBox 와 Class 를 확인·수정하고 최종 학습데이터를 만드는 라�
 - YOLO TXT 저장(WORK) 및 다시 불러오기(Reload)
 - RAW 원본 보호 (저장 경로가 RAW 안이면 저장 거부)
 - 데이터 조사 (이미지·TXT 개수, 짝, 빈 TXT, Class 분포)
+- **저장할 때 검수표(`manifests/dataset_manifest.csv`)에 자동 기록** (파일명, 출처, split, BBox 수, Class, 상태 등)
 
 개발 예정:
 
 - 이전 / 다음 이미지 이동, 4K 이미지 Zoom / Pan
 - BBox 수정(이동·크기 조절)
-- 검수 상태 관리와 검수표(Manifest) 기록
+- 검수 상태(검수 완료·수정 필요·제외)와 작성자·검수자를 화면에서 입력
 - Validation (좌표·Class·Pair 검사)
 
 ---
@@ -47,6 +48,7 @@ group_3/
 │   ├── data_paths.py             RAW / WORK 경로, RAW 보호
 │   ├── ui/main_window.py         화면·버튼·마우스 이벤트
 │   ├── bbox/bbox_manager.py      BBox 생성·선택
+│   ├── manifest/manifest_writer.py  저장할 때 검수표(CSV) 기록
 │   ├── yolo/                     YOLO TXT 읽기·쓰기·좌표 변환
 │   └── validation/validator.py   데이터 조사
 │
@@ -121,8 +123,8 @@ python main.py
 3. **[📂 이미지 열기]** 로 사진 1장을 엽니다. 같은 이름의 TXT 가 자동으로 불러와집니다.
 4. 기존 BBox 와 Class 를 확인합니다.
 5. 잘못된 BBox 는 삭제하고, 누락된 객체는 드래그로 추가합니다. Class 는 숫자키 0~6 으로 바꿉니다.
-6. 판단이 어려운 경우는 임의로 처리하지 않고 REVIEW 대상으로 따로 기록합니다. (상태 기록 기능은 개발 예정)
-7. **[💾 저장]** 으로 저장합니다. (`data/work/` 에 RAW 와 같은 구조로 저장)
+6. 판단이 어려운 경우는 임의로 처리하지 않고 REVIEW 로 표시합니다. (검수표에 `상태 = 수정 필요`, `발견된 문제 = REVIEW: 이유 코드` 를 직접 적습니다)
+7. **[💾 저장]** 으로 저장합니다. (`data/work/` 에 RAW 와 같은 구조로 저장되고, 검수표 CSV 에도 자동으로 기록됩니다)
 8. **[🔄 다시 불러오기]** 로 같은 위치에 복원되는지 확인합니다.
 
 | 조작 | 방법 |
@@ -245,7 +247,9 @@ manifests/dataset_manifest.xlsx
 docs/manifest_guide.md
 ```
 
-(현재는 빈 틀만 있습니다. 프로그램의 상태 기록 기능은 개발 예정입니다.)
+**프로그램이 [저장]할 때 자동으로 채우는 칸**: No, 이미지·TXT 파일명, 원본/최종 BBox 수, Class, TXT 줄 수 = 화면 BBox 수, 상태(고쳤으면 `수정 완료`), 출처 데이터셋, 원래 split
+
+**사람이 직접 채우는 칸**: 이미지 유형, 위치 맞음, Class 맞음, 누락 객체 여부, 발견된 문제, 작성자, 검수자, 검수일, 비고 (프로그램은 건드리지 않습니다)
 
 ---
 
