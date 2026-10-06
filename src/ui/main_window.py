@@ -180,6 +180,7 @@ class Day1Labeler:
         tool_row = tk.Frame(tools)
         tool_row.pack(fill="x")
         tk.Button(tool_row, text="🧹 전체 삭제", command=self.clear_all, padx=4, pady=0).pack(side="left", padx=(0, 4))
+        tk.Button(tool_row, text="💾→ 저장 후 다음 (W)", command=self.save_and_next, padx=4, pady=0).pack(side="left")
         self.tools = tools
         self.tool_row = tool_row
         self.diff_var = tk.BooleanVar(value=False)
@@ -256,6 +257,8 @@ class Day1Labeler:
         r.bind("<Delete>", lambda e: None if self.is_typing(e) else self.delete_selected())
         r.bind("<Control-s>", lambda e: self.save())
         r.bind("<Escape>", lambda e: None if self.is_typing(e) else self.on_escape())
+        for key in ("w", "W"):                              # W = 저장 후 다음 사진
+            r.bind(key, lambda e: None if self.is_typing(e) else self.save_and_next())
         r.bind("<Control-z>", lambda e: None if self.is_typing(e) else self.undo())
         r.bind("<Control-y>", lambda e: None if self.is_typing(e) else self.redo())
         r.bind("<Control-Z>", lambda e: None if self.is_typing(e) else self.redo())        # Ctrl+Shift+Z
@@ -626,6 +629,17 @@ class Day1Labeler:
         self.draw_boxes()
         self.refresh_box_list()
         self.update_title()
+
+    def save_and_next(self):
+        """[💾→ 저장 후 다음] / W : 저장하고 바로 다음 사진으로 넘어간다. (저장에 실패하면 넘어가지 않는다)"""
+        if self.pil_image is None or self.drag:
+            return
+        if not self.save():
+            return
+        if not self.navigator.has_next():
+            self.set_status(self.status.cget("text") + "   |   마지막 사진입니다.")
+            return
+        self.go_next()
 
     def confirm_discard(self):
         """저장 안 한 변경이 있으면 물어본다. True = 계속 진행해도 됨."""

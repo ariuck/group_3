@@ -86,6 +86,40 @@ class EditUiTest(unittest.TestCase):
         self.app.select_box(None)
         self.assertIn("선택된 BBox 없음", info.cget("text"))
 
+    # ── 저장 후 다음 ──────────────────────────────────────────
+    def add_second_photo(self):
+        """같은 폴더에 사진 한 장을 더 만들고 목록을 새로 읽는다."""
+        folder = self.app.image_path.parent
+        Image.new("RGB", (IMG_W, IMG_H), "blue").save(folder / "b.jpg")
+        self.app.navigator.set_current(self.app.image_path.parent / "b.jpg")
+        self.app.navigator.set_current(folder / "a.jpg")
+        self.app.update_nav()
+
+    def test_save_and_next_saves_then_moves(self):
+        from src.data_paths import work_label_path
+        self.add_second_photo()
+        first = self.app.image_path
+        self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
+        self.app.on_mouse_up(self.at(560, 300))
+        self.app.save_and_next()
+        self.root.update()
+        self.assertTrue(work_label_path(first).is_file())                  # 먼저 저장했고
+        self.assertEqual(self.app.image_path.name, "b.jpg")                # 다음 사진으로 넘어왔다
+        self.assertFalse(self.app.dirty)
+
+    def test_save_and_next_on_the_last_photo_saves_and_stays(self):
+        from src.data_paths import work_label_path
+        self.app.save_and_next()
+        self.assertTrue(work_label_path(self.app.image_path).is_file())
+        self.assertEqual(self.app.image_path.name, "a.jpg")
+        self.assertIn("마지막 사진", self.app.status.cget("text"))
+
+    def test_save_and_next_does_not_move_when_saving_fails(self):
+        self.add_second_photo()
+        self.app.save = lambda: False
+        self.app.save_and_next()
+        self.assertEqual(self.app.image_path.name, "a.jpg")
+
     # ── Diff 보기 ─────────────────────────────────────────────
     def canvas_texts(self):
         c = self.app.canvas
