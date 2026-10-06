@@ -177,6 +177,14 @@ class Day1Labeler:
         self.strip = ThumbStrip(self.root, on_select=self.on_thumb_selected, mark_of=self.thumb_mark)
         self.strip.pack(side="bottom", fill="x", padx=6, pady=(2, 4))
 
+        # 보기 필터: 상태별로 걸러서 본다 (예: '수정 필요' 인 사진만) — 제목줄 오른쪽
+        self.filter_var = tk.StringVar(value=self.FILTER_ALL)
+        self.filter_box = ttk.Combobox(self.strip.header, textvariable=self.filter_var, values=self.FILTER_CHOICES,
+                                       state="readonly", width=16, takefocus=False)
+        self.filter_box.pack(side="right")
+        tk.Label(self.strip.header, text="보기", font=("Malgun Gothic", 9)).pack(side="right", padx=(0, 4))
+        self.filter_box.bind("<<ComboboxSelected>>", lambda e: (self.on_filter_changed(), self.canvas.focus_set()))
+
         # ③ 아래쪽 상태 표시줄 (먼저 pack 해야 창이 작아져도 안 가려진다)
         self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
         self.status.pack(side="bottom", fill="x")
@@ -532,9 +540,11 @@ class Day1Labeler:
     def refresh_file_list(self):
         """하단 사진 목록을 채우고 현재 사진을 표시한다."""
         nav = self.navigator
+        if not nav.filtered and self.filter_var.get() != self.FILTER_ALL:
+            self.filter_var.set(self.FILTER_ALL)                 # 필터가 풀렸으면(새 폴더·숨겨진 사진 열기) 표시도 맞춘다
         if self._listed_files != nav.files:
             self._listed_files = list(nav.files)
-            self.strip.set_files(nav.files)
+            self.strip.set_files(nav.files, total_all=len(nav.all_files))
         self.strip.set_current(nav.index)
 
     def on_thumb_selected(self, index):
@@ -557,6 +567,48 @@ class Day1Labeler:
                 data = {}
             self._status_cache = (stamp, data)
         return self._status_cache[1]
+
+    # ── 보기 필터 ─────────────────────────────────────────────────
+    FILTER_ALL = "전체"
+    FILTER_NONE = "미작업 (기록 없음)"
+    FILTER_CHOICES = [FILTER_ALL, FILTER_NONE, "검수 전", "수정 완료", "검수 완료", "수정 필요", "제외"]
+
+    def make_filter(self, name):
+        """필터 이름 → 사진 경로를 받아 True/False 를 돌려주는 함수 (전체면 None). 검수표는 한 번만 읽는다."""
+        if name == self.FILTER_ALL:
+            return None
+        status_map = self.status_map()
+        if name == self.FILTER_NONE:
+            return lambda p: status_of(p, status_map) == ""
+        return lambda p: status_of(p, status_map) == name
+
+    def on_filter_changed(self):
+        """보기 필터를 바꿨을 때: 해당하는 사진만 목록·이동에 쓴다. 현재 사진이 해당하지 않으면 첫 사진으로 간다."""
+        nav = self.navigator
+        name = self.filter_var.get()
+        if self.pil_image is None or not nav.all_files:
+            self.filter_var.set(self.FILTER_ALL)
+            if name != self.FILTER_ALL:
+                self.set_status("먼저 폴더나 사진을 열어 주세요. 열린 사진이 있어야 걸러 볼 수 있습니다.")
+            return
+        count = nav.set_filter(self.make_filter(name))
+        if count == 0:
+            nav.set_filter(None)
+            self.filter_var.set(self.FILTER_ALL)
+            messagebox.showinfo("보기", f"'{name}' 에 해당하는 사진이 없습니다.")
+            self.refresh_file_list()
+            return
+        if nav.index < 0:                                        # 지금 보던 사진이 걸러졌다 → 첫 사진으로
+            if not self.confirm_discard():
+                nav.set_filter(None)
+                self.filter_var.set(self.FILTER_ALL)
+                self.refresh_file_list()
+                return
+            self.load_image(nav.files[0])
+        else:
+            self.update_nav()
+        self.set_status(f"보기: {name} — {nav.total}장 (전체 {len(nav.all_files)}장)" if nav.filtered
+                        else f"전체 보기 — {nav.total}장")
 
     THUMB_STATUS_COLORS = {"검수 전": "#555555", "수정 완료": "#e65100", "검수 완료": "#2e7d32",
                            "수정 필요": "#c62828", "제외": "#757575"}

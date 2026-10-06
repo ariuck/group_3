@@ -58,6 +58,7 @@ class ThumbStrip(tk.Frame):
         self.current = -1
         self.start = 0
         self._cache = OrderedDict()                  # 경로 → PhotoImage
+        self._total_all = None
         self._marks = {}                             # 경로 → (글자, 색) — refresh_marks 때만 다시 계산한다
         self._queue = []
         self._job = None
@@ -93,9 +94,11 @@ class ThumbStrip(tk.Frame):
         self.bind("<Configure>", self._on_configure)
 
     # ── 바깥에서 쓰는 함수 ────────────────────────────────────────────────
-    def set_files(self, files):
-        """목록을 바꾼다 (폴더를 열었을 때). 이미 읽어 둔 미리보기는 그대로 쓴다."""
+    def set_files(self, files, total_all=None):
+        """목록을 바꾼다 (폴더를 열었을 때·보기 필터를 바꿨을 때). 이미 읽어 둔 미리보기는 그대로 쓴다.
+        total_all 은 필터를 걸기 전 전체 개수 (제목에 '12 / 전체 900개' 로 보여 준다)."""
         self.files = list(files)
+        self._total_all = total_all
         self.current = -1
         self.start = 0
         self._marks.clear()
@@ -130,7 +133,11 @@ class ThumbStrip(tk.Frame):
 
     # ── 안쪽 ────────────────────────────────────────────────────────────
     def _update_title(self):
-        self.title.config(text=f"이미지 목록 ({len(self.files)}개)")
+        n = len(self.files)
+        if self._total_all is not None and self._total_all != n:
+            self.title.config(text=f"이미지 목록 ({n}개 / 전체 {self._total_all}개)")
+        else:
+            self.title.config(text=f"이미지 목록 ({n}개)")
 
     def _is_visible(self, index):
         return 0 <= index and self.start <= index < self.start + self._visible
