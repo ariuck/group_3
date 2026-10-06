@@ -45,3 +45,21 @@ def work_label_path(image_path):
     if dataset is None:
         return settings.WORK_DIR / "_RAW밖" / f"{stem}.txt"
     return settings.WORK_DIR.joinpath(dataset, "labels", *([split] if split else []), f"{stem}.txt")
+
+
+def find_raw_image(rel_path):
+    """검증 결과의 상대 경로('데이터셋/split/파일이름' — 확장자 없음)로 RAW 안의 이미지를 정확히 찾는다. 없으면 None.
+
+    예) 'DS2/validation/a'  →  data/raw/DS2/images/validation/a.jpg  (대문자 .JPG 도 찾는다)
+    파일 이름만으로 찾으면 다른 데이터셋·split 에 같은 이름이 있을 때 엉뚱한 사진이 열릴 수 있어서 경로 전체를 쓴다.
+    """
+    parts = [p for p in str(rel_path).replace("\\", "/").split("/") if p]
+    if len(parts) < 2:
+        return None
+    folder = Path(settings.RAW_DIR).joinpath(parts[0], "images", *parts[1:-1])
+    if not folder.is_dir():
+        return None
+    for p in sorted(folder.iterdir()):
+        if p.is_file() and p.stem == parts[-1] and p.suffix.lower() in settings.IMAGE_EXTS:
+            return p
+    return None

@@ -37,7 +37,7 @@ from src.bbox.bbox_edit import HANDLE_CURSORS, handle_points, hit_handle, move_b
 from src.bbox.bbox_manager import MIN_DRAG_PX, box_problems, find_box_at, make_box
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
-from src.data_paths import is_inside, locate_in_raw, work_label_path
+from src.data_paths import find_raw_image, is_inside, locate_in_raw, work_label_path
 from src.manifest.manifest_writer import ManifestError, read_human, read_status_map, record_save, status_of
 from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
@@ -386,10 +386,9 @@ class Day1Labeler:
         self.set_status(f"검증 완료: 총 {len(report)}건의 결과 (보고서: reports/validation_report.csv)")
 
         def jump_to_file(rel_path):
-            stem = Path(rel_path).stem
-            matches = list(settings.RAW_DIR.rglob(f"{stem}.jpg"))
-            if matches:
-                self.move_to(matches[0])
+            found = find_raw_image(rel_path)
+            if found is not None:
+                self.move_to(found)
             else:
                 messagebox.showinfo("안내", f"해당 이미지 파일을 찾을 수 없습니다: {rel_path}")
 
