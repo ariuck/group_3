@@ -77,6 +77,17 @@ class NavigatorTest(unittest.TestCase):
         self.assertEqual(nav.next_path().name, "img2.jpg")
 
 
+class JumpToIndexTest(unittest.TestCase):
+    def test_jump_to_index(self):
+        folder = make_folder(["img1.jpg", "img2.jpg", "img3.jpg"])
+        nav = ImageNavigator()
+        nav.load_folder(folder)
+        self.assertEqual(nav.jump_to_index(0).name, "img1.jpg")
+        self.assertEqual(nav.jump_to_index(2).name, "img3.jpg")
+        self.assertIsNone(nav.jump_to_index(-1))
+        self.assertIsNone(nav.jump_to_index(3))
+
+
 class LoadFolderTest(unittest.TestCase):
     def test_folder_with_photos_directly(self):
         folder = make_folder(["b.jpg", "a.jpg", "note.txt"])

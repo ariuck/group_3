@@ -130,11 +130,21 @@ class Day1Labeler:
         row = tk.Frame(self.root)
         row.pack(side="top", fill="x")
         self.btn_next = tk.Button(row, text="다음 ▶", command=self.go_next, padx=8, pady=1, state="disabled")
-        self.btn_next.pack(side="right", padx=(3, 8))
-        self.progress = tk.Label(row, text="0 / 0", font=("Malgun Gothic", 11, "bold"), width=10)
-        self.progress.pack(side="right")
+        self.btn_next.pack(side="right", padx=(2, 8))
+        self.btn_jump = tk.Button(row, text="이동", command=self.jump_to_entered_index, padx=6, pady=1)
+        self.btn_jump.pack(side="right", padx=(0, 4))
+        self.total_label = tk.Label(row, text="/ 0", font=("Malgun Gothic", 10))
+        self.total_label.pack(side="right", padx=(0, 2))
+        self.entry_index = tk.Entry(row, width=5, justify="center", font=("Malgun Gothic", 10))   # 사진 번호를 직접 입력
+        self.entry_index.pack(side="right", padx=(2, 2))
+        self.entry_index.insert(0, "0")
+        self.entry_index.bind("<Return>", lambda e: self.jump_to_entered_index())
+        self.entry_index.bind("<KP_Enter>", lambda e: self.jump_to_entered_index())
+        self.entry_index.bind("<FocusIn>", lambda e: self.entry_index.select_range(0, "end"))
+        self.entry_index.bind("<Escape>", lambda e: (self.show_nav_number(self.navigator.index + 1 if self.navigator.index >= 0 else 0),
+                                                     self.canvas.focus_set()))
         self.btn_prev = tk.Button(row, text="◀ 이전", command=self.go_prev, padx=8, pady=1, state="disabled")
-        self.btn_prev.pack(side="right", padx=3)
+        self.btn_prev.pack(side="right", padx=(6, 2))
         self.info = tk.Label(row, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
         self.info.pack(side="left", fill="x", expand=True)
 
@@ -239,6 +249,10 @@ class Day1Labeler:
             r.bind(key, lambda e: None if self.is_typing(e) else self.go_prev())
         for key in ("<Right>", "<Next>", "d", "D"):
             r.bind(key, lambda e: None if self.is_typing(e) else self.go_next())
+
+        # Ctrl+G = 사진 번호 입력칸으로 커서 이동 (번호로 바로 이동)
+        for key in ("<Control-g>", "<Control-G>"):
+            r.bind(key, lambda e: self.focus_jump_entry())
 
     @staticmethod
     def is_typing(event):
@@ -404,7 +418,7 @@ class Day1Labeler:
         if self._nav_pending is None and not self.confirm_discard():   # 저장 안 한 변경이 있으면 처음 한 번만 물어봄
             return
         self._nav_pending = target
-        self.progress.config(text=f"{target + 1} / {nav.total}")        # 가벼운 표시만 먼저 갱신
+        self.show_nav_number(target + 1)                                # 가벼운 표시만 먼저 갱신
         self.btn_prev.config(state="normal" if target > 0 else "disabled")
         self.btn_next.config(state="normal" if target < nav.total - 1 else "disabled")
         self.file_list.selection_clear(0, "end")
@@ -427,10 +441,45 @@ class Day1Labeler:
             return
         self.load_image(path)
 
+    def show_nav_number(self, number):
+        """번호 입력칸과 '/ 총 개수' 를 맞춘다. (number = 1부터, 사진이 없으면 0)"""
+        self.entry_index.delete(0, "end")
+        self.entry_index.insert(0, str(number))
+        self.total_label.config(text=f"/ {self.navigator.total}")
+
+    def nav_text(self):
+        """화면에 보이는 위치 글자 (예: '21 / 300')."""
+        return f"{self.entry_index.get()} {self.total_label.cget('text')}"
+
+    def focus_jump_entry(self):
+        """Ctrl+G : 사진 번호 입력칸에 커서를 두고 전체를 선택한다."""
+        self.entry_index.focus_set()
+        self.entry_index.select_range(0, "end")
+
+    def jump_to_entered_index(self):
+        """입력한 사진 번호(1부터)로 바로 이동한다.  예: 300 → 300번째 사진."""
+        nav = self.navigator
+        current = nav.index + 1 if nav.index >= 0 else 0
+        if nav.total == 0:
+            messagebox.showinfo("이동", "열려 있는 사진 목록이 없습니다. 먼저 [📁 폴더 열기] 또는 [📂 이미지 열기]로 사진을 불러오세요.")
+            return
+        text = self.entry_index.get().strip()
+        if not text:
+            self.show_nav_number(current)
+            return
+        if not text.isdigit() or not 1 <= int(text) <= nav.total:
+            messagebox.showwarning("사진 번호", f"1부터 {nav.total} 사이의 숫자를 입력해 주세요.\n(입력값: '{text}')")
+            self.show_nav_number(current)
+            return
+        if int(text) != current:
+            self.move_to(nav.jump_to_index(int(text) - 1))
+        self.show_nav_number(nav.index + 1)                 # 저장 확인에서 취소했으면 원래 번호로 되돌린다
+        self.canvas.focus_set()                             # 이동 후 방향키·단축키가 바로 동작하도록
+
     def update_nav(self):
         """진행률 글자와 [이전]/[다음] 버튼 활성 상태를 맞춘다."""
         nav = self.navigator
-        self.progress.config(text=nav.progress_text())
+        self.show_nav_number(nav.index + 1 if nav.index >= 0 else 0)
         self.btn_prev.config(state="normal" if nav.has_prev() else "disabled")
         self.btn_next.config(state="normal" if nav.has_next() else "disabled")
         self.refresh_file_list()

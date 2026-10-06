@@ -51,16 +51,19 @@ class StepHoldTest(unittest.TestCase):
         self.app.load_image = lambda p: (loads.append(Path(p).name), real(p))[1]
 
     def tearDown(self):
+        for job in (self.app._resize_job, self.app._render_job, self.app._nav_job):   # 남은 예약 작업을 취소해야 종료 때 오류 메시지가 안 난다
+            if job is not None:
+                self.root.after_cancel(job)
         self.root.destroy()
 
     def test_burst_of_keys_reads_only_the_destination(self):
         for _ in range(20):                          # 처리보다 빨리 20번 연속 입력 (키를 누르고 있는 상황)
             self.app.go_next()
-        self.assertEqual(self.app.progress.cget("text"), "21 / 60")   # 번호는 바로 바뀐다
+        self.assertEqual(self.app.nav_text(), "21 / 60")   # 번호는 바로 바뀐다
         drain(self.root, self.app)
         self.assertEqual(self.loads, ["img020.jpg"])                  # 사진은 도착지 한 장만 읽는다
         self.assertEqual(self.app.image_path.name, "img020.jpg")
-        self.assertEqual(self.app.progress.cget("text"), "21 / 60")
+        self.assertEqual(self.app.nav_text(), "21 / 60")
 
     def test_backlog_does_not_keep_moving_after_release(self):
         gap = 20                                      # 사진 읽기(수십 ms)보다 빠른 입력
@@ -77,11 +80,11 @@ class StepHoldTest(unittest.TestCase):
         for _ in range(100):
             self.app.go_next()
         drain(self.root, self.app)
-        self.assertEqual(self.app.progress.cget("text"), "60 / 60")
+        self.assertEqual(self.app.nav_text(), "60 / 60")
         for _ in range(100):
             self.app.go_prev()
         drain(self.root, self.app)
-        self.assertEqual(self.app.progress.cget("text"), "1 / 60")
+        self.assertEqual(self.app.nav_text(), "1 / 60")
 
     def test_unsaved_change_asks_only_once_for_a_burst(self):
         self.app.dirty = True                         # 확인창에서 '저장 안 하고 이동'(False) 을 고른 경우
@@ -89,7 +92,7 @@ class StepHoldTest(unittest.TestCase):
             self.app.go_next()
         drain(self.root, self.app)
         self.assertEqual(len(self.asked), 1)          # 연속 입력 동안 확인창은 한 번만
-        self.assertEqual(self.app.progress.cget("text"), "6 / 60")
+        self.assertEqual(self.app.nav_text(), "6 / 60")
 
     def test_cancel_in_the_confirm_dialog_stays(self):
         from src.ui import main_window as mw
@@ -98,7 +101,60 @@ class StepHoldTest(unittest.TestCase):
         for _ in range(3):
             self.app.go_next()
         drain(self.root, self.app)
-        self.assertEqual(self.app.progress.cget("text"), "1 / 60")    # 이동하지 않는다
+        self.assertEqual(self.app.nav_text(), "1 / 60")    # 이동하지 않는다
+
+
+class JumpToNumberTest(unittest.TestCase):
+    """사진 번호를 직접 입력해 이동 (혜성 제안)."""
+
+    def setUp(self):
+        try:
+            self.root, self.app, self.asked = make_app(60)
+        except Exception as e:
+            self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
+        from src.ui import main_window as mw
+        self.warned = []
+        mw.messagebox.showwarning = lambda *a, **k: self.warned.append(a[0])
+
+    def tearDown(self):
+        for job in (self.app._resize_job, self.app._render_job, self.app._nav_job):   # 남은 예약 작업을 취소해야 종료 때 오류 메시지가 안 난다
+            if job is not None:
+                self.root.after_cancel(job)
+        self.root.destroy()
+
+    def jump(self, text):
+        self.app.entry_index.delete(0, "end")
+        self.app.entry_index.insert(0, text)
+        self.app.jump_to_entered_index()
+        self.root.update()
+
+    def test_jump_to_number(self):
+        self.assertEqual(self.app.nav_text(), "1 / 60")
+        self.jump("37")
+        self.assertEqual(self.app.image_path.name, "img036.jpg")
+        self.assertEqual(self.app.nav_text(), "37 / 60")
+        self.assertEqual(self.app.file_list.curselection(), (36,))      # 왼쪽 목록도 따라간다
+
+    def test_out_of_range_and_garbage_are_rejected(self):
+        for text in ("0", "61", "abc", "-3", "1.5"):
+            self.jump(text)
+            self.assertEqual(self.app.image_path.name, "img000.jpg", text)
+            self.assertEqual(self.app.nav_text(), "1 / 60", text)        # 입력칸은 현재 번호로 되돌아간다
+        self.assertEqual(len(self.warned), 5)
+
+    def test_cancel_in_the_confirm_dialog_keeps_the_number(self):
+        from src.ui import main_window as mw
+        mw.messagebox.askyesnocancel = lambda *a, **k: None             # 취소
+        self.app.dirty = True
+        self.jump("10")
+        self.assertEqual(self.app.nav_text(), "1 / 60")
+        self.assertEqual(self.app.image_path.name, "img000.jpg")
+
+    def test_arrow_keys_continue_from_the_jumped_photo(self):
+        self.jump("30")
+        self.app.go_next()
+        drain(self.root, self.app)
+        self.assertEqual(self.app.nav_text(), "31 / 60")
 
 
 if __name__ == "__main__":

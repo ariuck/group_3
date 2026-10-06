@@ -62,6 +62,12 @@ class ImageNavigator:
     def next_path(self):
         return self.files[self.index + 1] if self.has_next() else None
 
+    def jump_to_index(self, index):
+        """0부터 세는 번호의 사진 경로 (범위 밖이면 None)."""
+        if 0 <= index < self.total:
+            return self.files[index]
+        return None
+
     def progress_text(self):
         if self.index < 0:
             return "0 / 0"
