@@ -2,6 +2,7 @@
 
 화면(Tk)이 필요하다.  실행 (프로젝트 폴더에서):  python -m unittest tests/test_step_hold.py
 """
+import shutil
 import tempfile
 import time
 import unittest
@@ -31,7 +32,7 @@ def make_app(count):
     root.update()
     app.on_drop([str(ds)])
     root.update()
-    return root, app, asked
+    return root, app, asked, tmp
 
 
 def drain(root, app):
@@ -43,7 +44,8 @@ def drain(root, app):
 class StepHoldTest(unittest.TestCase):
     def setUp(self):
         try:
-            self.root, self.app, self.asked = make_app(60)
+            self.root, self.app, self.asked, tmp = make_app(60)
+            self.addCleanup(shutil.rmtree, tmp, True)         # 시험이 만든 큰 가짜 사진을 시험이 끝나면 지운다
         except Exception as e:                       # 화면이 없는 환경이면 건너뛴다
             self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
         loads = self.loads = []
@@ -109,7 +111,8 @@ class JumpToNumberTest(unittest.TestCase):
 
     def setUp(self):
         try:
-            self.root, self.app, self.asked = make_app(60)
+            self.root, self.app, self.asked, tmp = make_app(60)
+            self.addCleanup(shutil.rmtree, tmp, True)         # 시험이 만든 큰 가짜 사진을 시험이 끝나면 지운다
         except Exception as e:
             self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
         from src.ui import main_window as mw

@@ -2,6 +2,7 @@
 
 실행 (프로젝트 폴더에서):  python -m unittest tests/test_folder_drop.py
 """
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -23,6 +24,7 @@ class ToLocalPathTest(unittest.TestCase):
 class PickTargetTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
         (self.tmp / "folder").mkdir()
         (self.tmp / "a.jpg").write_bytes(b"x")
         (self.tmp / "b.txt").write_text("x")

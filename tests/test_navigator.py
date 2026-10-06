@@ -2,6 +2,8 @@
 
 실행 (프로젝트 폴더에서):  python -m unittest tests/test_navigator.py
 """
+import atexit
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,7 +12,9 @@ from src.ui.navigator import ImageNavigator
 
 
 def make_folder(names):
-    folder = Path(tempfile.mkdtemp()) / "images" / "train"
+    base = Path(tempfile.mkdtemp())
+    atexit.register(shutil.rmtree, base, True)             # 시험이 끝나면 임시 폴더를 지운다
+    folder = base / "images" / "train"
     folder.mkdir(parents=True)
     for n in names:
         (folder / n).write_bytes(b"x")          # 내용은 필요 없다 (목록만 본다)
@@ -97,7 +101,9 @@ class LoadFolderTest(unittest.TestCase):
         self.assertEqual(nav.progress_text(), "1 / 2")
 
     def test_dataset_folder_finds_photos_in_subfolders(self):
-        root = Path(tempfile.mkdtemp()) / "DS1"
+        base = Path(tempfile.mkdtemp())
+        atexit.register(shutil.rmtree, base, True)
+        root = base / "DS1"
         for split, names in (("train", ["a.jpg", "b.jpg"]), ("val", ["c.jpg"])):
             (root / "images" / split).mkdir(parents=True)
             for n in names:
@@ -108,7 +114,9 @@ class LoadFolderTest(unittest.TestCase):
         self.assertEqual([p.name for p in nav.files], ["a.jpg", "b.jpg", "c.jpg"])   # train 다음 val
 
     def test_split_folders_are_grouped_not_mixed_by_name(self):
-        root = Path(tempfile.mkdtemp()) / "DS1"
+        base = Path(tempfile.mkdtemp())
+        atexit.register(shutil.rmtree, base, True)
+        root = base / "DS1"
         for split, names in (("train", ["b.jpg", "d.jpg"]), ("val", ["a.jpg", "c.jpg"])):
             (root / "images" / split).mkdir(parents=True)
             for n in names:
@@ -124,7 +132,9 @@ class LoadFolderTest(unittest.TestCase):
         self.assertEqual(nav.total, 2)                       # 사진이 없는 폴더는 지금 목록을 바꾸지 않는다
 
     def test_list_is_kept_when_photo_inside_is_opened(self):
-        root = Path(tempfile.mkdtemp()) / "DS1"
+        base = Path(tempfile.mkdtemp())
+        atexit.register(shutil.rmtree, base, True)
+        root = base / "DS1"
         for split in ("train", "val"):
             (root / "images" / split).mkdir(parents=True)
             (root / "images" / split / f"{split}1.jpg").write_bytes(b"x")
