@@ -1,0 +1,39 @@
+# Class 0~6 설정 — 프로그램이 실제로 읽어서 Class 목록을 만든다. (회사 제공 번호를 그대로 사용, 재번호 금지)
+#   name    : Class 이름
+#   enabled : false 이면 새 BBox 를 만들 수 없고, 기존 TXT 에서 발견되면 REVIEW 대상
+#   color   : 화면 BBox 색 (선택 항목)
+classes:
+  0:
+    name: "나뭇잎·종이류"
+    enabled: true
+    color: "#43a047"
+
+  1:
+    name: "플라스틱류·돌·금속류"
+    enabled: true
+    color: "#e53935"
+
+  2:
+    name: "나뭇가지류"
+    enabled: true
+    color: "#1e88e5"
+
+  3:
+    name: "벌레류"
+    enabled: true
+    color: "#8e24aa"
+
+  4:
+    name: "고무장갑"
+    enabled: false
+    color: "#757575"
+
+  5:
+    name: "병해·갈변"
+    enabled: true
+    color: "#fb8c00"
+
+  6:
+    name: "파·고추"
+    enabled: true
+    color: "#00897b"
