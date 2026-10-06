@@ -77,6 +77,7 @@ class Day1Labeler:
         self.selected = None       # 선택된 BBox 번호 (없으면 None)
         self.current_class = 0     # 새 BBox 를 만들 때 쓸 Class
         self.dirty = False         # 저장 안 한 변경이 있는가?
+        self._status_hold_until = 0.0   # 이 시각까지는 결과 메시지를 좌표 안내로 덮지 않는다
         self._nudge_idx, self._nudge_t = None, 0.0   # 키보드 미세 이동: 직전에 움직인 BBox 와 시각 (연속 이동을 Undo 한 번으로 묶는다)
         self.unreadable = 0        # 원본 라벨에서 형식이 맞지 않아 읽지 못한 줄 수 (저장하면 WORK 파일에서 빠진다)
         self._unreadable_ok = None  # 그래도 저장하겠다고 확인한 사진 (같은 사진은 다시 묻지 않는다)
@@ -1198,8 +1199,17 @@ class Day1Labeler:
         name = self.image_path.name if self.image_path else ""
         self.root.title(f"교과 7 · 이미지 라벨링 — {name}{' *' if self.dirty else ''}")
 
+    STATUS_HOLD_SECONDS = 5.0      # 저장 결과·경고 같은 메시지를 마우스 좌표 안내가 덮지 못하게 지켜 주는 시간
+
     def set_status(self, text):
+        """상태줄에 결과·안내 메시지를 보인다. 몇 초 동안은 마우스 움직임으로 생기는 좌표 안내가 덮어쓰지 못한다."""
         self.status.config(text=text)
+        self._status_hold_until = time.monotonic() + self.STATUS_HOLD_SECONDS
+
+    def hover_status(self, text):
+        """마우스를 움직일 때 나오는 좌표·조작 안내. 최근에 결과 메시지가 있었다면 그 메시지가 사라지지 않도록 건너뛴다."""
+        if time.monotonic() >= self._status_hold_until:
+            self.status.config(text=text)
 
     # ====================================================================
     # 좌표 변환 (원본 픽셀 ↔ 화면)   ★ 이 두 줄을 이해하면 라벨링 프로그램의 절반을 이해한 것
@@ -1456,7 +1466,7 @@ class Day1Labeler:
         x, y = self.to_image(event.x, event.y)
         self.update_hover_cursor(x, y)
         if 0 <= x < self.img_w and 0 <= y < self.img_h:
-            self.set_status(f"원본 좌표 ({x:.0f}, {y:.0f})   |   배율 {self.vp.zoom_percent}%   |   "
+            self.hover_status(f"원본 좌표 ({x:.0f}, {y:.0f})   |   배율 {self.vp.zoom_percent}%   |   "
                             "빈 곳 드래그 = 새 BBox · 안쪽 드래그 = 이동 · 핸들 드래그 = 크기 · Shift+드래그 = 겹쳐서 새 BBox · Esc = 취소")
 
     def on_canvas_resize(self, event):

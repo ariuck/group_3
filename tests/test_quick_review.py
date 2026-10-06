@@ -165,6 +165,41 @@ class QuickReviewTest(unittest.TestCase):
         self.assertEqual(self.app.image_path.name, "a0.jpg")
         self.assertIn("작업하지 않은 사진이 없습니다", self.app.status.cget("text"))
 
+    # ── 상태줄: 결과 메시지가 마우스 좌표 안내에 덮이지 않는다 ───────
+    def hover(self):
+        e = Ev(self.app.canvas.winfo_width() // 2, self.app.canvas.winfo_height() // 2)
+        self.app.on_mouse_move(e)
+
+    def test_save_result_survives_moving_the_mouse(self):
+        """(수정한 문제) 저장 결과 메시지가 마우스를 움직이자마자 좌표 안내로 사라지던 문제"""
+        self.go_to("a3.jpg")
+        self.app.save()
+        message = self.app.status.cget("text")
+        self.assertIn("저장 완료", message)
+        self.hover()
+        self.assertEqual(self.app.status.cget("text"), message)
+
+    def test_hover_help_appears_again_after_the_hold_time(self):
+        self.go_to("a3.jpg")
+        self.app.save()
+        self.app._status_hold_until -= 10                       # 시간이 충분히 지났다고 본다
+        self.hover()
+        self.assertIn("원본 좌표", self.app.status.cget("text"))
+
+    def test_hover_help_keeps_updating_while_nothing_else_was_said(self):
+        self.go_to("a3.jpg")
+        self.app._status_hold_until = 0.0
+        self.hover()
+        first = self.app.status.cget("text")
+        self.assertIn("원본 좌표", first)
+        self.app.on_mouse_move(Ev(self.app.canvas.winfo_width() // 2 + 7, self.app.canvas.winfo_height() // 2 + 3))
+        self.assertNotEqual(self.app.status.cget("text"), first)  # 좌표가 따라 바뀐다
+
+    def test_a_new_message_always_replaces_the_old_one(self):
+        self.app.set_status("첫 번째")
+        self.app.set_status("두 번째")
+        self.assertEqual(self.app.status.cget("text"), "두 번째")
+
     # ── 저장 안 됨 표시 · 작업 진행 요약 ─────────────────────────
     def test_unsaved_badge_follows_the_changes(self):
         self.go_to("a3.jpg")
