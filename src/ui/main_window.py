@@ -41,6 +41,7 @@ from src.data_paths import is_inside, locate_in_raw, work_label_path
 from src.manifest.manifest_writer import ManifestError, read_human, read_status_map, record_save, status_of
 from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
+from src.ui.session import load_session, save_session
 from src.ui.thumb_strip import ThumbStrip
 from src.ui.validation_dialog import show_validation_dialog
 from src.validation.validator import inventory_markdown, scan_inventory, validate_dataset, write_report
@@ -97,6 +98,7 @@ class Day1Labeler:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.show_image()
         self.set_status(self.start_message())
+        self.root.after(150, self.restore_session)             # 창이 뜬 직후, 마지막으로 보던 폴더·사진을 다시 연다
 
     # 예전 코드·설명과의 호환용: self.scale / offset_x / offset_y 는 Viewport 값을 그대로 보여 준다.
     @property
@@ -401,6 +403,22 @@ class Day1Labeler:
         if path:
             self.load_image(path)
 
+    def restore_session(self):
+        """프로그램을 켠 직후, 마지막으로 보던 폴더와 사진을 그대로 연다. 이미 뭔가 열었거나 기록이 없으면 아무것도 안 한다."""
+        if self.pil_image is not None:
+            return False
+        saved = load_session()
+        if saved is None:
+            return False
+        folder, image = saved
+        first = self.navigator.load_folder(folder)
+        if first is None or image not in self.navigator.files:
+            return False
+        if not self.load_image(image):
+            return False
+        self.set_status(f"마지막 작업 위치에서 이어서 시작합니다: {image.name}  ({self.navigator.progress_text()})")
+        return True
+
     def open_folder(self):
         """[📁 폴더 열기] 폴더를 고르면 그 안의 사진 전체를 목록으로 열고 첫 사진을 보여 준다."""
         folder = filedialog.askdirectory(
@@ -453,6 +471,7 @@ class Day1Labeler:
         self.load_boxes()
         self.show_image()                                    # 새 이미지는 항상 '화면 맞춤'으로 시작
         self.update_nav()
+        save_session(self.navigator.folder, self.image_path)  # 다음에 켜면 여기서 이어서 (작은 파일 하나)
         return True
 
     # ---- 이전 / 다음 ----
