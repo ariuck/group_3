@@ -46,9 +46,20 @@ root.after(300, root.quit)   # 창이 뜨고 입력칸이 포커스를 받을 �
 root.mainloop()
 
 
+def focus(widget):
+    """widget 이 실제로 키보드 포커스를 받을 때까지 기다린다.
+    (가짜 키 입력은 포커스를 가진 창으로 전달되므로, 포커스가 잡히기 전에 보내면 글자가 사라져 시험이 가끔 실패한다)"""
+    widget.focus_force()
+    for _ in range(200):
+        root.update()
+        if root.focus_get() is widget:
+            return True
+        time.sleep(0.01)
+    return False
+
+
 def press(keysym, char="", state=0):
-    entry.focus_force()
-    root.update()
+    focus(entry)
     entry.event_generate("<KeyPress>", keysym=keysym, state=state, when="now")
     root.update()
 
@@ -112,8 +123,7 @@ tap("Hangul")
 
 # ── 한/영 키: 눌렀다 떼면 한 번만 바뀐다 / 떼는 신호만 와도 바뀐다 / 이미지 화면(입력칸이 아닌 곳)에서도 바뀐다 ──
 def release(keysym):
-    entry.focus_force()
-    root.update()
+    focus(entry)
     entry.event_generate("<KeyRelease>", keysym=keysym, when="now")
     root.update()
 
@@ -142,8 +152,7 @@ ok("오른쪽 Alt 도 한/영 키처럼 한 번만 바뀐다", ime.korean != bef
 other = tk.Frame(root, width=50, height=20)          # 입력칸이 아닌 곳 (이미지 화면 대신)
 other.pack()
 ime.bind_global(root)
-other.focus_force()
-root.update()
+ok("입력칸이 아닌 곳(이미지 화면 대신)에 포커스가 잡힘", focus(other))
 before = ime.korean
 time.sleep(0.2)
 other.event_generate("<KeyPress>", keysym="Hangul", when="now"); root.update()
@@ -151,7 +160,7 @@ other.event_generate("<KeyRelease>", keysym="Hangul", when="now"); root.update()
 ok("입력칸이 아닌 곳에서도 한/영 키로 바뀐다", ime.korean != before)
 before = ime.korean
 time.sleep(0.2)
-entry.focus_force(); root.update()
+focus(entry)
 entry.event_generate("<KeyPress>", keysym="Hangul", when="now"); root.update()
 entry.event_generate("<KeyRelease>", keysym="Hangul", when="now"); root.update()
 ok("입력칸에서는 두 번 바뀌지 않는다 (전체 연결과 겹치지 않음)", ime.korean != before)

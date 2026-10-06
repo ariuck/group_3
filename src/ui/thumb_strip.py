@@ -18,12 +18,13 @@ from tkinter import ttk
 
 from PIL import Image, ImageTk
 
+from src.ui import theme
+
 THUMB_W, THUMB_H = 128, 72          # 미리보기 크기
 CELL_PAD = 14                       # 칸 사이 여백(테두리 포함)
 MAX_CELLS = 16                      # 만들어 두는 칸 수 (아주 넓은 화면에서도 충분)
 CACHE_LIMIT = 150                   # 기억해 두는 미리보기 수
-CURRENT_BG = "#1e88e5"
-FONT = "Malgun Gothic"
+CURRENT_BG = theme.COLORS["accent"]
 
 
 def make_thumbnail(path, size=(THUMB_W, THUMB_H)):
@@ -40,18 +41,19 @@ def make_thumbnail(path, size=(THUMB_W, THUMB_H)):
 
 class _Cell:
     def __init__(self, parent):
-        self.frame = tk.Frame(parent, bd=2, relief="flat", padx=2, pady=1, cursor="hand2")
-        self.pic = tk.Label(self.frame, width=THUMB_W, height=THUMB_H, padx=0, pady=0)
+        self.frame = tk.Frame(parent, bd=0, padx=4, pady=4, cursor="hand2", bg=theme.COLORS["card"])
+        self.pic = tk.Label(self.frame, width=THUMB_W, height=THUMB_H, padx=0, pady=0, bg=theme.COLORS["card"])
         self.pic.pack()
-        self.cap = tk.Label(self.frame, font=(FONT, 8), width=22, anchor="center")
-        self.cap.pack()
+        self.cap = tk.Label(self.frame, font=theme.font(8), width=22, anchor="center", bg=theme.COLORS["card"])
+        self.cap.pack(pady=(3, 0))
         self.index = None
         self.path = None
 
 
 class ThumbStrip(tk.Frame):
     def __init__(self, parent, on_select, mark_of=None):
-        super().__init__(parent)
+        C = theme.COLORS
+        super().__init__(parent, bg=C["card"], highlightbackground=C["border"], highlightthickness=1, padx=10, pady=8)
         self._on_select = on_select
         self._mark_of = mark_of                      # mark_of(path) → (글자, 색)
         self.files = []
@@ -64,24 +66,28 @@ class ThumbStrip(tk.Frame):
         self._job = None
         self._resize_job = None
         self._visible = 5
-        self._blank = ImageTk.PhotoImage(Image.new("RGB", (THUMB_W, THUMB_H), "#cfcfcf"))
+        self._blank = ImageTk.PhotoImage(Image.new("RGB", (THUMB_W, THUMB_H), "#e5e7eb"))
 
         # 윗줄: 제목 · 안내 · (main_window 가 버튼을 더할 수 있는 자리)
-        self.header = tk.Frame(self)
-        self.header.pack(fill="x")
-        self.title = tk.Label(self.header, text="이미지 목록", font=(FONT, 9, "bold"))
+        self.header = tk.Frame(self, bg=C["card"])
+        self.header.pack(fill="x", pady=(0, 6))
+        self.title = tk.Label(self.header, text="이미지 목록", font=theme.font(11, True), bg=C["card"], fg=C["text"])
         self.title.pack(side="left")
-        self.hint = tk.Label(self.header, text="", fg="#666666", font=(FONT, 8))
-        self.hint.pack(side="left", padx=8)
+        self.summary = tk.Label(self.header, text="", fg=C["accent"], font=theme.font(9, True), bg=C["card"])
+        self.summary.pack(side="left", padx=(12, 0))                      # 작업 진행 요약 (예: 작업 3/11 · 검수 완료 1 …)
+        self.hint = tk.Label(self.header, text="", fg=C["muted"], font=theme.font(9), bg=C["card"])
+        self.hint.pack(side="left", padx=12)
 
         # 아랫줄: ‹ [미리보기 ...] ›
-        self.row = tk.Frame(self)
+        self.row = tk.Frame(self, bg=C["card"])
         self.row.pack(fill="x")
-        self.btn_prev = ttk.Button(self.row, text="‹", width=2, command=lambda: self.page(-1), takefocus=False)
+        self.btn_prev = ttk.Button(self.row, text="‹", width=2, command=lambda: self.page(-1), takefocus=False,
+                                   style="Tool.TButton")
         self.btn_prev.pack(side="left")
-        self.btn_next = ttk.Button(self.row, text="›", width=2, command=lambda: self.page(+1), takefocus=False)
+        self.btn_next = ttk.Button(self.row, text="›", width=2, command=lambda: self.page(+1), takefocus=False,
+                                   style="Tool.TButton")
         self.btn_next.pack(side="right")                      # 가운데보다 먼저 pack 해야 미리보기가 많아도 버튼이 밀려나지 않는다
-        self.body = tk.Frame(self.row)
+        self.body = tk.Frame(self.row, bg=C["card"])
         self.body.pack(side="left", fill="x", expand=True)
 
         self.cells = []
@@ -113,6 +119,7 @@ class ThumbStrip(tk.Frame):
             self._refresh()
         else:
             self._style_cells()
+            self._poke()
 
     def refresh_marks(self):
         """저장·상태가 바뀐 뒤 글자(✓·상태)를 다시 계산해서 쓴다."""
@@ -192,7 +199,7 @@ class ThumbStrip(tk.Frame):
         self._style_cells()
         center = self.current if self.current >= 0 else self.start
         self._queue.sort(key=lambda c: abs(c.index - center))        # 현재 사진에 가까운 것부터 채운다
-        self._schedule_load()
+        self._schedule_load(self.IDLE_MS)
         self.btn_prev.state(["!disabled" if self.start > 0 else "disabled"])
         self.btn_next.state(["!disabled" if self.start + self._visible < len(self.files) else "disabled"])
 
@@ -209,15 +216,26 @@ class ThumbStrip(tk.Frame):
                 text, color = self._marks[cell.path]
             name = cell.path.stem
             cell.cap.config(text=f"{name}\n{text}" if text else name, fg=color,
-                            font=(FONT, 8, "bold" if is_cur else "normal"), height=2)
-            bg = CURRENT_BG if is_cur else self.cget("bg")
+                            font=theme.font(8, is_cur), height=2)
+            bg = CURRENT_BG if is_cur else theme.COLORS["card"]
             cell.frame.config(bg=bg)
             cell.cap.config(bg=bg, fg=("white" if is_cur else color))
             cell.pic.config(bg=bg)
 
-    def _schedule_load(self):
-        if self._queue and self._job is None:
-            self._job = self.after(1, self._load_next)
+    IDLE_MS = 220          # 마지막 이동(방향키 등) 뒤 이만큼 조용해야 미리보기를 읽기 시작한다
+
+    def _schedule_load(self, delay=1):
+        """대기열이 있으면 미리보기 읽기를 예약한다. 이미 예약되어 있으면 취소하고 다시 건다(= 디바운스)."""
+        if not self._queue:
+            return
+        if self._job is not None:
+            self.after_cancel(self._job)
+        self._job = self.after(delay, self._load_next)
+
+    def _poke(self):
+        """사진 이동이 계속되는 동안에는 미리보기를 읽지 않고 기다린다. (사진 한 장 읽기가 50ms 쯤 걸려 이동이 끊겨 보이기 때문)"""
+        if self._queue:
+            self._schedule_load(self.IDLE_MS)
 
     def _load_next(self):
         """미리보기를 한 장씩 읽는다 (한 번에 한 장 — 그 사이에 화면이 반응한다)."""
@@ -236,7 +254,7 @@ class ThumbStrip(tk.Frame):
             if cell.path == path:                                    # 그 사이 다른 사진으로 바뀌지 않았으면
                 cell.pic.config(image=photo)
             break
-        self._schedule_load()
+        self._schedule_load(1)
 
     def stop(self):
         """창을 닫을 때 예약된 작업을 정리한다."""

@@ -105,6 +105,15 @@ class RestoreInAppTest(unittest.TestCase):
         self.assertEqual(app2.strip.current, 3)
         self.assertIn("이어서", app2.status.cget("text"))
 
+    def test_shutdown_cancels_the_pending_restore(self):
+        """(수정한 버그) 켜자마자 닫으면 예약된 복원 작업이 닫힌 창을 찾아 오류를 내던 문제"""
+        root, app = self.new_app()
+        self.assertIsNotNone(app._restore_job)
+        app.shutdown()
+        self.assertIsNone(app._restore_job)
+        self.assertNotIn(str(app._restore_job), root.tk.call("after", "info"))
+        self.assertEqual(len(root.tk.splitlist(root.tk.call("after", "info"))), 0)     # 남은 예약이 없다
+
     def test_fresh_start_without_a_record_does_nothing(self):
         root, app = self.new_app()
         self.assertFalse(app.restore_session())

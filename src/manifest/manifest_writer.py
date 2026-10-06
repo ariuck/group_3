@@ -7,7 +7,8 @@
     TXT 줄 수 = 화면 BBox 수 · 상태(고쳤으면 '수정 완료') · 출처 데이터셋 · 원래 split
 
 사람이 직접 채우는 칸 (입력칸 화면 form_panel.py 에서 받은 값만 기록한다 — 사람이 판단하는 내용이므로)
-    이미지 유형 · 위치 맞음 · Class 맞음 · 누락 객체 여부 · 발견된 문제 · 작성자 · 검수자 · 검수일 · 비고
+    이미지 유형 · 위치 맞음 · Class 맞음 · 누락 객체 여부 · 발견된 문제 · 작성자 · 검수자 · 비고
+    (검수일은 검수를 마친 상태가 될 때 비어 있으면 프로그램이 오늘 날짜를 적는다)
     상태는 사람이 입력칸에서 직접 바꾼 경우에만 그 값을 쓰고, 아니면 프로그램이 자동으로 정한다.
 
 같은 사진을 다시 저장하면 새 줄을 만들지 않고 그 줄을 갱신한다.
@@ -16,6 +17,7 @@
 import csv
 import os
 import tempfile
+from datetime import date
 from pathlib import Path
 
 from src import settings
@@ -55,9 +57,12 @@ def _load(path):
     try:
         with open(path, encoding="utf-8-sig", newline="") as f:
             reader = csv.DictReader(f)
+            if not reader.fieldnames:                                  # 아무것도(공백 줄뿐인 것 포함) 적혀 있지 않은 빈 파일 → 새 검수표로 본다 (예전에는 저장이 막혔다)
+                return []
             if reader.fieldnames != HEADERS:
                 raise ManifestError(f"검수표 머리글이 기준 {len(HEADERS)}칸과 다릅니다. 열을 바꾸거나 지우지 않았는지 확인하세요.\n{path}")
-            return list(reader)
+            # 엑셀에서 줄이 짧게 저장됐거나 칸이 남아도 다룰 수 있게 모든 칸을 글자로 맞춘다 (빈 칸 = '')
+            return [{h: (r.get(h) or "") for h in HEADERS} for r in reader]
     except UnicodeDecodeError:
         raise ManifestError("검수표를 읽을 수 없습니다. 엑셀에서 저장할 때 'CSV UTF-8' 형식으로 저장해 주세요.\n" + str(path))
 
@@ -134,12 +139,13 @@ def status_of(image_path, status_map):
     return status_map.get((dataset, split, Path(image_path).name), "")
 
 
-def record_save(image_path, raw_txt, work_txt, screen_count, manifest_path=None, human=None):
+def record_save(image_path, raw_txt, work_txt, screen_count, manifest_path=None, human=None, today=None):
     """[저장] 직후 호출 — 이 사진의 줄을 만들거나 갱신하고, 화면에 보여 줄 짧은 메시지를 돌려준다.
 
     image_path   : 이미지 경로          raw_txt : 원본 TXT 경로(없으면 None)
     work_txt     : 방금 저장한 WORK TXT   screen_count : 저장 당시 화면의 BBox 수
     human        : 입력칸 값 {머리글: 값} (form_panel 의 get_values()). None 이면 사람 칸은 그대로 둔다.
+    today        : 검수일로 적을 날짜 (기본은 오늘, 시험에서 바꿔 쓴다)
     """
     dataset, split = locate_in_raw(image_path)
     if dataset is None:
@@ -186,6 +192,11 @@ def record_save(image_path, raw_txt, work_txt, screen_count, manifest_path=None,
         row["상태"] = STATUS_EDITED
     elif not changed and row["상태"] in ("", STATUS_EDITED):
         row["상태"] = STATUS_BEFORE
+
+    # 검수일: 검수를 마친 상태(검수 완료·수정 완료·수정 필요·제외)가 되었는데 비어 있으면 오늘 날짜를 적는다.
+    # 이미 적혀 있는 날짜(사람이 엑셀에서 고친 것 포함)는 바꾸지 않는다. '검수 전'은 아직 검수한 것이 아니므로 적지 않는다.
+    if not row["검수일"] and row["상태"] not in ("", STATUS_BEFORE):
+        row["검수일"] = (today or date.today()).isoformat()
 
     _save(path, rows)
     return f"검수표 기록: No.{row['No']} · 상태 {row['상태']} · BBox {row['원본 BBox 수']}→{row['최종 BBox 수']}"

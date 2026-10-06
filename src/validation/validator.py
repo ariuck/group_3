@@ -33,7 +33,7 @@ def scan_inventory(raw_dir):
             labels = {p.stem: p for p in (lbl_root / split).glob("*.txt")} if (lbl_root / split).is_dir() else {}
             empty = bad = 0
             for path in labels.values():
-                text = path.read_text(encoding="utf-8", errors="replace")
+                text = path.read_text(encoding="utf-8-sig", errors="replace")
                 if not text.strip():
                     empty += 1
                 for line in text.splitlines():
@@ -140,7 +140,7 @@ def parse_label_file(path):
     if not path.is_file():
         return rows, errors
 
-    text = path.read_text(encoding="utf-8", errors="replace")
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
     for no, line in enumerate(text.splitlines(), 1):
         line = line.strip()
         if not line:

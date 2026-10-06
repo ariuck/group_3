@@ -108,9 +108,9 @@ class EditUiTest(unittest.TestCase):
         self.app.cycle_contrast()
         self.assertEqual(self.app.btn_contrast.cget("text"), "대비 ×1.3")
         self.app.toggle_gray()
-        self.assertEqual(self.app.btn_gray.cget("relief"), "sunken")
+        self.assertTrue(self.app.gray_var.get())                       # 눌린 모양 = 체크 상태
         self.app.toggle_gray()
-        self.assertEqual(self.app.btn_gray.cget("relief"), "raised")
+        self.assertFalse(self.app.gray_var.get())
 
     def test_enhance_never_changes_the_photo_or_the_saved_label(self):
         from src.data_paths import work_label_path
@@ -144,6 +144,84 @@ class EditUiTest(unittest.TestCase):
         self.app.on_mouse_up(self.at(120, 120))
         self.app.cross_var.set(False); self.app.on_cross_toggled()
         self.assertEqual(self.cross_items(), 0)
+
+    # ── 키보드: Tab 선택 · Shift+방향키 미세 이동 · H 숨기기 ─────────
+    def add_second_box(self):
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))
+        self.app.select_box(None)
+
+    def test_tab_cycles_through_the_boxes(self):
+        self.add_second_box()
+        self.assertEqual(self.app.select_next_box(+1), "break")
+        self.assertEqual(self.app.selected, 0)                    # 선택이 없으면 첫 BBox 부터
+        self.app.select_next_box(+1)
+        self.assertEqual(self.app.selected, 1)
+        self.app.select_next_box(+1)
+        self.assertEqual(self.app.selected, 0)                    # 끝에서 처음으로
+        self.app.select_next_box(-1)
+        self.assertEqual(self.app.selected, 1)                    # Shift+Tab 은 거꾸로
+        self.assertEqual(len(self.app.canvas.find_withtag("handle")), 8)
+
+    def test_tab_with_no_boxes_is_harmless(self):
+        self.app.boxes.clear(); self.app.selected = None
+        self.assertEqual(self.app.select_next_box(+1), "break")
+        self.assertIn("BBox 가 없습니다", self.app.status.cget("text"))
+
+    def test_shift_arrow_moves_one_pixel_and_ctrl_shift_ten(self):
+        self.app.select_box(0)
+        self.app.nudge(1, 0)
+        self.assertEqual(self.box(), (401.0, 240.0, 601.0, 360.0))
+        self.app.nudge(0, -1, big=True)
+        self.assertEqual(self.box(), (401.0, 230.0, 601.0, 350.0))
+        self.app.nudge(-1, 0)
+        self.assertEqual(self.box(), (400.0, 230.0, 600.0, 350.0))
+        self.assertTrue(self.app.dirty)
+
+    def test_a_burst_of_nudges_is_one_undo_step(self):
+        self.app.select_box(0)
+        for _ in range(5):
+            self.app.nudge(1, 0)
+        self.assertEqual(self.box(), (405.0, 240.0, 605.0, 360.0))
+        self.assertEqual(len(self.app.history), 1)                # 연달아 누른 5번 = Undo 1번
+        self.app.undo()
+        self.assertEqual(self.box(), (400.0, 240.0, 600.0, 360.0))
+
+    def test_a_pause_starts_a_new_undo_step(self):
+        self.app.select_box(0)
+        self.app.nudge(1, 0)
+        self.app._nudge_t -= 2.0                                  # 2초 쉬었다가
+        self.app.nudge(1, 0)
+        self.assertEqual(len(self.app.history), 2)
+
+    def test_nudge_stops_at_the_image_edge_and_without_selection(self):
+        self.app.select_box(0)
+        for _ in range(45):                                       # 10px 씩 450px → 이미지 오른쪽 끝(1000)을 넘어서려 한다
+            self.app.nudge(1, 0, big=True)
+        self.assertEqual(self.box()[2], float(IMG_W))             # 오른쪽 끝에서 멈춘다
+        self.assertIn("가장자리", self.app.status.cget("text"))
+        self.app.select_box(None)
+        before = self.box()
+        self.assertEqual(self.app.nudge(1, 0), "break")
+        self.assertEqual(self.box(), before)
+        self.assertIn("먼저 BBox 를 선택", self.app.status.cget("text"))
+
+    def test_h_hides_the_boxes_and_blocks_editing(self):
+        self.app.select_box(0)
+        self.app.toggle_boxes()
+        self.assertFalse(self.app.show_boxes_var.get())
+        self.assertEqual(len(self.app.canvas.find_withtag("box")), 0)       # 도화지에 BBox 도 핸들도 없다
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))
+        self.assertEqual(len(self.app.boxes), 1)                  # 숨긴 동안은 새 BBox 가 만들어지지 않는다
+        self.assertIn("숨겨져", self.app.status.cget("text"))
+        self.app.toggle_boxes()
+        self.assertGreater(len(self.app.canvas.find_withtag("box")), 0)
+        self.assertEqual(len(self.app.canvas.find_withtag("handle")), 8)    # 선택 상태도 그대로
+
+    def test_the_keys_are_bound(self):
+        for key in ("<Tab>", "<Shift-Tab>", "<Shift-Left>", "<Control-Shift-Right>", "h"):
+            self.assertTrue(self.root.bind(key), key)
 
     # ── 라벨 목록 표 ───────────────────────────────────────────
     def rows(self):
@@ -225,14 +303,19 @@ class EditUiTest(unittest.TestCase):
         def buttons(w):
             out = []
             for c in w.winfo_children():
-                if c.winfo_class() in ("Button", "Checkbutton"):
+                if c.winfo_class() in ("Button", "Checkbutton", "TButton", "TCheckbutton", "TMenubutton"):
                     out.append(c.cget("text"))
                 out += buttons(c)
             return out
         names = " ".join(buttons(self.app.root))
-        for label in ("이미지 열기", "폴더 열기", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동 모드",
-                      "데이터 조사", "QA 검증", "다시 불러오기", "WORK 폴더"):
+        for label in ("이미지 열기", "폴더 열기", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동 모드", "도구"):
             self.assertIn(label, names)
+        menu = [w for w in self.app.root.winfo_children()[0].winfo_children() if w.winfo_class() == "TMenubutton"]
+        self.assertTrue(menu)
+        tools = self.app.root.nametowidget(menu[0].cget("menu"))
+        entries = [tools.entrycget(i, "label") for i in range(tools.index("end") + 1) if tools.type(i) == "command"]   # 구분선은 건너뜀
+        for label in ("데이터 조사", "QA 검증 (무결성)", "다시 불러오기", "WORK 폴더 열기"):
+            self.assertIn(label, entries)
 
     # ── 저장 후 다음 ──────────────────────────────────────────
     def add_second_photo(self):
@@ -250,7 +333,7 @@ class EditUiTest(unittest.TestCase):
         self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
         self.app.on_mouse_up(self.at(560, 300))
         self.app.save_and_next()
-        self.root.update()
+        self.assertTrue(self.app.wait_for_nav())                           # 다음 사진이 화면에 뜰 때까지 기다린다
         self.assertTrue(work_label_path(first).is_file())                  # 먼저 저장했고
         self.assertEqual(self.app.image_path.name, "b.jpg")                # 다음 사진으로 넘어왔다
         self.assertFalse(self.app.dirty)

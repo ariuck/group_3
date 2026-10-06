@@ -47,7 +47,7 @@ def write_manifest(rows):
         w.writerows(rows)
 
 
-HUMAN_COLUMNS = ("이미지 유형", "위치 맞음", "Class 맞음", "누락 객체 여부", "발견된 문제", "작성자", "검수자", "검수일", "비고(수정 내용)")
+HUMAN_COLUMNS = ("이미지 유형", "위치 맞음", "Class 맞음", "누락 객체 여부", "발견된 문제", "작성자", "검수자", "비고(수정 내용)")   # (검수일은 프로그램이 자동으로 적는다)
 
 
 def near(a, b, eps=1e-6):
@@ -138,6 +138,8 @@ try:
     ok("검수표: TXT 줄 수 = 화면 BBox 수 → O", r["TXT 줄 수 = 화면 BBox 수"] == "O")
     ok("검수표: 고쳤으므로 상태가 '수정 완료'", r["상태"] == "수정 완료")
     ok("검수표: 사람이 판단하는 칸은 비어 있다", all(r[h] == "" for h in HUMAN_COLUMNS))
+    from datetime import date
+    ok("검수표: 검수를 마친 상태(수정 완료)라 검수일에 오늘 날짜가 자동으로 적힌다", r["검수일"] == date.today().isoformat())
     ok("상태줄에 검수표 기록 결과가 보인다", "검수표 기록" in app.status.cget("text"))
     app.boxes = []; app.draw_boxes()
     app.reload(); root.update()
