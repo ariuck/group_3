@@ -49,3 +49,26 @@ def read_yolo_file(txt_path, img_w, img_h):
         x1, y1, x2, y2 = yolo_to_pixel(xc, yc, w, h, img_w, img_h)
         boxes.append({"cls": cls, "x1": x1, "y1": y1, "x2": x2, "y2": y2})
     return boxes, bad_lines
+
+
+def read_yolo_rows(txt_path):
+    """TXT 를 (class, x_center, y_center, width, height) 목록으로 읽는다 (좌표 변환 없음).
+    읽을 수 없는 줄은 건너뛰고, 파일이 없으면 빈 목록."""
+    p = Path(txt_path) if txt_path else None
+    if p is None or not p.is_file():
+        return []
+    rows = []
+    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        parts = line.split()
+        try:
+            if len(parts) != 5:
+                raise ValueError
+            rows.append((int(parts[0]), *(float(v) for v in parts[1:])))
+        except ValueError:
+            continue
+    return rows
+
+
+def label_signature(txt_path, digits=5):
+    """두 TXT 가 같은 내용인지 비교하기 위한 값 (소수 오차를 무시하도록 반올림 + 정렬)."""
+    return sorted((c, *(round(v, digits) for v in vals)) for c, *vals in read_yolo_rows(txt_path))
