@@ -1,2 +1,3 @@
 Pillow
 PyYAML
+tkinterdnd2   # (선택) 폴더를 창에 끌어다 놓기. 없어도 [폴더 열기] 버튼은 동작

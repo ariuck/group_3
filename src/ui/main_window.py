@@ -37,6 +37,7 @@ from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
 from src.data_paths import is_inside, locate_in_raw, work_label_path
 from src.manifest.manifest_writer import ManifestError, read_human, record_save
+from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
 from src.ui.validation_dialog import show_validation_dialog
 from src.validation.validator import inventory_markdown, scan_inventory, validate_dataset, write_report
@@ -165,7 +166,12 @@ class Day1Labeler:
         # ④-2 왼쪽 패널: 같은 폴더의 사진 목록. 누르면 바로 그 사진으로 간다 (✓ = WORK 에 저장된 사진)
         left = tk.Frame(self.root, padx=4, pady=4)
         left.pack(side="left", fill="y")
-        tk.Label(left, text="사진 목록", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
+        head = tk.Frame(left)
+        head.pack(side="top", fill="x")
+        tk.Label(head, text="사진 목록", font=("Malgun Gothic", 10, "bold")).pack(side="left")
+        tk.Button(head, text="📁 폴더 열기", command=self.open_folder, padx=4, pady=0).pack(side="right")
+        self.drop_hint = tk.Label(left, text="", anchor="w", fg="#666666", font=("Malgun Gothic", 8))
+        self.drop_hint.pack(side="top", fill="x")
         scroll = tk.Scrollbar(left)
         scroll.pack(side="right", fill="y")
         self.file_list = tk.Listbox(left, width=26, font=("Consolas", 9), activestyle="none",
@@ -177,6 +183,12 @@ class Day1Labeler:
         # ⑤ 가운데: 이미지를 보여 줄 도화지(Canvas)
         self.canvas = tk.Canvas(self.root, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
         self.canvas.pack(side="left", fill="both", expand=True)
+
+        # 폴더·사진을 창에 끌어다 놓기 (tkinterdnd2 가 있을 때만)
+        if register_drop(self.root, self.on_drop):
+            self.drop_hint.config(text="폴더를 창에 끌어다 놓아도 됩니다")
+        else:
+            self.drop_hint.config(text="")
 
     # ------------------------------------------------------------------
     # 이벤트 연결 ([Tkinter 개념 3: 이벤트 bind])
@@ -315,6 +327,44 @@ class Day1Labeler:
             initialdir=str(settings.RAW_DIR if settings.RAW_DIR.is_dir() else settings.PROJECT_DIR),
             filetypes=[("JPG 이미지", "*.jpg *.jpeg *.JPG *.JPEG")])
         if path:
+            self.load_image(path)
+
+    def open_folder(self):
+        """[📁 폴더 열기] 폴더를 고르면 그 안의 사진 전체를 목록으로 열고 첫 사진을 보여 준다."""
+        folder = filedialog.askdirectory(
+            title="사진이 들어 있는 폴더 선택 (data/raw/... 또는 images 폴더)",
+            initialdir=str(settings.RAW_DIR if settings.RAW_DIR.is_dir() else settings.PROJECT_DIR))
+        if folder:
+            self.open_folder_path(folder)
+
+    def open_folder_path(self, folder):
+        """폴더 안의 사진을 목록으로 쓰고 첫 사진을 연다.  ([폴더 열기] 와 끌어다 놓기가 함께 쓴다)"""
+        if not self.confirm_discard():
+            return
+        nav = self.navigator
+        before = (nav.folder, nav.files, nav.index, nav.fixed)
+        count = nav.set_folder(folder)
+        if count == 0:
+            nav.folder, nav.files, nav.index, nav.fixed = before          # 사진이 없으면 지금 목록을 그대로 둔다
+            messagebox.showinfo("사진이 없음", f"이 폴더에는 JPG 사진이 없습니다.\n\n{folder}")
+            return
+        if not self.load_image(nav.files[0]):
+            return
+        text = f"폴더 열기: {folder}  (사진 {count}장)"
+        if not is_inside(Path(folder), settings.RAW_DIR):
+            text += "   ※ data/raw 밖의 폴더라 검수표에는 기록되지 않습니다"
+        self.set_status(text)
+
+    def on_drop(self, paths):
+        """창에 폴더(또는 사진)를 끌어다 놓았을 때."""
+        target = pick_target(paths)
+        if target is None:
+            messagebox.showinfo("열 수 없음", "폴더나 JPG 사진을 놓아 주세요.")
+            return
+        kind, path = target
+        if kind == "folder":
+            self.open_folder_path(path)
+        elif self.confirm_discard():
             self.load_image(path)
 
     def load_image(self, path):
@@ -834,6 +884,6 @@ class Day1Labeler:
 # ============================================================================
 
 def main():
-    root = tk.Tk()
+    root = make_root()          # tkinterdnd2 가 있으면 폴더 끌어다 놓기가 켜진다
     Day1Labeler(root)
     root.mainloop()
