@@ -297,22 +297,25 @@ reports/qa_summary.md
 
 ## 13. 프로그램 테스트 결과
 
-라벨링 프로그램 테스트 결과는 다음 파일에서 확인합니다. (작성 예정)
+라벨링 프로그램 테스트 결과는 다음 파일에서 확인합니다.
 
 ```text
 reports/test_report.md
 ```
 
-테스트 단계:
+테스트 단계와 현재 상태:
 
-- Golden Test
-- Pilot Test
-- Final Acceptance Test
+| 단계 | 상태 |
+|---|---|
+| Golden Test | 실제 데이터 900장 읽기 전용 점검(짝·Validation·Round-trip)과 자동 시험으로 11/12 확인, 화면 표시는 사람 확인 `미확인` |
+| Pilot Test (20~50장) | 미실시 — 사람이 실제 작업 흐름으로 해 보고 기록해야 함 |
+| Final Acceptance Test | 미실시 — 900장 검수 완료 후 |
 
-현재는 가짜 데이터로 시험하는 자체 점검만 있습니다.
+자동 시험은 가짜 데이터로 돌아가며, 한 번에 실행하려면 다음과 같이 합니다.
 
 ```bash
-python tests/day1_selftest.py
+python tests/run_all.py                # 모든 시험을 한 번에 (약 1분)
+python tests/day1_selftest.py          # 1일차 자체 점검만
 ```
 
 ---
