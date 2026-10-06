@@ -152,6 +152,7 @@ try:
     ok("검수표: 같은 사진은 새 줄이 아니라 갱신 (줄 1개, 원본 수 2 유지)", len(rows) == 1 and rows[0]["원본 BBox 수"] == "2")
     rows[0].update({"상태": "수정 필요", "발견된 문제": "REVIEW: class_ambiguous", "작성자": "A", "비고(수정 내용)": "한글 메모"})
     write_manifest(rows)
+    app.load_form()                                  # 검수표를 파일로 고쳤으니 화면 입력칸도 다시 읽는다
     app.boxes.append({"cls": 1, "x1": 10.0, "y1": 10.0, "x2": 60.0, "y2": 60.0})        # 또 고침
     app.dirty = True
     ok("한 번 더 저장", app.save())
