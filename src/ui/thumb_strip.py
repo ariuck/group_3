@@ -18,7 +18,7 @@ from tkinter import ttk
 
 from PIL import Image, ImageTk
 
-THUMB_W, THUMB_H = 140, 80          # 미리보기 크기
+THUMB_W, THUMB_H = 128, 72          # 미리보기 크기
 CELL_PAD = 14                       # 칸 사이 여백(테두리 포함)
 MAX_CELLS = 16                      # 만들어 두는 칸 수 (아주 넓은 화면에서도 충분)
 CACHE_LIMIT = 150                   # 기억해 두는 미리보기 수

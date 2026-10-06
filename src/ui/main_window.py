@@ -55,7 +55,7 @@ class Day1Labeler:
         self.root = root
         root.title("교과 7 · 이미지 라벨링 (RAW / WORK 구조)")
         root.geometry(f"1400x{min(940, root.winfo_screenheight() - 80)}")      # 화면이 작으면 높이를 줄인다
-        root.minsize(1160, 700)                                                 # 이보다 작으면 버튼·패널이 잘린다
+        root.minsize(1160, 740)                                                 # 이보다 작으면 버튼·패널이 잘린다
 
         # ------------------------------------------------------------------
         # [Tkinter 개념 1: 변수]  프로그램이 '기억해야 하는 것'들
@@ -151,7 +151,8 @@ class Day1Labeler:
 
         # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
         #    같은 줄 오른쪽에 이전 / 진행률 / 다음 (위 버튼 줄은 꽉 차서 창이 좁으면 밀려나 안 보였다)
-        row = tk.Frame(self.root)
+        center = tk.Frame(self.root)                           # 가운데 영역 = 머리글(출처·번호 이동) + 이미지 도화지
+        row = tk.Frame(center)
         row.pack(side="top", fill="x")
         self.btn_next = tk.Button(row, text="다음 ▶", command=self.go_next, padx=8, pady=1, state="disabled")
         self.btn_next.pack(side="right", padx=(2, 8))
@@ -190,36 +191,34 @@ class Day1Labeler:
 
         tk.Label(side, text="클래스 선택 (숫자키 0~6)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
         self.class_list = tk.Listbox(side, height=len(settings.CLASSES), exportselection=False,
-                                     font=("Malgun Gothic", 10), activestyle="none")
+                                     font=("Malgun Gothic", 9), activestyle="none")
         for c in settings.CLASSES:
             self.class_list.insert("end", f"■ {c['id']}  {settings.class_name(c['id'])}")
             self.class_list.itemconfig(c["id"], foreground=c["color"] if c["enabled"] else "#9e9e9e")
         self.class_list.selection_set(self.current_class)
         self.class_list.pack(fill="x", pady=(0, 6))
 
-        # 보기 옵션 (Diff · 십자선 · 밝기·대비·흑백)
-        tools = tk.LabelFrame(side, text="보기 옵션", padx=4, pady=2, font=("Malgun Gothic", 9))
-        tools.pack(fill="x", pady=(0, 6))
-        self.tools = tools
-        opts = tk.Frame(tools)                               # 보기 옵션 (Diff · 십자선) — 한 줄에 둔다
-        opts.pack(fill="x")
-        self.opts_row = opts
+        # 보기 옵션 줄 (Diff · 십자선 · 밝기·대비·흑백) — 툴바 바로 아래. 오른쪽 패널을 짧게 하려고 옮겼다.
+        opts = tk.Frame(self.root, padx=8)
+        opts.pack(side="top", fill="x")
+        self.opts_bar = opts
+        self.tools = opts
+        tk.Label(opts, text="보기", fg="#666666", font=("Malgun Gothic", 9)).pack(side="left", padx=(0, 6))
         self.diff_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(opts, text="RAW 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
+        tk.Checkbutton(opts, text="RAW 와 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
                        font=("Malgun Gothic", 9)).pack(side="left")
         self.cross_var = tk.BooleanVar(value=False)
         tk.Checkbutton(opts, text="십자선", variable=self.cross_var, command=self.on_cross_toggled,
-                       font=("Malgun Gothic", 9)).pack(side="left")
-        self.diff_label = tk.Label(tools, text="", anchor="w", justify="left", fg="#555555", font=("Malgun Gothic", 8))
-        # (diff_label 은 Diff 를 켰을 때만 pack — 평소에는 자리를 차지하지 않는다)
-        enh = tk.Frame(tools)                                # 화면 보정 (밝기·대비·흑백) — 어두운 사진의 작은 이물을 찾을 때
-        enh.pack(fill="x", pady=(0, 0))
-        self.btn_bright = tk.Button(enh, text="밝기 ×1.0", command=self.cycle_brightness, padx=4, pady=0)
-        self.btn_bright.pack(side="left", padx=(0, 3))
-        self.btn_contrast = tk.Button(enh, text="대비 ×1.0", command=self.cycle_contrast, padx=4, pady=0)
+                       font=("Malgun Gothic", 9)).pack(side="left", padx=(4, 0))
+        ttk.Separator(opts, orient="vertical").pack(side="left", fill="y", padx=8, pady=2)
+        self.btn_bright = tk.Button(opts, text="밝기 ×1.0", command=self.cycle_brightness, padx=4, pady=0)
+        self.btn_bright.pack(side="left", padx=(0, 3))            # 어두운 사진의 작은 이물을 찾을 때 (화면에만 적용)
+        self.btn_contrast = tk.Button(opts, text="대비 ×1.0", command=self.cycle_contrast, padx=4, pady=0)
         self.btn_contrast.pack(side="left", padx=(0, 3))
-        self.btn_gray = tk.Button(enh, text="흑백", command=self.toggle_gray, padx=4, pady=0)
+        self.btn_gray = tk.Button(opts, text="흑백", command=self.toggle_gray, padx=4, pady=0)
         self.btn_gray.pack(side="left")
+        self.diff_label = tk.Label(opts, text="", anchor="w", fg="#555555", font=("Malgun Gothic", 9, "bold"))
+        self.diff_label.pack(side="left", padx=(14, 0))          # Diff 를 켜면 '추가 N · 수정 N · 삭제 N · 그대로 N'
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
@@ -239,8 +238,9 @@ class Day1Labeler:
         self._box_guard = False                                              # 표를 다시 채우는 동안 선택 이벤트를 무시
 
         # ⑤ 가운데: 이미지를 보여 줄 도화지(Canvas)
-        self.canvas = tk.Canvas(self.root, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        center.pack(side="left", fill="both", expand=True)       # (오른쪽 패널·아래 줄을 먼저 pack 한 뒤 남는 자리를 차지)
+        self.canvas = tk.Canvas(center, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
+        self.canvas.pack(side="top", fill="both", expand=True)
 
         # 폴더·사진을 창에 끌어다 놓기 (tkinterdnd2 가 있을 때만)
         if register_drop(self.root, self.on_drop):
@@ -768,7 +768,7 @@ class Day1Labeler:
                 self.draw_ghost(self.raw_boxes[ri], "#9e9e9e", "원본")      # 수정 전 위치(회색 점선)
             for ri in d["deleted"]:
                 self.draw_ghost(self.raw_boxes[ri], self.DIFF_COLORS["deleted"], "삭제됨")
-            self.diff_label.config(text=diff_summary(d) + ("" if self.raw_boxes or not self.boxes else "\n(원본 라벨이 없는 사진)"))
+            self.diff_label.config(text=diff_summary(d) + ("" if self.raw_boxes or not self.boxes else "  (원본 라벨이 없는 사진)"))
         for i, b in enumerate(self.boxes):
             x1, y1, x2, y2 = self.vp.box_to_canvas(b)
             color = settings.class_color(b["cls"])
@@ -852,11 +852,8 @@ class Day1Labeler:
 
     def on_diff_toggled(self):
         """[RAW 와 비교(Diff)] 켜기/끄기."""
-        if self.diff_var.get():
-            self.diff_label.pack(fill="x", after=self.opts_row)                       # 체크박스 줄 바로 아래
-        else:
+        if not self.diff_var.get():
             self.diff_label.config(text="")
-            self.diff_label.pack_forget()
         self.draw_boxes()
         if self.diff_var.get():
             self.set_status("Diff 보기 — 초록 = 추가 · 주황 = 수정(회색 점선이 원래 위치) · 빨강 점선 = 삭제된 원본 BBox")
