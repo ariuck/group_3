@@ -145,6 +145,41 @@ class EditUiTest(unittest.TestCase):
         self.app.cross_var.set(False); self.app.on_cross_toggled()
         self.assertEqual(self.cross_items(), 0)
 
+    # ── 툴바: 이동(Pan) 모드와 배율 표시 ───────────────────────
+    def test_pan_mode_drags_the_view_with_the_left_button(self):
+        self.app.pan_var.set(True); self.app.on_pan_toggled()
+        ox, oy = self.app.vp.offset_x, self.app.vp.offset_y
+        self.app.on_mouse_down(Ev(300, 300)); self.app.on_mouse_drag(Ev(340, 320)); self.app.on_mouse_up(Ev(340, 320))
+        self.assertEqual((self.app.vp.offset_x - ox, self.app.vp.offset_y - oy), (40, 20))   # 화면이 따라 움직였다
+        self.assertEqual(len(self.app.boxes), 1)                                              # BBox 는 만들어지지 않는다
+        self.assertEqual(self.box(), (400.0, 240.0, 600.0, 360.0))                           # 기존 BBox 도 안 움직인다
+        self.assertFalse(self.app.dirty)
+        self.assertIsNone(self.app.pan_last)
+
+    def test_pan_mode_can_be_turned_off_again(self):
+        self.app.pan_var.set(True); self.app.on_pan_toggled()
+        self.app.pan_var.set(False); self.app.on_pan_toggled()
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))
+        self.assertEqual(len(self.app.boxes), 2)                                              # 다시 BBox 를 그린다
+
+    def test_zoom_percent_label_follows_the_scale(self):
+        self.assertEqual(self.app.zoom_label.cget("text"), f"{self.app.vp.zoom_percent}%")
+        self.app.zoom_in()
+        self.assertEqual(self.app.zoom_label.cget("text"), f"{self.app.vp.zoom_percent}%")
+
+    def test_toolbar_has_every_main_action(self):
+        def buttons(w):
+            out = []
+            for c in w.winfo_children():
+                if c.winfo_class() in ("Button", "Checkbutton"):
+                    out.append(c.cget("text"))
+                out += buttons(c)
+            return out
+        names = " ".join(buttons(self.app.root))
+        for label in ("이미지", "폴더", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동", "조사", "QA", "재로드", "WORK"):
+            self.assertIn(label, names)
+
     # ── 저장 후 다음 ──────────────────────────────────────────
     def add_second_photo(self):
         """같은 폴더에 사진 한 장을 더 만들고 목록을 새로 읽는다."""

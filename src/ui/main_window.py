@@ -54,7 +54,8 @@ class Day1Labeler:
     def __init__(self, root):
         self.root = root
         root.title("교과 7 · 이미지 라벨링 (RAW / WORK 구조)")
-        root.geometry("1220x780")
+        root.geometry(f"1400x{min(940, root.winfo_screenheight() - 80)}")      # 화면이 작으면 높이를 줄인다
+        root.minsize(1160, 700)                                                 # 이보다 작으면 버튼·패널이 잘린다
 
         # ------------------------------------------------------------------
         # [Tkinter 개념 1: 변수]  프로그램이 '기억해야 하는 것'들
@@ -123,18 +124,30 @@ class Day1Labeler:
     def build_widgets(self):
         # ① 위쪽 버튼 줄.  command=... 에는 '누르면 실행할 함수'를 연결한다.
         #    (주의: command=self.save  처럼 괄호 없이 함수 이름만 넘긴다. 괄호를 붙이면 지금 바로 실행돼 버린다)
-        bar = tk.Frame(self.root, padx=6, pady=6)
+        bar = tk.Frame(self.root, padx=6, pady=5)
         bar.pack(side="top", fill="x")
-        for text, func in (("📊 데이터 조사", self.show_inventory), ("🔍 무결성 검증(QA)", self.run_validation),
-                           ("📂 이미지 열기", self.open_image),
-                           ("💾 저장", self.save), ("🔄 다시 불러오기", self.reload),
-                           ("🗑 선택 BBox 삭제", self.delete_selected), ("📁 WORK 폴더 열기", self.open_work_folder)):
-            tk.Button(bar, text=text, command=func, padx=8, pady=3).pack(side="left", padx=3)
-
-        # ①-2 오른쪽 끝: 확대·되돌리기 버튼 (오른쪽부터 쌓이므로 역순으로 pack)
-        for text, func in (("↷ 다시", self.redo), ("↶ 되돌리기", self.undo), ("⤢ 맞춤", self.fit_to_window),
-                           ("－", self.zoom_out), ("＋", self.zoom_in)):
-            tk.Button(bar, text=text, command=func, padx=6, pady=3).pack(side="right", padx=2)
+        self.pan_var = tk.BooleanVar(value=False)
+        groups = [
+            # (글자, 눌렀을 때 할 일)   — 같은 일을 하는 버튼끼리 묶고, 묶음 사이에는 구분선을 둔다
+            [("📂 이미지", self.open_image), ("📁 폴더", self.open_folder)],                         # 열기
+            [("💾 저장", self.save), ("💾→ 저장+다음", self.save_and_next)],                        # 저장
+            [("↶ 되돌리기", self.undo), ("↷ 다시", self.redo), ("🗑 삭제", self.delete_selected),
+             ("🧹 전체 삭제", self.clear_all)],                                                     # 편집
+            [("⤢ 맞춤", self.fit_to_window), ("－", self.zoom_out), ("＋", self.zoom_in), "PAN"],   # 보기
+            [("📊 조사", self.show_inventory), ("🔍 QA", self.run_validation),
+             ("🔄 재로드", self.reload), ("📂 WORK", self.open_work_folder)],                       # 도구
+        ]
+        for gi, group in enumerate(groups):
+            if gi:
+                ttk.Separator(bar, orient="vertical").pack(side="left", fill="y", padx=6)
+            for item in group:
+                if item == "PAN":                 # 켜 두면 왼쪽 버튼 드래그로도 화면을 옮긴다 (오른쪽 버튼이 불편할 때)
+                    tk.Checkbutton(bar, text="✋ 이동", variable=self.pan_var, indicatoron=False, padx=6, pady=2,
+                                   selectcolor="#cfe3ff", command=self.on_pan_toggled).pack(side="left", padx=2)
+                else:
+                    tk.Button(bar, text=item[0], command=item[1], padx=6, pady=2).pack(side="left", padx=2)
+        self.zoom_label = tk.Label(bar, text="100%", fg="#555555", font=("Malgun Gothic", 10, "bold"), width=6)
+        self.zoom_label.pack(side="right")
 
         # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
         #    같은 줄 오른쪽에 이전 / 진행률 / 다음 (위 버튼 줄은 꽉 차서 창이 좁으면 밀려나 안 보였다)
@@ -162,7 +175,6 @@ class Day1Labeler:
         # ③-0 맨 아래: 사진 목록(미리보기 줄) — 누르면 그 사진으로 이동. (먼저 pack 해야 창이 작아져도 안 가려진다)
         self.strip = ThumbStrip(self.root, on_select=self.on_thumb_selected, mark_of=self.thumb_mark)
         self.strip.pack(side="bottom", fill="x", padx=6, pady=(2, 4))
-        tk.Button(self.strip.header, text="📁 폴더 열기", command=self.open_folder, padx=6, pady=0).pack(side="right")
 
         # ③ 아래쪽 상태 표시줄 (먼저 pack 해야 창이 작아져도 안 가려진다)
         self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
@@ -185,15 +197,10 @@ class Day1Labeler:
         self.class_list.selection_set(self.current_class)
         self.class_list.pack(fill="x", pady=(0, 6))
 
-        # 편집 도구 (전체 삭제 · 저장 후 다음 · 보기 옵션)
-        tools = tk.LabelFrame(side, text="편집 도구", padx=4, pady=2, font=("Malgun Gothic", 9))
+        # 보기 옵션 (Diff · 십자선 · 밝기·대비·흑백)
+        tools = tk.LabelFrame(side, text="보기 옵션", padx=4, pady=2, font=("Malgun Gothic", 9))
         tools.pack(fill="x", pady=(0, 6))
-        tool_row = tk.Frame(tools)
-        tool_row.pack(fill="x")
-        tk.Button(tool_row, text="🧹 전체 삭제", command=self.clear_all, padx=4, pady=0).pack(side="left", padx=(0, 4))
-        tk.Button(tool_row, text="💾→ 저장 후 다음 (W)", command=self.save_and_next, padx=4, pady=0).pack(side="left")
         self.tools = tools
-        self.tool_row = tool_row
         opts = tk.Frame(tools)                               # 보기 옵션 (Diff · 십자선) — 한 줄에 둔다
         opts.pack(fill="x")
         self.opts_row = opts
@@ -710,6 +717,7 @@ class Day1Labeler:
     def render(self):
         """현재 Viewport(배율·위치) 그대로 이미지 + BBox 를 다시 그린다."""
         self._render_job = None
+        self.zoom_label.config(text=f"{self.vp.zoom_percent}%" if self.pil_image is not None else "")
         c = self.canvas
         c.delete("img")
         if self.pil_image is None:
@@ -812,6 +820,12 @@ class Day1Labeler:
     def toggle_gray(self):
         self.gray = not self.gray
         self.refresh_enhance("흑백 " + ("켜짐" if self.gray else "꺼짐"))
+
+    def on_pan_toggled(self):
+        """[✋ 이동] 켜기/끄기."""
+        self.set_cursor("fleur" if self.pan_var.get() else "crosshair")
+        self.set_status("✋ 이동 모드 — 왼쪽 버튼으로 끌어 화면을 옮깁니다. (끄면 다시 BBox 를 그리고 고칩니다)"
+                        if self.pan_var.get() else "이동 모드를 껐습니다.")
 
     def update_cross(self, x, y):
         """[십자선] 이 켜져 있으면 마우스 위치에 가로·세로 점선을 그린다 (BBox 경계를 정밀하게 맞출 때)."""
@@ -923,7 +937,7 @@ class Day1Labeler:
         if self.pil_image is None or self.drag:
             return
         self.pan_last = (event.x, event.y)
-        self.canvas.config(cursor="fleur")
+        self.set_cursor("fleur")
 
     def on_pan_drag(self, event):
         """이동하는 동안은 이미 그려진 것을 그대로 옮기고(빠름), 잠깐 멈추면 빈 곳까지 다시 그린다."""
@@ -945,7 +959,7 @@ class Day1Labeler:
         if self.pan_last is None:
             return
         self.pan_last = None
-        self.canvas.config(cursor="crosshair")
+        self.set_cursor("fleur" if self.pan_var.get() else "crosshair")
         if self._render_job is not None:
             self.root.after_cancel(self._render_job)
         self.render()
@@ -964,6 +978,9 @@ class Day1Labeler:
         · 빈 곳, 또는 Shift 를 누른 채  → 새 BBox 그리기 (Shift 는 기존 BBox 위에서 새 BBox 를 그릴 때)"""
         self.canvas.focus_set()              # 입력칸에 있던 커서를 가져온다 → 숫자키·Delete 단축키가 다시 동작
         if self.pil_image is None or self.pan_last is not None:
+            return
+        if self.pan_var.get():                                # ✋ 이동 모드: 왼쪽 버튼으로 화면을 옮긴다
+            self.on_pan_start(event)
             return
         ix, iy = self.to_image(event.x, event.y)
         if not getattr(event, "state", 0) & 0x0001:          # 0x0001 = Shift
@@ -992,6 +1009,9 @@ class Day1Labeler:
     def on_mouse_drag(self, event):
         """② 누른 채 움직이는 동안 — 새 BBox 의 점선 사각형을 늘리거나, BBox 를 옮기고 크기를 바꾼다."""
         self.update_cross(event.x, event.y)
+        if self.pan_last is not None:                         # ✋ 이동 모드로 끄는 중
+            self.on_pan_drag(event)
+            return
         d = self.drag
         if not d:
             return
@@ -1011,6 +1031,9 @@ class Day1Labeler:
 
     def on_mouse_up(self, event):
         """③ 뗀 순간 — 이동·크기 조절을 확정하거나, '클릭'이면 선택, '드래그'면 새 BBox 생성."""
+        if self.pan_last is not None:                         # ✋ 이동 모드로 끌던 것을 마친다
+            self.on_pan_end(event)
+            return
         d, self.drag = self.drag, None
         if not d:
             return
@@ -1091,6 +1114,9 @@ class Day1Labeler:
 
     def update_hover_cursor(self, ix, iy):
         """BBox 위에서 마우스 모양: 핸들 = 크기 조절 화살표, 안쪽 = 이동, 그 밖 = 십자."""
+        if self.pan_var.get():                                 # ✋ 이동 모드에서는 어디서나 손 모양
+            self.set_cursor("fleur")
+            return
         name = "crosshair"
         if self.selected is not None:
             handle = hit_handle(self.boxes[self.selected], ix, iy, self.HANDLE_TOL_PX / self.vp.scale)
