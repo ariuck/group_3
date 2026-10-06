@@ -27,6 +27,7 @@ from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이
 from src import settings
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.data_paths import is_inside, locate_in_raw, work_label_path
+from src.manifest.manifest_writer import ManifestError, record_save
 from src.validation.validator import inventory_markdown, scan_inventory
 from src.yolo.yolo_loader import find_raw_label, read_yolo_file
 from src.yolo.yolo_writer import write_yolo_file
@@ -243,7 +244,13 @@ class Day1Labeler:
             return False
         self.dirty = False
         self.update_title()
-        self.set_status(f"저장 완료 → {target}")
+        # TXT 저장이 끝난 뒤 검수표(CSV)에 이 사진의 줄을 기록한다. 실패해도 TXT 는 이미 저장되어 있다.
+        note = ""
+        try:
+            note = "   |   " + record_save(self.image_path, find_raw_label(self.image_path), target, len(self.boxes))
+        except ManifestError as e:
+            messagebox.showwarning("검수표 기록 실패", f"TXT 는 저장되었습니다.\n검수표(CSV)에는 기록하지 못했습니다.\n\n{e}")
+        self.set_status(f"저장 완료 → {target}{note}")
         return True
 
     def reload(self):
