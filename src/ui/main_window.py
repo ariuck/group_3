@@ -308,8 +308,7 @@ class Day1Labeler:
         self.canvas.pack(fill="both", expand=True)
 
         # 폴더·사진을 창에 끌어다 놓기 (tkinterdnd2 가 있을 때만)
-        if register_drop(self.root, self.on_drop):
-            self.strip.hint.config(text="폴더를 창에 끌어다 놓아도 됩니다")
+        register_drop(self.root, self.on_drop)                   # (안내 문구는 빈 화면 가운데에 이미 있어서 제목줄에는 두지 않는다)
 
     # ------------------------------------------------------------------
     # 이벤트 연결 ([Tkinter 개념 3: 이벤트 bind])
