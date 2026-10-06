@@ -25,6 +25,7 @@ import math
 import os
 import shutil
 import subprocess
+import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -74,6 +75,7 @@ class Day1Labeler:
         self.selected = None       # 선택된 BBox 번호 (없으면 None)
         self.current_class = 0     # 새 BBox 를 만들 때 쓸 Class
         self.dirty = False         # 저장 안 한 변경이 있는가?
+        self._nudge_idx, self._nudge_t = None, 0.0   # 키보드 미세 이동: 직전에 움직인 BBox 와 시각 (연속 이동을 Undo 한 번으로 묶는다)
         self.unreadable = 0        # 원본 라벨에서 형식이 맞지 않아 읽지 못한 줄 수 (저장하면 WORK 파일에서 빠진다)
         self._unreadable_ok = None  # 그래도 저장하겠다고 확인한 사진 (같은 사진은 다시 묻지 않는다)
         self._clean = []           # 마지막으로 불러오거나 저장한 BBox 목록 (Undo 후 '변경 없음' 판단용)
@@ -178,6 +180,9 @@ class Day1Labeler:
         self.diff_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(opts, text="RAW 와 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
                         takefocus=False).pack(side="left")
+        self.show_boxes_var = tk.BooleanVar(value=True)           # 끄면 BBox 를 숨겨 아래의 이물을 그대로 볼 수 있다 (H 키)
+        ttk.Checkbutton(opts, text="BBox 보기", variable=self.show_boxes_var, command=self.on_boxes_toggled,
+                        takefocus=False).pack(side="left", padx=(10, 0))
         self.cross_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(opts, text="십자선", variable=self.cross_var, command=self.on_cross_toggled,
                         takefocus=False).pack(side="left", padx=(10, 0))
@@ -351,6 +356,15 @@ class Day1Labeler:
             r.bind(key, lambda e: None if self.is_typing(e) else self.mark_review())
         for key in ("n", "N"):
             r.bind(key, lambda e: None if self.is_typing(e) else self.go_next_unworked())
+
+        # BBox 키보드 조작: Tab / Shift+Tab = 다음·이전 BBox 선택, Shift+방향키 = 1px 미세 이동(Ctrl 도 누르면 10px), H = BBox 숨기기
+        for key in ("<Tab>", "<Shift-Tab>", "<ISO_Left_Tab>"):
+            r.bind(key, lambda e, k=key: None if self.is_typing(e) else self.select_next_box(+1 if k == "<Tab>" else -1))
+        for name, (dx, dy) in {"Left": (-1, 0), "Right": (1, 0), "Up": (0, -1), "Down": (0, 1)}.items():
+            r.bind(f"<Shift-{name}>", lambda e, d=(dx, dy): None if self.is_typing(e) else self.nudge(*d, big=False))
+            r.bind(f"<Control-Shift-{name}>", lambda e, d=(dx, dy): None if self.is_typing(e) else self.nudge(*d, big=True))
+        for key in ("h", "H"):
+            r.bind(key, lambda e: None if self.is_typing(e) else self.toggle_boxes())
 
         # Ctrl+G = 사진 번호 입력칸으로 커서 이동 (번호로 바로 이동)
         for key in ("<Control-g>", "<Control-G>"):
@@ -997,6 +1011,10 @@ class Day1Labeler:
         [RAW 와 비교(Diff)] 를 켜면 추가(초록)·수정(주황)·삭제(빨강)를 색으로 구분하고, 원본 위치는 점선으로 보여 준다."""
         c = self.canvas
         c.delete("box")
+        if not self.show_boxes_var.get():                        # 숨김 상태: BBox 는 그리지 않는다 (목록·좌표줄은 그대로)
+            self.update_bbox_info()
+            self.update_warning()
+            return
         state = {}                                               # state: 지금 BBox 번호 → 'added' / 'modified'
         if self.diff_var.get():
             d = diff_boxes(self.raw_boxes, self.boxes)
@@ -1249,6 +1267,9 @@ class Day1Labeler:
         if self.pan_var.get():                                #  이동 모드: 왼쪽 버튼으로 화면을 옮긴다
             self.on_pan_start(event)
             return
+        if not self.show_boxes_var.get():
+            self.set_status("BBox 가 숨겨져 있어요 — H 키(또는 'BBox 보기')로 다시 보이게 한 뒤 편집하세요.")
+            return
         ix, iy = self.to_image(event.x, event.y)
         if not getattr(event, "state", 0) & 0x0001:          # 0x0001 = Shift
             if self.selected is not None:
@@ -1423,6 +1444,49 @@ class Day1Labeler:
     # BBox 선택 / 삭제 / Class 변경
     # ====================================================================
 
+    def select_next_box(self, delta):
+        """Tab / Shift+Tab — 다음·이전 BBox 를 선택한다 (끝에서 처음으로 돌아간다). 마우스 없이 BBox 를 차례로 확인할 때."""
+        if self.pil_image is None or self.drag:
+            return "break"
+        if not self.boxes:
+            self.set_status("이 사진에는 BBox 가 없습니다.")
+            return "break"
+        cur = self.selected if self.selected is not None else (-1 if delta > 0 else 0)
+        self.select_box((cur + delta) % len(self.boxes))
+        return "break"                                           # Tab 이 다른 칸으로 커서를 옮기지 않게
+
+    def nudge(self, dx, dy, big=False):
+        """Shift+방향키 — 선택한 BBox 를 원본 픽셀 1px (big 이면 10px) 만큼 옮긴다. 정밀하게 맞출 때."""
+        if self.pil_image is None or self.drag:
+            return "break"
+        if self.selected is None:
+            self.set_status("먼저 BBox 를 선택하세요 (클릭 또는 Tab). Shift+방향키로 1px 씩 옮길 수 있습니다.")
+            return "break"
+        step = 10 if big else 1
+        old = self.boxes[self.selected]
+        new = move_box(old, dx * step, dy * step, self.img_w, self.img_h)
+        if new == old:
+            self.set_status("더 이상 그쪽으로 옮길 수 없습니다. (이미지 가장자리)")
+            return "break"
+        now = time.monotonic()
+        if not (self._nudge_idx == self.selected and now - self._nudge_t < 1.0):
+            self.history.push(self.boxes)                        # 연달아 누르는 동안은 Undo 한 번으로 되돌아가게 처음에만 기록
+        self._nudge_idx, self._nudge_t = self.selected, now
+        self.boxes[self.selected] = new
+        self.mark_changed()
+        self.set_status(f"BBox {self.selected + 1}번 이동 — x1,y1 = ({new['x1']:.0f}, {new['y1']:.0f})   (Ctrl+Z 로 되돌리기)")
+        return "break"
+
+    def toggle_boxes(self):
+        """H — BBox 를 숨기거나 다시 보인다."""
+        self.show_boxes_var.set(not self.show_boxes_var.get())
+        self.on_boxes_toggled()
+
+    def on_boxes_toggled(self):
+        self.draw_boxes()
+        self.set_status("BBox 를 숨겼습니다 — 아래 이물을 그대로 볼 수 있어요. H 키로 다시 보입니다. (숨긴 동안은 BBox 를 그리거나 고칠 수 없습니다)"
+                        if not self.show_boxes_var.get() else "BBox 를 다시 보입니다.")
+
     def select_box(self, index):
         """BBox 선택(None 이면 선택 해제). 선택하면 Class 목록도 그 BBox 의 Class 로 맞춘다."""
         self.selected = index
@@ -1523,6 +1587,7 @@ class Day1Labeler:
         return True
 
     def after_history(self, what):
+        self._nudge_t = 0.0
         self.selected = None
         self.dirty = self.boxes != self._clean           # 처음 상태까지 되돌리면 '변경 없음'
         self.draw_boxes()
