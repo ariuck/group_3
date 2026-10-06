@@ -1,1 +1,1 @@
-file_name,source_dataset,original_split,scene_type,worker,status,qa_status,review_reason
+﻿No,이미지 파일명,라벨(TXT) 파일명,이미지 유형,원본 BBox 수,최종 BBox 수,Class,TXT 줄 수 = 화면 BBox 수,위치 맞음,Class 맞음,누락 객체 여부,상태,발견된 문제,작성자,검수자,검수일,비고(수정 내용)
