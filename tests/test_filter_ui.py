@@ -113,6 +113,24 @@ class FilterUiTest(unittest.TestCase):
         self.assertEqual(self.app.filter_var.get(), "전체")
         self.assertTrue(self.infos)                                      # '해당하는 사진이 없습니다' 안내
 
+    def test_empty_result_restores_the_number_display(self):
+        """(수정한 버그) 걸러서 본 뒤 해당 사진이 없는 필터를 고르면 위쪽 번호·총 개수가 이전 값으로 남던 문제"""
+        self.choose("수정 필요")
+        self.assertEqual(self.app.nav_text(), "1 / 1")
+        self.choose("제외")                                              # 해당하는 사진이 없다 → 전체로 되돌림
+        self.assertEqual(len(self.names()), 6)
+        self.assertEqual(self.app.nav_text(), "3 / 6")                   # 보던 사진(a2)의 번호와 전체 개수
+        self.assertEqual(str(self.app.btn_next.cget("state")), "normal")
+
+    def test_cancelled_filter_restores_the_number_display(self):
+        from src.ui import main_window as mw
+        self.choose("수정 필요")                                         # a2 한 장만 보임
+        mw.messagebox.askyesnocancel = lambda *a, **k: None
+        self.app.dirty = True
+        self.choose("검수 완료")                                         # 지금 사진(a2)이 걸러져 이동해야 하는데 취소
+        self.assertEqual(self.app.filter_var.get(), "전체")
+        self.assertEqual(self.app.nav_text(), "3 / 6")
+
     def test_back_to_everything(self):
         self.choose("수정 필요")
         self.choose("전체")

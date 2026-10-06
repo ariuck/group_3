@@ -101,7 +101,7 @@ class Day1Labeler:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.show_image()
         self.set_status(self.start_message())
-        self.root.after(150, self.restore_session)             # 창이 뜬 직후, 마지막으로 보던 폴더·사진을 다시 연다
+        self._restore_job = self.root.after(150, self.restore_session)   # 창이 뜬 직후, 마지막으로 보던 폴더·사진을 다시 연다
 
     # 예전 코드·설명과의 호환용: self.scale / offset_x / offset_y 는 Viewport 값을 그대로 보여 준다.
     @property
@@ -641,13 +641,13 @@ class Day1Labeler:
             nav.set_filter(None)
             self.filter_var.set(self.FILTER_ALL)
             messagebox.showinfo("보기", f"'{name}' 에 해당하는 사진이 없습니다.")
-            self.refresh_file_list()
+            self.update_nav()                                    # 번호·총 개수·이전/다음 표시도 함께 되돌린다
             return
         if nav.index < 0:                                        # 지금 보던 사진이 걸러졌다 → 첫 사진으로
             if not self.confirm_discard():
                 nav.set_filter(None)
                 self.filter_var.set(self.FILTER_ALL)
-                self.refresh_file_list()
+                self.update_nav()
                 return
             self.load_image(nav.files[0])
         else:
@@ -793,8 +793,22 @@ class Day1Labeler:
             return False                     # 취소
         return self.save() if ans else True  # 예 → 저장 / 아니오 → 변경 버림
 
+    def shutdown(self):
+        """예약해 둔 작업(화면 다시 그리기·이동·복원 등)을 모두 취소한다. 창을 닫기 직전에 부른다.
+        (취소하지 않으면 닫힌 창을 찾다가 'invalid command name' 오류가 날 수 있다)"""
+        for name in ("_resize_job", "_render_job", "_nav_job", "_restore_job"):
+            job = getattr(self, name, None)
+            if job is not None:
+                try:
+                    self.root.after_cancel(job)
+                except tk.TclError:
+                    pass
+                setattr(self, name, None)
+        self.strip.stop()
+
     def on_close(self):
         if self.confirm_discard():
+            self.shutdown()
             self.root.destroy()
 
     # ====================================================================
@@ -865,7 +879,7 @@ class Day1Labeler:
         [RAW 와 비교(Diff)] 를 켜면 추가(초록)·수정(주황)·삭제(빨강)를 색으로 구분하고, 원본 위치는 점선으로 보여 준다."""
         c = self.canvas
         c.delete("box")
-        state, deleted = {}, []                                  # state: 지금 BBox 번호 → 'added' / 'modified'
+        state = {}                                               # state: 지금 BBox 번호 → 'added' / 'modified'
         if self.diff_var.get():
             d = diff_boxes(self.raw_boxes, self.boxes)
             state = {ci: "added" for ci in d["added"]}
