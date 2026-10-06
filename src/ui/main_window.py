@@ -112,7 +112,7 @@ class Day1Labeler:
         bar = tk.Frame(self.root, padx=6, pady=6)
         bar.pack(side="top", fill="x")
         for text, func in (("📊 데이터 조사", self.show_inventory), ("🔍 무결성 검증(QA)", self.run_validation),
-                           ("📂 이미지 열기", self.open_image),
+                           ("📁 폴더 열기", self.open_folder), ("📂 이미지 열기", self.open_image),
                            ("💾 저장", self.save), ("🔄 다시 불러오기", self.reload),
                            ("🗑 선택 BBox 삭제", self.delete_selected), ("📁 WORK 폴더 열기", self.open_work_folder)):
             tk.Button(bar, text=text, command=func, padx=8, pady=3).pack(side="left", padx=3)
@@ -225,6 +225,12 @@ class Day1Labeler:
                           ("<Right>", self.go_next), ("<Next>", self.go_next)):   # Prior/Next = PageUp/PageDown
             r.bind(key, lambda e, f=func: None if self.is_typing(e) else f())
 
+        # 방향키(← →) 및 A / D 키로 이전/다음 사진 이동
+        for key in ("<Left>", "a", "A"):
+            r.bind(key, lambda e: None if self.is_typing(e) else self.go_prev())
+        for key in ("<Right>", "d", "D"):
+            r.bind(key, lambda e: None if self.is_typing(e) else self.go_next())
+
     @staticmethod
     def is_typing(event):
         """키를 누른 곳이 글자 입력칸(Entry·Combobox)인가?"""
@@ -305,6 +311,23 @@ class Day1Labeler:
     # ====================================================================
     # 파일 열기 / 저장 / 다시 불러오기
     # ====================================================================
+
+    def open_folder(self):
+        """[📁 폴더 열기] 데이터 또는 이미지 폴더 선택 → 하위 모든 이미지 자동 스캔 → 첫 장 표시."""
+        if not self.confirm_discard():
+            return
+        folder = filedialog.askdirectory(
+            title="데이터/이미지 폴더 선택 (data/raw 또는 images/ 포함 폴더)",
+            initialdir=str(settings.RAW_DIR if settings.RAW_DIR.is_dir() else settings.PROJECT_DIR)
+        )
+        if not folder:
+            return
+        first_img = self.navigator.load_folder(folder)
+        if not first_img:
+            messagebox.showinfo("폴더 열기", f"선택한 폴더 안에 JPG 이미지가 없습니다.\n\n{folder}")
+            return
+        self.load_image(first_img)
+        self.set_status(f"폴더를 열었습니다: {Path(folder).name} (총 {self.navigator.total}장)")
 
     def open_image(self):
         """[이미지 열기] 파일 선택 → 불러오기."""
