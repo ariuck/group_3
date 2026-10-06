@@ -86,6 +86,42 @@ class EditUiTest(unittest.TestCase):
         self.app.select_box(None)
         self.assertIn("선택된 BBox 없음", info.cget("text"))
 
+    # ── 화면 보정 (밝기·대비·흑백) ────────────────────────────
+    def test_enhance_changes_only_the_copy(self):
+        src = Image.new("RGB", (4, 4), (100, 150, 50))
+        self.assertEqual(self.app.enhance(src).getpixel((0, 0)), (100, 150, 50))     # 보정 전에는 그대로
+        self.app.bright_idx = 1                                                       # ×1.3
+        bright = self.app.enhance(src).getpixel((0, 0))
+        self.assertGreater(bright[0], 100)
+        self.app.bright_idx = 3                                                       # ×0.7
+        self.assertLess(self.app.enhance(src).getpixel((0, 0))[0], 100)
+        self.app.bright_idx, self.app.gray = 0, True
+        r, g, b = self.app.enhance(src).getpixel((0, 0))
+        self.assertTrue(r == g == b)                                                  # 흑백
+        self.assertEqual(src.getpixel((0, 0)), (100, 150, 50))                        # 입력 사본은 안 바뀐다
+
+    def test_buttons_cycle_and_return_to_normal(self):
+        for _ in range(4):
+            self.app.cycle_brightness()
+        self.assertEqual(self.app.bright_idx, 0)
+        self.assertEqual(self.app.btn_bright.cget("text"), "밝기 ×1.0")
+        self.app.cycle_contrast()
+        self.assertEqual(self.app.btn_contrast.cget("text"), "대비 ×1.3")
+        self.app.toggle_gray()
+        self.assertEqual(self.app.btn_gray.cget("relief"), "sunken")
+        self.app.toggle_gray()
+        self.assertEqual(self.app.btn_gray.cget("relief"), "raised")
+
+    def test_enhance_never_changes_the_photo_or_the_saved_label(self):
+        from src.data_paths import work_label_path
+        before = self.app.pil_image.getpixel((10, 10))
+        self.app.cycle_brightness(); self.app.cycle_contrast(); self.app.toggle_gray()
+        self.assertEqual(self.app.pil_image.getpixel((10, 10)), before)               # 원본 이미지 객체 그대로
+        self.assertFalse(self.app.dirty)                                              # 보정은 '변경'이 아니다
+        self.app.save()
+        parts = work_label_path(self.app.image_path).read_text().split()
+        self.assertAlmostEqual(float(parts[1]), 0.5, places=6)                        # 라벨 좌표 그대로
+
     # ── 십자선 ────────────────────────────────────────────────
     def cross_items(self):
         return len(self.app.canvas.find_withtag("cross"))

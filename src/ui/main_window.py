@@ -29,7 +29,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이는 데 사용
+from PIL import Image, ImageEnhance, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이는 데 사용
 
 from src import settings
 from src.bbox.bbox_diff import diff_boxes, diff_summary
@@ -78,6 +78,9 @@ class Day1Labeler:
         self.pan_last = None       # 화면 이동(오른쪽 드래그) 중 마지막 마우스 위치
         self._cursor = "crosshair"  # 지금 캔버스 마우스 모양 (바뀔 때만 다시 지정)
         self.raw_boxes = []        # 이 사진의 원본(RAW) BBox — Diff 보기에서 지금 BBox 와 비교한다
+        self.bright_idx = 0        # 화면 보정(밝기·대비·흑백) — 화면에 보이는 모습만 바꾼다. 원본 사진과 저장 파일은 그대로
+        self.contrast_idx = 0
+        self.gray = False
         self._resize_job = None    # 창 크기 변경 후 다시 그리기 예약(디바운스)용
         self._render_job = None    # 화면 이동 중 이미지 다시 그리기 예약용
 
@@ -183,14 +186,25 @@ class Day1Labeler:
         tk.Button(tool_row, text="💾→ 저장 후 다음 (W)", command=self.save_and_next, padx=4, pady=0).pack(side="left")
         self.tools = tools
         self.tool_row = tool_row
+        opts = tk.Frame(tools)                               # 보기 옵션 (Diff · 십자선) — 한 줄에 둔다
+        opts.pack(fill="x")
+        self.opts_row = opts
         self.diff_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(tools, text="RAW 와 비교 (Diff)", variable=self.diff_var, command=self.on_diff_toggled,
-                       font=("Malgun Gothic", 9)).pack(anchor="w")
-        self.diff_label = tk.Label(tools, text="", anchor="w", justify="left", fg="#555555", font=("Malgun Gothic", 8))
-        self.diff_label.pack(fill="x")
+        tk.Checkbutton(opts, text="RAW 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
+                       font=("Malgun Gothic", 9)).pack(side="left")
         self.cross_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(tools, text="십자선 (정밀 정렬용)", variable=self.cross_var, command=self.on_cross_toggled,
-                       font=("Malgun Gothic", 9)).pack(anchor="w")
+        tk.Checkbutton(opts, text="십자선", variable=self.cross_var, command=self.on_cross_toggled,
+                       font=("Malgun Gothic", 9)).pack(side="left")
+        self.diff_label = tk.Label(tools, text="", anchor="w", justify="left", fg="#555555", font=("Malgun Gothic", 8))
+        # (diff_label 은 Diff 를 켰을 때만 pack — 평소에는 자리를 차지하지 않는다)
+        enh = tk.Frame(tools)                                # 화면 보정 (밝기·대비·흑백) — 어두운 사진의 작은 이물을 찾을 때
+        enh.pack(fill="x", pady=(0, 0))
+        self.btn_bright = tk.Button(enh, text="밝기 ×1.0", command=self.cycle_brightness, padx=4, pady=0)
+        self.btn_bright.pack(side="left", padx=(0, 3))
+        self.btn_contrast = tk.Button(enh, text="대비 ×1.0", command=self.cycle_contrast, padx=4, pady=0)
+        self.btn_contrast.pack(side="left", padx=(0, 3))
+        self.btn_gray = tk.Button(enh, text="흑백", command=self.toggle_gray, padx=4, pady=0)
+        self.btn_gray.pack(side="left")
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
@@ -708,6 +722,7 @@ class Day1Labeler:
             # 크게 확대하면 픽셀 경계가 보이도록 NEAREST (경계를 정확히 맞추기 좋다)
             resample = Image.NEAREST if self.vp.scale >= 2 else Image.BILINEAR
             part = self.pil_image.crop((x0, y0, x1, y1)).resize((disp_w, disp_h), resample)
+            part = self.enhance(part)                        # 밝기·대비·흑백 (화면에 보이는 부분만 — 가벼움)
             self.photo = ImageTk.PhotoImage(part)            # self.photo 에 저장해 두지 않으면 화면에서 사라진다!
             sx, sy = self.vp.image_to_canvas(x0, y0)
             c.create_image(round(sx), round(sy), anchor="nw", image=self.photo, tags="img")
@@ -763,6 +778,37 @@ class Day1Labeler:
         self.canvas.create_text(x1 + 3, y2 - 2, anchor="sw", text=f"{text} · {b['cls']}", fill=color,
                                 font=("Malgun Gothic", 9, "bold"), tags="box")
 
+    ENHANCE_STEPS = (1.0, 1.3, 1.6, 0.7)     # 누를 때마다 순서대로 바뀌고 다시 1.0 으로 돌아온다
+
+    def enhance(self, img):
+        """화면 보정을 적용한 사본. (원본 pil_image 는 건드리지 않는다)"""
+        if self.bright_idx:
+            img = ImageEnhance.Brightness(img).enhance(self.ENHANCE_STEPS[self.bright_idx])
+        if self.contrast_idx:
+            img = ImageEnhance.Contrast(img).enhance(self.ENHANCE_STEPS[self.contrast_idx])
+        if self.gray:
+            img = img.convert("L").convert("RGB")
+        return img
+
+    def refresh_enhance(self, what):
+        self.btn_bright.config(text=f"밝기 ×{self.ENHANCE_STEPS[self.bright_idx]:.1f}")
+        self.btn_contrast.config(text=f"대비 ×{self.ENHANCE_STEPS[self.contrast_idx]:.1f}")
+        self.btn_gray.config(relief="sunken" if self.gray else "raised")
+        self.render()
+        self.set_status(f"{what} — 화면에만 적용됩니다. 원본 사진과 저장되는 라벨은 바뀌지 않습니다.")
+
+    def cycle_brightness(self):
+        self.bright_idx = (self.bright_idx + 1) % len(self.ENHANCE_STEPS)
+        self.refresh_enhance("밝기")
+
+    def cycle_contrast(self):
+        self.contrast_idx = (self.contrast_idx + 1) % len(self.ENHANCE_STEPS)
+        self.refresh_enhance("대비")
+
+    def toggle_gray(self):
+        self.gray = not self.gray
+        self.refresh_enhance("흑백 " + ("켜짐" if self.gray else "꺼짐"))
+
     def update_cross(self, x, y):
         """[십자선] 이 켜져 있으면 마우스 위치에 가로·세로 점선을 그린다 (BBox 경계를 정밀하게 맞출 때)."""
         self.canvas.delete("cross")
@@ -780,8 +826,11 @@ class Day1Labeler:
 
     def on_diff_toggled(self):
         """[RAW 와 비교(Diff)] 켜기/끄기."""
-        if not self.diff_var.get():
+        if self.diff_var.get():
+            self.diff_label.pack(fill="x", after=self.opts_row)                       # 체크박스 줄 바로 아래
+        else:
             self.diff_label.config(text="")
+            self.diff_label.pack_forget()
         self.draw_boxes()
         if self.diff_var.get():
             self.set_status("Diff 보기 — 초록 = 추가 · 주황 = 수정(회색 점선이 원래 위치) · 빨강 점선 = 삭제된 원본 BBox")
