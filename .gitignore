@@ -27,3 +27,6 @@ venv/
 .vscode/
 __pycache__/
 *.pyc
+
+# 프로그램이 만드는 검증 결과 (매번 새로 생성)
+reports/validation_report.csv
