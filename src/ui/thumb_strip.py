@@ -79,10 +79,10 @@ class ThumbStrip(tk.Frame):
         self.row.pack(fill="x")
         self.btn_prev = ttk.Button(self.row, text="‹", width=2, command=lambda: self.page(-1), takefocus=False)
         self.btn_prev.pack(side="left")
+        self.btn_next = ttk.Button(self.row, text="›", width=2, command=lambda: self.page(+1), takefocus=False)
+        self.btn_next.pack(side="right")                      # 가운데보다 먼저 pack 해야 미리보기가 많아도 버튼이 밀려나지 않는다
         self.body = tk.Frame(self.row)
         self.body.pack(side="left", fill="x", expand=True)
-        self.btn_next = ttk.Button(self.row, text="›", width=2, command=lambda: self.page(+1), takefocus=False)
-        self.btn_next.pack(side="right")
 
         self.cells = []
         for k in range(MAX_CELLS):

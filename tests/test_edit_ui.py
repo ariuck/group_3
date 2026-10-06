@@ -155,7 +155,7 @@ class EditUiTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(str(rows[0][0]), "1")
         self.assertIn("2", rows[0][1])                              # Class 번호 + 이름
-        self.assertEqual(rows[0][2], "[400, 240, 200, 120]")
+        self.assertEqual(rows[0][2], "[400,240,200,120]")
         self.assertEqual(rows[0][3], "원본")
         self.assertIn("(1개)", self.app.box_title.cget("text"))
 
@@ -163,7 +163,7 @@ class EditUiTest(unittest.TestCase):
         self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
         self.app.on_mouse_up(self.at(560, 300))
         self.assertEqual(self.rows()[0][3], "변경")
-        self.assertEqual(self.rows()[0][2], "[460, 240, 200, 120]")
+        self.assertEqual(self.rows()[0][2], "[460,240,200,120]")
         self.assertIn("changed", self.app.box_list.item("0", "tags"))
         self.app.undo()
         self.assertEqual(self.rows()[0][3], "원본")                 # 되돌리면 다시 '원본'
@@ -230,7 +230,8 @@ class EditUiTest(unittest.TestCase):
                 out += buttons(c)
             return out
         names = " ".join(buttons(self.app.root))
-        for label in ("이미지", "폴더", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동", "조사", "QA", "재로드", "WORK"):
+        for label in ("이미지 열기", "폴더 열기", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동 모드",
+                      "데이터 조사", "QA 검증", "다시 불러오기", "WORK 폴더"):
             self.assertIn(label, names)
 
     # ── 저장 후 다음 ──────────────────────────────────────────
