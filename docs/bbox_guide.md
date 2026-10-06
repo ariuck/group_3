@@ -93,7 +93,7 @@ Reason 예:
 - occlusion_ambiguous
 ```
 
-REVIEW 사유 코드는 Manifest 의 `review_reason` 칸에 기록합니다.
+REVIEW 로 보낸 이유는 Manifest 검수표의 `발견된 문제` 칸에 적습니다.
 
 ---
 

@@ -28,7 +28,7 @@ BBox 와 Class 를 확인·수정하고 최종 학습데이터를 만드는 라�
 
 - 이전 / 다음 이미지 이동, 4K 이미지 Zoom / Pan
 - BBox 수정(이동·크기 조절)
-- PASS / EDITED / REVIEW 상태 관리와 Manifest 기록
+- 검수 상태 관리와 검수표(Manifest) 기록
 - Validation (좌표·Class·Pair 검사)
 
 ---
@@ -65,7 +65,8 @@ group_3/
 │   └── day1/                     1일차 산출물·과정 기록
 │
 ├── manifests/
-│   └── dataset_manifest.csv      작업대장
+│   ├── dataset_manifest.xlsx     검수표 (팀이 입력하는 틀)
+│   └── dataset_manifest.csv      검수표와 같은 칸의 CSV 머리글
 │
 ├── reports/                      qa_summary.md, test_report.md (작성 예정)
 └── tests/
@@ -215,21 +216,28 @@ RAW 데이터는 직접 수정하지 않습니다. 프로그램도 RAW 안에는
 
 ## 11. 작업 상태 확인
 
-900장의 작업 상태는 다음 파일에서 확인합니다.
+900장의 작업 상태는 다음 검수표에서 확인합니다.
 
 ```text
-manifests/dataset_manifest.csv
+manifests/dataset_manifest.xlsx
 ```
 
-주요 상태:
+- 시트 `검수표`: 이미지 1장 = 1행, 칸 17개
+  - No · 이미지 파일명 · 라벨(TXT) 파일명 · 이미지 유형 · 원본 BBox 수 · 최종 BBox 수 · Class
+  - TXT 줄 수 = 화면 BBox 수 · 위치 맞음 · Class 맞음 · 누락 객체 여부
+  - 상태 · 발견된 문제 · 작성자 · 검수자 · 검수일 · 비고(수정 내용)
+- 시트 `Class 기준`: Class ID / 이물 종류 / 사용 기준
+- 같은 17칸의 CSV 머리글: `manifests/dataset_manifest.csv`
+
+상태(`상태` 칸)는 목록에서 고릅니다.
 
 ```text
-DONE    → 수정 없이 검수 완료
-EDITED  → 수정 후 저장 완료
-REVIEW  → 추가 확인 필요
+검수 전 / 검수 완료 / 수정 필요 / 수정 완료 / 제외
 ```
 
-(현재는 칸 정의(머리글)만 있습니다. 프로그램의 상태 기록 기능은 개발 예정입니다.)
+`TXT 줄 수 = 화면 BBox 수`, `위치 맞음`, `Class 맞음`, `누락 객체 여부` 칸은 O / X 로 적습니다.
+
+(현재는 빈 틀만 있습니다. 프로그램의 상태 기록 기능은 개발 예정입니다.)
 
 ---
 

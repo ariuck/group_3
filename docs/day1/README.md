@@ -12,18 +12,23 @@
 
 ## 최종 기준과 다른 부분 (최종 기준이 우선)
 
-1일차에 쓴 초안 중 **최종 제출 기준과 이름·값이 다른 것**이 있습니다. 아래는 최종 기준을 따릅니다.
+1일차에 쓴 초안 중 **팀이 확정한 Manifest 검수표**와 이름·값이 다른 것이 있습니다. 아래는 검수표를 따릅니다.
 
-| 항목 | 1일차 초안 | 최종 기준 |
+| 항목 | 1일차 초안 | 최종 (검수표) |
 |---|---|---|
-| Manifest 파일 | `manifests/manifest.csv` (14칸) | `manifests/dataset_manifest.csv` (8칸: `file_name, source_dataset, original_split, scene_type, worker, status, qa_status, review_reason`) |
-| 작업 상태 | PENDING / WORKING / PASS / EDITED / REVIEW / REVIEWED / FINAL | `status` = DONE / EDITED / REVIEW, `qa_status` = PASS / WAIT |
-| 검수 사유 | 자유 문장(`issue`) | `review_reason` 코드 (예: `class_ambiguous`, `bbox_boundary_ambiguous`) |
+| Manifest 파일 | `manifests/manifest.csv` (14칸) | `manifests/dataset_manifest.xlsx` — 시트 `검수표` 17칸 + `Class 기준`, CSV 머리글은 `dataset_manifest.csv` |
+| 작업 상태 | PENDING / WORKING / PASS / EDITED / REVIEW / REVIEWED / FINAL | `상태` = 검수 전 / 검수 완료 / 수정 필요 / 수정 완료 / 제외 |
+| 검수 사유 | 자유 문장(`issue`) | `발견된 문제`, `비고(수정 내용)` 칸 |
 | Class 설정 | `config/classes.json` | `configs/classes.yaml` |
 | 기준 문서 | 1일차_산출물 안의 기준 정리 | `docs/project_baseline.md`, `class_guide.md`, `bbox_guide.md` |
 
 1일차 문서의 Manifest 초안(`3_Dataset_Manifest_초안`)은 칸의 **뜻을 이해하기 위한 참고**로만 보고,
-실제 작업 기록은 `dataset_manifest.csv` 형식으로 합니다.
+실제 작업 기록은 검수표(`dataset_manifest.xlsx`) 틀로 합니다.
+
+### 검수표 틀에 아직 없는 것 (팀 결정 필요)
+
+- **출처(`source_dataset`)·원래 split(`train`/`validation`) 칸이 없습니다.** 교과 8 에서 출처와 기존 분할을 확인해야 하므로 칸을 추가할지 정해야 합니다.
+- **REVIEW(판단이 어려움)에 해당하는 상태가 없습니다.** Class/BBox 기준서의 "애매하면 REVIEW"를 검수표에서 어떻게 표시할지 정해야 합니다. (예: 상태 `수정 필요` + `발견된 문제`에 이유)
 
 ## 알아 둘 점
 
