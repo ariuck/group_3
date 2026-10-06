@@ -21,6 +21,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from src.manifest.manifest_writer import STATUS_CHOICES
+from src.ui.hangul_input import HangulIME
 
 SCENE_CHOICES = ["정상 김치", "김치+대상", "객체 단독"]
 
@@ -43,6 +44,7 @@ class FormPanel(ttk.LabelFrame):
         self._on_change = on_change
         self._loading = False
         self._vars = {}
+        self.ime = HangulIME(on_mode_change=self._show_mode)   # WSL 에서도 한글을 칠 수 있게 (hangul_input.py 참고)
 
         for row, (key, label, kind, choices) in enumerate(FIELDS):
             ttk.Label(self, text=label).grid(row=row, column=0, sticky="w", padx=6, pady=3)
@@ -51,11 +53,20 @@ class FormPanel(ttk.LabelFrame):
                 widget = ttk.Combobox(self, textvariable=var, values=[""] + list(choices), state="readonly", width=10)
             else:
                 widget = ttk.Entry(self, textvariable=var, width=10)   # 좁게 시작하고 남는 폭만큼 늘어난다
+                self.ime.attach(widget)
             widget.grid(row=row, column=1, sticky="ew", padx=6, pady=3)
             var.trace_add("write", self._changed)
             self._vars[key] = var
 
+        # 한/영 전환 버튼 (한/영 키·오른쪽 Alt·Shift+Space 로도 바뀐다)
+        self._mode_btn = ttk.Button(self, width=10, command=self.ime.toggle, takefocus=False)
+        self._mode_btn.grid(row=len(FIELDS), column=1, sticky="e", padx=6, pady=(0, 3))
+        self._show_mode(self.ime.korean)
+
         self.columnconfigure(1, weight=1)
+
+    def _show_mode(self, korean):
+        self._mode_btn.config(text="한/영: 한글" if korean else "한/영: 영어")
 
     def _changed(self, *_):
         # set_values 로 값을 채우는 동안에는 "사람이 고쳤다"로 보지 않는다.
