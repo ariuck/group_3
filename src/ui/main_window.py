@@ -184,11 +184,11 @@ class Day1Labeler:
         self.bbox_info.pack(side="bottom", fill="x")
 
         # ④ 오른쪽 패널: 클래스 선택 + 라벨 목록 + 검수 기록 입력칸
-        side = tk.Frame(self.root, width=260, padx=6, pady=4)
+        side = tk.Frame(self.root, width=300, padx=6, pady=4)
         side.pack(side="right", fill="y")
-        side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 260 유지
+        side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 300 유지
 
-        tk.Label(side, text="클래스 선택", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
+        tk.Label(side, text="클래스 선택 (숫자키 0~6)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
         self.class_list = tk.Listbox(side, height=len(settings.CLASSES), exportselection=False,
                                      font=("Malgun Gothic", 10), activestyle="none")
         for c in settings.CLASSES:
@@ -226,9 +226,17 @@ class Day1Labeler:
         self.form = FormPanel(side, on_change=self.on_form_changed)
         self.form.pack(side="bottom", fill="x", pady=(8, 0))
 
-        tk.Label(side, text="라벨 목록 (BBox)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
-        self.box_list = tk.Listbox(side, font=("Consolas", 9), activestyle="none", exportselection=False)
+        self.box_title = tk.Label(side, text="라벨 목록 (0개)", font=("Malgun Gothic", 10, "bold"))
+        self.box_title.pack(anchor="w")
+        self.box_list = ttk.Treeview(side, columns=("no", "cls", "pos", "state"), show="headings", height=4,
+                                     selectmode="browse")
+        for col, text, width, anchor in (("no", "No", 30, "center"), ("cls", "클래스", 112, "w"),
+                                         ("pos", "위치 (x, y, w, h)", 112, "w"), ("state", "상태", 40, "center")):
+            self.box_list.heading(col, text=text)
+            self.box_list.column(col, width=width, anchor=anchor, stretch=(col == "pos"))
+        self.box_list.tag_configure("changed", foreground="#e65100")        # 내가 고치거나 추가한 BBox 는 주황
         self.box_list.pack(fill="both", expand=True)
+        self._box_guard = False                                              # 표를 다시 채우는 동안 선택 이벤트를 무시
 
         # ⑤ 가운데: 이미지를 보여 줄 도화지(Canvas)
         self.canvas = tk.Canvas(self.root, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
@@ -262,7 +270,7 @@ class Day1Labeler:
             c.bind(f"<ButtonRelease-{btn}>", self.on_pan_end)
 
         self.class_list.bind("<<ListboxSelect>>", self.on_class_selected)
-        self.box_list.bind("<<ListboxSelect>>", self.on_box_list_selected)
+        self.box_list.bind("<<TreeviewSelect>>", self.on_box_list_selected)
 
         r = self.root
         # 입력칸에 글자를 치는 중에는 글자·숫자 단축키가 동작하면 안 된다
@@ -867,13 +875,23 @@ class Day1Labeler:
                  f"YOLO xc={xc:.4f} yc={yc:.4f} w={w:.4f} h={h:.4f}")
 
     def refresh_box_list(self):
-        """오른쪽 '라벨 목록'을 현재 self.boxes 와 맞춘다."""
-        self.box_list.delete(0, "end")
-        for i, b in enumerate(self.boxes):
-            w, h = b["x2"] - b["x1"], b["y2"] - b["y1"]
-            self.box_list.insert("end", f"{i + 1:>2}  cls {b['cls']}  [{b['x1']:.0f},{b['y1']:.0f},{w:.0f},{h:.0f}]")
-        if self.selected is not None and self.selected < len(self.boxes):
-            self.box_list.selection_set(self.selected)       # (코드로 선택해도 ListboxSelect 이벤트는 안 생긴다)
+        """오른쪽 '라벨 목록' 표를 현재 self.boxes 와 맞춘다.  상태 = 원본 그대로이면 '원본', 고치거나 새로 그렸으면 '변경'."""
+        self._box_guard = True
+        try:
+            self.box_list.delete(*self.box_list.get_children())
+            same = set(diff_boxes(self.raw_boxes, self.boxes)["unchanged"])
+            for i, b in enumerate(self.boxes):
+                w, h = b["x2"] - b["x1"], b["y2"] - b["y1"]
+                changed = i not in same
+                self.box_list.insert("", "end", iid=str(i), tags=("changed",) if changed else (), values=(
+                    i + 1, f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}",
+                    f"[{b['x1']:.0f}, {b['y1']:.0f}, {w:.0f}, {h:.0f}]", "변경" if changed else "원본"))
+            if self.selected is not None and self.selected < len(self.boxes):
+                self.box_list.selection_set(str(self.selected))
+                self.box_list.see(str(self.selected))
+            self.box_title.config(text=f"라벨 목록 ({len(self.boxes)}개)")
+        finally:
+            self._box_guard = False
 
     def update_title(self):
         name = self.image_path.name if self.image_path else ""
@@ -1221,9 +1239,12 @@ class Day1Labeler:
             self.choose_class(sel[0])
 
     def on_box_list_selected(self, _event):
-        sel = self.box_list.curselection()
-        if sel and sel[0] != self.selected:
-            self.select_box(sel[0])
+        """표에서 줄을 눌렀을 때 그 BBox 를 선택한다. (표를 다시 채우는 중에 생기는 이벤트는 무시)"""
+        if self._box_guard:
+            return
+        sel = self.box_list.selection()
+        if sel and int(sel[0]) != self.selected:
+            self.select_box(int(sel[0]))
 
     def mark_changed(self):
         """BBox 가 바뀐 뒤 공통으로 하는 일: 저장 안 함 표시 + 화면 갱신."""
