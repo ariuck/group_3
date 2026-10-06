@@ -30,6 +30,7 @@ from src.data_paths import is_inside, locate_in_raw, work_label_path
 from src.validation.validator import inventory_markdown, scan_inventory
 from src.yolo.yolo_loader import find_raw_label, read_yolo_file
 from src.yolo.yolo_writer import write_yolo_file
+from src.ui.navigator import ImageNavigator
 
 
 class Day1Labeler:
@@ -59,6 +60,8 @@ class Day1Labeler:
         self.drag = None           # 드래그 중인 정보 (시작점, 임시 사각형 등)
         self._resize_job = None    # 창 크기 변경 후 다시 그리기 예약(디바운스)용
 
+        self.navigator = ImageNavigator() # 네비게이터 추가
+
         self.build_widgets()
         self.bind_events()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -84,6 +87,18 @@ class Day1Labeler:
                            ("💾 저장", self.save), ("🔄 다시 불러오기", self.reload),
                            ("🗑 선택 BBox 삭제", self.delete_selected), ("📁 WORK 폴더 열기", self.open_work_folder)):
             tk.Button(bar, text=text, command=func, padx=8, pady=3).pack(side="left", padx=3)
+
+
+        # 후영 추가
+        # (1.5) 이전 / 다음 / 진행률 (오른쪽 끝)
+        self.progress = tk.Label(bar, text="0 / 0", font=("Malgun Gothic", 11, "bold"), width=12)
+        self.progress.pack(side="right", padx=6)
+        self.btn_next = tk.Button(bar, text="다음 ▶", command=self.go_next, padx=8, pady=3, state="disabled")
+        self.btn_next.pack(side="right", padx=3)
+        self.btn_prev = tk.Button(bar, text="◀ 이전", command=self.go_prev, padx=8, pady=3, state="disabled")
+        self.btn_prev.pack(side="right", padx=3)
+
+
 
         # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
         self.info = tk.Label(self.root, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
@@ -135,6 +150,11 @@ class Day1Labeler:
         for i in range(len(settings.CLASSES)):              # 숫자키 0~6 = Class 선택
             self.root.bind(str(i), lambda e, cid=i: self.choose_class(cid))
 
+        # 방향키 추가
+        self.root.bind("<Left>", lambda e: self.go_prev())
+        self.root.bind("<Right>", lambda e: self.go_next())
+
+
     # ====================================================================
     # 데이터 조사 / 폴더 열기
     # ====================================================================
@@ -179,28 +199,52 @@ class Day1Labeler:
     # ====================================================================
 
     def open_image(self):
-        """[이미지 열기] 이미지 → 같은 이름 TXT 자동 찾기 → BBox Load."""
+        """[이미지 열기] 파일 선택 → 불러오기."""
         if not self.confirm_discard():
             return
         path = filedialog.askopenfilename(
             title="라벨링할 이미지 선택 (data/raw/.../images/...)",
             initialdir=str(settings.RAW_DIR if settings.RAW_DIR.is_dir() else settings.PROJECT_DIR),
             filetypes=[("JPG 이미지", "*.jpg *.jpeg *.JPG *.JPEG")])
-        if not path:
-            return                                           # 사용자가 취소
+        if path:
+            self.load_image(path)
+
+    def load_image(self, path):
+        """이미지 1장을 읽어 화면에 올린다. (저장 여부 확인은 부르는 쪽에서 이미 끝낸 상태)"""
         try:
             img = Image.open(path)
-            img.load()                                       # 실제로 읽어서 깨진 파일이면 여기서 오류가 난다
+            img.load()
             img = img.convert("RGB")
         except Exception as e:
             messagebox.showerror("이미지를 열 수 없음", f"{path}\n\n{e}")
-            return
-
+            return False
         self.image_path = Path(path)
         self.pil_image = img
         self.img_w, self.img_h = img.size
+        self.navigator.set_current(self.image_path)   # 목록·번호 갱신
         self.load_boxes()
         self.show_image()
+        self.update_nav()
+        return True
+
+    # ---- 이전 / 다음 ----
+    def go_prev(self):
+        self.move_to(self.navigator.prev_path())
+
+    def go_next(self):
+        self.move_to(self.navigator.next_path())
+
+    def move_to(self, path):
+        if path is None or not self.confirm_discard():   # 저장 안 한 변경이 있으면 먼저 물어봄
+            return
+        self.load_image(path)
+
+    def update_nav(self):
+        """진행률 글자와 [이전]/[다음] 버튼 활성 상태를 맞춘다."""
+        nav = self.navigator
+        self.progress.config(text=nav.progress_text())
+        self.btn_prev.config(state="normal" if nav.has_prev() else "disabled")
+        self.btn_next.config(state="normal" if nav.has_next() else "disabled")
 
     def load_boxes(self):
         """TXT 를 읽어 self.boxes 에 채운다.
