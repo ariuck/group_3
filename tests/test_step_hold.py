@@ -136,7 +136,7 @@ class JumpToNumberTest(unittest.TestCase):
         self.jump("37")
         self.assertEqual(self.app.image_path.name, "img036.jpg")
         self.assertEqual(self.app.nav_text(), "37 / 60")
-        self.assertEqual(self.app.file_list.curselection(), (36,))      # 왼쪽 목록도 따라간다
+        self.assertEqual(self.app.strip.current, 36)                       # 하단 사진 목록도 따라간다
 
     def test_out_of_range_and_garbage_are_rejected(self):
         for text in ("0", "61", "abc", "-3", "1.5"):

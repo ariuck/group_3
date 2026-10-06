@@ -58,6 +58,7 @@ class ThumbStrip(tk.Frame):
         self.current = -1
         self.start = 0
         self._cache = OrderedDict()                  # 경로 → PhotoImage
+        self._marks = {}                             # 경로 → (글자, 색) — refresh_marks 때만 다시 계산한다
         self._queue = []
         self._job = None
         self._resize_job = None
@@ -97,6 +98,7 @@ class ThumbStrip(tk.Frame):
         self.files = list(files)
         self.current = -1
         self.start = 0
+        self._marks.clear()
         self._update_title()
         self._refresh()
 
@@ -110,7 +112,8 @@ class ThumbStrip(tk.Frame):
             self._style_cells()
 
     def refresh_marks(self):
-        """저장·상태가 바뀐 뒤 글자(✓·상태)를 다시 쓴다."""
+        """저장·상태가 바뀐 뒤 글자(✓·상태)를 다시 계산해서 쓴다."""
+        self._marks.clear()
         self._style_cells()
 
     def page(self, direction):
@@ -194,7 +197,9 @@ class ThumbStrip(tk.Frame):
             is_cur = cell.index == self.current
             text, color = ("", "#333333")
             if self._mark_of is not None:
-                text, color = self._mark_of(cell.path)
+                if cell.path not in self._marks:
+                    self._marks[cell.path] = self._mark_of(cell.path)
+                text, color = self._marks[cell.path]
             name = cell.path.stem
             cell.cap.config(text=f"{name}\n{text}" if text else name, fg=color,
                             font=(FONT, 8, "bold" if is_cur else "normal"), height=2)
