@@ -77,6 +77,8 @@ class Day1Labeler:
         self._render_job = None    # 화면 이동 중 이미지 다시 그리기 예약용
 
         self.navigator = ImageNavigator() # 네비게이터 추가
+        self._nav_pending = None   # ← → 를 누르는 동안 '가려는 사진 번호' (아직 화면에 안 올린 것)
+        self._nav_job = None       # 그 사진을 읽도록 예약한 작업
 
         self.build_widgets()
         self.bind_events()
@@ -374,6 +376,7 @@ class Day1Labeler:
         except Exception as e:
             messagebox.showerror("이미지를 열 수 없음", f"{path}\n\n{e}")
             return False
+        self._nav_pending = None                      # 다른 경로로 사진을 열면 방향키로 가던 중이던 목적지는 버린다
         self.image_path = Path(path)
         self.pil_image = img
         self.img_w, self.img_h = img.size
@@ -385,10 +388,39 @@ class Day1Labeler:
 
     # ---- 이전 / 다음 ----
     def go_prev(self):
-        self.move_to(self.navigator.prev_path())
+        self.step(-1)
 
     def go_next(self):
-        self.move_to(self.navigator.next_path())
+        self.step(+1)
+
+    def step(self, delta):
+        """이전(-1) / 다음(+1).  방향키를 누르고 있으면 입력이 초당 수십 번 들어와 사진을 그때마다 읽으면 쌓여서 멈춰 보인다.
+        그래서 번호·목록 표시만 바로 바꾸고, 사진은 입력이 잠잠해지는 순간(after_idle)에 '가려는 곳' 한 장만 읽는다."""
+        nav = self.navigator
+        base = self._nav_pending if self._nav_pending is not None else nav.index
+        target = base + delta
+        if not 0 <= target < nav.total:
+            return
+        if self._nav_pending is None and not self.confirm_discard():   # 저장 안 한 변경이 있으면 처음 한 번만 물어봄
+            return
+        self._nav_pending = target
+        self.progress.config(text=f"{target + 1} / {nav.total}")        # 가벼운 표시만 먼저 갱신
+        self.btn_prev.config(state="normal" if target > 0 else "disabled")
+        self.btn_next.config(state="normal" if target < nav.total - 1 else "disabled")
+        self.file_list.selection_clear(0, "end")
+        self.file_list.selection_set(target)
+        self.file_list.see(target)
+        if self._nav_job is None:
+            self._nav_job = self.root.after_idle(self.flush_step)
+
+    def flush_step(self):
+        """쌓인 이동 중 마지막 목적지 사진 한 장만 실제로 연다."""
+        self._nav_job = None
+        target, self._nav_pending = self._nav_pending, None
+        if target is None or not 0 <= target < self.navigator.total:
+            return
+        if not self.load_image(self.navigator.files[target]):
+            self.update_nav()                                           # 못 열었으면 표시를 현재 사진 기준으로 되돌린다
 
     def move_to(self, path):
         if path is None or not self.confirm_discard():   # 저장 안 한 변경이 있으면 먼저 물어봄
