@@ -83,6 +83,13 @@ def test_fit_small_image_not_enlarged():
     assert close(v.image_to_canvas(100, 50), (400, 300))   # 가운데
 
 
+def test_fit_upscale():
+    v = Viewport()
+    v.fit(200, 100, 800, 600, upscale=True)  # 가로 기준 4배
+    assert close((v.scale,), (4.0,))
+    assert close(v.image_to_canvas(0, 0), (0, 100))
+
+
 def test_box_to_canvas_and_clamp():
     v = Viewport(scale=2, offset_x=10, offset_y=20)
     assert close(v.box_to_canvas({"x1": 0, "y1": 0, "x2": 100, "y2": 50}), (10, 20, 210, 120))

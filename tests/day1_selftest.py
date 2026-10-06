@@ -1,4 +1,4 @@
-"""1일차 프로그램 자체 점검 (RAW/WORK 분리, 데이터 조사, End-to-End, RAW 불변, Class 설정을 코드로 확인).
+"""1일차 프로그램 자체 점검 (RAW/WORK 분리, 데이터 조사, End-to-End, RAW 불변, Class 설정, ③ Zoom·편집을 코드로 확인).
 
 임시 폴더에 '가짜 데이터'를 만들어 시험하므로 data/raw 의 실제 데이터는 읽지도 건드리지도 않는다.
 
@@ -31,6 +31,10 @@ def ok(name, cond):
 
 def md5(p):
     return hashlib.md5(Path(p).read_bytes()).hexdigest()
+
+
+def near(a, b, eps=1e-6):
+    return all(abs(x - y) < eps for x, y in zip(a, b))
 
 
 # ── Class 설정 (configs/classes.yaml) ───────────────────────────────────────
@@ -92,8 +96,8 @@ try:
     ok("TXT 자동 Load: BBox 2개", len(app.boxes) == 2)
 
     class E:
-        def __init__(self, x, y):
-            self.x, self.y = x, y
+        def __init__(self, x, y, delta=0, num=None):
+            self.x, self.y, self.delta, self.num = x, y, delta, num
 
     app.choose_class(5)
     app.on_mouse_down(E(150, 120)); app.on_mouse_drag(E(220, 180)); app.on_mouse_up(E(220, 180))
@@ -117,6 +121,62 @@ try:
     ok("안전장치: RAW 안에는 저장을 거부한다", app.save() is False)
     mw.work_label_path = original
     ok("안전장치 시도 후에도 RAW 불변", {p: md5(p) for p in raw.rglob("*.txt")} == raw_hash)
+
+    # ── ③ Zoom · 화면 이동 · Undo/Redo ─────────────────────────────────────────
+    app.dirty = False
+    mw.filedialog.askopenfilename = lambda **k: str(img_a)
+    app.open_image(); root.update()
+    n0 = len(app.boxes)
+    fit_scale = app.vp.scale
+    ok("이미지를 열면 화면 맞춤 상태", app.auto_fit and fit_scale > 0)
+
+    before = app.to_image(300, 250)
+    app.on_mouse_wheel(E(300, 250, delta=120)); app.on_mouse_wheel(E(300, 250, num=4))   # Windows 휠 · Linux 휠
+    ok("휠 확대: 배율이 커진다", app.vp.scale > fit_scale * 1.5 and not app.auto_fit)
+    ok("휠 확대: 커서 아래 지점이 제자리", near(app.to_image(300, 250), before))
+    app.on_mouse_wheel(E(300, 250, num=5))
+    ok("휠 축소: 배율이 줄어든다", app.vp.scale < fit_scale * 1.5)
+
+    app.zoom_in(); app.zoom_in()
+    app.choose_class(3)
+    expect = make_box(3, *app.to_image(100, 100), *app.to_image(200, 180), app.img_w, app.img_h)
+    app.on_mouse_down(E(100, 100)); app.on_mouse_drag(E(200, 180)); app.on_mouse_up(E(200, 180))
+    ok("확대 상태에서 그린 BBox 도 원본 픽셀 좌표로 저장", len(app.boxes) == n0 + 1 and app.boxes[-1] == expect)
+
+    ok("Undo: BBox 추가 취소", app.undo() and len(app.boxes) == n0 and not app.dirty)
+    ok("Redo: 다시 추가", app.redo() and len(app.boxes) == n0 + 1 and app.dirty)
+
+    app.select_box(0)
+    old_cls = app.boxes[0]["cls"]
+    new_cls = 6 if old_cls != 6 else 5
+    app.choose_class(new_cls)
+    ok("Class 변경 후 Undo → 원래 Class", app.boxes[0]["cls"] == new_cls and app.undo() and app.boxes[0]["cls"] == old_cls)
+
+    app.select_box(0)
+    app.delete_selected()
+    ok("삭제 후 Undo → BBox 복원", len(app.boxes) == n0 and app.undo() and len(app.boxes) == n0 + 1)
+    ok("되돌릴 게 없으면 False", all(app.undo() for _ in range(len(app.history))) and app.undo() is False)
+    app.redo(); app.redo(); app.redo()
+
+    before = app.to_image(400, 300)
+    app.on_pan_start(E(400, 300)); app.on_pan_drag(E(460, 330)); app.on_pan_end(E(460, 330))
+    ok("오른쪽 드래그 이동: 이미지가 마우스를 따라간다", near(app.to_image(460, 330), before))
+
+    for _ in range(40):
+        app.zoom_in()
+    root.update()
+    ok("최대 확대에서도 오류 없이 그린다 (보이는 부분만 잘라 그림)", app.vp.zoom_percent == 2000)
+
+    zoomed = [dict(b) for b in app.boxes]
+    ok("확대 상태에서 저장", app.save())
+    app.fit_to_window(); root.update()
+    ok("화면 맞춤으로 복귀", app.auto_fit and abs(app.vp.scale - fit_scale) < 1e-9)
+    app.reload(); root.update()
+    ok("배율과 상관없이 저장·복원 좌표가 같다", len(app.boxes) == len(zoomed) and all(
+        a["cls"] == b["cls"] and all(abs(a[k] - b[k]) < 1e-3 for k in ("x1", "y1", "x2", "y2"))
+        for a, b in zip(app.boxes, zoomed)))
+    ok("다시 불러오면 Undo 기록은 비워진다", not app.history.can_undo)
+    ok("③ 이후에도 RAW 불변", {p: md5(p) for p in raw.rglob("*.txt")} == raw_hash)
 
     # ── 빈 TXT / TXT 없음 ──────────────────────────────────────────────────────
     app.dirty = False

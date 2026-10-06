@@ -75,17 +75,21 @@ class Viewport:
         self.offset_x += dx
         self.offset_y += dy
 
-    def fit(self, img_w, img_h, canvas_w, canvas_h, margin=0):
+    def fit(self, img_w, img_h, canvas_w, canvas_h, margin=0, upscale=False):
         """이미지 전체가 캔버스 안에 들어오도록 배율을 정하고 가운데 정렬한다.
 
-        작은 이미지를 억지로 키우지는 않는다(최대 100 %).
+        upscale=False 면 작은 이미지를 억지로 키우지 않는다(최대 100 %).
+        upscale=True 면 작은 이미지도 캔버스에 꽉 차게 키운다.
         """
         if img_w <= 0 or img_h <= 0 or canvas_w <= 0 or canvas_h <= 0:
             self.reset()
             return
         avail_w = max(1, canvas_w - 2 * margin)
         avail_h = max(1, canvas_h - 2 * margin)
-        self.scale = _clamp(min(avail_w / img_w, avail_h / img_h, 1.0), MIN_SCALE, MAX_SCALE)
+        s = min(avail_w / img_w, avail_h / img_h)
+        if not upscale:
+            s = min(s, 1.0)
+        self.scale = _clamp(s, MIN_SCALE, MAX_SCALE)
         self.offset_x = (canvas_w - img_w * self.scale) / 2
         self.offset_y = (canvas_h - img_h * self.scale) / 2
 
