@@ -86,6 +86,56 @@ class EditUiTest(unittest.TestCase):
         self.app.select_box(None)
         self.assertIn("선택된 BBox 없음", info.cget("text"))
 
+    # ── Diff 보기 ─────────────────────────────────────────────
+    def canvas_texts(self):
+        c = self.app.canvas
+        return [c.itemcget(i, "text") for i in c.find_withtag("box") if c.type(i) == "text"]
+
+    def turn_diff_on(self):
+        self.app.diff_var.set(True)
+        self.app.on_diff_toggled()
+
+    def test_diff_is_off_by_default_and_shows_no_marks(self):
+        self.assertFalse(self.app.diff_var.get())
+        self.assertFalse(any("[" in t for t in self.canvas_texts()))
+        self.assertEqual(self.app.diff_label.cget("text"), "")
+
+    def test_diff_unchanged(self):
+        self.turn_diff_on()
+        self.assertEqual(self.app.diff_label.cget("text"), "추가 0 · 수정 0 · 삭제 0 · 그대로 1")
+        self.assertFalse(any("[" in t for t in self.canvas_texts()))
+
+    def test_diff_shows_modified_with_the_original_position(self):
+        self.turn_diff_on()
+        self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(540, 310))
+        self.app.on_mouse_up(self.at(540, 310))
+        self.assertIn("수정 1", self.app.diff_label.cget("text"))
+        texts = self.canvas_texts()
+        self.assertTrue(any("[수정]" in t for t in texts))
+        self.assertTrue(any(t.startswith("원본") for t in texts))          # 원래 위치의 회색 점선
+
+    def test_diff_shows_added_and_deleted(self):
+        self.turn_diff_on()
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))                            # 새 BBox
+        self.assertTrue(any("[추가]" in t for t in self.canvas_texts()))
+        self.app.select_box(0); self.app.delete_selected()                 # 원본 BBox 삭제
+        self.assertTrue(any(t.startswith("삭제됨") for t in self.canvas_texts()))
+        self.assertIn("추가 1 · 수정 0 · 삭제 1", self.app.diff_label.cget("text"))
+
+    def test_diff_for_a_photo_without_raw_label(self):
+        self.app.raw_boxes = []
+        self.turn_diff_on()
+        self.assertIn("원본 라벨이 없는 사진", self.app.diff_label.cget("text"))
+
+    def test_diff_turned_off_clears_the_marks(self):
+        self.turn_diff_on()
+        self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
+        self.app.on_mouse_up(self.at(560, 300))
+        self.app.diff_var.set(False); self.app.on_diff_toggled()
+        self.assertFalse(any("[" in t or t.startswith("원본") for t in self.canvas_texts()))
+        self.assertEqual(self.app.diff_label.cget("text"), "")
+
     def test_clear_all_asks_then_can_be_undone(self):
         from src.ui import main_window as mw
         asked = []

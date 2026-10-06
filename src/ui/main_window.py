@@ -32,6 +32,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이는 데 사용
 
 from src import settings
+from src.bbox.bbox_diff import diff_boxes, diff_summary
 from src.bbox.bbox_edit import HANDLE_CURSORS, handle_points, hit_handle, move_box, resize_box
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.bbox.history import History
@@ -76,6 +77,7 @@ class Day1Labeler:
         self.drag = None           # 드래그 중인 정보 (시작점, 임시 사각형 등)
         self.pan_last = None       # 화면 이동(오른쪽 드래그) 중 마지막 마우스 위치
         self._cursor = "crosshair"  # 지금 캔버스 마우스 모양 (바뀔 때만 다시 지정)
+        self.raw_boxes = []        # 이 사진의 원본(RAW) BBox — Diff 보기에서 지금 BBox 와 비교한다
         self._resize_job = None    # 창 크기 변경 후 다시 그리기 예약(디바운스)용
         self._render_job = None    # 화면 이동 중 이미지 다시 그리기 예약용
 
@@ -180,6 +182,11 @@ class Day1Labeler:
         tk.Button(tool_row, text="🧹 전체 삭제", command=self.clear_all, padx=4, pady=0).pack(side="left", padx=(0, 4))
         self.tools = tools
         self.tool_row = tool_row
+        self.diff_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(tools, text="RAW 와 비교 (Diff)", variable=self.diff_var, command=self.on_diff_toggled,
+                       font=("Malgun Gothic", 9)).pack(anchor="w")
+        self.diff_label = tk.Label(tools, text="", anchor="w", justify="left", fg="#555555", font=("Malgun Gothic", 8))
+        self.diff_label.pack(fill="x")
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
@@ -532,6 +539,8 @@ class Day1Labeler:
         self.boxes, self.selected, self.dirty = [], None, False
         self._clean = []
         self.history.clear()                                 # 다른 이미지(또는 다시 불러오기)면 Undo 기록은 버린다
+        raw_txt = find_raw_label(self.image_path)
+        self.raw_boxes = read_yolo_file(raw_txt, self.img_w, self.img_h)[0] if raw_txt else []   # Diff 비교용 원본
         dataset, split = locate_in_raw(self.image_path)
         where = f"{dataset} / {split}" if dataset else "RAW 밖의 파일"
         self.info.config(text=f"출처: {where}   |   {self.image_path.name}   ({self.img_w}×{self.img_h})")
@@ -689,20 +698,38 @@ class Day1Labeler:
             self.photo = None                                # 이미지가 화면 밖으로 완전히 나감
         self.draw_boxes()
 
+    DIFF_COLORS = {"added": "#2e7d32", "modified": "#ef6c00", "deleted": "#c62828"}     # 추가 초록 · 수정 주황 · 삭제 빨강
+    DIFF_NAMES = {"added": "추가", "modified": "수정", "deleted": "삭제"}
+
     def draw_boxes(self):
-        """BBox 만 다시 그린다 (가벼움). 원본 픽셀 좌표 → 화면 좌표 변환이 핵심."""
+        """BBox 만 다시 그린다 (가벼움). 원본 픽셀 좌표 → 화면 좌표 변환이 핵심.
+        [RAW 와 비교(Diff)] 를 켜면 추가(초록)·수정(주황)·삭제(빨강)를 색으로 구분하고, 원본 위치는 점선으로 보여 준다."""
         c = self.canvas
         c.delete("box")
+        state, deleted = {}, []                                  # state: 지금 BBox 번호 → 'added' / 'modified'
+        if self.diff_var.get():
+            d = diff_boxes(self.raw_boxes, self.boxes)
+            state = {ci: "added" for ci in d["added"]}
+            for ri, ci in d["modified"]:
+                state[ci] = "modified"
+                self.draw_ghost(self.raw_boxes[ri], "#9e9e9e", "원본")      # 수정 전 위치(회색 점선)
+            for ri in d["deleted"]:
+                self.draw_ghost(self.raw_boxes[ri], self.DIFF_COLORS["deleted"], "삭제됨")
+            self.diff_label.config(text=diff_summary(d) + ("" if self.raw_boxes or not self.boxes else "\n(원본 라벨이 없는 사진)"))
         for i, b in enumerate(self.boxes):
             x1, y1, x2, y2 = self.vp.box_to_canvas(b)
             color = settings.class_color(b["cls"])
             is_sel = (i == self.selected)
-            c.create_rectangle(x1, y1, x2, y2, outline=("#ffeb3b" if is_sel else color),
-                               width=(4 if is_sel else 2), tags="box")
+            mark = state.get(i)                                  # 'added' / 'modified' / None(그대로)
+            outline = "#ffeb3b" if is_sel else (self.DIFF_COLORS[mark] if mark else color)
+            c.create_rectangle(x1, y1, x2, y2, outline=outline, width=(4 if is_sel else 2), tags="box")
+            label = f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}"
+            if mark:
+                label += f"  [{self.DIFF_NAMES[mark]}]"
             tag = c.create_text(x1 + 3, y1 - 2 if y1 > 16 else y1 + 12, anchor=("sw" if y1 > 16 else "nw"),
-                                text=f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}", fill="white",
-                                font=("Malgun Gothic", 9, "bold"), tags="box")
-            bg = c.create_rectangle(c.bbox(tag), fill=color, outline=color, tags="box")
+                                text=label, fill="white", font=("Malgun Gothic", 9, "bold"), tags="box")
+            bg = c.create_rectangle(c.bbox(tag), fill=(self.DIFF_COLORS[mark] if mark else color),
+                                    outline=(self.DIFF_COLORS[mark] if mark else color), tags="box")
             c.tag_raise(tag, bg)                             # 글자가 배경 사각형 위에 오도록
         if self.selected is not None and self.selected < len(self.boxes):
             for hx, hy in handle_points(self.boxes[self.selected]).values():     # 선택된 BBox 의 크기 조절 핸들 8개
@@ -710,6 +737,21 @@ class Day1Labeler:
                 c.create_rectangle(sx - 4, sy - 4, sx + 4, sy + 4, fill="white", outline="#222222", width=1,
                                    tags=("box", "handle"))
         self.update_bbox_info()
+
+    def draw_ghost(self, b, color, text):
+        """Diff 에서 원본 BBox 를 점선으로 그린다 (선택·이동 대상은 아니다)."""
+        x1, y1, x2, y2 = self.vp.box_to_canvas(b)
+        self.canvas.create_rectangle(x1, y1, x2, y2, outline=color, width=2, dash=(6, 4), tags="box")
+        self.canvas.create_text(x1 + 3, y2 - 2, anchor="sw", text=f"{text} · {b['cls']}", fill=color,
+                                font=("Malgun Gothic", 9, "bold"), tags="box")
+
+    def on_diff_toggled(self):
+        """[RAW 와 비교(Diff)] 켜기/끄기."""
+        if not self.diff_var.get():
+            self.diff_label.config(text="")
+        self.draw_boxes()
+        if self.diff_var.get():
+            self.set_status("Diff 보기 — 초록 = 추가 · 주황 = 수정(회색 점선이 원래 위치) · 빨강 점선 = 삭제된 원본 BBox")
 
     def update_bbox_info(self):
         """선택한 BBox 의 좌표(원본 픽셀)와 YOLO 비율값을 상태줄 위에 보여 준다."""
