@@ -86,6 +86,29 @@ class EditUiTest(unittest.TestCase):
         self.app.select_box(None)
         self.assertIn("선택된 BBox 없음", info.cget("text"))
 
+    # ── 십자선 ────────────────────────────────────────────────
+    def cross_items(self):
+        return len(self.app.canvas.find_withtag("cross"))
+
+    def test_crosshair_follows_the_mouse_only_when_on(self):
+        self.app.on_mouse_move(self.at(100, 100))
+        self.assertEqual(self.cross_items(), 0)                   # 기본은 꺼짐
+        self.app.cross_var.set(True); self.app.on_cross_toggled()
+        self.app.on_mouse_move(self.at(100, 100))
+        self.assertEqual(self.cross_items(), 2)                   # 가로선 + 세로선
+        self.app.on_mouse_move(self.at(200, 150))
+        self.assertEqual(self.cross_items(), 2)                   # 따라다니되 늘어나지 않는다
+        x = self.app.canvas.coords(self.app.canvas.find_withtag("cross")[1])[0]
+        self.assertAlmostEqual(x, self.at(200, 150).x)
+
+    def test_crosshair_stays_during_a_drag_and_goes_away_when_turned_off(self):
+        self.app.cross_var.set(True); self.app.on_cross_toggled()
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(120, 120))
+        self.assertEqual(self.cross_items(), 2)
+        self.app.on_mouse_up(self.at(120, 120))
+        self.app.cross_var.set(False); self.app.on_cross_toggled()
+        self.assertEqual(self.cross_items(), 0)
+
     # ── 저장 후 다음 ──────────────────────────────────────────
     def add_second_photo(self):
         """같은 폴더에 사진 한 장을 더 만들고 목록을 새로 읽는다."""

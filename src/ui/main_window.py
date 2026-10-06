@@ -188,6 +188,9 @@ class Day1Labeler:
                        font=("Malgun Gothic", 9)).pack(anchor="w")
         self.diff_label = tk.Label(tools, text="", anchor="w", justify="left", fg="#555555", font=("Malgun Gothic", 8))
         self.diff_label.pack(fill="x")
+        self.cross_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(tools, text="십자선 (정밀 정렬용)", variable=self.cross_var, command=self.on_cross_toggled,
+                       font=("Malgun Gothic", 9)).pack(anchor="w")
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
@@ -235,6 +238,7 @@ class Day1Labeler:
         c.bind("<B1-Motion>", self.on_mouse_drag)           # 누른 채로 움직이는 동안
         c.bind("<ButtonRelease-1>", self.on_mouse_up)       # 버튼을 뗀 순간
         c.bind("<Motion>", self.on_mouse_move)              # 그냥 움직일 때 (좌표 표시용)
+        c.bind("<Leave>", lambda e: self.canvas.delete("cross"))   # 마우스가 캔버스를 벗어나면 십자선을 지운다
         c.bind("<Configure>", self.on_canvas_resize)        # 도화지 크기가 바뀔 때
 
         # ③ 확대 / 이동
@@ -759,6 +763,21 @@ class Day1Labeler:
         self.canvas.create_text(x1 + 3, y2 - 2, anchor="sw", text=f"{text} · {b['cls']}", fill=color,
                                 font=("Malgun Gothic", 9, "bold"), tags="box")
 
+    def update_cross(self, x, y):
+        """[십자선] 이 켜져 있으면 마우스 위치에 가로·세로 점선을 그린다 (BBox 경계를 정밀하게 맞출 때)."""
+        self.canvas.delete("cross")
+        if not self.cross_var.get() or self.pil_image is None:
+            return
+        cw, ch = self.canvas_size()
+        self.canvas.create_line(0, y, cw, y, fill="#00e5ff", dash=(3, 3), tags="cross")
+        self.canvas.create_line(x, 0, x, ch, fill="#00e5ff", dash=(3, 3), tags="cross")
+
+    def on_cross_toggled(self):
+        if not self.cross_var.get():
+            self.canvas.delete("cross")
+        else:
+            self.set_status("십자선 켜짐 — 마우스를 따라다니는 점선으로 BBox 경계를 정밀하게 맞출 수 있습니다.")
+
     def on_diff_toggled(self):
         """[RAW 와 비교(Diff)] 켜기/끄기."""
         if not self.diff_var.get():
@@ -919,6 +938,7 @@ class Day1Labeler:
 
     def on_mouse_drag(self, event):
         """② 누른 채 움직이는 동안 — 새 BBox 의 점선 사각형을 늘리거나, BBox 를 옮기고 크기를 바꾼다."""
+        self.update_cross(event.x, event.y)
         d = self.drag
         if not d:
             return
@@ -1029,6 +1049,7 @@ class Day1Labeler:
 
     def on_mouse_move(self, event):
         """그냥 움직일 때: 마우스 모양을 바꾸고, 가리키는 '원본 이미지 좌표'를 상태줄에 표시 (좌표 개념 확인용)."""
+        self.update_cross(event.x, event.y)
         if self.pil_image is None or self.drag or self.pan_last is not None:
             return
         x, y = self.to_image(event.x, event.y)
