@@ -170,7 +170,16 @@ class Day1Labeler:
             self.class_list.insert("end", f"■ {c['id']}  {settings.class_name(c['id'])}")
             self.class_list.itemconfig(c["id"], foreground=c["color"] if c["enabled"] else "#9e9e9e")
         self.class_list.selection_set(self.current_class)
-        self.class_list.pack(fill="x", pady=(0, 10))
+        self.class_list.pack(fill="x", pady=(0, 6))
+
+        # 편집 도구 (전체 삭제 · 저장 후 다음 · 보기 옵션)
+        tools = tk.LabelFrame(side, text="편집 도구", padx=4, pady=2, font=("Malgun Gothic", 9))
+        tools.pack(fill="x", pady=(0, 6))
+        tool_row = tk.Frame(tools)
+        tool_row.pack(fill="x")
+        tk.Button(tool_row, text="🧹 전체 삭제", command=self.clear_all, padx=4, pady=0).pack(side="left", padx=(0, 4))
+        self.tools = tools
+        self.tool_row = tool_row
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
@@ -1014,6 +1023,23 @@ class Day1Labeler:
         del self.boxes[self.selected]
         self.selected = None
         self.mark_changed()
+
+    def clear_all(self):
+        """[🧹 전체 삭제] 이 사진의 BBox 를 모두 지운다. 확인창을 거치고, Ctrl+Z 로 되돌릴 수 있다."""
+        if self.drag or self.pil_image is None:
+            return
+        if not self.boxes:
+            self.set_status("지울 BBox 가 없습니다.")
+            return
+        if not messagebox.askyesno("전체 삭제", f"이 사진의 BBox {len(self.boxes)}개를 모두 지울까요?\n\n"
+                                   "Ctrl+Z 로 되돌릴 수 있고, [저장]하기 전에는 파일이 바뀌지 않습니다."):
+            return
+        count = len(self.boxes)
+        self.history.push(self.boxes)
+        self.boxes.clear()
+        self.selected = None
+        self.mark_changed()
+        self.set_status(f"BBox {count}개를 모두 지웠습니다 — Ctrl+Z 로 되돌릴 수 있습니다.")
 
     def choose_class(self, cid):
         """Class 선택(숫자키 / 목록 클릭 공통).

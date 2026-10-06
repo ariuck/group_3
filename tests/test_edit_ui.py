@@ -86,6 +86,37 @@ class EditUiTest(unittest.TestCase):
         self.app.select_box(None)
         self.assertIn("선택된 BBox 없음", info.cget("text"))
 
+    def test_clear_all_asks_then_can_be_undone(self):
+        from src.ui import main_window as mw
+        asked = []
+        mw.messagebox.askyesno = lambda *a, **k: (asked.append(a[1]), True)[1]
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))                    # BBox 2개로 만든다
+        self.assertEqual(len(self.app.boxes), 2)
+        self.app.clear_all()
+        self.assertEqual(self.app.boxes, [])
+        self.assertIsNone(self.app.selected)
+        self.assertEqual(len(asked), 1)
+        self.assertIn("2개", asked[0])                             # 몇 개를 지우는지 알려 준다
+        self.app.undo()
+        self.assertEqual(len(self.app.boxes), 2)                   # 한 번에 되돌아온다
+
+    def test_clear_all_can_be_declined(self):
+        from src.ui import main_window as mw
+        mw.messagebox.askyesno = lambda *a, **k: False
+        self.app.clear_all()
+        self.assertEqual(len(self.app.boxes), 1)
+        self.assertEqual(len(self.app.history), 0)
+        self.assertFalse(self.app.dirty)
+
+    def test_clear_all_with_no_boxes_does_not_ask(self):
+        from src.ui import main_window as mw
+        asked = []
+        mw.messagebox.askyesno = lambda *a, **k: (asked.append(1), True)[1]
+        self.app.boxes.clear()
+        self.app.clear_all()
+        self.assertEqual(asked, [])
+
     def test_click_only_selects(self):
         self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_up(self.at(500, 300))
         self.assertEqual(self.app.selected, 0)
