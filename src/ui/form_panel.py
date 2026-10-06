@@ -25,11 +25,12 @@ import tkinter as tk
 from tkinter import ttk
 
 from src.manifest.manifest_writer import STATUS_CHOICES
+from src.ui import theme
 from src.ui.hangul_input import HangulIME
 
 SCENE_CHOICES = ["김치+대상 객체", "정상 김치", "대상 객체 단독", "판단 어려움"]   # docs/manifest_guide.md 의 '이미지 유형' 값과 같게
 
-# (검수표 머리글, 화면에 보이는 이름, 종류, 선택지, 값이 비었을 때 라디오 이름)
+# (검수표 머리글, 화면에 보이는 이름, 종류, 선택지, 값이 비었을 때 선택 버튼 이름)
 FIELDS = [
     ("상태", "상태", "choice", STATUS_CHOICES, "자동"),
     ("이미지 유형", "이미지 유형", "choice", SCENE_CHOICES, "미정"),
@@ -38,28 +39,27 @@ FIELDS = [
     ("발견된 문제", "발견된 문제", "text", None, None),
     ("비고(수정 내용)", "비고", "text", None, None),
 ]
-RADIO_COLUMNS = {"상태": 3, "이미지 유형": 2}      # 라디오를 가로로 몇 개씩 펼칠지
+CHIP_COLUMNS = 3                      # 선택 버튼을 가로로 몇 개씩 펼칠지
 
 
-class FormPanel(ttk.Frame):
-    """사람이 직접 채우는 칸을 모아 둔 패널."""
+class FormPanel(tk.Frame):
+    """사람이 직접 채우는 칸을 모아 둔 카드. (선택 칸은 눌러서 고르는 칩, 글자 칸은 넓은 입력칸)"""
 
     def __init__(self, parent, on_change=None, on_mode=None):
-        super().__init__(parent, relief="groove", borderwidth=2, padding=2)
+        C = theme.COLORS
+        super().__init__(parent, bg=C["card"], highlightbackground=C["border"], highlightthickness=1, padx=12, pady=8)
         self._on_change = on_change
         self._on_mode = on_mode            # 한/영 상태가 바뀌었을 때 알림 (예: 상태줄에 안내)
         self._loading = False
         self._vars = {}
         self.ime = HangulIME(on_mode_change=self._show_mode)   # WSL 에서도 한글을 칠 수 있게 (hangul_input.py 참고)
-
         self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, weight=1)
 
         # 제목줄: '검수 기록' + 한/영 전환 버튼 (한/영 키·오른쪽 Alt·Shift+Space 로도 바뀐다)
-        head = ttk.Frame(self)
-        head.grid(row=0, column=0, columnspan=2, sticky="ew", padx=4, pady=(0, 2))
-        ttk.Label(head, text="검수 기록", font=("Malgun Gothic", 10, "bold")).pack(side="left")
-        self._mode_btn = ttk.Button(head, width=10, command=self.ime.toggle, takefocus=False)
+        head = tk.Frame(self, bg=C["card"])
+        head.grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        tk.Label(head, text="검수 기록", bg=C["card"], fg=C["text"], font=theme.font(11, True)).pack(side="left")
+        self._mode_btn = ttk.Button(head, width=11, command=self.ime.toggle, takefocus=False, style="Tool.TButton")
         self._mode_btn.pack(side="right")
         self._show_mode(self.ime.korean)
         row = 1
@@ -69,27 +69,29 @@ class FormPanel(ttk.Frame):
                 continue
             var = tk.StringVar(value="")
             self._vars[key] = var
-            box = ttk.Frame(self)
-            box.grid(row=row, column=0, columnspan=2, sticky="ew", padx=4, pady=(0, 2))
-            ttk.Label(box, text=label, font=("Malgun Gothic", 9, "bold"), foreground="#444444").grid(
-                row=0, column=0, columnspan=3, sticky="w")
-            cols = RADIO_COLUMNS.get(key, 2)
+            tk.Label(self, text=label, bg=C["card"], fg=C["muted"], font=theme.font(9, True), anchor="w").grid(
+                row=row, column=0, sticky="ew")
+            chips = tk.Frame(self, bg=C["card"])
+            chips.grid(row=row + 1, column=0, sticky="ew", pady=(2, 6))
             options = [(blank_label, "")] + [(c, c) for c in choices]
             for n, (text, value) in enumerate(options):
-                ttk.Radiobutton(box, text=text, value=value, variable=var, takefocus=False).grid(
-                    row=1 + n // cols, column=n % cols, sticky="w", padx=(2, 6))
-            for c in range(cols):
-                box.columnconfigure(c, weight=1)
+                ttk.Radiobutton(chips, text=text, value=value, variable=var, style="Chip.Toolbutton",
+                                takefocus=False).grid(row=n // CHIP_COLUMNS, column=n % CHIP_COLUMNS, sticky="ew",
+                                                      padx=(0 if n % CHIP_COLUMNS == 0 else 4, 0),
+                                                      pady=(0 if n < CHIP_COLUMNS else 4, 0))
+            for c in range(CHIP_COLUMNS):
+                chips.columnconfigure(c, weight=1, uniform="chip")
             var.trace_add("write", self._changed)
-            row += 1
+            row += 2
 
         # 작성자 · 검수자는 한 줄에 나란히
-        names = ttk.Frame(self)
-        names.grid(row=row, column=0, columnspan=2, sticky="ew", padx=4, pady=2)
+        names = tk.Frame(self, bg=C["card"])
+        names.grid(row=row, column=0, sticky="ew", pady=(0, 4))
         for n, (key, label) in enumerate((("작성자", "작성자"), ("검수자", "검수자"))):
-            ttk.Label(names, text=label).grid(row=0, column=n * 2, sticky="w", padx=(0 if n == 0 else 8, 3))
+            tk.Label(names, text=label, bg=C["card"], fg=C["muted"], font=theme.font(9, True)).grid(
+                row=0, column=n * 2, sticky="w", padx=(0 if n == 0 else 12, 6))
             var = tk.StringVar()
-            entry = ttk.Entry(names, textvariable=var, width=8)
+            entry = ttk.Entry(names, textvariable=var, width=10)
             entry.grid(row=0, column=n * 2 + 1, sticky="ew")
             names.columnconfigure(n * 2 + 1, weight=1)
             self.ime.attach(entry)
@@ -98,14 +100,15 @@ class FormPanel(ttk.Frame):
         row += 1
 
         for key, label in (("발견된 문제", "발견된 문제"), ("비고(수정 내용)", "비고")):
-            ttk.Label(self, text=label).grid(row=row, column=0, sticky="w", padx=4)
+            tk.Label(self, text=label, bg=C["card"], fg=C["muted"], font=theme.font(9, True), anchor="w").grid(
+                row=row, column=0, sticky="ew")
             var = tk.StringVar()
-            entry = ttk.Entry(self, textvariable=var, width=10)
-            entry.grid(row=row, column=1, sticky="ew", padx=4, pady=2)
+            entry = ttk.Entry(self, textvariable=var)
+            entry.grid(row=row + 1, column=0, sticky="ew", pady=(2, 4))
             self.ime.attach(entry)
             var.trace_add("write", self._changed)
             self._vars[key] = var
-            row += 1
+            row += 2
 
     def _show_mode(self, korean):
         self._mode_btn.config(text="한/영: 한글" if korean else "한/영: 영어")

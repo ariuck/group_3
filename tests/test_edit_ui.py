@@ -108,9 +108,9 @@ class EditUiTest(unittest.TestCase):
         self.app.cycle_contrast()
         self.assertEqual(self.app.btn_contrast.cget("text"), "대비 ×1.3")
         self.app.toggle_gray()
-        self.assertEqual(self.app.btn_gray.cget("relief"), "sunken")
+        self.assertTrue(self.app.gray_var.get())                       # 눌린 모양 = 체크 상태
         self.app.toggle_gray()
-        self.assertEqual(self.app.btn_gray.cget("relief"), "raised")
+        self.assertFalse(self.app.gray_var.get())
 
     def test_enhance_never_changes_the_photo_or_the_saved_label(self):
         from src.data_paths import work_label_path
@@ -225,14 +225,19 @@ class EditUiTest(unittest.TestCase):
         def buttons(w):
             out = []
             for c in w.winfo_children():
-                if c.winfo_class() in ("Button", "Checkbutton"):
+                if c.winfo_class() in ("Button", "Checkbutton", "TButton", "TCheckbutton", "TMenubutton"):
                     out.append(c.cget("text"))
                 out += buttons(c)
             return out
         names = " ".join(buttons(self.app.root))
-        for label in ("이미지 열기", "폴더 열기", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동 모드",
-                      "데이터 조사", "QA 검증", "다시 불러오기", "WORK 폴더"):
+        for label in ("이미지 열기", "폴더 열기", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동 모드", "도구"):
             self.assertIn(label, names)
+        menu = [w for w in self.app.root.winfo_children()[0].winfo_children() if w.winfo_class() == "TMenubutton"]
+        self.assertTrue(menu)
+        tools = self.app.root.nametowidget(menu[0].cget("menu"))
+        entries = [tools.entrycget(i, "label") for i in range(tools.index("end") + 1)]
+        for label in ("데이터 조사", "QA 검증 (무결성)", "다시 불러오기", "WORK 폴더 열기"):
+            self.assertIn(label, entries)
 
     # ── 저장 후 다음 ──────────────────────────────────────────
     def add_second_photo(self):

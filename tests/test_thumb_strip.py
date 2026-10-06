@@ -11,6 +11,7 @@ from PIL import Image
 
 from src import settings
 from src.manifest import manifest_writer as mw
+from src.ui.thumb_strip import CURRENT_BG
 
 
 def make_photos(count, size=(640, 480)):
@@ -106,9 +107,9 @@ class ThumbStripTest(unittest.TestCase):
         lo, hi = self.strip.visible_range
         self.assertTrue(lo <= 30 < hi)
         cur = [c for c in self.strip.cells if c.index == 30][0]
-        self.assertEqual(cur.frame.cget("bg"), "#1e88e5")                # 파란 테두리
+        self.assertEqual(cur.frame.cget("bg"), CURRENT_BG)               # 파란 테두리
         others = [c for c in self.strip.cells if c.index not in (None, 30)]
-        self.assertTrue(all(c.frame.cget("bg") != "#1e88e5" for c in others))
+        self.assertTrue(all(c.frame.cget("bg") != CURRENT_BG for c in others))
 
     def test_moving_inside_the_window_does_not_scroll(self):
         self.strip.set_files(self.files)

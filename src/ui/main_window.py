@@ -41,6 +41,8 @@ from src.data_paths import is_inside, locate_in_raw, work_label_path
 from src.manifest.manifest_writer import ManifestError, read_human, read_status_map, record_save, status_of
 from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
+from src.ui import theme
+from src.ui.class_picker import ClassPicker
 from src.ui.session import load_session, save_session
 from src.ui.thumb_strip import ThumbStrip
 from src.ui.validation_dialog import show_validation_dialog
@@ -55,8 +57,9 @@ class Day1Labeler:
     def __init__(self, root):
         self.root = root
         root.title("교과 7 · 이미지 라벨링 (RAW / WORK 구조)")
-        root.geometry(f"1400x{min(940, root.winfo_screenheight() - 80)}")      # 화면이 작으면 높이를 줄인다
-        root.minsize(1160, 740)                                                 # 이보다 작으면 버튼·패널이 잘린다
+        theme.setup(root)                                       # 색·글꼴·버튼 모양 (src/ui/theme.py)
+        root.geometry(f"1520x{min(960, root.winfo_screenheight() - 80)}")      # 화면이 작으면 높이를 줄인다
+        root.minsize(1280, 820)                                                 # 이보다 작으면 버튼·패널이 잘린다
 
         # ------------------------------------------------------------------
         # [Tkinter 개념 1: 변수]  프로그램이 '기억해야 하는 것'들
@@ -117,140 +120,164 @@ class Day1Labeler:
         """처음 화면에 보여 줄 안내. 데이터가 아직 없으면 어디에 넣어야 하는지 알려 준다."""
         raw = settings.RAW_DIR
         if raw.is_dir() and any(raw.rglob("*.jpg")):
-            return "[데이터 조사]로 데이터를 확인하고, [이미지 열기]로 사진 1장을 열어 보세요."
+            return "[폴더 열기]로 폴더를 열거나 [이미지 열기]로 사진 1장을 열어 보세요.  (도구 ▸ 데이터 조사에서 개수와 짝을 확인할 수 있어요)"
         return "data/raw 폴더에 데이터가 없습니다.  이물검출_학습데이터1·2 의 images / labels 파일을 data/raw 안에 넣어 주세요."
 
     # ------------------------------------------------------------------
     # 화면 만들기 ([Tkinter 개념 2: 위젯] + [개념 4: command])
     # ------------------------------------------------------------------
     def build_widgets(self):
-        # ① 위쪽 버튼 줄.  command=... 에는 '누르면 실행할 함수'를 연결한다.
-        #    (주의: command=self.save  처럼 괄호 없이 함수 이름만 넘긴다. 괄호를 붙이면 지금 바로 실행돼 버린다)
-        bar = tk.Frame(self.root, padx=6, pady=5)
+        C = theme.COLORS
+        # ① 위쪽 도구 줄 — 같은 일을 하는 버튼끼리 묶고, 주요 버튼(저장)은 파랑으로 강조한다.
+        #    command=... 에는 '누르면 실행할 함수'를 연결한다. (괄호 없이 함수 이름만! 괄호를 붙이면 지금 바로 실행돼 버린다)
+        bar = ttk.Frame(self.root, style="Bar.TFrame", padding=(14, 9))
         bar.pack(side="top", fill="x")
+        tk.Frame(self.root, height=1, bg=C["border"]).pack(side="top", fill="x")      # 도구 줄 아래 구분선
         self.pan_var = tk.BooleanVar(value=False)
-        groups = [# (글자, 눌렀을 때 할 일)   — 같은 일을 하는 버튼끼리 묶고, 묶음 사이에는 구분선을 둔다
-            [("이미지 열기", self.open_image), ("폴더 열기", self.open_folder)],                         # 열기
-            [("저장", self.save), ("저장+다음", self.save_and_next)],                        # 저장
-            [("↶ 되돌리기", self.undo), ("↷ 다시", self.redo), ("삭제", self.delete_selected),
-             ("전체 삭제", self.clear_all)],                                                     # 편집
-            [("⤢ 맞춤", self.fit_to_window), ("－", self.zoom_out), ("＋", self.zoom_in), "PAN"],   # 보기
-            [("데이터 조사", self.show_inventory), ("QA 검증", self.run_validation),
-             ("다시 불러오기", self.reload), ("WORK 폴더", self.open_work_folder)],                       # 도구
+        groups = [  # (글자, 할 일, 모양)
+            [("이미지 열기", self.open_image, "Tool"), ("폴더 열기", self.open_folder, "Tool")],
+            [("저장", self.save, "Primary"), ("저장+다음", self.save_and_next, "Soft")],
+            [("↶ 되돌리기", self.undo, "Tool"), ("↷ 다시", self.redo, "Tool"), ("삭제", self.delete_selected, "Danger"),
+             ("전체 삭제", self.clear_all, "Danger")],
+            [("⤢ 맞춤", self.fit_to_window, "Tool"), ("－", self.zoom_out, "Tool"), ("＋", self.zoom_in, "Tool"), "PAN"],
+            ["TOOLS"],
         ]
         for gi, group in enumerate(groups):
             if gi:
-                ttk.Separator(bar, orient="vertical").pack(side="left", fill="y", padx=6)
+                ttk.Separator(bar, orient="vertical").pack(side="left", fill="y", padx=10, pady=2)
             for item in group:
-                if item == "PAN":                 # 켜 두면 왼쪽 버튼 드래그로도 화면을 옮긴다 (오른쪽 버튼이 불편할 때)
-                    tk.Checkbutton(bar, text="이동 모드", variable=self.pan_var, indicatoron=False, padx=6, pady=2,
-                                   selectcolor="#cfe3ff", command=self.on_pan_toggled).pack(side="left", padx=2)
+                if item == "TOOLS":               # 자주 쓰지 않는 도구는 메뉴 하나로 묶는다
+                    menu = tk.Menu(self.root, tearoff=0, bg=C["card"], fg=C["text"], activebackground=C["accent_soft"],
+                                   activeforeground=C["text"], font=theme.font(10), borderwidth=1, relief="solid")
+                    for text, func in (("데이터 조사", self.show_inventory), ("QA 검증 (무결성)", self.run_validation),
+                                       ("다시 불러오기", self.reload), ("WORK 폴더 열기", self.open_work_folder)):
+                        menu.add_command(label=text, command=func)
+                    ttk.Menubutton(bar, text="도구", menu=menu, style="Tool.TMenubutton", takefocus=False).pack(
+                        side="left", padx=3)
+                elif item == "PAN":               # 켜 두면 왼쪽 버튼 드래그로도 화면을 옮긴다 (오른쪽 버튼이 불편할 때)
+                    ttk.Checkbutton(bar, text="이동 모드", variable=self.pan_var, style="Chip.Toolbutton",
+                                    command=self.on_pan_toggled, takefocus=False).pack(side="left", padx=3)
                 else:
-                    tk.Button(bar, text=item[0], command=item[1], padx=6, pady=2).pack(side="left", padx=2)
-        self.zoom_label = tk.Label(bar, text="100%", fg="#555555", font=("Malgun Gothic", 10, "bold"), width=6)
+                    ttk.Button(bar, text=item[0], command=item[1], style=f"{item[2]}.TButton",
+                               takefocus=False).pack(side="left", padx=3)
+        self.zoom_label = ttk.Label(bar, text="100%", style="Bar.TLabel", font=theme.font(11, True), width=6,
+                                    anchor="e")
         self.zoom_label.pack(side="right")
 
-        # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
-        #    같은 줄 오른쪽에 이전 / 진행률 / 다음 (위 버튼 줄은 꽉 차서 창이 좁으면 밀려나 안 보였다)
-        center = tk.Frame(self.root)                           # 가운데 영역 = 머리글(출처·번호 이동) + 이미지 도화지
-        row = tk.Frame(center)
-        row.pack(side="top", fill="x")
-        self.btn_next = tk.Button(row, text="다음 ▶", command=self.go_next, padx=8, pady=1, state="disabled")
-        self.btn_next.pack(side="right", padx=(2, 8))
-        self.btn_jump = tk.Button(row, text="이동", command=self.jump_to_entered_index, padx=6, pady=1)
-        self.btn_jump.pack(side="right", padx=(0, 4))
-        self.total_label = tk.Label(row, text="/ 0", font=("Malgun Gothic", 10))
-        self.total_label.pack(side="right", padx=(0, 2))
-        self.entry_index = tk.Entry(row, width=5, justify="center", font=("Malgun Gothic", 10))   # 사진 번호를 직접 입력
-        self.entry_index.pack(side="right", padx=(2, 2))
+        # ② 가운데 영역(이미지 쪽) — 보기 옵션 줄 + 머리글 + 도화지 + 좌표줄 + 사진 목록. (pack 은 맨 마지막에)
+        center = ttk.Frame(self.root, padding=(14, 10, 12, 8))
+        opts = ttk.Frame(center, padding=(0, 0, 0, 8))          # 보기 옵션 줄 (Diff · 십자선 · 밝기·대비·흑백)
+        opts.pack(side="top", fill="x")
+        self.opts_bar = opts
+        self.tools = opts
+        ttk.Label(opts, text="보기", style="Muted.TLabel").pack(side="left", padx=(0, 10))
+        self.diff_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(opts, text="RAW 와 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
+                        takefocus=False).pack(side="left")
+        self.cross_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(opts, text="십자선", variable=self.cross_var, command=self.on_cross_toggled,
+                        takefocus=False).pack(side="left", padx=(10, 0))
+        ttk.Separator(opts, orient="vertical").pack(side="left", fill="y", padx=12, pady=2)
+        self.btn_bright = ttk.Button(opts, text="밝기 ×1.0", command=self.cycle_brightness, style="Tool.TButton",
+                                     takefocus=False)
+        self.btn_bright.pack(side="left", padx=(0, 4))           # 어두운 사진의 작은 이물을 찾을 때 (화면에만 적용)
+        self.btn_contrast = ttk.Button(opts, text="대비 ×1.0", command=self.cycle_contrast, style="Tool.TButton",
+                                       takefocus=False)
+        self.btn_contrast.pack(side="left", padx=(0, 4))
+        self.gray_var = tk.BooleanVar(value=False)
+        self.btn_gray = ttk.Checkbutton(opts, text="흑백", variable=self.gray_var, style="Chip.Toolbutton",
+                                        command=self.on_gray_clicked, takefocus=False)
+        self.btn_gray.pack(side="left")
+        self.diff_label = ttk.Label(opts, text="", style="Diff.TLabel")
+        self.diff_label.pack(side="left", padx=(16, 0))          # Diff 를 켜면 '추가 N · 수정 N · 삭제 N · 그대로 N'
+
+        # ③ 맨 아래 상태줄 (창 전체 폭). 먼저 pack 해야 창이 작아져도 안 가려진다
+        self.status = ttk.Label(self.root, text="", style="Status.TLabel", padding=(14, 5), anchor="w")
+        self.status.pack(side="bottom", fill="x")
+
+        # ④ 오른쪽 패널: 카드 3장 — 클래스 / 라벨 목록 / 검수 기록  (창 전체 높이를 쓴다)
+        side = ttk.Frame(self.root, width=420, padding=(0, 6, 14, 10))
+        side.pack(side="right", fill="y")
+        side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 420 유지
+
+        cls_card = theme.card(side, padx=12, pady=8)
+        cls_card.pack(fill="x", pady=(0, 8))
+        head = tk.Frame(cls_card, bg=C["card"])
+        head.pack(fill="x", pady=(0, 4))
+        tk.Label(head, text="클래스", bg=C["card"], fg=C["text"], font=theme.font(11, True)).pack(side="left")
+        tk.Label(head, text="숫자키 0~6 으로도 고를 수 있어요", bg=C["card"], fg=C["muted"], font=theme.font(9)).pack(
+            side="left", padx=(8, 0))
+        self.class_list = ClassPicker(cls_card, settings.CLASSES, on_pick=self.choose_class, current=self.current_class)
+        self.class_list.pack(fill="x")
+
+        # 검수 기록 입력칸 — 패널 맨 아래에 둔다 (라벨 목록보다 먼저 pack 해야 창이 작아져도 안 가려진다)
+        self.form = FormPanel(side, on_change=self.on_form_changed, on_mode=self.on_ime_mode)
+        self.form.ime.bind_global(self.root)             # 한/영 키는 이미지 화면에 커서가 있어도 바뀐다
+        self.form.pack(side="bottom", fill="x", pady=(8, 0))
+
+        box_card = theme.card(side, padx=12, pady=8)
+        box_card.pack(fill="both", expand=True)
+        self.box_title = tk.Label(box_card, text="라벨 목록 (0개)", bg=C["card"], fg=C["text"], font=theme.font(11, True),
+                                  anchor="w")
+        self.box_title.pack(fill="x", pady=(0, 4))
+        self.box_list = ttk.Treeview(box_card, columns=("no", "cls", "pos", "state"), show="headings", height=3,
+                                     selectmode="browse")
+        for col, text, width, anchor in (("no", "No", 36, "center"), ("cls", "클래스", 150, "w"),
+                                         ("pos", "위치 (x,y,w,h)", 140, "w"), ("state", "상태", 52, "center")):
+            self.box_list.heading(col, text=text)
+            self.box_list.column(col, width=width, anchor=anchor, stretch=(col == "pos"))
+        self.box_list.tag_configure("changed", foreground=C["warn"])        # 내가 고치거나 추가한 BBox 는 주황
+        self.box_list.pack(fill="both", expand=True)
+        self._box_guard = False                                              # 표를 다시 채우는 동안 선택 이벤트를 무시
+
+        # ⑤ 가운데: 머리글(파일 이름 · 번호 이동) + 이미지 도화지 + 좌표줄 + 사진 목록
+        center.pack(side="left", fill="both", expand=True)       # (상태줄·오른쪽 패널을 먼저 pack 한 뒤 남는 자리를 차지)
+        row = ttk.Frame(center)
+        row.pack(side="top", fill="x", pady=(0, 8))
+        titles = ttk.Frame(row)
+        titles.pack(side="left", fill="x", expand=True)
+        self.info = ttk.Label(titles, text="사진을 열어 주세요", style="Title.TLabel")
+        self.info.pack(anchor="w")
+        self.info_meta = ttk.Label(titles, text="", style="Muted.TLabel")
+        self.info_meta.pack(anchor="w")
+        self.btn_next = ttk.Button(row, text="다음 ▶", command=self.go_next, style="Tool.TButton", state="disabled",
+                                   takefocus=False)
+        self.btn_next.pack(side="right", padx=(4, 0))
+        self.btn_jump = ttk.Button(row, text="이동", command=self.jump_to_entered_index, style="Tool.TButton",
+                                   takefocus=False)
+        self.btn_jump.pack(side="right", padx=(4, 0))
+        self.total_label = ttk.Label(row, text="/ 0", style="Muted.TLabel", font=theme.font(11))
+        self.total_label.pack(side="right", padx=(4, 2))
+        self.entry_index = ttk.Entry(row, width=5, justify="center", style="Nav.TEntry", font=theme.font(11, True))
+        self.entry_index.pack(side="right")                      # 사진 번호를 직접 입력
         self.entry_index.insert(0, "0")
         self.entry_index.bind("<Return>", lambda e: self.jump_to_entered_index())
         self.entry_index.bind("<KP_Enter>", lambda e: self.jump_to_entered_index())
         self.entry_index.bind("<FocusIn>", lambda e: self.entry_index.select_range(0, "end"))
         self.entry_index.bind("<Escape>", lambda e: (self.show_nav_number(self.navigator.index + 1 if self.navigator.index >= 0 else 0),
                                                      self.canvas.focus_set()))
-        self.btn_prev = tk.Button(row, text="◀ 이전", command=self.go_prev, padx=8, pady=1, state="disabled")
-        self.btn_prev.pack(side="right", padx=(6, 2))
-        self.info = tk.Label(row, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
-        self.info.pack(side="left", fill="x", expand=True)
+        self.btn_prev = ttk.Button(row, text="◀ 이전", command=self.go_prev, style="Tool.TButton", state="disabled",
+                                   takefocus=False)
+        self.btn_prev.pack(side="right", padx=(0, 6))
 
-        # ③-0 맨 아래: 사진 목록(미리보기 줄) — 누르면 그 사진으로 이동. (먼저 pack 해야 창이 작아져도 안 가려진다)
-        self.strip = ThumbStrip(self.root, on_select=self.on_thumb_selected, mark_of=self.thumb_mark)
-        self.strip.pack(side="bottom", fill="x", padx=6, pady=(2, 4))
+        # 아래부터 쌓는다: 사진 목록(맨 아래) → 좌표줄 → (남는 자리) 도화지
+        self.strip = ThumbStrip(center, on_select=self.on_thumb_selected, mark_of=self.thumb_mark)
+        self.strip.pack(side="bottom", fill="x", pady=(8, 0))
+        self.bbox_info = ttk.Label(center, text="", style="Coord.TLabel", padding=(2, 6), anchor="w")
+        self.bbox_info.pack(side="bottom", fill="x")
 
-        # 보기 필터: 상태별로 걸러서 본다 (예: '수정 필요' 인 사진만) — 제목줄 오른쪽
+        # 보기 필터: 상태별로 걸러서 본다 (예: '수정 필요' 인 사진만) — 사진 목록 제목줄 오른쪽
         self.filter_var = tk.StringVar(value=self.FILTER_ALL)
         self.filter_box = ttk.Combobox(self.strip.header, textvariable=self.filter_var, values=self.FILTER_CHOICES,
                                        state="readonly", width=16, takefocus=False)
         self.filter_box.pack(side="right")
-        tk.Label(self.strip.header, text="보기", font=("Malgun Gothic", 9)).pack(side="right", padx=(0, 4))
+        tk.Label(self.strip.header, text="보기", bg=C["card"], fg=C["muted"], font=theme.font(9)).pack(side="right", padx=(0, 6))
         self.filter_box.bind("<<ComboboxSelected>>", lambda e: (self.on_filter_changed(), self.canvas.focus_set()))
 
-        # ③ 아래쪽 상태 표시줄 (먼저 pack 해야 창이 작아져도 안 가려진다)
-        self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
-        self.status.pack(side="bottom", fill="x")
-        # 선택한 BBox 의 좌표 (상태줄 바로 위) — 이동·크기 조절 중에도 실시간으로 바뀐다
-        self.bbox_info = tk.Label(self.root, text="", anchor="w", padx=8, pady=2, font=("Consolas", 9), fg="#333333")
-        self.bbox_info.pack(side="bottom", fill="x")
-
-        # ④ 오른쪽 패널: 클래스 선택 + 라벨 목록 + 검수 기록 입력칸
-        side = tk.Frame(self.root, width=320, padx=6, pady=4)
-        side.pack(side="right", fill="y")
-        side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 320 유지
-
-        tk.Label(side, text="클래스 선택 (숫자키 0~6)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
-        self.class_list = tk.Listbox(side, height=len(settings.CLASSES), exportselection=False,
-                                     font=("Malgun Gothic", 9), activestyle="none")
-        for c in settings.CLASSES:
-            self.class_list.insert("end", f"■ {c['id']}  {settings.class_name(c['id'])}")
-            self.class_list.itemconfig(c["id"], foreground=c["color"] if c["enabled"] else "#9e9e9e")
-        self.class_list.selection_set(self.current_class)
-        self.class_list.pack(fill="x", pady=(0, 6))
-
-        # 보기 옵션 줄 (Diff · 십자선 · 밝기·대비·흑백) — 툴바 바로 아래. 오른쪽 패널을 짧게 하려고 옮겼다.
-        opts = tk.Frame(self.root, padx=8)
-        opts.pack(side="top", fill="x")
-        self.opts_bar = opts
-        self.tools = opts
-        tk.Label(opts, text="보기", fg="#666666", font=("Malgun Gothic", 9)).pack(side="left", padx=(0, 6))
-        self.diff_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(opts, text="RAW 와 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
-                       font=("Malgun Gothic", 9)).pack(side="left")
-        self.cross_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(opts, text="십자선", variable=self.cross_var, command=self.on_cross_toggled,
-                       font=("Malgun Gothic", 9)).pack(side="left", padx=(4, 0))
-        ttk.Separator(opts, orient="vertical").pack(side="left", fill="y", padx=8, pady=2)
-        self.btn_bright = tk.Button(opts, text="밝기 ×1.0", command=self.cycle_brightness, padx=4, pady=0)
-        self.btn_bright.pack(side="left", padx=(0, 3))            # 어두운 사진의 작은 이물을 찾을 때 (화면에만 적용)
-        self.btn_contrast = tk.Button(opts, text="대비 ×1.0", command=self.cycle_contrast, padx=4, pady=0)
-        self.btn_contrast.pack(side="left", padx=(0, 3))
-        self.btn_gray = tk.Button(opts, text="흑백", command=self.toggle_gray, padx=4, pady=0)
-        self.btn_gray.pack(side="left")
-        self.diff_label = tk.Label(opts, text="", anchor="w", fg="#555555", font=("Malgun Gothic", 9, "bold"))
-        self.diff_label.pack(side="left", padx=(14, 0))          # Diff 를 켜면 '추가 N · 수정 N · 삭제 N · 그대로 N'
-
-        # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
-        # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
-        self.form = FormPanel(side, on_change=self.on_form_changed, on_mode=self.on_ime_mode)
-        self.form.ime.bind_global(self.root)             # 한/영 키는 이미지 화면에 커서가 있어도 바뀐다
-        self.form.pack(side="bottom", fill="x", pady=(8, 0))
-
-        self.box_title = tk.Label(side, text="라벨 목록 (0개)", font=("Malgun Gothic", 10, "bold"))
-        self.box_title.pack(anchor="w")
-        self.box_list = ttk.Treeview(side, columns=("no", "cls", "pos", "state"), show="headings", height=4,
-                                     selectmode="browse")
-        for col, text, width, anchor in (("no", "No", 28, "center"), ("cls", "클래스", 104, "w"),
-                                         ("pos", "위치 (x,y,w,h)", 128, "w"), ("state", "상태", 44, "center")):
-            self.box_list.heading(col, text=text)
-            self.box_list.column(col, width=width, anchor=anchor, stretch=(col == "pos"))
-        self.box_list.tag_configure("changed", foreground="#e65100")        # 내가 고치거나 추가한 BBox 는 주황
-        self.box_list.pack(fill="both", expand=True)
-        self._box_guard = False                                              # 표를 다시 채우는 동안 선택 이벤트를 무시
-
-        # ⑤ 가운데: 이미지를 보여 줄 도화지(Canvas)
-        center.pack(side="left", fill="both", expand=True)       # (오른쪽 패널·아래 줄을 먼저 pack 한 뒤 남는 자리를 차지)
-        self.canvas = tk.Canvas(center, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
-        self.canvas.pack(side="top", fill="both", expand=True)
+        view = tk.Frame(center, bg=C["border"], padx=1, pady=1)  # 도화지 둘레 옅은 테두리
+        view.pack(side="top", fill="both", expand=True)
+        self.canvas = tk.Canvas(view, bg=C["canvas"], highlightthickness=0, cursor="crosshair")
+        self.canvas.pack(fill="both", expand=True)
 
         # 폴더·사진을 창에 끌어다 놓기 (tkinterdnd2 가 있을 때만)
         if register_drop(self.root, self.on_drop):
@@ -279,7 +306,6 @@ class Day1Labeler:
             c.bind(f"<B{btn}-Motion>", self.on_pan_drag)
             c.bind(f"<ButtonRelease-{btn}>", self.on_pan_end)
 
-        self.class_list.bind("<<ListboxSelect>>", self.on_class_selected)
         self.box_list.bind("<<TreeviewSelect>>", self.on_box_list_selected)
 
         r = self.root
@@ -654,7 +680,8 @@ class Day1Labeler:
         self.raw_boxes = read_yolo_file(raw_txt, self.img_w, self.img_h)[0] if raw_txt else []   # Diff 비교용 원본
         dataset, split = locate_in_raw(self.image_path)
         where = f"{dataset} / {split}" if dataset else "RAW 밖의 파일"
-        self.info.config(text=f"출처: {where}   |   {self.image_path.name}   ({self.img_w}×{self.img_h})")
+        self.info.config(text=self.image_path.name)
+        self.info_meta.config(text=f"{where}   ·   {self.img_w} × {self.img_h} px")
         self.load_form()
 
         work = work_label_path(self.image_path)
@@ -789,9 +816,9 @@ class Day1Labeler:
         if self.pil_image is None:
             c.delete("img")
             c.delete("box")
-            c.create_text(c.winfo_width() / 2, c.winfo_height() / 2, tags="img", fill="#bbbbbb",
-                          font=("Malgun Gothic", 14), justify="center",
-                          text="[이미지 열기] 로 시작하세요\n(데이터는 data/raw 폴더에 넣어 두세요)")
+            c.create_text(c.winfo_width() / 2, c.winfo_height() / 2, tags="img", fill=theme.COLORS["faint"],
+                          font=theme.font(13), justify="center",
+                          text="사진을 열어 주세요\n\n위의 [폴더 열기] 를 누르거나, 폴더를 이 창에 끌어다 놓으세요\n(데이터는 data/raw 폴더에 넣어 두세요)")
             self.refresh_box_list()
             return
         cw, ch = self.canvas_size()
@@ -892,7 +919,7 @@ class Day1Labeler:
     def refresh_enhance(self, what):
         self.btn_bright.config(text=f"밝기 ×{self.ENHANCE_STEPS[self.bright_idx]:.1f}")
         self.btn_contrast.config(text=f"대비 ×{self.ENHANCE_STEPS[self.contrast_idx]:.1f}")
-        self.btn_gray.config(relief="sunken" if self.gray else "raised")
+        self.gray_var.set(self.gray)
         self.render()
         self.set_status(f"{what} — 화면에만 적용됩니다. 원본 사진과 저장되는 라벨은 바뀌지 않습니다.")
 
@@ -903,6 +930,11 @@ class Day1Labeler:
     def cycle_contrast(self):
         self.contrast_idx = (self.contrast_idx + 1) % len(self.ENHANCE_STEPS)
         self.refresh_enhance("대비")
+
+    def on_gray_clicked(self):
+        """[흑백] 체크 버튼을 눌렀을 때 (체크 상태가 곧 켜짐/꺼짐)."""
+        self.gray = self.gray_var.get()
+        self.refresh_enhance("흑백 " + ("켜짐" if self.gray else "꺼짐"))
 
     def toggle_gray(self):
         self.gray = not self.gray
@@ -1257,8 +1289,7 @@ class Day1Labeler:
             cls = self.boxes[index]["cls"]
             if 0 <= cls < len(settings.CLASSES):
                 self.current_class = cls
-                self.class_list.selection_clear(0, "end")
-                self.class_list.selection_set(cls)
+                self.class_list.set(cls)
         self.draw_boxes()
         self.refresh_box_list()
 
@@ -1298,21 +1329,14 @@ class Day1Labeler:
         if cid in settings.UNUSED_CLASSES:
             messagebox.showwarning("사용 안 함", f"Class {cid} ({settings.class_name(cid, False)}) 는 이번 프로젝트에서 사용하지 않습니다.\n"
                                    "판단이 어려우면 REVIEW 로 표시합니다.")
-            self.class_list.selection_clear(0, "end")
-            self.class_list.selection_set(self.current_class)
+            self.class_list.set(self.current_class)
             return
         self.current_class = cid
-        self.class_list.selection_clear(0, "end")
-        self.class_list.selection_set(cid)
+        self.class_list.set(cid)
         if self.selected is not None and self.boxes[self.selected]["cls"] != cid:
             self.history.push(self.boxes)
             self.boxes[self.selected]["cls"] = cid
             self.mark_changed()
-
-    def on_class_selected(self, _event):
-        sel = self.class_list.curselection()
-        if sel:
-            self.choose_class(sel[0])
 
     def on_box_list_selected(self, _event):
         """표에서 줄을 눌렀을 때 그 BBox 를 선택한다. (표를 다시 채우는 중에 생기는 이벤트는 무시)"""
