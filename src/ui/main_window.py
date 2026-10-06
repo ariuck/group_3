@@ -232,10 +232,11 @@ class Day1Labeler:
             r.bind(key, lambda e: None if self.is_typing(e) else self.fit_to_window())
         for i in range(len(settings.CLASSES)):              # 숫자키 0~6 = Class 선택
             r.bind(str(i), lambda e, cid=i: None if self.is_typing(e) else self.choose_class(cid))
-        # ← → = 이전/다음 사진 (입력칸에서 글자 커서를 옮기는 중에는 사진이 넘어가면 안 된다)
-        for key, func in (("<Left>", self.go_prev), ("<Prior>", self.go_prev),
-                          ("<Right>", self.go_next), ("<Next>", self.go_next)):   # Prior/Next = PageUp/PageDown
-            r.bind(key, lambda e, f=func: None if self.is_typing(e) else f())
+        # ← → / PageUp·PageDown / A·D = 이전/다음 사진 (입력칸에서 글자를 치는 중에는 사진이 넘어가면 안 된다)
+        for key in ("<Left>", "<Prior>", "a", "A"):                     # Prior/Next = PageUp/PageDown
+            r.bind(key, lambda e: None if self.is_typing(e) else self.go_prev())
+        for key in ("<Right>", "<Next>", "d", "D"):
+            r.bind(key, lambda e: None if self.is_typing(e) else self.go_next())
 
     @staticmethod
     def is_typing(event):
@@ -341,16 +342,13 @@ class Day1Labeler:
         """폴더 안의 사진을 목록으로 쓰고 첫 사진을 연다.  ([폴더 열기] 와 끌어다 놓기가 함께 쓴다)"""
         if not self.confirm_discard():
             return
-        nav = self.navigator
-        before = (nav.folder, nav.files, nav.index, nav.fixed)
-        count = nav.set_folder(folder)
-        if count == 0:
-            nav.folder, nav.files, nav.index, nav.fixed = before          # 사진이 없으면 지금 목록을 그대로 둔다
+        first = self.navigator.load_folder(folder)
+        if first is None:                                                  # 사진이 없으면 지금 화면·목록을 그대로 둔다
             messagebox.showinfo("사진이 없음", f"이 폴더에는 JPG 사진이 없습니다.\n\n{folder}")
             return
-        if not self.load_image(nav.files[0]):
+        if not self.load_image(first):
             return
-        text = f"폴더 열기: {folder}  (사진 {count}장)"
+        text = f"폴더를 열었습니다: {Path(folder).name} (총 {self.navigator.total}장)"
         if not is_inside(Path(folder), settings.RAW_DIR):
             text += "   ※ data/raw 밖의 폴더라 검수표에는 기록되지 않습니다"
         self.set_status(text)

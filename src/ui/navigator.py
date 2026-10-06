@@ -13,33 +13,13 @@ def _natural_key(p):
 class ImageNavigator:
     def __init__(self):
         self.folder = None     # 지금 목록을 만든 폴더
-        self.files = []        # 같은 폴더의 사진 목록 (정렬됨)
+        self.files = []        # 사진 목록 (정렬됨)
         self.index = -1        # 현재 사진 번호 (0부터)
-        self.fixed = False     # True = 폴더째 연 목록 (set_folder)
-
-    def set_folder(self, folder):
-        """폴더 하나를 통째로 목록으로 쓴다 (끌어다 놓기·폴더 열기). 사진 수를 돌려준다.
-
-        폴더 바로 아래에 사진이 있으면 그것만, 없으면 하위 폴더(images/train 등)까지 찾는다.
-        이 목록은 그 안의 사진을 열어도 유지된다.
-        """
-        folder = Path(folder)
-        direct = [p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
-        found = direct or [p for p in folder.rglob("*") if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
-        self.folder = folder
-        self.files = sorted(found, key=lambda p: (str(p.parent).lower(), _natural_key(p)))
-        self.index = -1
-        self.fixed = True
-        return len(self.files)
 
     def set_current(self, path):
-        """현재 사진을 지정한다. 폴더가 바뀌었으면 목록을 다시 만든다."""
+        """현재 사진을 지정한다. 목록에 없는 파일이면 그 사진이 있는 폴더를 스캔한다."""
         path = Path(path)
-        if self.fixed and path in self.files:        # 폴더째 연 목록 안의 사진이면 목록을 그대로 둔다
-            self.index = self.files.index(path)
-            return
-        self.fixed = False
-        if self.folder != path.parent or path not in self.files:
+        if path not in self.files:
             self.folder = path.parent
             self.files = sorted((p for p in self.folder.iterdir()
                                  if p.is_file() and p.suffix.lower() in IMAGE_EXTS), key=_natural_key)
@@ -47,6 +27,23 @@ class ImageNavigator:
             self.index = self.files.index(path)
         except ValueError:                      # 목록에 없으면 이 사진 1장만 있는 것으로 처리
             self.files, self.index = [path], 0
+
+    def load_folder(self, folder):
+        """폴더를 선택했을 때 하위의 모든 JPG 이미지를 찾아 목록을 만든다. 첫 사진 경로를 돌려준다 (없으면 None).
+
+        폴더 바로 아래에 사진이 있으면 그것만, 없으면 하위 폴더(images/train, images/val 등)까지 찾는다.
+        이 목록은 그 안의 사진을 열어도 유지된다.
+        """
+        folder = Path(folder)
+        files = [p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
+        if not files:
+            files = [p for p in folder.rglob("*") if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
+        if not files:
+            return None
+        self.folder = folder
+        self.files = sorted(files, key=lambda p: (str(p.parent).lower(), _natural_key(p)))   # 폴더별로 묶고 이름순 (train → val)
+        self.index = 0
+        return self.files[0]
 
     @property
     def total(self):
