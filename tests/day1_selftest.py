@@ -4,6 +4,7 @@
 
     python tests/day1_selftest.py
 """
+import csv
 import hashlib
 import shutil
 import sys
@@ -17,6 +18,7 @@ from PIL import Image                                     # noqa: E402
 from src import settings                                  # noqa: E402
 from src.bbox.bbox_manager import make_box, find_box_at   # noqa: E402
 from src.data_paths import locate_in_raw, work_label_path  # noqa: E402
+from src.manifest.manifest_writer import HEADERS, ManifestError, record_save  # noqa: E402
 from src.ui import main_window as mw                      # noqa: E402
 from src.validation.validator import inventory_markdown, scan_inventory  # noqa: E402
 from src.yolo.coords import pixel_to_yolo, yolo_to_pixel  # noqa: E402
@@ -31,6 +33,21 @@ def ok(name, cond):
 
 def md5(p):
     return hashlib.md5(Path(p).read_bytes()).hexdigest()
+
+
+def read_manifest():
+    with open(settings.MANIFEST_PATH, encoding="utf-8-sig", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def write_manifest(rows):
+    with open(settings.MANIFEST_PATH, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=HEADERS)
+        w.writeheader()
+        w.writerows(rows)
+
+
+HUMAN_COLUMNS = ("이미지 유형", "위치 맞음", "Class 맞음", "누락 객체 여부", "발견된 문제", "작성자", "검수자", "검수일", "비고(수정 내용)")
 
 
 # ── Class 설정 (configs/classes.yaml) ───────────────────────────────────────
@@ -66,6 +83,7 @@ try:
     raw_hash = {p: md5(p) for p in raw.rglob("*.txt")}
 
     settings.RAW_DIR, settings.WORK_DIR = raw, work                  # 프로그램이 임시 폴더를 쓰도록 바꿈
+    settings.MANIFEST_PATH = tmp / "manifests" / "dataset_manifest.csv"   # 검수표도 임시 폴더에 (처음에는 없음)
 
     # ── 데이터 조사 ────────────────────────────────────────────────────────────
     rows, summary = scan_inventory(raw)
@@ -103,11 +121,42 @@ try:
     saved = [dict(b) for b in app.boxes]
     ok("저장 성공", app.save())
     ok("WORK 에 같은 구조로 TXT 생성", (work / "DS1" / "labels" / "train" / "a.txt").is_file())
+
+    # ── 검수표(CSV) 자동 기록 ─────────────────────────────────────────────────
+    ok("검수표 CSV 가 처음 저장할 때 만들어진다", settings.MANIFEST_PATH.is_file())
+    ok("검수표 머리글이 19칸 기준과 같다", next(csv.reader(open(settings.MANIFEST_PATH, encoding="utf-8-sig"))) == HEADERS and len(HEADERS) == 19)
+    rows = read_manifest()
+    r = rows[0]
+    ok("검수표: 사진 1장 = 1줄", len(rows) == 1 and r["No"] == "1")
+    ok("검수표: 파일명·출처·split 이 자동으로 채워진다",
+       (r["이미지 파일명"], r["라벨(TXT) 파일명"], r["출처 데이터셋"], r["원래 split"]) == ("a.jpg", "a.txt", "DS1", "train"))
+    ok("검수표: 원본 2 → 최종 3, Class 2, 3, 5", (r["원본 BBox 수"], r["최종 BBox 수"], r["Class"]) == ("2", "3", "2, 3, 5"))
+    ok("검수표: TXT 줄 수 = 화면 BBox 수 → O", r["TXT 줄 수 = 화면 BBox 수"] == "O")
+    ok("검수표: 고쳤으므로 상태가 '수정 완료'", r["상태"] == "수정 완료")
+    ok("검수표: 사람이 판단하는 칸은 비어 있다", all(r[h] == "" for h in HUMAN_COLUMNS))
+    ok("상태줄에 검수표 기록 결과가 보인다", "검수표 기록" in app.status.cget("text"))
     app.boxes = []; app.draw_boxes()
     app.reload(); root.update()
     ok("다시 불러오기: 같은 위치·Class 로 복원", len(app.boxes) == 3 and all(
         a["cls"] == b["cls"] and all(abs(a[k] - b[k]) < 1e-3 for k in ("x1", "y1", "x2", "y2"))
         for a, b in zip(app.boxes, saved)))
+
+    # ── 다시 저장: 새 줄이 아니라 갱신, 사람이 쓴 내용은 보존 ──────────────────────
+    app.dirty = True
+    ok("다시 저장", app.save())
+    rows = read_manifest()
+    ok("검수표: 같은 사진은 새 줄이 아니라 갱신 (줄 1개, 원본 수 2 유지)", len(rows) == 1 and rows[0]["원본 BBox 수"] == "2")
+    rows[0].update({"상태": "수정 필요", "발견된 문제": "REVIEW: class_ambiguous", "작성자": "A", "비고(수정 내용)": "한글 메모"})
+    write_manifest(rows)
+    app.boxes.append({"cls": 1, "x1": 10.0, "y1": 10.0, "x2": 60.0, "y2": 60.0})        # 또 고침
+    app.dirty = True
+    ok("한 번 더 저장", app.save())
+    r = read_manifest()[0]
+    ok("검수표: 사람이 쓴 칸(작성자·비고·발견된 문제)을 지우지 않는다",
+       (r["작성자"], r["비고(수정 내용)"], r["발견된 문제"]) == ("A", "한글 메모", "REVIEW: class_ambiguous"))
+    ok("검수표: 사람이 정한 상태 '수정 필요'(REVIEW 표시)를 덮어쓰지 않는다", r["상태"] == "수정 필요")
+    ok("검수표: 최종 BBox 수는 갱신된다 (3 → 4)", r["최종 BBox 수"] == "4")
+    app.boxes.pop(); app.dirty = False
 
     # ── RAW 원본 불변 + 쓰기 방지 안전장치 ──────────────────────────────────────
     ok("RAW TXT 는 하나도 바뀌지 않았다 (해시 동일)", {p: md5(p) for p in raw.rglob("*.txt")} == raw_hash)
@@ -126,6 +175,26 @@ try:
     mw.filedialog.askopenfilename = lambda **k: str(raw / "DS2" / "images" / "validation" / "d.jpg")
     app.open_image()
     ok("TXT 없음: 안내 후 빈 상태", len(app.boxes) == 0 and "TXT 가 없어" in app.status.cget("text"))
+
+    # ── 검수표: 고치지 않은 사진 / 머리글 보호 / RAW 밖 ─────────────────────────
+    mw.filedialog.askopenfilename = lambda **k: str(raw / "DS1" / "images" / "train" / "b.jpg")
+    app.open_image()
+    ok("고치지 않고 저장", app.save())
+    rows = read_manifest()
+    b = next(r for r in rows if r["이미지 파일명"] == "b.jpg")
+    ok("검수표: 새 줄의 No 가 이어서 매겨진다", b["No"] == "2" and len(rows) == 2)
+    ok("검수표: 빈 TXT 는 BBox 수 0 → 0 (빈칸 아님), 줄 수 일치 O", (b["원본 BBox 수"], b["최종 BBox 수"], b["TXT 줄 수 = 화면 BBox 수"]) == ("0", "0", "O"))
+    ok("검수표: 고치지 않았으면 '검수 전' (검수 완료는 사람이 표시)", b["상태"] == "검수 전")
+
+    bad = tmp / "bad.csv"
+    bad.write_text("a,b,c\n1,2,3\n", encoding="utf-8")
+    try:
+        record_save(img_a, None, work / "DS1" / "labels" / "train" / "a.txt", 1, manifest_path=bad)
+        raised = False
+    except ManifestError:
+        raised = True
+    ok("검수표: 머리글이 다르면 덮어쓰지 않고 중단한다", raised and bad.read_text(encoding="utf-8") == "a,b,c\n1,2,3\n")
+    ok("검수표: RAW 밖의 이미지는 기록하지 않는다", "RAW 밖" in record_save(tmp / "x.jpg", None, tmp / "x.txt", 0) and len(read_manifest()) == 2)
     root.destroy()
     print("\nALL OK — 자체 점검 통과")
 finally:
