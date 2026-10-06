@@ -72,5 +72,36 @@ ok(f"공백·숫자는 그대로 (got {var.get()!r})", var.get() == "abc검 1")
 press("Hangul")
 ok("한/영 키로 영어 전환", not ime.korean)
 
+# Shift 를 눌러도 조합이 끊기지 않는다 (ㅖ = Shift+ㅔ, 'ㅎ' 다음에 Shift 를 누르면 예전에는 '혜' 가 'ㅎㅖ' 로 갈라졌다)
+press("Hangul")
+var.set("")
+ime.finish()
+entry.icursor("end")
+
+
+def type_shifted(seq):
+    """seq 의 각 글자를 실제 키보드처럼 친다. 대문자는 Shift 를 먼저 눌렀다가 글자를 누른다."""
+    for ch in seq:
+        if ch.isupper():
+            press("Shift_L", "", state=0)
+            press(ch, ch, state=1)
+        else:
+            press(ch, ch)
+
+
+type_shifted("gPtjd")            # ㅎ + Shift+ㅔ(ㅖ) + ㅅㅓㅇ  →  혜성
+ok(f"Shift 를 눌러도 이어서 조합: 혜성 (got {var.get()!r})", var.get() == "혜성")
+var.set(""); ime.finish(); entry.icursor("end")
+type_shifted("Rkcl")             # 쌍자음 ㄲ (Shift+r) + ㅏ + ㅊ + ㅣ  →  까치
+ok(f"쌍자음도 Shift 로 정상 입력: 까치 (got {var.get()!r})", var.get() == "까치")
+var.set(""); ime.finish(); entry.icursor("end")
+for ch in "gk":
+    press(ch, ch)
+press("Shift_R", "")             # 조합 중간에 Shift 만 눌렀다 떼도 글자가 그대로 이어진다
+press("Caps_Lock", "")
+press("s", "s")
+ok(f"조합 중 Shift·CapsLock 만 눌러도 유지: 한 (got {var.get()!r})", var.get() == "한")
+press("Hangul")
+
 root.destroy()
 sys.exit(1 if failed else 0)

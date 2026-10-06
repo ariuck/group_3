@@ -125,6 +125,10 @@ def compose(keys):
 
 
 TOGGLE_KEYSYMS = {"Hangul", "Alt_R"}      # WSL 에서 한/영 키는 보통 둘 중 하나로 들어온다
+# 글자를 만들지 않고 누르기만 하는 키. 이 키가 눌렸다고 조합 중인 글자를 끊으면 안 된다.
+# (ㅖ·ㅒ·ㄲ 같은 글자는 Shift 를 먼저 누른 채 치므로, Shift 가 조합을 끊으면 '혜성'이 'ㅎㅖ성'이 된다)
+MODIFIER_KEYSYMS = {"Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Meta_L", "Meta_R",
+                    "Super_L", "Super_R", "Caps_Lock", "Num_Lock", "ISO_Level3_Shift", "Mode_switch"}
 CONTROL, ALT = 0x0004, 0x0008             # event.state 의 Ctrl·Alt 비트
 
 
@@ -160,6 +164,8 @@ class HangulIME:
         if event.keysym in TOGGLE_KEYSYMS or (event.keysym == "space" and event.state & 0x0001):
             self.toggle()
             return "break"
+        if event.keysym in MODIFIER_KEYSYMS:
+            return None                                       # Shift 등만 누른 것은 조합에 영향이 없다 (조합을 끊지 않는다)
         if not self.korean or event.state & (CONTROL | ALT):
             return None                                       # Ctrl+V 붙여 넣기 등은 원래대로
         # 다른 칸이거나 커서가 옮겨졌으면 이전 조합은 끝난 것으로 본다
