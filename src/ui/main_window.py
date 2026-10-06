@@ -4,6 +4,7 @@
     [📂 이미지 열기]  → 같은 이름의 TXT 자동 Load → BBox 표시
     BBox 추가 / 삭제 / Class 변경
     [💾 저장]         → WORK 폴더에 "RAW 와 같은 구조"로 저장  (RAW 는 절대 수정하지 않음)
+                        + 오른쪽 '검수 기록' 입력칸(상태·작성자·검수자 등)을 검수표(CSV)에 함께 기록
     [🔄 다시 불러오기] → 같은 위치에 BBox 가 복원되는지 확인
 
 [핵심 약속] BBox 는 "화면 좌표"가 아니라 "원본 이미지 픽셀 좌표"로 기억한다.
@@ -20,14 +21,15 @@ src/validation (데이터 조사) · src/data_paths (RAW/WORK 경로) · src/set
 import os
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 
 from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이는 데 사용
 
 from src import settings
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.data_paths import is_inside, locate_in_raw, work_label_path
-from src.manifest.manifest_writer import ManifestError, record_save
+from src.manifest.manifest_writer import ManifestError, read_human, record_save
+from src.ui.form_panel import FormPanel
 from src.validation.validator import inventory_markdown, scan_inventory
 from src.yolo.yolo_loader import find_raw_label, read_yolo_file
 from src.yolo.yolo_writer import write_yolo_file
@@ -94,7 +96,7 @@ class Day1Labeler:
         self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
         self.status.pack(side="bottom", fill="x")
 
-        # ④ 오른쪽 패널: 클래스 선택 + 라벨 목록
+        # ④ 오른쪽 패널: 클래스 선택 + 라벨 목록 + 검수 기록 입력칸
         side = tk.Frame(self.root, width=260, padx=6, pady=4)
         side.pack(side="right", fill="y")
         side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 260 유지
@@ -107,6 +109,11 @@ class Day1Labeler:
             self.class_list.itemconfig(c["id"], foreground=c["color"] if c["enabled"] else "#9e9e9e")
         self.class_list.selection_set(self.current_class)
         self.class_list.pack(fill="x", pady=(0, 10))
+
+        # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
+        # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
+        self.form = FormPanel(side, on_change=self.on_form_changed)
+        self.form.pack(side="bottom", fill="x", pady=(8, 0))
 
         tk.Label(side, text="라벨 목록 (BBox)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
         self.box_list = tk.Listbox(side, font=("Consolas", 9), activestyle="none", exportselection=False)
@@ -131,10 +138,16 @@ class Day1Labeler:
         self.class_list.bind("<<ListboxSelect>>", self.on_class_selected)
         self.box_list.bind("<<ListboxSelect>>", self.on_box_list_selected)
 
-        self.root.bind("<Delete>", lambda e: self.delete_selected())
+        # 입력칸에 글자를 치는 중에는 Delete·숫자 단축키가 동작하면 안 된다 (비고에 '3'을 쳤는데 Class 가 바뀌면 안 됨)
+        self.root.bind("<Delete>", lambda e: None if self.is_typing(e) else self.delete_selected())
         self.root.bind("<Control-s>", lambda e: self.save())
         for i in range(len(settings.CLASSES)):              # 숫자키 0~6 = Class 선택
-            self.root.bind(str(i), lambda e, cid=i: self.choose_class(cid))
+            self.root.bind(str(i), lambda e, cid=i: None if self.is_typing(e) else self.choose_class(cid))
+
+    @staticmethod
+    def is_typing(event):
+        """키를 누른 곳이 글자 입력칸(Entry·Combobox)인가?"""
+        return isinstance(event.widget, (tk.Entry, ttk.Entry))
 
     # ====================================================================
     # 데이터 조사 / 폴더 열기
@@ -213,6 +226,7 @@ class Day1Labeler:
         dataset, split = locate_in_raw(self.image_path)
         where = f"{dataset} / {split}" if dataset else "RAW 밖의 파일"
         self.info.config(text=f"출처: {where}   |   {self.image_path.name}   ({self.img_w}×{self.img_h})")
+        self.load_form()
 
         work = work_label_path(self.image_path)
         source = work if work.is_file() else find_raw_label(self.image_path)
@@ -242,16 +256,40 @@ class Day1Labeler:
         except OSError as e:
             messagebox.showerror("저장 실패", f"저장하지 못했습니다.\n\n{e}")
             return False
+        # TXT 저장이 끝난 뒤 검수표(CSV)에 이 사진의 줄을 기록한다. 입력칸 값(사람 칸)도 함께 넘긴다.
+        # 실패해도 TXT 는 이미 저장되어 있다. 다만 입력칸 내용은 아직 기록되지 않았으므로 '저장 안 함' 상태로 둔다.
+        try:
+            note = record_save(self.image_path, find_raw_label(self.image_path), target, len(self.boxes),
+                               human=self.form.get_values())
+        except ManifestError as e:
+            self.dirty = True
+            self.update_title()
+            messagebox.showwarning("검수표 기록 실패", "TXT 는 저장되었습니다.\n검수표(CSV)에는 기록하지 못했습니다.\n"
+                                   f"입력칸 내용은 아직 기록되지 않았습니다.\n\n{e}")
+            self.set_status(f"TXT 저장 완료 → {target}   |   검수표 기록 실패 (입력칸 내용 미기록)")
+            return False
         self.dirty = False
         self.update_title()
-        # TXT 저장이 끝난 뒤 검수표(CSV)에 이 사진의 줄을 기록한다. 실패해도 TXT 는 이미 저장되어 있다.
-        note = ""
-        try:
-            note = "   |   " + record_save(self.image_path, find_raw_label(self.image_path), target, len(self.boxes))
-        except ManifestError as e:
-            messagebox.showwarning("검수표 기록 실패", f"TXT 는 저장되었습니다.\n검수표(CSV)에는 기록하지 못했습니다.\n\n{e}")
-        self.set_status(f"저장 완료 → {target}{note}")
+        self.load_form()                     # 프로그램이 정한 상태(예: 수정 완료)를 입력칸에 다시 보여 준다
+        self.set_status(f"저장 완료 → {target}   |   {note}")
         return True
+
+    def load_form(self):
+        """검수표에 적혀 있던 상태·사람 칸을 입력칸에 보여 준다. (기록이 없으면 빈칸)"""
+        try:
+            values = read_human(self.image_path)
+        except ManifestError as e:
+            self.form.clear()
+            messagebox.showwarning("검수표 읽기 실패", f"검수표(CSV)를 읽지 못해 입력칸을 비워 둡니다.\n\n{e}")
+            return
+        self.form.set_values(values)
+
+    def on_form_changed(self):
+        """입력칸을 고쳤을 때: 저장 안 한 변경으로 표시한다. (사진을 열기 전에는 저장할 곳이 없으므로 무시)"""
+        if self.pil_image is None:
+            return
+        self.dirty = True
+        self.update_title()
 
     def reload(self):
         """[다시 불러오기] 저장한 TXT 를 다시 읽어 BBox 가 같은 위치에 복원되는지 확인한다.
@@ -366,6 +404,7 @@ class Day1Labeler:
 
     def on_mouse_down(self, event):
         """① 누른 순간: 시작 위치를 기억하고, 점선 임시 사각형을 만든다."""
+        self.canvas.focus_set()              # 입력칸에 있던 커서를 가져온다 → 숫자키·Delete 단축키가 다시 동작
         if self.pil_image is None:
             return
         rect = self.canvas.create_rectangle(event.x, event.y, event.x, event.y,
