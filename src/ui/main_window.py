@@ -34,7 +34,7 @@ from PIL import Image, ImageEnhance, ImageTk   # Pillow: JPG 를 읽고 화면�
 from src import settings
 from src.bbox.bbox_diff import diff_boxes, diff_summary
 from src.bbox.bbox_edit import HANDLE_CURSORS, handle_points, hit_handle, move_box, resize_box
-from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
+from src.bbox.bbox_manager import MIN_DRAG_PX, box_problems, find_box_at, make_box
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
 from src.data_paths import is_inside, locate_in_raw, work_label_path
@@ -227,6 +227,7 @@ class Day1Labeler:
             self.box_list.heading(col, text=text)
             self.box_list.column(col, width=width, anchor=anchor, stretch=(col == "pos"))
         self.box_list.tag_configure("changed", foreground=C["warn"])        # 내가 고치거나 추가한 BBox 는 주황
+        self.box_list.tag_configure("problem", foreground=C["danger"])      # 이미지 밖·Class 범위 밖 등 이상한 BBox 는 빨강
         self.box_list.pack(fill="both", expand=True)
         self._box_guard = False                                              # 표를 다시 채우는 동안 선택 이벤트를 무시
 
@@ -697,6 +698,9 @@ class Day1Labeler:
             msg += "  ← 빈 TXT: 이물이 정말 없는지 이미지를 보고 확인하세요"
         if bad:
             msg += f"  ⚠ 읽지 못한 줄 {bad}개 (저장하면 WORK 파일에서는 빠집니다)"
+        odd = sum(1 for b in self.boxes if self.problems_of(b))
+        if odd:
+            msg += f"  ⚠ 확인이 필요한 BBox {odd}개 (빨간 점선: 이미지 밖·Class 범위 밖 등)"
         self.set_status(msg)
 
     def save(self):
@@ -871,6 +875,10 @@ class Day1Labeler:
             self.photo = None                                # 이미지가 화면 밖으로 완전히 나감
         self.draw_boxes()
 
+    def problems_of(self, box):
+        """이 BBox 에서 이상한 점 (이미지 밖·Class 범위 밖·너무 작음 등). 정상이면 빈 목록."""
+        return box_problems(box, self.img_w, self.img_h, len(settings.CLASSES), settings.UNUSED_CLASSES)
+
     DIFF_COLORS = {"added": "#2e7d32", "modified": "#ef6c00", "deleted": "#c62828"}     # 추가 초록 · 수정 주황 · 삭제 빨강
     DIFF_NAMES = {"added": "추가", "modified": "수정", "deleted": "삭제"}
 
@@ -894,13 +902,16 @@ class Day1Labeler:
             color = settings.class_color(b["cls"])
             is_sel = (i == self.selected)
             mark = state.get(i)                                  # 'added' / 'modified' / None(그대로)
-            outline = "#ffeb3b" if is_sel else (self.DIFF_COLORS[mark] if mark else color)
-            c.create_rectangle(x1, y1, x2, y2, outline=outline, width=(4 if is_sel else 2), tags="box")
-            label = f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}"
+            problem = bool(self.problems_of(b))                  # 이상한 BBox 는 빨간 점선 + '⚠' 표시
+            outline = "#ffeb3b" if is_sel else (theme.COLORS["danger"] if problem else
+                                                (self.DIFF_COLORS[mark] if mark else color))
+            c.create_rectangle(x1, y1, x2, y2, outline=outline, width=(4 if is_sel else 2),
+                               dash=(6, 4) if problem else (), tags="box")
+            label = f"{'⚠ ' if problem else ''}{b['cls']} {settings.class_name(b['cls'], with_note=False)}"
             if mark:
                 label += f"  [{self.DIFF_NAMES[mark]}]"
             tag = c.create_text(x1 + 3, y1 - 2 if y1 > 16 else y1 + 12, anchor=("sw" if y1 > 16 else "nw"),
-                                text=label, fill="white", font=("Malgun Gothic", 9, "bold"), tags="box")
+                                text=label, fill="white", font=theme.font(9, True), tags="box")
             bg = c.create_rectangle(c.bbox(tag), fill=(self.DIFF_COLORS[mark] if mark else color),
                                     outline=(self.DIFF_COLORS[mark] if mark else color), tags="box")
             c.tag_raise(tag, bg)                             # 글자가 배경 사각형 위에 오도록
@@ -916,7 +927,7 @@ class Day1Labeler:
         x1, y1, x2, y2 = self.vp.box_to_canvas(b)
         self.canvas.create_rectangle(x1, y1, x2, y2, outline=color, width=2, dash=(6, 4), tags="box")
         self.canvas.create_text(x1 + 3, y2 - 2, anchor="sw", text=f"{text} · {b['cls']}", fill=color,
-                                font=("Malgun Gothic", 9, "bold"), tags="box")
+                                font=theme.font(9, True), tags="box")
 
     ENHANCE_STEPS = (1.0, 1.3, 1.6, 0.7)     # 누를 때마다 순서대로 바뀌고 다시 1.0 으로 돌아온다
 
@@ -957,7 +968,7 @@ class Day1Labeler:
     def on_pan_toggled(self):
         """[이동] 켜기/끄기."""
         self.set_cursor("fleur" if self.pan_var.get() else "crosshair")
-        self.set_status(" 이동 모드 — 왼쪽 버튼으로 끌어 화면을 옮깁니다. (끄면 다시 BBox 를 그리고 고칩니다)"
+        self.set_status("이동 모드 — 왼쪽 버튼으로 끌어 화면을 옮깁니다. (끄면 다시 BBox 를 그리고 고칩니다)"
                         if self.pan_var.get() else "이동 모드를 껐습니다.")
 
     def update_cross(self, x, y):
@@ -994,7 +1005,8 @@ class Day1Labeler:
             text=f"BBox {self.selected + 1}번 · Class {b['cls']}   "
                  f"x1,y1=({b['x1']:.0f}, {b['y1']:.0f})  x2,y2=({b['x2']:.0f}, {b['y2']:.0f})  "
                  f"W×H={b['x2'] - b['x1']:.0f}×{b['y2'] - b['y1']:.0f}px   "
-                 f"YOLO xc={xc:.4f} yc={yc:.4f} w={w:.4f} h={h:.4f}")
+                 f"YOLO xc={xc:.4f} yc={yc:.4f} w={w:.4f} h={h:.4f}"
+                 + ("   ⚠ " + " · ".join(self.problems_of(b)) if self.problems_of(b) else ""))
 
     def refresh_box_list(self):
         """오른쪽 '라벨 목록' 표를 현재 self.boxes 와 맞춘다.  상태 = 원본 그대로이면 '원본', 고치거나 새로 그렸으면 '변경'."""
@@ -1005,9 +1017,12 @@ class Day1Labeler:
             for i, b in enumerate(self.boxes):
                 w, h = b["x2"] - b["x1"], b["y2"] - b["y1"]
                 changed = i not in same
-                self.box_list.insert("", "end", iid=str(i), tags=("changed",) if changed else (), values=(
+                problem = bool(self.problems_of(b))
+                tags = ("problem",) if problem else (("changed",) if changed else ())
+                self.box_list.insert("", "end", iid=str(i), tags=tags, values=(
                     i + 1, f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}",
-                    f"[{b['x1']:.0f},{b['y1']:.0f},{w:.0f},{h:.0f}]", "변경" if changed else "원본"))
+                    f"[{b['x1']:.0f},{b['y1']:.0f},{w:.0f},{h:.0f}]",
+                    "⚠ 확인" if problem else ("변경" if changed else "원본")))
             if self.selected is not None and self.selected < len(self.boxes):
                 self.box_list.selection_set(str(self.selected))
                 self.box_list.see(str(self.selected))

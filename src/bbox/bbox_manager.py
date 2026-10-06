@@ -35,3 +35,21 @@ def find_box_at(boxes, x, y):
             if best is None or area <= best_area:
                 best, best_area = i, area
     return best
+
+
+def box_problems(box, img_w, img_h, n_classes=7, unused=()):
+    """BBox 에서 이상한 점을 한국어 문장 목록으로 돌려준다. 비어 있으면 정상.
+
+    원본 라벨에 있는 이상한 BBox 는 자동으로 고치거나 지우지 않는다 (사람이 보고 판단) — 대신 화면에서 눈에 띄게 알려 주기 위한 검사다.
+    """
+    out = []
+    cls = box["cls"]
+    if not 0 <= cls < n_classes:
+        out.append(f"Class {cls} 는 0~{n_classes - 1} 범위 밖")
+    elif cls in unused:
+        out.append(f"Class {cls} 는 이번 프로젝트에서 사용하지 않는 번호")
+    if box["x1"] < -0.5 or box["y1"] < -0.5 or box["x2"] > img_w + 0.5 or box["y2"] > img_h + 0.5:
+        out.append("이미지 밖으로 나감")
+    if box["x2"] - box["x1"] < MIN_BOX_PX or box["y2"] - box["y1"] < MIN_BOX_PX:
+        out.append(f"너무 작음 ({MIN_BOX_PX}px 미만)")
+    return out
