@@ -1,11 +1,11 @@
 """라벨링 화면 (Tkinter) — 이미지 1장 End-to-End.
 
-    [📊 데이터 조사]  → 실제 JPG / TXT 구조 · 개수 · 짝(Pair) · Class 분포를 조사
-    [📂 이미지 열기]  → 같은 이름의 TXT 자동 Load → BBox 표시
+    [데이터 조사]  → 실제 JPG / TXT 구조 · 개수 · 짝(Pair) · Class 분포를 조사
+    [이미지 열기]  → 같은 이름의 TXT 자동 Load → BBox 표시
     BBox 추가 / 삭제 / Class 변경
-    [💾 저장]         → WORK 폴더에 "RAW 와 같은 구조"로 저장  (RAW 는 절대 수정하지 않음)
+    [저장]         → WORK 폴더에 "RAW 와 같은 구조"로 저장  (RAW 는 절대 수정하지 않음)
                         + 오른쪽 '검수 기록' 입력칸(상태·작성자·검수자 등)을 검수표(CSV)에 함께 기록
-    [🔄 다시 불러오기] → 같은 위치에 BBox 가 복원되는지 확인
+    [다시 불러오기] → 같은 위치에 BBox 가 복원되는지 확인
     ③ Zoom·편집      → 마우스 휠 확대/축소 · 오른쪽(또는 휠) 버튼 드래그 이동 · F = 화면 맞춤
                         Ctrl+Z 되돌리기 · Ctrl+Y 다시 실행
 
@@ -38,9 +38,11 @@ from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
 from src.data_paths import is_inside, locate_in_raw, work_label_path
-from src.manifest.manifest_writer import ManifestError, read_human, record_save
+from src.manifest.manifest_writer import ManifestError, read_human, read_status_map, record_save, status_of
 from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
+from src.ui.session import load_session, save_session
+from src.ui.thumb_strip import ThumbStrip
 from src.ui.validation_dialog import show_validation_dialog
 from src.validation.validator import inventory_markdown, scan_inventory, validate_dataset, write_report
 from src.yolo.coords import pixel_to_yolo
@@ -53,7 +55,8 @@ class Day1Labeler:
     def __init__(self, root):
         self.root = root
         root.title("교과 7 · 이미지 라벨링 (RAW / WORK 구조)")
-        root.geometry("1220x780")
+        root.geometry(f"1400x{min(940, root.winfo_screenheight() - 80)}")      # 화면이 작으면 높이를 줄인다
+        root.minsize(1160, 740)                                                 # 이보다 작으면 버튼·패널이 잘린다
 
         # ------------------------------------------------------------------
         # [Tkinter 개념 1: 변수]  프로그램이 '기억해야 하는 것'들
@@ -77,6 +80,8 @@ class Day1Labeler:
         self.drag = None           # 드래그 중인 정보 (시작점, 임시 사각형 등)
         self.pan_last = None       # 화면 이동(오른쪽 드래그) 중 마지막 마우스 위치
         self._cursor = "crosshair"  # 지금 캔버스 마우스 모양 (바뀔 때만 다시 지정)
+        self._listed_files = None  # 하단 사진 목록에 올려 둔 사진들 (폴더가 바뀔 때만 다시 올린다)
+        self._status_cache = (object(), {})   # (검수표 수정 시각, {사진: 상태}) — 사진 목록 글자용
         self.raw_boxes = []        # 이 사진의 원본(RAW) BBox — Diff 보기에서 지금 BBox 와 비교한다
         self.bright_idx = 0        # 화면 보정(밝기·대비·흑백) — 화면에 보이는 모습만 바꾼다. 원본 사진과 저장 파일은 그대로
         self.contrast_idx = 0
@@ -93,6 +98,7 @@ class Day1Labeler:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.show_image()
         self.set_status(self.start_message())
+        self.root.after(150, self.restore_session)             # 창이 뜬 직후, 마지막으로 보던 폴더·사진을 다시 연다
 
     # 예전 코드·설명과의 호환용: self.scale / offset_x / offset_y 는 Viewport 값을 그대로 보여 준다.
     @property
@@ -111,7 +117,7 @@ class Day1Labeler:
         """처음 화면에 보여 줄 안내. 데이터가 아직 없으면 어디에 넣어야 하는지 알려 준다."""
         raw = settings.RAW_DIR
         if raw.is_dir() and any(raw.rglob("*.jpg")):
-            return "[📊 데이터 조사]로 데이터를 확인하고, [📂 이미지 열기]로 사진 1장을 열어 보세요."
+            return "[데이터 조사]로 데이터를 확인하고, [이미지 열기]로 사진 1장을 열어 보세요."
         return "data/raw 폴더에 데이터가 없습니다.  이물검출_학습데이터1·2 의 images / labels 파일을 data/raw 안에 넣어 주세요."
 
     # ------------------------------------------------------------------
@@ -120,22 +126,34 @@ class Day1Labeler:
     def build_widgets(self):
         # ① 위쪽 버튼 줄.  command=... 에는 '누르면 실행할 함수'를 연결한다.
         #    (주의: command=self.save  처럼 괄호 없이 함수 이름만 넘긴다. 괄호를 붙이면 지금 바로 실행돼 버린다)
-        bar = tk.Frame(self.root, padx=6, pady=6)
+        bar = tk.Frame(self.root, padx=6, pady=5)
         bar.pack(side="top", fill="x")
-        for text, func in (("📊 데이터 조사", self.show_inventory), ("🔍 무결성 검증(QA)", self.run_validation),
-                           ("📂 이미지 열기", self.open_image),
-                           ("💾 저장", self.save), ("🔄 다시 불러오기", self.reload),
-                           ("🗑 선택 BBox 삭제", self.delete_selected), ("📁 WORK 폴더 열기", self.open_work_folder)):
-            tk.Button(bar, text=text, command=func, padx=8, pady=3).pack(side="left", padx=3)
-
-        # ①-2 오른쪽 끝: 확대·되돌리기 버튼 (오른쪽부터 쌓이므로 역순으로 pack)
-        for text, func in (("↷ 다시", self.redo), ("↶ 되돌리기", self.undo), ("⤢ 맞춤", self.fit_to_window),
-                           ("－", self.zoom_out), ("＋", self.zoom_in)):
-            tk.Button(bar, text=text, command=func, padx=6, pady=3).pack(side="right", padx=2)
+        self.pan_var = tk.BooleanVar(value=False)
+        groups = [# (글자, 눌렀을 때 할 일)   — 같은 일을 하는 버튼끼리 묶고, 묶음 사이에는 구분선을 둔다
+            [("이미지 열기", self.open_image), ("폴더 열기", self.open_folder)],                         # 열기
+            [("저장", self.save), ("저장+다음", self.save_and_next)],                        # 저장
+            [("↶ 되돌리기", self.undo), ("↷ 다시", self.redo), ("삭제", self.delete_selected),
+             ("전체 삭제", self.clear_all)],                                                     # 편집
+            [("⤢ 맞춤", self.fit_to_window), ("－", self.zoom_out), ("＋", self.zoom_in), "PAN"],   # 보기
+            [("데이터 조사", self.show_inventory), ("QA 검증", self.run_validation),
+             ("다시 불러오기", self.reload), ("WORK 폴더", self.open_work_folder)],                       # 도구
+        ]
+        for gi, group in enumerate(groups):
+            if gi:
+                ttk.Separator(bar, orient="vertical").pack(side="left", fill="y", padx=6)
+            for item in group:
+                if item == "PAN":                 # 켜 두면 왼쪽 버튼 드래그로도 화면을 옮긴다 (오른쪽 버튼이 불편할 때)
+                    tk.Checkbutton(bar, text="이동 모드", variable=self.pan_var, indicatoron=False, padx=6, pady=2,
+                                   selectcolor="#cfe3ff", command=self.on_pan_toggled).pack(side="left", padx=2)
+                else:
+                    tk.Button(bar, text=item[0], command=item[1], padx=6, pady=2).pack(side="left", padx=2)
+        self.zoom_label = tk.Label(bar, text="100%", fg="#555555", font=("Malgun Gothic", 10, "bold"), width=6)
+        self.zoom_label.pack(side="right")
 
         # ② 현재 사진의 출처 정보 (데이터셋 / split / 파일) — Manifest 의 source_dataset, original_split 에 해당
         #    같은 줄 오른쪽에 이전 / 진행률 / 다음 (위 버튼 줄은 꽉 차서 창이 좁으면 밀려나 안 보였다)
-        row = tk.Frame(self.root)
+        center = tk.Frame(self.root)                           # 가운데 영역 = 머리글(출처·번호 이동) + 이미지 도화지
+        row = tk.Frame(center)
         row.pack(side="top", fill="x")
         self.btn_next = tk.Button(row, text="다음 ▶", command=self.go_next, padx=8, pady=1, state="disabled")
         self.btn_next.pack(side="right", padx=(2, 8))
@@ -156,6 +174,18 @@ class Day1Labeler:
         self.info = tk.Label(row, text="출처: -", anchor="w", padx=10, pady=2, font=("Malgun Gothic", 10, "bold"))
         self.info.pack(side="left", fill="x", expand=True)
 
+        # ③-0 맨 아래: 사진 목록(미리보기 줄) — 누르면 그 사진으로 이동. (먼저 pack 해야 창이 작아져도 안 가려진다)
+        self.strip = ThumbStrip(self.root, on_select=self.on_thumb_selected, mark_of=self.thumb_mark)
+        self.strip.pack(side="bottom", fill="x", padx=6, pady=(2, 4))
+
+        # 보기 필터: 상태별로 걸러서 본다 (예: '수정 필요' 인 사진만) — 제목줄 오른쪽
+        self.filter_var = tk.StringVar(value=self.FILTER_ALL)
+        self.filter_box = ttk.Combobox(self.strip.header, textvariable=self.filter_var, values=self.FILTER_CHOICES,
+                                       state="readonly", width=16, takefocus=False)
+        self.filter_box.pack(side="right")
+        tk.Label(self.strip.header, text="보기", font=("Malgun Gothic", 9)).pack(side="right", padx=(0, 4))
+        self.filter_box.bind("<<ComboboxSelected>>", lambda e: (self.on_filter_changed(), self.canvas.focus_set()))
+
         # ③ 아래쪽 상태 표시줄 (먼저 pack 해야 창이 작아져도 안 가려진다)
         self.status = tk.Label(self.root, text="", anchor="w", padx=8, pady=3, relief="sunken")
         self.status.pack(side="bottom", fill="x")
@@ -164,83 +194,67 @@ class Day1Labeler:
         self.bbox_info.pack(side="bottom", fill="x")
 
         # ④ 오른쪽 패널: 클래스 선택 + 라벨 목록 + 검수 기록 입력칸
-        side = tk.Frame(self.root, width=260, padx=6, pady=4)
+        side = tk.Frame(self.root, width=320, padx=6, pady=4)
         side.pack(side="right", fill="y")
-        side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 260 유지
+        side.pack_propagate(False)       # 안의 내용 크기에 맞춰 줄어들지 않고 폭 320 유지
 
-        tk.Label(side, text="클래스 선택", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
+        tk.Label(side, text="클래스 선택 (숫자키 0~6)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
         self.class_list = tk.Listbox(side, height=len(settings.CLASSES), exportselection=False,
-                                     font=("Malgun Gothic", 10), activestyle="none")
+                                     font=("Malgun Gothic", 9), activestyle="none")
         for c in settings.CLASSES:
             self.class_list.insert("end", f"■ {c['id']}  {settings.class_name(c['id'])}")
             self.class_list.itemconfig(c["id"], foreground=c["color"] if c["enabled"] else "#9e9e9e")
         self.class_list.selection_set(self.current_class)
         self.class_list.pack(fill="x", pady=(0, 6))
 
-        # 편집 도구 (전체 삭제 · 저장 후 다음 · 보기 옵션)
-        tools = tk.LabelFrame(side, text="편집 도구", padx=4, pady=2, font=("Malgun Gothic", 9))
-        tools.pack(fill="x", pady=(0, 6))
-        tool_row = tk.Frame(tools)
-        tool_row.pack(fill="x")
-        tk.Button(tool_row, text="🧹 전체 삭제", command=self.clear_all, padx=4, pady=0).pack(side="left", padx=(0, 4))
-        tk.Button(tool_row, text="💾→ 저장 후 다음 (W)", command=self.save_and_next, padx=4, pady=0).pack(side="left")
-        self.tools = tools
-        self.tool_row = tool_row
-        opts = tk.Frame(tools)                               # 보기 옵션 (Diff · 십자선) — 한 줄에 둔다
-        opts.pack(fill="x")
-        self.opts_row = opts
+        # 보기 옵션 줄 (Diff · 십자선 · 밝기·대비·흑백) — 툴바 바로 아래. 오른쪽 패널을 짧게 하려고 옮겼다.
+        opts = tk.Frame(self.root, padx=8)
+        opts.pack(side="top", fill="x")
+        self.opts_bar = opts
+        self.tools = opts
+        tk.Label(opts, text="보기", fg="#666666", font=("Malgun Gothic", 9)).pack(side="left", padx=(0, 6))
         self.diff_var = tk.BooleanVar(value=False)
-        tk.Checkbutton(opts, text="RAW 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
+        tk.Checkbutton(opts, text="RAW 와 비교(Diff)", variable=self.diff_var, command=self.on_diff_toggled,
                        font=("Malgun Gothic", 9)).pack(side="left")
         self.cross_var = tk.BooleanVar(value=False)
         tk.Checkbutton(opts, text="십자선", variable=self.cross_var, command=self.on_cross_toggled,
-                       font=("Malgun Gothic", 9)).pack(side="left")
-        self.diff_label = tk.Label(tools, text="", anchor="w", justify="left", fg="#555555", font=("Malgun Gothic", 8))
-        # (diff_label 은 Diff 를 켰을 때만 pack — 평소에는 자리를 차지하지 않는다)
-        enh = tk.Frame(tools)                                # 화면 보정 (밝기·대비·흑백) — 어두운 사진의 작은 이물을 찾을 때
-        enh.pack(fill="x", pady=(0, 0))
-        self.btn_bright = tk.Button(enh, text="밝기 ×1.0", command=self.cycle_brightness, padx=4, pady=0)
-        self.btn_bright.pack(side="left", padx=(0, 3))
-        self.btn_contrast = tk.Button(enh, text="대비 ×1.0", command=self.cycle_contrast, padx=4, pady=0)
+                       font=("Malgun Gothic", 9)).pack(side="left", padx=(4, 0))
+        ttk.Separator(opts, orient="vertical").pack(side="left", fill="y", padx=8, pady=2)
+        self.btn_bright = tk.Button(opts, text="밝기 ×1.0", command=self.cycle_brightness, padx=4, pady=0)
+        self.btn_bright.pack(side="left", padx=(0, 3))            # 어두운 사진의 작은 이물을 찾을 때 (화면에만 적용)
+        self.btn_contrast = tk.Button(opts, text="대비 ×1.0", command=self.cycle_contrast, padx=4, pady=0)
         self.btn_contrast.pack(side="left", padx=(0, 3))
-        self.btn_gray = tk.Button(enh, text="흑백", command=self.toggle_gray, padx=4, pady=0)
+        self.btn_gray = tk.Button(opts, text="흑백", command=self.toggle_gray, padx=4, pady=0)
         self.btn_gray.pack(side="left")
+        self.diff_label = tk.Label(opts, text="", anchor="w", fg="#555555", font=("Malgun Gothic", 9, "bold"))
+        self.diff_label.pack(side="left", padx=(14, 0))          # Diff 를 켜면 '추가 N · 수정 N · 삭제 N · 그대로 N'
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
-        self.form = FormPanel(side, on_change=self.on_form_changed)
+        self.form = FormPanel(side, on_change=self.on_form_changed, on_mode=self.on_ime_mode)
+        self.form.ime.bind_global(self.root)             # 한/영 키는 이미지 화면에 커서가 있어도 바뀐다
         self.form.pack(side="bottom", fill="x", pady=(8, 0))
 
-        tk.Label(side, text="라벨 목록 (BBox)", font=("Malgun Gothic", 10, "bold")).pack(anchor="w")
-        self.box_list = tk.Listbox(side, font=("Consolas", 9), activestyle="none", exportselection=False)
+        self.box_title = tk.Label(side, text="라벨 목록 (0개)", font=("Malgun Gothic", 10, "bold"))
+        self.box_title.pack(anchor="w")
+        self.box_list = ttk.Treeview(side, columns=("no", "cls", "pos", "state"), show="headings", height=4,
+                                     selectmode="browse")
+        for col, text, width, anchor in (("no", "No", 28, "center"), ("cls", "클래스", 104, "w"),
+                                         ("pos", "위치 (x,y,w,h)", 128, "w"), ("state", "상태", 44, "center")):
+            self.box_list.heading(col, text=text)
+            self.box_list.column(col, width=width, anchor=anchor, stretch=(col == "pos"))
+        self.box_list.tag_configure("changed", foreground="#e65100")        # 내가 고치거나 추가한 BBox 는 주황
         self.box_list.pack(fill="both", expand=True)
-
-        # ④-2 왼쪽 패널: 같은 폴더의 사진 목록. 누르면 바로 그 사진으로 간다 (✓ = WORK 에 저장된 사진)
-        left = tk.Frame(self.root, padx=4, pady=4)
-        left.pack(side="left", fill="y")
-        head = tk.Frame(left)
-        head.pack(side="top", fill="x")
-        tk.Label(head, text="사진 목록", font=("Malgun Gothic", 10, "bold")).pack(side="left")
-        tk.Button(head, text="📁 폴더 열기", command=self.open_folder, padx=4, pady=0).pack(side="right")
-        self.drop_hint = tk.Label(left, text="", anchor="w", fg="#666666", font=("Malgun Gothic", 8))
-        self.drop_hint.pack(side="top", fill="x")
-        scroll = tk.Scrollbar(left)
-        scroll.pack(side="right", fill="y")
-        self.file_list = tk.Listbox(left, width=26, font=("Consolas", 9), activestyle="none",
-                                    exportselection=False, yscrollcommand=scroll.set)
-        self.file_list.pack(side="left", fill="y")
-        scroll.config(command=self.file_list.yview)
-        self._listed_files = None        # 지금 목록에 보이는 사진들 (폴더가 바뀔 때만 다시 채운다)
+        self._box_guard = False                                              # 표를 다시 채우는 동안 선택 이벤트를 무시
 
         # ⑤ 가운데: 이미지를 보여 줄 도화지(Canvas)
-        self.canvas = tk.Canvas(self.root, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        center.pack(side="left", fill="both", expand=True)       # (오른쪽 패널·아래 줄을 먼저 pack 한 뒤 남는 자리를 차지)
+        self.canvas = tk.Canvas(center, bg="#2b2b2b", highlightthickness=0, cursor="crosshair")
+        self.canvas.pack(side="top", fill="both", expand=True)
 
         # 폴더·사진을 창에 끌어다 놓기 (tkinterdnd2 가 있을 때만)
         if register_drop(self.root, self.on_drop):
-            self.drop_hint.config(text="폴더를 창에 끌어다 놓아도 됩니다")
-        else:
-            self.drop_hint.config(text="")
+            self.strip.hint.config(text="폴더를 창에 끌어다 놓아도 됩니다")
 
     # ------------------------------------------------------------------
     # 이벤트 연결 ([Tkinter 개념 3: 이벤트 bind])
@@ -266,8 +280,7 @@ class Day1Labeler:
             c.bind(f"<ButtonRelease-{btn}>", self.on_pan_end)
 
         self.class_list.bind("<<ListboxSelect>>", self.on_class_selected)
-        self.box_list.bind("<<ListboxSelect>>", self.on_box_list_selected)
-        self.file_list.bind("<<ListboxSelect>>", self.on_file_selected)
+        self.box_list.bind("<<TreeviewSelect>>", self.on_box_list_selected)
 
         r = self.root
         # 입력칸에 글자를 치는 중에는 글자·숫자 단축키가 동작하면 안 된다
@@ -309,7 +322,7 @@ class Day1Labeler:
     # ====================================================================
 
     def show_inventory(self):
-        """[📊 데이터 조사] RAW 폴더의 개수·짝·빈 TXT·Class 분포를 표로 보여 준다."""
+        """[데이터 조사] RAW 폴더의 개수·짝·빈 TXT·Class 분포를 표로 보여 준다."""
         rows, summary = scan_inventory(settings.RAW_DIR)
         if not rows:
             messagebox.showinfo("데이터 조사", f"조사할 데이터가 없습니다.\n\n{settings.RAW_DIR}\n\n"
@@ -331,12 +344,12 @@ class Day1Labeler:
             self.root.clipboard_append(text)
             self.set_status("조사 표를 복사했습니다. 옵시디언 노트에 붙여 넣으세요 (Ctrl+V).")
 
-        tk.Button(btns, text="📋 표 복사 (마크다운)", command=copy, padx=8).pack(side="left", padx=8)
+        tk.Button(btns, text=" 표 복사 (마크다운)", command=copy, padx=8).pack(side="left", padx=8)
         tk.Button(btns, text="닫기", command=win.destroy, padx=8).pack(side="left")
         box.pack(fill="both", expand=True)
 
     def run_validation(self):
-        """[🔍 무결성 검증(QA)] 900장 전체 데이터셋 무결성을 정밀 검사하여 결과 다이얼로그를 띄운다."""
+        """[무결성 검증(QA)] 900장 전체 데이터셋 무결성을 정밀 검사하여 결과 다이얼로그를 띄운다."""
         self.set_status("데이터셋 무결성 검사(Validation) 진행 중...")
         self.root.update_idletasks()
         report = validate_dataset(raw_dir=settings.RAW_DIR, work_dir=settings.WORK_DIR)
@@ -356,7 +369,7 @@ class Day1Labeler:
         show_validation_dialog(self.root, report, csv_path=out_csv, on_jump=jump_to_file)
 
     def open_work_folder(self):
-        """[📁 WORK 폴더 열기] 저장 결과를 파일 탐색기에서 확인한다."""
+        """[WORK 폴더 열기] 저장 결과를 파일 탐색기에서 확인한다."""
         settings.WORK_DIR.mkdir(parents=True, exist_ok=True)
         folder = settings.WORK_DIR
         try:
@@ -390,8 +403,24 @@ class Day1Labeler:
         if path:
             self.load_image(path)
 
+    def restore_session(self):
+        """프로그램을 켠 직후, 마지막으로 보던 폴더와 사진을 그대로 연다. 이미 뭔가 열었거나 기록이 없으면 아무것도 안 한다."""
+        if self.pil_image is not None:
+            return False
+        saved = load_session()
+        if saved is None:
+            return False
+        folder, image = saved
+        first = self.navigator.load_folder(folder)
+        if first is None or image not in self.navigator.files:
+            return False
+        if not self.load_image(image):
+            return False
+        self.set_status(f"마지막 작업 위치에서 이어서 시작합니다: {image.name}  ({self.navigator.progress_text()})")
+        return True
+
     def open_folder(self):
-        """[📁 폴더 열기] 폴더를 고르면 그 안의 사진 전체를 목록으로 열고 첫 사진을 보여 준다."""
+        """[폴더 열기] 폴더를 고르면 그 안의 사진 전체를 목록으로 열고 첫 사진을 보여 준다."""
         folder = filedialog.askdirectory(
             title="사진이 들어 있는 폴더 선택 (data/raw/... 또는 images 폴더)",
             initialdir=str(settings.RAW_DIR if settings.RAW_DIR.is_dir() else settings.PROJECT_DIR))
@@ -442,6 +471,7 @@ class Day1Labeler:
         self.load_boxes()
         self.show_image()                                    # 새 이미지는 항상 '화면 맞춤'으로 시작
         self.update_nav()
+        save_session(self.navigator.folder, self.image_path)  # 다음에 켜면 여기서 이어서 (작은 파일 하나)
         return True
 
     # ---- 이전 / 다음 ----
@@ -465,9 +495,7 @@ class Day1Labeler:
         self.show_nav_number(target + 1)                                # 가벼운 표시만 먼저 갱신
         self.btn_prev.config(state="normal" if target > 0 else "disabled")
         self.btn_next.config(state="normal" if target < nav.total - 1 else "disabled")
-        self.file_list.selection_clear(0, "end")
-        self.file_list.selection_set(target)
-        self.file_list.see(target)
+        self.strip.set_current(target)                                  # 하단 미리보기 줄의 강조도 바로 옮긴다 (가벼움)
         if self._nav_job is None:
             self._nav_job = self.root.after_idle(self.flush_step)
 
@@ -505,7 +533,7 @@ class Day1Labeler:
         nav = self.navigator
         current = nav.index + 1 if nav.index >= 0 else 0
         if nav.total == 0:
-            messagebox.showinfo("이동", "열려 있는 사진 목록이 없습니다. 먼저 [📁 폴더 열기] 또는 [📂 이미지 열기]로 사진을 불러오세요.")
+            messagebox.showinfo("이동", "열려 있는 사진 목록이 없습니다. 먼저 [폴더 열기] 또는 [이미지 열기]로 사진을 불러오세요.")
             return
         text = self.entry_index.get().strip()
         if not text:
@@ -529,27 +557,89 @@ class Day1Labeler:
         self.refresh_file_list()
 
     def refresh_file_list(self):
-        """왼쪽 사진 목록을 채우고 현재 사진을 표시한다."""
-        nav, lb = self.navigator, self.file_list
+        """하단 사진 목록을 채우고 현재 사진을 표시한다."""
+        nav = self.navigator
+        if not nav.filtered and self.filter_var.get() != self.FILTER_ALL:
+            self.filter_var.set(self.FILTER_ALL)                 # 필터가 풀렸으면(새 폴더·숨겨진 사진 열기) 표시도 맞춘다
         if self._listed_files != nav.files:
             self._listed_files = list(nav.files)
-            lb.delete(0, "end")
-            for p in nav.files:
-                lb.insert("end", f"{'✓' if work_label_path(p).exists() else ' '} {p.name}")
-        elif self.image_path is not None and 0 <= nav.index < lb.size():   # 방금 저장했으면 ✓ 표시
-            lb.delete(nav.index)
-            lb.insert(nav.index, f"{'✓' if work_label_path(self.image_path).exists() else ' '} {self.image_path.name}")
-        lb.selection_clear(0, "end")
-        if 0 <= nav.index < lb.size():
-            lb.selection_set(nav.index)
-            lb.see(nav.index)
+            self.strip.set_files(nav.files, total_all=len(nav.all_files))
+        self.strip.set_current(nav.index)
 
-    def on_file_selected(self, _event):
-        sel = self.file_list.curselection()
-        if not sel or sel[0] == self.navigator.index:
+    def on_thumb_selected(self, index):
+        """하단 사진 목록에서 사진을 눌렀을 때. (저장 확인에서 취소하면 그대로 남는다)"""
+        files = self.navigator.files
+        if 0 <= index < len(files) and index != self.navigator.index:
+            self.move_to(files[index])
+        self.strip.set_current(self.navigator.index)
+
+    def status_map(self):
+        """검수표의 {사진: 상태}. 파일이 바뀌었을 때만 다시 읽는다."""
+        try:
+            stamp = Path(settings.MANIFEST_PATH).stat().st_mtime_ns
+        except OSError:
+            stamp = None
+        if self._status_cache[0] != stamp:
+            try:
+                data = read_status_map()
+            except ManifestError:
+                data = {}
+            self._status_cache = (stamp, data)
+        return self._status_cache[1]
+
+    # ── 보기 필터 ─────────────────────────────────────────────────
+    FILTER_ALL = "전체"
+    FILTER_NONE = "미작업 (기록 없음)"
+    FILTER_CHOICES = [FILTER_ALL, FILTER_NONE, "검수 전", "수정 완료", "검수 완료", "수정 필요", "제외"]
+
+    def make_filter(self, name):
+        """필터 이름 → 사진 경로를 받아 True/False 를 돌려주는 함수 (전체면 None). 검수표는 한 번만 읽는다."""
+        if name == self.FILTER_ALL:
+            return None
+        status_map = self.status_map()
+        if name == self.FILTER_NONE:
+            return lambda p: status_of(p, status_map) == ""
+        return lambda p: status_of(p, status_map) == name
+
+    def on_filter_changed(self):
+        """보기 필터를 바꿨을 때: 해당하는 사진만 목록·이동에 쓴다. 현재 사진이 해당하지 않으면 첫 사진으로 간다."""
+        nav = self.navigator
+        name = self.filter_var.get()
+        if self.pil_image is None or not nav.all_files:
+            self.filter_var.set(self.FILTER_ALL)
+            if name != self.FILTER_ALL:
+                self.set_status("먼저 폴더나 사진을 열어 주세요. 열린 사진이 있어야 걸러 볼 수 있습니다.")
             return
-        self.move_to(self.navigator.files[sel[0]])
-        self.refresh_file_list()          # 저장 확인에서 [취소]했으면 원래 사진에 표시를 되돌린다
+        count = nav.set_filter(self.make_filter(name))
+        if count == 0:
+            nav.set_filter(None)
+            self.filter_var.set(self.FILTER_ALL)
+            messagebox.showinfo("보기", f"'{name}' 에 해당하는 사진이 없습니다.")
+            self.refresh_file_list()
+            return
+        if nav.index < 0:                                        # 지금 보던 사진이 걸러졌다 → 첫 사진으로
+            if not self.confirm_discard():
+                nav.set_filter(None)
+                self.filter_var.set(self.FILTER_ALL)
+                self.refresh_file_list()
+                return
+            self.load_image(nav.files[0])
+        else:
+            self.update_nav()
+        self.set_status(f"보기: {name} — {nav.total}장 (전체 {len(nav.all_files)}장)" if nav.filtered
+                        else f"전체 보기 — {nav.total}장")
+
+    THUMB_STATUS_COLORS = {"검수 전": "#555555", "수정 완료": "#e65100", "검수 완료": "#2e7d32",
+                           "수정 필요": "#c62828", "제외": "#757575"}
+
+    def thumb_mark(self, path):
+        """사진 목록의 사진 아래 글자: 저장했으면 ✓, 검수표 상태가 있으면 상태 (색으로 구분)."""
+        saved = work_label_path(path).exists()
+        status = status_of(path, self.status_map())
+        if not saved and not status:
+            return "", "#555555"
+        text = ("✓ " if saved else "") + status
+        return text.strip(), self.THUMB_STATUS_COLORS.get(status, "#2e7d32")
 
     def load_boxes(self):
         """TXT 를 읽어 self.boxes 에 채운다.
@@ -612,7 +702,7 @@ class Day1Labeler:
         self._clean = [dict(b) for b in self.boxes]
         self.update_title()
         self.load_form()                     # 프로그램이 정한 상태(예: 수정 완료)를 입력칸에 다시 보여 준다
-        self.refresh_file_list()             # 사진 목록에 ✓ 표시
+        self.strip.refresh_marks()           # 사진 목록에 ✓·상태 표시
         self.set_status(f"저장 완료 → {target}   |   {note}")
         return True
 
@@ -625,6 +715,14 @@ class Day1Labeler:
             messagebox.showwarning("검수표 읽기 실패", f"검수표(CSV)를 읽지 못해 입력칸을 비워 둡니다.\n\n{e}")
             return
         self.form.set_values(values)
+
+    def on_ime_mode(self, korean):
+        """한/영 상태가 바뀌었을 때 상태줄에 알린다. (프로그램을 켤 때 처음 한 번은 알리지 않는다)"""
+        if not getattr(self, "_ime_ready", False):
+            self._ime_ready = True
+            return
+        self.set_status("한글 입력 — 검수 기록 칸에 한글로 쓸 수 있습니다. 영어로 바꾸려면 한/영 키를 다시 누르세요."
+                        if korean else "영어 입력 — 한/영 키를 누르면 한글로 바뀝니다.")
 
     def on_form_changed(self):
         """입력칸을 고쳤을 때: 저장 안 한 변경으로 표시한다. (사진을 열기 전에는 저장할 곳이 없으므로 무시)"""
@@ -649,7 +747,7 @@ class Day1Labeler:
         self.update_title()
 
     def save_and_next(self):
-        """[💾→ 저장 후 다음] / W : 저장하고 바로 다음 사진으로 넘어간다. (저장에 실패하면 넘어가지 않는다)"""
+        """[저장 후 다음] / W : 저장하고 바로 다음 사진으로 넘어간다. (저장에 실패하면 넘어가지 않는다)"""
         if self.pil_image is None or self.drag:
             return
         if not self.save():
@@ -693,7 +791,7 @@ class Day1Labeler:
             c.delete("box")
             c.create_text(c.winfo_width() / 2, c.winfo_height() / 2, tags="img", fill="#bbbbbb",
                           font=("Malgun Gothic", 14), justify="center",
-                          text="[📂 이미지 열기] 로 시작하세요\n(데이터는 data/raw 폴더에 넣어 두세요)")
+                          text="[이미지 열기] 로 시작하세요\n(데이터는 data/raw 폴더에 넣어 두세요)")
             self.refresh_box_list()
             return
         cw, ch = self.canvas_size()
@@ -706,6 +804,7 @@ class Day1Labeler:
     def render(self):
         """현재 Viewport(배율·위치) 그대로 이미지 + BBox 를 다시 그린다."""
         self._render_job = None
+        self.zoom_label.config(text=f"{self.vp.zoom_percent}%" if self.pil_image is not None else "")
         c = self.canvas
         c.delete("img")
         if self.pil_image is None:
@@ -748,7 +847,7 @@ class Day1Labeler:
                 self.draw_ghost(self.raw_boxes[ri], "#9e9e9e", "원본")      # 수정 전 위치(회색 점선)
             for ri in d["deleted"]:
                 self.draw_ghost(self.raw_boxes[ri], self.DIFF_COLORS["deleted"], "삭제됨")
-            self.diff_label.config(text=diff_summary(d) + ("" if self.raw_boxes or not self.boxes else "\n(원본 라벨이 없는 사진)"))
+            self.diff_label.config(text=diff_summary(d) + ("" if self.raw_boxes or not self.boxes else "  (원본 라벨이 없는 사진)"))
         for i, b in enumerate(self.boxes):
             x1, y1, x2, y2 = self.vp.box_to_canvas(b)
             color = settings.class_color(b["cls"])
@@ -809,6 +908,12 @@ class Day1Labeler:
         self.gray = not self.gray
         self.refresh_enhance("흑백 " + ("켜짐" if self.gray else "꺼짐"))
 
+    def on_pan_toggled(self):
+        """[이동] 켜기/끄기."""
+        self.set_cursor("fleur" if self.pan_var.get() else "crosshair")
+        self.set_status(" 이동 모드 — 왼쪽 버튼으로 끌어 화면을 옮깁니다. (끄면 다시 BBox 를 그리고 고칩니다)"
+                        if self.pan_var.get() else "이동 모드를 껐습니다.")
+
     def update_cross(self, x, y):
         """[십자선] 이 켜져 있으면 마우스 위치에 가로·세로 점선을 그린다 (BBox 경계를 정밀하게 맞출 때)."""
         self.canvas.delete("cross")
@@ -826,11 +931,8 @@ class Day1Labeler:
 
     def on_diff_toggled(self):
         """[RAW 와 비교(Diff)] 켜기/끄기."""
-        if self.diff_var.get():
-            self.diff_label.pack(fill="x", after=self.opts_row)                       # 체크박스 줄 바로 아래
-        else:
+        if not self.diff_var.get():
             self.diff_label.config(text="")
-            self.diff_label.pack_forget()
         self.draw_boxes()
         if self.diff_var.get():
             self.set_status("Diff 보기 — 초록 = 추가 · 주황 = 수정(회색 점선이 원래 위치) · 빨강 점선 = 삭제된 원본 BBox")
@@ -849,13 +951,23 @@ class Day1Labeler:
                  f"YOLO xc={xc:.4f} yc={yc:.4f} w={w:.4f} h={h:.4f}")
 
     def refresh_box_list(self):
-        """오른쪽 '라벨 목록'을 현재 self.boxes 와 맞춘다."""
-        self.box_list.delete(0, "end")
-        for i, b in enumerate(self.boxes):
-            w, h = b["x2"] - b["x1"], b["y2"] - b["y1"]
-            self.box_list.insert("end", f"{i + 1:>2}  cls {b['cls']}  [{b['x1']:.0f},{b['y1']:.0f},{w:.0f},{h:.0f}]")
-        if self.selected is not None and self.selected < len(self.boxes):
-            self.box_list.selection_set(self.selected)       # (코드로 선택해도 ListboxSelect 이벤트는 안 생긴다)
+        """오른쪽 '라벨 목록' 표를 현재 self.boxes 와 맞춘다.  상태 = 원본 그대로이면 '원본', 고치거나 새로 그렸으면 '변경'."""
+        self._box_guard = True
+        try:
+            self.box_list.delete(*self.box_list.get_children())
+            same = set(diff_boxes(self.raw_boxes, self.boxes)["unchanged"])
+            for i, b in enumerate(self.boxes):
+                w, h = b["x2"] - b["x1"], b["y2"] - b["y1"]
+                changed = i not in same
+                self.box_list.insert("", "end", iid=str(i), tags=("changed",) if changed else (), values=(
+                    i + 1, f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}",
+                    f"[{b['x1']:.0f},{b['y1']:.0f},{w:.0f},{h:.0f}]", "변경" if changed else "원본"))
+            if self.selected is not None and self.selected < len(self.boxes):
+                self.box_list.selection_set(str(self.selected))
+                self.box_list.see(str(self.selected))
+            self.box_title.config(text=f"라벨 목록 ({len(self.boxes)}개)")
+        finally:
+            self._box_guard = False
 
     def update_title(self):
         name = self.image_path.name if self.image_path else ""
@@ -919,7 +1031,7 @@ class Day1Labeler:
         if self.pil_image is None or self.drag:
             return
         self.pan_last = (event.x, event.y)
-        self.canvas.config(cursor="fleur")
+        self.set_cursor("fleur")
 
     def on_pan_drag(self, event):
         """이동하는 동안은 이미 그려진 것을 그대로 옮기고(빠름), 잠깐 멈추면 빈 곳까지 다시 그린다."""
@@ -941,7 +1053,7 @@ class Day1Labeler:
         if self.pan_last is None:
             return
         self.pan_last = None
-        self.canvas.config(cursor="crosshair")
+        self.set_cursor("fleur" if self.pan_var.get() else "crosshair")
         if self._render_job is not None:
             self.root.after_cancel(self._render_job)
         self.render()
@@ -960,6 +1072,9 @@ class Day1Labeler:
         · 빈 곳, 또는 Shift 를 누른 채  → 새 BBox 그리기 (Shift 는 기존 BBox 위에서 새 BBox 를 그릴 때)"""
         self.canvas.focus_set()              # 입력칸에 있던 커서를 가져온다 → 숫자키·Delete 단축키가 다시 동작
         if self.pil_image is None or self.pan_last is not None:
+            return
+        if self.pan_var.get():                                #  이동 모드: 왼쪽 버튼으로 화면을 옮긴다
+            self.on_pan_start(event)
             return
         ix, iy = self.to_image(event.x, event.y)
         if not getattr(event, "state", 0) & 0x0001:          # 0x0001 = Shift
@@ -988,6 +1103,9 @@ class Day1Labeler:
     def on_mouse_drag(self, event):
         """② 누른 채 움직이는 동안 — 새 BBox 의 점선 사각형을 늘리거나, BBox 를 옮기고 크기를 바꾼다."""
         self.update_cross(event.x, event.y)
+        if self.pan_last is not None:                         #  이동 모드로 끄는 중
+            self.on_pan_drag(event)
+            return
         d = self.drag
         if not d:
             return
@@ -1007,6 +1125,9 @@ class Day1Labeler:
 
     def on_mouse_up(self, event):
         """③ 뗀 순간 — 이동·크기 조절을 확정하거나, '클릭'이면 선택, '드래그'면 새 BBox 생성."""
+        if self.pan_last is not None:                         #  이동 모드로 끌던 것을 마친다
+            self.on_pan_end(event)
+            return
         d, self.drag = self.drag, None
         if not d:
             return
@@ -1087,6 +1208,9 @@ class Day1Labeler:
 
     def update_hover_cursor(self, ix, iy):
         """BBox 위에서 마우스 모양: 핸들 = 크기 조절 화살표, 안쪽 = 이동, 그 밖 = 십자."""
+        if self.pan_var.get():                                 #  이동 모드에서는 어디서나 손 모양
+            self.set_cursor("fleur")
+            return
         name = "crosshair"
         if self.selected is not None:
             handle = hit_handle(self.boxes[self.selected], ix, iy, self.HANDLE_TOL_PX / self.vp.scale)
@@ -1151,7 +1275,7 @@ class Day1Labeler:
         self.mark_changed()
 
     def clear_all(self):
-        """[🧹 전체 삭제] 이 사진의 BBox 를 모두 지운다. 확인창을 거치고, Ctrl+Z 로 되돌릴 수 있다."""
+        """[전체 삭제] 이 사진의 BBox 를 모두 지운다. 확인창을 거치고, Ctrl+Z 로 되돌릴 수 있다."""
         if self.drag or self.pil_image is None:
             return
         if not self.boxes:
@@ -1191,9 +1315,12 @@ class Day1Labeler:
             self.choose_class(sel[0])
 
     def on_box_list_selected(self, _event):
-        sel = self.box_list.curselection()
-        if sel and sel[0] != self.selected:
-            self.select_box(sel[0])
+        """표에서 줄을 눌렀을 때 그 BBox 를 선택한다. (표를 다시 채우는 중에 생기는 이벤트는 무시)"""
+        if self._box_guard:
+            return
+        sel = self.box_list.selection()
+        if sel and int(sel[0]) != self.selected:
+            self.select_box(int(sel[0]))
 
     def mark_changed(self):
         """BBox 가 바뀐 뒤 공통으로 하는 일: 저장 안 함 표시 + 화면 갱신."""

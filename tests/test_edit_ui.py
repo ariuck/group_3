@@ -145,6 +145,95 @@ class EditUiTest(unittest.TestCase):
         self.app.cross_var.set(False); self.app.on_cross_toggled()
         self.assertEqual(self.cross_items(), 0)
 
+    # ── 라벨 목록 표 ───────────────────────────────────────────
+    def rows(self):
+        lb = self.app.box_list
+        return [lb.item(i, "values") for i in lb.get_children()]
+
+    def test_label_table_shows_original_and_changed(self):
+        rows = self.rows()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(str(rows[0][0]), "1")
+        self.assertIn("2", rows[0][1])                              # Class 번호 + 이름
+        self.assertEqual(rows[0][2], "[400,240,200,120]")
+        self.assertEqual(rows[0][3], "원본")
+        self.assertIn("(1개)", self.app.box_title.cget("text"))
+
+    def test_label_table_marks_a_moved_or_new_box_as_changed(self):
+        self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
+        self.app.on_mouse_up(self.at(560, 300))
+        self.assertEqual(self.rows()[0][3], "변경")
+        self.assertEqual(self.rows()[0][2], "[460,240,200,120]")
+        self.assertIn("changed", self.app.box_list.item("0", "tags"))
+        self.app.undo()
+        self.assertEqual(self.rows()[0][3], "원본")                 # 되돌리면 다시 '원본'
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))
+        self.assertEqual([r[3] for r in self.rows()], ["원본", "변경"])
+        self.assertIn("(2개)", self.app.box_title.cget("text"))
+
+    def test_clicking_a_row_selects_that_box(self):
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))                     # 2번째 BBox 가 선택된 상태
+        self.assertEqual(self.app.selected, 1)
+        self.assertEqual(self.app.box_list.selection(), ("1",))     # 표에서도 같은 줄이 선택돼 있다
+        self.app.box_list.selection_set("0")
+        self.root.update()
+        self.assertEqual(self.app.selected, 0)                      # 표를 눌러 바꾼 선택이 화면에도 반영
+        self.assertEqual(len(self.app.canvas.find_withtag("handle")), 8)
+
+    def test_table_refresh_does_not_trigger_a_selection_loop(self):
+        self.app.select_box(0)
+        picks = []
+        orig = self.app.select_box
+        self.app.select_box = lambda i: (picks.append(i), orig(i))[1]
+        for _ in range(5):
+            self.app.refresh_box_list()
+            self.root.update()
+        self.assertEqual(picks, [])                                 # 표를 다시 채워도 선택 함수가 되풀이 호출되지 않는다
+
+    def test_empty_table_when_no_boxes(self):
+        self.app.boxes.clear(); self.app.selected = None
+        self.app.refresh_box_list()
+        self.assertEqual(self.rows(), [])
+        self.assertIn("(0개)", self.app.box_title.cget("text"))
+
+    # ── 툴바: 이동(Pan) 모드와 배율 표시 ───────────────────────
+    def test_pan_mode_drags_the_view_with_the_left_button(self):
+        self.app.pan_var.set(True); self.app.on_pan_toggled()
+        ox, oy = self.app.vp.offset_x, self.app.vp.offset_y
+        self.app.on_mouse_down(Ev(300, 300)); self.app.on_mouse_drag(Ev(340, 320)); self.app.on_mouse_up(Ev(340, 320))
+        self.assertEqual((self.app.vp.offset_x - ox, self.app.vp.offset_y - oy), (40, 20))   # 화면이 따라 움직였다
+        self.assertEqual(len(self.app.boxes), 1)                                              # BBox 는 만들어지지 않는다
+        self.assertEqual(self.box(), (400.0, 240.0, 600.0, 360.0))                           # 기존 BBox 도 안 움직인다
+        self.assertFalse(self.app.dirty)
+        self.assertIsNone(self.app.pan_last)
+
+    def test_pan_mode_can_be_turned_off_again(self):
+        self.app.pan_var.set(True); self.app.on_pan_toggled()
+        self.app.pan_var.set(False); self.app.on_pan_toggled()
+        self.app.on_mouse_down(self.at(50, 50)); self.app.on_mouse_drag(self.at(150, 150))
+        self.app.on_mouse_up(self.at(150, 150))
+        self.assertEqual(len(self.app.boxes), 2)                                              # 다시 BBox 를 그린다
+
+    def test_zoom_percent_label_follows_the_scale(self):
+        self.assertEqual(self.app.zoom_label.cget("text"), f"{self.app.vp.zoom_percent}%")
+        self.app.zoom_in()
+        self.assertEqual(self.app.zoom_label.cget("text"), f"{self.app.vp.zoom_percent}%")
+
+    def test_toolbar_has_every_main_action(self):
+        def buttons(w):
+            out = []
+            for c in w.winfo_children():
+                if c.winfo_class() in ("Button", "Checkbutton"):
+                    out.append(c.cget("text"))
+                out += buttons(c)
+            return out
+        names = " ".join(buttons(self.app.root))
+        for label in ("이미지 열기", "폴더 열기", "저장", "저장+다음", "되돌리기", "다시", "삭제", "전체 삭제", "맞춤", "이동 모드",
+                      "데이터 조사", "QA 검증", "다시 불러오기", "WORK 폴더"):
+            self.assertIn(label, names)
+
     # ── 저장 후 다음 ──────────────────────────────────────────
     def add_second_photo(self):
         """같은 폴더에 사진 한 장을 더 만들고 목록을 새로 읽는다."""

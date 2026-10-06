@@ -117,6 +117,23 @@ def read_human(image_path, manifest_path=None):
     return {h: (row[h] or "") for h in FORM_FIELDS}
 
 
+def read_status_map(manifest_path=None):
+    """검수표 전체를 한 번 읽어 {(출처 데이터셋, 원래 split, 이미지 파일명): 상태} 로 돌려준다.
+
+    사진 목록(썸네일)에 상태를 색으로 보여 주거나 상태별로 걸러 볼 때 쓴다. 파일이 없으면 빈 dict.
+    """
+    rows = _load(Path(manifest_path or settings.MANIFEST_PATH))
+    return {(r["출처 데이터셋"], r["원래 split"], r["이미지 파일명"]): (r["상태"] or "") for r in rows}
+
+
+def status_of(image_path, status_map):
+    """read_status_map 결과에서 이 사진의 상태를 찾는다. 기록이 없거나 RAW 밖이면 ''."""
+    dataset, split = locate_in_raw(image_path)
+    if dataset is None:
+        return ""
+    return status_map.get((dataset, split, Path(image_path).name), "")
+
+
 def record_save(image_path, raw_txt, work_txt, screen_count, manifest_path=None, human=None):
     """[저장] 직후 호출 — 이 사진의 줄을 만들거나 갱신하고, 화면에 보여 줄 짧은 메시지를 돌려준다.
 
