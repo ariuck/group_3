@@ -333,7 +333,7 @@ class EditUiTest(unittest.TestCase):
         self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
         self.app.on_mouse_up(self.at(560, 300))
         self.app.save_and_next()
-        self.root.update()
+        self.assertTrue(self.app.wait_for_nav())                           # 다음 사진이 화면에 뜰 때까지 기다린다
         self.assertTrue(work_label_path(first).is_file())                  # 먼저 저장했고
         self.assertEqual(self.app.image_path.name, "b.jpg")                # 다음 사진으로 넘어왔다
         self.assertFalse(self.app.dirty)

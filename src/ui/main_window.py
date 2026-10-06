@@ -25,6 +25,7 @@ import math
 import os
 import shutil
 import subprocess
+import threading
 import time
 import tkinter as tk
 from pathlib import Path
@@ -77,6 +78,11 @@ class Day1Labeler:
         self.selected = None       # 선택된 BBox 번호 (없으면 None)
         self.current_class = 0     # 새 BBox 를 만들 때 쓸 Class
         self.dirty = False         # 저장 안 한 변경이 있는가?
+        self._load_state = None    # 방향키 이동 중 다른 스레드에서 읽고 있는 사진 {경로, 결과, 끝났는지, ...}
+        self._edit_serial = 0      # BBox·검수 기록을 고칠 때마다 1 증가 — 사진을 읽는 동안 편집했는지 알아내는 데 쓴다
+        self._nav_serial = 0       # 방향키 이동을 시작할 때의 편집 횟수
+        self._load_seq = 0         # 사진을 화면에 올릴 때마다 1 증가 — 읽는 동안 다른 사진이 열렸으면 그 결과를 버리는 데 쓴다
+        self._poll_job = None
         self._status_hold_until = 0.0   # 이 시각까지는 결과 메시지를 좌표 안내로 덮지 않는다
         self._nudge_idx, self._nudge_t = None, 0.0   # 키보드 미세 이동: 직전에 움직인 BBox 와 시각 (연속 이동을 Undo 한 번으로 묶는다)
         self.unreadable = 0        # 원본 라벨에서 형식이 맞지 않아 읽지 못한 줄 수 (저장하면 WORK 파일에서 빠진다)
@@ -546,16 +552,28 @@ class Day1Labeler:
         elif self.confirm_discard():
             self.load_image(path)
 
+    @staticmethod
+    def decode_image(path):
+        """사진 파일을 읽어 RGB 이미지로. (무거운 작업 — 화면 요소를 건드리지 않아서 다른 스레드에서도 안전하다)"""
+        img = Image.open(path)
+        img.load()
+        return img.convert("RGB")
+
     def load_image(self, path):
         """이미지 1장을 읽어 화면에 올린다. (저장 여부 확인은 부르는 쪽에서 이미 끝낸 상태)"""
         try:
-            img = Image.open(path)
-            img.load()
-            img = img.convert("RGB")
+            img = self.decode_image(path)
         except Exception as e:
             messagebox.showerror("이미지를 열 수 없음", f"{path}\n\n{e}")
             return False
-        self._nav_pending = None                      # 다른 경로로 사진을 열면 방향키로 가던 중이던 목적지는 버린다
+        self.apply_image(path, img)
+        return True
+
+    def apply_image(self, path, img, keep_pending=False):
+        """읽은 사진을 화면에 올린다. keep_pending=True 면 방향키로 가는 중인 목적지(_nav_pending)를 지우지 않는다."""
+        self._load_seq += 1                           # 읽는 중이던 다른 결과는 이제 낡은 것
+        if not keep_pending:
+            self._nav_pending = None                  # 다른 경로로 사진을 열면 방향키로 가던 중이던 목적지는 버린다
         self.image_path = Path(path)
         self.pil_image = img
         self.img_w, self.img_h = img.size
@@ -564,6 +582,77 @@ class Day1Labeler:
         self.show_image()                                    # 새 이미지는 항상 '화면 맞춤'으로 시작
         self.update_nav()
         save_session(self.navigator.folder, self.image_path)  # 다음에 켜면 여기서 이어서 (작은 파일 하나)
+
+    # ---- 방향키로 넘길 때: 사진 읽기를 다른 스레드에서 ----
+    def start_async_load(self, index):
+        """navigator.files[index] 를 다른 스레드에서 읽기 시작한다. 읽는 동안 화면(번호·목록)은 계속 움직인다."""
+        path = self.navigator.files[index]
+        st = {"path": path, "seq": self._load_seq, "done": False, "img": None, "error": None}
+        self._load_state = st
+
+        def work():
+            try:
+                st["img"] = self.decode_image(path)
+            except Exception as e:  # noqa: BLE001 — 깨진 사진은 화면 쪽에서 안내한다
+                st["error"] = e
+            st["done"] = True
+
+        threading.Thread(target=work, daemon=True).start()
+        if self._poll_job is None:
+            self._poll_job = self.root.after(6, self.poll_load)
+
+    def poll_load(self):
+        """다른 스레드가 사진을 다 읽었는지 확인하고, 다 읽었으면 화면에 올린다. (화면은 이 함수에서만 건드린다)"""
+        self._poll_job = None
+        st = self._load_state
+        if st is None:
+            return
+        if not st["done"]:
+            self._poll_job = self.root.after(6, self.poll_load)
+            return
+        if self.drag is not None:                            # 마우스로 BBox 를 끄는 중에는 화면을 바꾸지 않고 잠깐 기다린다
+            self._poll_job = self.root.after(30, self.poll_load)
+            return
+        self._load_state = None
+        files = self.navigator.files
+        pending = self._nav_pending
+        target = files[pending] if pending is not None and 0 <= pending < len(files) else None
+        if st["seq"] != self._load_seq:                      # 읽는 사이에 다른 경로로 사진이 열렸다 → 이 결과는 버린다
+            return
+        if target is None:                                   # 가려던 곳이 사라졌다(목록이 바뀜)
+            self._nav_pending = None
+            self.update_nav()
+            return
+        if st["error"] is not None:
+            if target == st["path"]:                         # 가려던 사진 자체가 깨졌다 → 안내하고 지금 사진에 머문다
+                self._nav_pending = None
+                messagebox.showerror("이미지를 열 수 없음", f"{st['path']}\n\n{st['error']}")
+                self.update_nav()
+            else:                                            # 지나가는 사진이 깨졌으면 건너뛰고 최신 목적지를 읽는다
+                self.start_async_load(pending)
+            return
+        if self._edit_serial != self._nav_serial:            # 읽는 동안 편집했다 → 편집 중인 내용을 지키려고 이동을 취소한다
+            self._nav_pending = None
+            self.update_nav()
+            self.set_status("편집 중인 내용이 있어 사진 이동을 취소했습니다. 저장하거나 되돌린 뒤 다시 넘겨 주세요.")
+            return
+        final = target == st["path"]
+        self.apply_image(st["path"], st["img"], keep_pending=not final)
+        if not final:                                        # 지나가는 사진: 화면에는 올렸지만 가려는 곳은 더 앞이다 → 표시를 목적지로 되돌리고 계속 읽는다
+            self.show_nav_number(pending + 1)
+            self.btn_prev.config(state="normal" if pending > 0 else "disabled")
+            self.btn_next.config(state="normal" if pending < self.navigator.total - 1 else "disabled")
+            self.strip.set_current(pending)
+            self.start_async_load(pending)
+
+    def wait_for_nav(self, timeout=10.0):
+        """방향키 이동이 끝날 때까지 기다린다 (시험·자동화용). 끝났으면 True."""
+        end = time.monotonic() + timeout
+        while self._nav_pending is not None or self._nav_job is not None or self._load_state is not None:
+            if time.monotonic() > end:
+                return False
+            self.root.update()
+            time.sleep(0.002)
         return True
 
     # ---- 이전 / 다음 ----
@@ -581,8 +670,10 @@ class Day1Labeler:
         target = base + delta
         if not 0 <= target < nav.total:
             return
-        if self._nav_pending is None and not self.confirm_discard():   # 저장 안 한 변경이 있으면 처음 한 번만 물어봄
-            return
+        if self._nav_pending is None:
+            if not self.confirm_discard():                              # 저장 안 한 변경이 있으면 처음 한 번만 물어봄
+                return
+            self._nav_serial = self._edit_serial                        # 여기서부터 새로 편집하면 이동을 취소해 지킨다
         self._nav_pending = target
         self.show_nav_number(target + 1)                                # 가벼운 표시만 먼저 갱신
         self.btn_prev.config(state="normal" if target > 0 else "disabled")
@@ -592,13 +683,14 @@ class Day1Labeler:
             self._nav_job = self.root.after_idle(self.flush_step)
 
     def flush_step(self):
-        """쌓인 이동 중 마지막 목적지 사진 한 장만 실제로 연다."""
+        """쌓인 이동 중 마지막 목적지 사진을 읽기 시작한다. (이미 읽는 중이면 그것이 끝난 뒤 poll_load 가 최신 목적지를 이어서 읽는다)"""
         self._nav_job = None
-        target, self._nav_pending = self._nav_pending, None
+        target = self._nav_pending
         if target is None or not 0 <= target < self.navigator.total:
+            self._nav_pending = None
             return
-        if not self.load_image(self.navigator.files[target]):
-            self.update_nav()                                           # 못 열었으면 표시를 현재 사진 기준으로 되돌린다
+        if self._load_state is None:
+            self.start_async_load(target)
 
     def move_to(self, path):
         if path is None or not self.confirm_discard():   # 저장 안 한 변경이 있으면 먼저 물어봄
@@ -859,6 +951,7 @@ class Day1Labeler:
         """입력칸을 고쳤을 때: 저장 안 한 변경으로 표시한다. (사진을 열기 전에는 저장할 곳이 없으므로 무시)"""
         if self.pil_image is None:
             return
+        self._edit_serial += 1
         self.dirty = True
         self.update_title()
 
@@ -946,7 +1039,8 @@ class Day1Labeler:
     def shutdown(self):
         """예약해 둔 작업(화면 다시 그리기·이동·복원 등)을 모두 취소한다. 창을 닫기 직전에 부른다.
         (취소하지 않으면 닫힌 창을 찾다가 'invalid command name' 오류가 날 수 있다)"""
-        for name in ("_resize_job", "_render_job", "_nav_job", "_restore_job"):
+        self._load_state = None                                  # 읽는 중이던 사진은 버린다 (스레드는 알아서 끝난다)
+        for name in ("_resize_job", "_render_job", "_nav_job", "_restore_job", "_poll_job"):
             job = getattr(self, name, None)
             if job is not None:
                 try:
@@ -1011,7 +1105,11 @@ class Day1Labeler:
             disp_h = max(1, round((y1 - y0) * self.vp.scale))
             # 크게 확대하면 픽셀 경계가 보이도록 NEAREST (경계를 정확히 맞추기 좋다)
             resample = Image.NEAREST if self.vp.scale >= 2 else Image.BILINEAR
-            part = self.pil_image.crop((x0, y0, x1, y1)).resize((disp_w, disp_h), resample)
+            part = self.pil_image.crop((x0, y0, x1, y1))
+            shrink = next((k for k in (8, 4, 2) if self.vp.scale * k <= 1), 1) if resample == Image.BILINEAR else 1
+            if shrink > 1:
+                part = part.reduce(shrink)                   # 크게 줄여 보일 때는 먼저 정수 배로 줄여 두면 훨씬 빠르다 (4K 사진 39ms → 18ms)
+            part = part.resize((disp_w, disp_h), resample)
             part = self.enhance(part)                        # 밝기·대비·흑백 (화면에 보이는 부분만 — 가벼움)
             self.photo = ImageTk.PhotoImage(part)            # self.photo 에 저장해 두지 않으면 화면에서 사라진다!
             sx, sy = self.vp.image_to_canvas(x0, y0)
@@ -1596,6 +1694,7 @@ class Day1Labeler:
 
     def mark_changed(self):
         """BBox 가 바뀐 뒤 공통으로 하는 일: 저장 안 함 표시 + 화면 갱신."""
+        self._edit_serial += 1
         self.dirty = True
         self.draw_boxes()
         self.refresh_box_list()
@@ -1630,6 +1729,7 @@ class Day1Labeler:
         return True
 
     def after_history(self, what):
+        self._edit_serial += 1
         self._nudge_t = 0.0
         self.selected = None
         self.dirty = self.boxes != self._clean           # 처음 상태까지 되돌리면 '변경 없음'

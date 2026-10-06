@@ -119,6 +119,7 @@ class ThumbStrip(tk.Frame):
             self._refresh()
         else:
             self._style_cells()
+            self._poke()
 
     def refresh_marks(self):
         """저장·상태가 바뀐 뒤 글자(✓·상태)를 다시 계산해서 쓴다."""
@@ -198,7 +199,7 @@ class ThumbStrip(tk.Frame):
         self._style_cells()
         center = self.current if self.current >= 0 else self.start
         self._queue.sort(key=lambda c: abs(c.index - center))        # 현재 사진에 가까운 것부터 채운다
-        self._schedule_load()
+        self._schedule_load(self.IDLE_MS)
         self.btn_prev.state(["!disabled" if self.start > 0 else "disabled"])
         self.btn_next.state(["!disabled" if self.start + self._visible < len(self.files) else "disabled"])
 
@@ -221,9 +222,20 @@ class ThumbStrip(tk.Frame):
             cell.cap.config(bg=bg, fg=("white" if is_cur else color))
             cell.pic.config(bg=bg)
 
-    def _schedule_load(self):
-        if self._queue and self._job is None:
-            self._job = self.after(1, self._load_next)
+    IDLE_MS = 220          # 마지막 이동(방향키 등) 뒤 이만큼 조용해야 미리보기를 읽기 시작한다
+
+    def _schedule_load(self, delay=1):
+        """대기열이 있으면 미리보기 읽기를 예약한다. 이미 예약되어 있으면 취소하고 다시 건다(= 디바운스)."""
+        if not self._queue:
+            return
+        if self._job is not None:
+            self.after_cancel(self._job)
+        self._job = self.after(delay, self._load_next)
+
+    def _poke(self):
+        """사진 이동이 계속되는 동안에는 미리보기를 읽지 않고 기다린다. (사진 한 장 읽기가 50ms 쯤 걸려 이동이 끊겨 보이기 때문)"""
+        if self._queue:
+            self._schedule_load(self.IDLE_MS)
 
     def _load_next(self):
         """미리보기를 한 장씩 읽는다 (한 번에 한 장 — 그 사이에 화면이 반응한다)."""
@@ -242,7 +254,7 @@ class ThumbStrip(tk.Frame):
             if cell.path == path:                                    # 그 사이 다른 사진으로 바뀌지 않았으면
                 cell.pic.config(image=photo)
             break
-        self._schedule_load()
+        self._schedule_load(1)
 
     def stop(self):
         """창을 닫을 때 예약된 작업을 정리한다."""

@@ -4,6 +4,7 @@
 """
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -72,6 +73,7 @@ class ThumbStripTest(unittest.TestCase):
         self.marks = {}
         self.strip = ThumbStrip(self.root, on_select=self.selected.append,
                                 mark_of=lambda p: self.marks.get(p.name, ("", "#333333")))
+        self.strip.IDLE_MS = 1                                              # 시험에서는 '조용해질 때까지 기다리는 시간'을 줄인다
         self.strip.pack(fill="x")
         self.root.update()
 
@@ -81,10 +83,12 @@ class ThumbStripTest(unittest.TestCase):
 
     def settle(self):
         """보이는 미리보기를 모두 읽을 때까지 기다린다."""
-        for _ in range(400):
+        end = time.monotonic() + 5
+        while time.monotonic() < end:
             self.root.update()
             if not self.strip._queue and self.strip._job is None:
                 break
+            time.sleep(0.002)
 
     def test_visible_count_follows_the_width(self):
         self.strip.set_files(self.files)
@@ -140,6 +144,22 @@ class ThumbStripTest(unittest.TestCase):
         self.strip.set_files(self.files)                                  # 같은 목록을 다시 넣어도
         self.settle()
         self.assertEqual(len(self.strip._cache), loaded)                  # 다시 읽지 않는다
+
+    def test_thumbnails_wait_while_the_current_photo_keeps_changing(self):
+        """(성능) 방향키로 넘기는 동안 미리보기를 읽으면 사진 이동이 끊겨 보이므로, 멈춘 뒤에 읽는다"""
+        self.strip.IDLE_MS = 150
+        self.strip.set_files(self.files)
+        self.strip.set_current(0)
+        self.assertGreater(len(self.strip._queue), 0)
+        start = time.monotonic()
+        while time.monotonic() - start < 0.4:                              # 0.4초 동안 계속 넘긴다 (키를 누르고 있는 상황)
+            self.strip.set_current((self.strip.current + 1) % 5)
+            self.root.update()
+            time.sleep(0.02)
+        self.assertEqual(len(self.strip._cache), 0)                         # 움직이는 동안은 하나도 읽지 않았다
+        self.settle()                                                       # 멈추면
+        lo, hi = self.strip.visible_range
+        self.assertTrue(all(self.files[i] in self.strip._cache for i in range(lo, hi)))   # 채워진다
 
     def test_nearest_to_current_loads_first(self):
         self.strip.set_files(self.files)

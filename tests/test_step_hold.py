@@ -36,8 +36,7 @@ def make_app(count):
 
 
 def drain(root, app):
-    while app._nav_pending is not None or app._nav_job is not None:
-        root.update()
+    assert app.wait_for_nav(), "이동이 끝나지 않았다"
     root.update()
 
 
@@ -49,8 +48,8 @@ class StepHoldTest(unittest.TestCase):
         except Exception as e:                       # 화면이 없는 환경이면 건너뛴다
             self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
         loads = self.loads = []
-        real = self.app.load_image
-        self.app.load_image = lambda p: (loads.append(Path(p).name), real(p))[1]
+        real = self.app.decode_image                              # 사진을 실제로 읽는 함수 (방향키 이동은 다른 스레드에서 이것을 부른다)
+        self.app.decode_image = lambda p: (loads.append(Path(p).name), real(p))[1]
 
     def tearDown(self):
         for job in (self.app._resize_job, self.app._render_job, self.app._nav_job):   # 남은 예약 작업을 취소해야 종료 때 오류 메시지가 안 난다
@@ -158,6 +157,127 @@ class JumpToNumberTest(unittest.TestCase):
         self.app.go_next()
         drain(self.root, self.app)
         self.assertEqual(self.app.nav_text(), "31 / 60")
+
+
+class AsyncNavTest(unittest.TestCase):
+    """방향키로 넘길 때 사진 읽기는 다른 스레드에서 한다 — 읽는 동안에도 화면이 멈추지 않고, 편집 중인 내용은 지켜진다."""
+
+    def setUp(self):
+        try:
+            self.root, self.app, self.asked, tmp = make_app(30)
+        except Exception as e:
+            self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        self.real_decode = self.app.decode_image
+        self.slow = 0.0
+        self.broken = set()
+
+        def decode(path):
+            time.sleep(self.slow)
+            if Path(path).name in self.broken:
+                raise OSError("깨진 사진")
+            return self.real_decode(path)
+        self.app.decode_image = decode
+
+    def tearDown(self):
+        self.app.shutdown()
+        self.root.destroy()
+
+    def test_the_screen_keeps_responding_while_a_photo_is_being_read(self):
+        self.slow = 0.4
+        t0 = time.perf_counter()
+        self.app.go_next()
+        self.root.update()
+        self.assertLess(time.perf_counter() - t0, 0.2)               # 읽는 데 0.4초가 걸려도 go_next 는 바로 돌아온다
+        self.assertEqual(self.app.nav_text(), "2 / 30")                # 번호는 이미 바뀌었고
+        ticks = 0
+        while self.app._load_state is not None and not self.app._load_state["done"]:
+            self.root.update()                                       # 읽는 동안에도 화면 갱신이 계속 돈다
+            ticks += 1
+            time.sleep(0.005)
+        self.assertGreater(ticks, 10)
+        self.assertTrue(self.app.wait_for_nav())
+        self.assertEqual(self.app.image_path.name, "img001.jpg")
+
+    def test_photos_passed_on_the_way_are_shown_and_the_final_one_wins(self):
+        self.slow = 0.05
+        shown = []
+        real_apply = self.app.apply_image
+        self.app.apply_image = lambda path, img, keep_pending=False: (shown.append(Path(path).name), real_apply(path, img, keep_pending))[1]
+        start = time.monotonic()
+        while time.monotonic() - start < 0.5:                         # 0.5초 동안 계속 넘긴다
+            self.app.go_next()
+            self.root.update()
+            time.sleep(0.01)
+        self.assertTrue(self.app.wait_for_nav())
+        self.assertGreater(len(shown), 1)                              # 지나가는 사진도 화면에 올라간다 (멈춰 보이지 않게)
+        self.assertEqual(shown[-1], self.app.image_path.name)
+        self.assertEqual(self.app.nav_text(), f"{self.app.navigator.index + 1} / 30")
+        self.assertEqual(self.app.strip.current, self.app.navigator.index)   # 번호·목록·화면이 같은 사진을 가리킨다
+
+    def test_editing_while_a_photo_is_loading_cancels_the_move_and_keeps_the_edit(self):
+        """(안전장치) 읽는 동안 BBox 를 고쳤는데 새 사진이 덮어써서 편집이 사라지면 안 된다"""
+        self.slow = 0.3
+        self.app.go_next()
+        self.root.update()
+        self.app.boxes.append({"cls": 1, "x1": 10.0, "y1": 10.0, "x2": 90.0, "y2": 80.0})   # 읽는 중에 새 BBox 를 그림
+        self.app.history.push(self.app.boxes[:-1])
+        self.app.mark_changed()
+        self.assertTrue(self.app.wait_for_nav())
+        self.assertEqual(self.app.image_path.name, "img000.jpg")      # 이동하지 않았다
+        self.assertEqual(len(self.app.boxes), 1)                       # 편집은 그대로
+        self.assertTrue(self.app.dirty)
+        self.assertIn("이동을 취소", self.app.status.cget("text"))
+        self.assertEqual(self.app.nav_text(), "1 / 30")                # 번호 표시도 원래대로
+
+    def test_choosing_to_discard_does_not_cancel_the_move(self):
+        from src.ui import main_window as mw
+        mw.messagebox.askyesnocancel = lambda *a, **k: False          # '저장 안 하고 이동'
+        self.app.dirty = True
+        self.app.go_next()
+        self.assertTrue(self.app.wait_for_nav())
+        self.assertEqual(self.app.image_path.name, "img001.jpg")      # 버리기로 했으면 정상적으로 이동
+
+    def test_opening_another_photo_meanwhile_wins(self):
+        self.slow = 0.3
+        self.app.go_next()
+        self.root.update()
+        other = self.app.navigator.files[7]
+        self.app.decode_image = self.real_decode                      # 직접 여는 쪽은 바로 읽는다
+        self.app.load_image(other)
+        self.assertTrue(self.app.wait_for_nav(3))
+        time.sleep(0.5)
+        for _ in range(20):
+            self.root.update()
+        self.assertEqual(self.app.image_path, other)                  # 낡은 읽기 결과가 뒤늦게 덮어쓰지 않는다
+        self.assertEqual(self.app.nav_text(), "8 / 30")
+
+    def test_a_broken_photo_on_the_way_is_skipped(self):
+        self.broken = {"img003.jpg"}
+        self.slow = 0.02
+        for _ in range(5):
+            self.app.go_next()
+        self.assertTrue(self.app.wait_for_nav())
+        self.assertEqual(self.app.image_path.name, "img005.jpg")      # 지나가는 사진이 깨져 있어도 목적지에 도착한다
+
+    def test_a_broken_destination_shows_an_error_and_stays(self):
+        from src.ui import main_window as mw
+        shown = []
+        mw.messagebox.showerror = lambda *a, **k: shown.append(a)
+        self.broken = {"img001.jpg"}
+        self.app.go_next()
+        self.assertTrue(self.app.wait_for_nav())
+        self.assertEqual(len(shown), 1)
+        self.assertEqual(self.app.image_path.name, "img000.jpg")      # 지금 사진에 머문다
+        self.assertEqual(self.app.nav_text(), "1 / 30")
+
+    def test_closing_while_a_photo_is_loading_is_quiet(self):
+        self.slow = 0.3
+        self.app.go_next()
+        self.root.update()
+        self.app.shutdown()
+        self.assertIsNone(self.app._load_state)
+        self.assertEqual(len(self.root.tk.splitlist(self.root.tk.call("after", "info"))), 0)     # 남은 예약이 없다
 
 
 if __name__ == "__main__":
