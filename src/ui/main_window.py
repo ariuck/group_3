@@ -32,6 +32,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이는 데 사용
 
 from src import settings
+from src.bbox.bbox_edit import HANDLE_CURSORS, hit_handle, move_box, resize_box
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
@@ -73,6 +74,7 @@ class Day1Labeler:
 
         self.drag = None           # 드래그 중인 정보 (시작점, 임시 사각형 등)
         self.pan_last = None       # 화면 이동(오른쪽 드래그) 중 마지막 마우스 위치
+        self._cursor = "crosshair"  # 지금 캔버스 마우스 모양 (바뀔 때만 다시 지정)
         self._resize_job = None    # 창 크기 변경 후 다시 그리기 예약(디바운스)용
         self._render_job = None    # 화면 이동 중 이미지 다시 그리기 예약용
 
@@ -233,6 +235,7 @@ class Day1Labeler:
         # (비고에 'f'·'-'·'3' 을 쳤는데 화면이 맞춰지거나 축소되거나 Class 가 바뀌면 안 됨)
         r.bind("<Delete>", lambda e: None if self.is_typing(e) else self.delete_selected())
         r.bind("<Control-s>", lambda e: self.save())
+        r.bind("<Escape>", lambda e: None if self.is_typing(e) else self.on_escape())
         r.bind("<Control-z>", lambda e: None if self.is_typing(e) else self.undo())
         r.bind("<Control-y>", lambda e: None if self.is_typing(e) else self.redo())
         r.bind("<Control-Z>", lambda e: None if self.is_typing(e) else self.redo())        # Ctrl+Shift+Z
@@ -792,24 +795,66 @@ class Day1Labeler:
     #    누름(Press) → 움직임(Drag) → 뗌(Release) 세 단계로 BBox 를 만든다.
     # ====================================================================
 
+    HANDLE_TOL_PX = 8        # 핸들을 잡을 수 있는 화면 거리 (픽셀)
+
     def on_mouse_down(self, event):
-        """① 누른 순간: 시작 위치를 기억하고, 점선 임시 사각형을 만든다."""
+        """① 누른 순간 — 무엇을 하려는지 정한다.
+        · 선택된 BBox 의 핸들 위       → 크기 조절
+        · BBox 안쪽                     → 그 BBox 를 선택하고 이동 준비 (움직이지 않고 떼면 '선택'만 된 것)
+        · 빈 곳, 또는 Shift 를 누른 채  → 새 BBox 그리기 (Shift 는 기존 BBox 위에서 새 BBox 를 그릴 때)"""
         self.canvas.focus_set()              # 입력칸에 있던 커서를 가져온다 → 숫자키·Delete 단축키가 다시 동작
         if self.pil_image is None or self.pan_last is not None:
             return
+        ix, iy = self.to_image(event.x, event.y)
+        if not getattr(event, "state", 0) & 0x0001:          # 0x0001 = Shift
+            if self.selected is not None:
+                handle = hit_handle(self.boxes[self.selected], ix, iy, self.HANDLE_TOL_PX / self.vp.scale)
+                if handle:
+                    self.start_edit("resize", self.selected, event, handle)
+                    return
+            idx = find_box_at(self.boxes, ix, iy)
+            if idx is not None:
+                if idx != self.selected:
+                    self.select_box(idx)
+                self.start_edit("move", idx, event)
+                return
         rect = self.canvas.create_rectangle(event.x, event.y, event.x, event.y,
                                             outline="#ffeb3b", dash=(4, 2), width=2, tags="rubber")
-        self.drag = {"x0": event.x, "y0": event.y, "rect": rect}
+        self.drag = {"mode": "new", "x0": event.x, "y0": event.y, "rect": rect}
+
+    def start_edit(self, mode, index, event, handle=None):
+        """이동 / 크기 조절 시작. 원래 BBox 를 기억해 두면 Esc 로 취소하거나 Undo 기록을 만들 수 있다."""
+        ix, iy = self.to_image(event.x, event.y)
+        self.drag = {"mode": mode, "index": index, "orig": dict(self.boxes[index]), "handle": handle,
+                     "ix": ix, "iy": iy, "start": (event.x, event.y), "moved": False}
+        self.set_cursor(HANDLE_CURSORS[handle] if handle else "fleur")
 
     def on_mouse_drag(self, event):
-        """② 누른 채 움직이는 동안: 임시 사각형 크기를 마우스에 맞춰 늘린다."""
-        if self.drag:
-            self.canvas.coords(self.drag["rect"], self.drag["x0"], self.drag["y0"], event.x, event.y)
+        """② 누른 채 움직이는 동안 — 새 BBox 의 점선 사각형을 늘리거나, BBox 를 옮기고 크기를 바꾼다."""
+        d = self.drag
+        if not d:
+            return
+        if d["mode"] == "new":
+            self.canvas.coords(d["rect"], d["x0"], d["y0"], event.x, event.y)
+            return
+        if not d["moved"] and max(abs(event.x - d["start"][0]), abs(event.y - d["start"][1])) < MIN_DRAG_PX:
+            return                           # 클릭하다가 살짝 흔들린 정도는 이동으로 치지 않는다
+        d["moved"] = True
+        ix, iy = self.to_image(event.x, event.y)
+        if d["mode"] == "move":
+            new = move_box(d["orig"], ix - d["ix"], iy - d["iy"], self.img_w, self.img_h)
+        else:
+            new = resize_box(d["orig"], d["handle"], ix, iy, self.img_w, self.img_h)
+        self.boxes[d["index"]] = new
+        self.draw_boxes()                    # BBox 만 다시 그린다 (가벼움)
 
     def on_mouse_up(self, event):
-        """③ 뗀 순간: '클릭'이면 BBox 선택, '드래그'면 새 BBox 생성."""
+        """③ 뗀 순간 — 이동·크기 조절을 확정하거나, '클릭'이면 선택, '드래그'면 새 BBox 생성."""
         d, self.drag = self.drag, None
         if not d:
+            return
+        if d["mode"] != "new":
+            self.finish_edit(d)
             return
         self.canvas.delete(d["rect"])                        # 임시 사각형 제거
 
@@ -838,14 +883,71 @@ class Day1Labeler:
         self.selected = len(self.boxes) - 1                  # 방금 만든 BBox 를 선택 상태로
         self.mark_changed()
 
+    def finish_edit(self, d):
+        """이동·크기 조절을 마친다. 실제로 바뀌었으면 Undo 기록(바뀌기 '전' 상태)을 남긴다."""
+        idx = d["index"]
+        if not d["moved"] or idx >= len(self.boxes) or self.boxes[idx] == d["orig"]:
+            if idx < len(self.boxes):
+                self.boxes[idx] = d["orig"]                  # 바뀐 게 없으면 원래 그대로
+            self.draw_boxes()
+            return
+        before = [dict(b) for b in self.boxes]
+        before[idx] = dict(d["orig"])                        # 지금 목록에서 이 BBox 만 원래 값으로 → '바뀌기 전' 상태
+        self.history.push(before)
+        what = "이동" if d["mode"] == "move" else "크기 조절"
+        self.mark_changed()
+        self.set_status(f"BBox {idx + 1}번 {what} — Ctrl+Z 로 되돌릴 수 있습니다.")
+
+    def cancel_drag(self):
+        """Esc — 하던 드래그(새 BBox·이동·크기 조절)를 취소한다. 취소할 게 있었으면 True."""
+        d, self.drag = self.drag, None
+        if not d:
+            return False
+        if d["mode"] == "new":
+            self.canvas.delete(d["rect"])
+        else:
+            if d["index"] < len(self.boxes):
+                self.boxes[d["index"]] = d["orig"]           # 원래 값으로 되돌림 (Undo 기록은 만들지 않았다)
+            self.draw_boxes()
+            self.refresh_box_list()
+        self.set_status("취소했습니다.")
+        return True
+
+    def on_escape(self):
+        """Esc — 드래그 중이면 취소, 아니면 BBox 선택 해제."""
+        if not self.cancel_drag() and self.selected is not None:
+            self.select_box(None)
+
+    def set_cursor(self, name):
+        """마우스 모양을 바꾼다 (이미 같으면 건드리지 않는다). 환경이 모르는 이름이면 'sizing' 으로 대신한다."""
+        if name == self._cursor:
+            return
+        try:
+            self.canvas.config(cursor=name)
+        except tk.TclError:
+            self.canvas.config(cursor="sizing")
+        self._cursor = name
+
+    def update_hover_cursor(self, ix, iy):
+        """BBox 위에서 마우스 모양: 핸들 = 크기 조절 화살표, 안쪽 = 이동, 그 밖 = 십자."""
+        name = "crosshair"
+        if self.selected is not None:
+            handle = hit_handle(self.boxes[self.selected], ix, iy, self.HANDLE_TOL_PX / self.vp.scale)
+            if handle:
+                name = HANDLE_CURSORS[handle]
+        if name == "crosshair" and find_box_at(self.boxes, ix, iy) is not None:
+            name = "fleur"
+        self.set_cursor(name)
+
     def on_mouse_move(self, event):
-        """그냥 움직일 때: 마우스가 가리키는 '원본 이미지 좌표'를 상태줄에 표시 (좌표 개념 확인용)."""
+        """그냥 움직일 때: 마우스 모양을 바꾸고, 가리키는 '원본 이미지 좌표'를 상태줄에 표시 (좌표 개념 확인용)."""
         if self.pil_image is None or self.drag or self.pan_last is not None:
             return
         x, y = self.to_image(event.x, event.y)
+        self.update_hover_cursor(x, y)
         if 0 <= x < self.img_w and 0 <= y < self.img_h:
             self.set_status(f"원본 좌표 ({x:.0f}, {y:.0f})   |   배율 {self.vp.zoom_percent}%   |   "
-                            "드래그 = BBox · 클릭 = 선택 · 휠 = 확대 · 오른쪽 드래그 = 이동 · F = 맞춤 · Ctrl+Z = 되돌리기")
+                            "빈 곳 드래그 = 새 BBox · 안쪽 드래그 = 이동 · 핸들 드래그 = 크기 · Shift+드래그 = 겹쳐서 새 BBox · Esc = 취소")
 
     def on_canvas_resize(self, event):
         """창 크기를 바꾸는 동안 이 이벤트가 수십 번 쏟아진다.
@@ -880,6 +982,8 @@ class Day1Labeler:
 
     def delete_selected(self):
         """[선택 BBox 삭제] / Delete 키."""
+        if self.drag:
+            return
         if self.selected is None:
             self.set_status("삭제할 BBox 를 먼저 클릭해서 선택하세요.")
             return
@@ -929,6 +1033,8 @@ class Day1Labeler:
 
     def undo(self):
         """[↶ 되돌리기] / Ctrl+Z"""
+        if self.drag:                                        # 드래그 도중에는 Esc 로 먼저 끝낸다
+            return False
         prev = self.history.undo(self.boxes)
         if prev is None:
             self.set_status("되돌릴 작업이 없습니다.")
@@ -939,6 +1045,8 @@ class Day1Labeler:
 
     def redo(self):
         """[↷ 다시] / Ctrl+Y · Ctrl+Shift+Z"""
+        if self.drag:
+            return False
         nxt = self.history.redo(self.boxes)
         if nxt is None:
             self.set_status("다시 실행할 작업이 없습니다.")
