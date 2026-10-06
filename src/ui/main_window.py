@@ -45,6 +45,8 @@ from src.ui.folder_drop import make_root, pick_target, register_drop
 from src.ui.form_panel import FormPanel
 from src.ui import theme
 from src.ui.class_picker import ClassPicker
+from src.ui.help_dialog import show_shortcuts
+from src.ui.tooltip import Tooltip
 from src.ui.session import load_session, save_session
 from src.ui.thumb_strip import ThumbStrip
 from src.ui.validation_dialog import show_validation_dialog
@@ -126,7 +128,7 @@ class Day1Labeler:
         """처음 화면에 보여 줄 안내. 데이터가 아직 없으면 어디에 넣어야 하는지 알려 준다."""
         raw = settings.RAW_DIR
         if raw.is_dir() and any(raw.rglob("*.jpg")):
-            return "[폴더 열기]로 폴더를 열거나 [이미지 열기]로 사진 1장을 열어 보세요.  (도구 ▸ 데이터 조사에서 개수와 짝을 확인할 수 있어요)"
+            return "[폴더 열기]로 폴더를 열거나 [이미지 열기]로 사진 1장을 열어 보세요.   (F1 = 단축키 도움말 · 도구 ▸ 데이터 조사에서 개수와 짝 확인)"
         return "data/raw 폴더에 데이터가 없습니다.  이물검출_학습데이터1·2 의 images / labels 파일을 data/raw 안에 넣어 주세요."
 
     # ------------------------------------------------------------------
@@ -158,14 +160,20 @@ class Day1Labeler:
                     for text, func in (("데이터 조사", self.show_inventory), ("QA 검증 (무결성)", self.run_validation),
                                        ("다시 불러오기", self.reload), ("WORK 폴더 열기", self.open_work_folder)):
                         menu.add_command(label=text, command=func)
+                    menu.add_separator()
+                    menu.add_command(label="단축키 도움말 (F1)", command=self.show_help)
                     ttk.Menubutton(bar, text="도구", menu=menu, style="Tool.TMenubutton", takefocus=False).pack(
                         side="left", padx=3)
                 elif item == "PAN":               # 켜 두면 왼쪽 버튼 드래그로도 화면을 옮긴다 (오른쪽 버튼이 불편할 때)
-                    ttk.Checkbutton(bar, text="이동 모드", variable=self.pan_var, style="Chip.Toolbutton",
-                                    command=self.on_pan_toggled, takefocus=False).pack(side="left", padx=3)
+                    chip = ttk.Checkbutton(bar, text="이동 모드", variable=self.pan_var, style="Chip.Toolbutton",
+                                           command=self.on_pan_toggled, takefocus=False)
+                    chip.pack(side="left", padx=3)
+                    Tooltip(chip, self.TOOLTIPS["이동 모드"])
                 else:
-                    ttk.Button(bar, text=item[0], command=item[1], style=f"{item[2]}.TButton",
-                               takefocus=False).pack(side="left", padx=3)
+                    btn = ttk.Button(bar, text=item[0], command=item[1], style=f"{item[2]}.TButton", takefocus=False)
+                    btn.pack(side="left", padx=3)
+                    if item[0] in self.TOOLTIPS:
+                        Tooltip(btn, self.TOOLTIPS[item[0]])
         self.zoom_label = ttk.Label(bar, text="100%", style="Bar.TLabel", font=theme.font(11, True), width=6,
                                     anchor="e")
         self.zoom_label.pack(side="right")
@@ -275,6 +283,9 @@ class Day1Labeler:
         self.btn_prev = ttk.Button(row, text="◀ 이전", command=self.go_prev, style="Tool.TButton", state="disabled",
                                    takefocus=False)
         self.btn_prev.pack(side="right", padx=(0, 6))
+        Tooltip(self.btn_prev, "← 또는 A 또는 PageUp")
+        Tooltip(self.btn_next, "→ 또는 D 또는 PageDown")
+        Tooltip(self.entry_index, "사진 번호를 입력하고 Enter — Ctrl+G 로 바로 이 칸으로 올 수 있어요")
 
         # 아래부터 쌓는다: 사진 목록(맨 아래) → 좌표줄 → (남는 자리) 도화지
         self.strip = ThumbStrip(center, on_select=self.on_thumb_selected, mark_of=self.thumb_mark)
@@ -366,9 +377,30 @@ class Day1Labeler:
         for key in ("h", "H"):
             r.bind(key, lambda e: None if self.is_typing(e) else self.toggle_boxes())
 
+        r.bind("<F1>", lambda e: self.show_help())
+
         # Ctrl+G = 사진 번호 입력칸으로 커서 이동 (번호로 바로 이동)
         for key in ("<Control-g>", "<Control-G>"):
             r.bind(key, lambda e: self.focus_jump_entry())
+
+    TOOLTIPS = {
+        "이미지 열기": "사진 1장을 열어요",
+        "폴더 열기": "폴더 안의 사진 전체를 열어요 (폴더를 창에 끌어다 놓아도 돼요)",
+        "저장": "Ctrl+S — 지금의 BBox 와 검수 기록을 저장해요",
+        "저장+다음": "W — 저장하고 바로 다음 사진으로 가요",
+        "↶ 되돌리기": "Ctrl+Z — 방금 한 편집을 되돌려요",
+        "↷ 다시": "Ctrl+Y — 되돌린 편집을 다시 적용해요",
+        "삭제": "Delete — 선택한 BBox 를 지워요",
+        "전체 삭제": "이 사진의 BBox 를 모두 지워요 (Ctrl+Z 로 되돌릴 수 있어요)",
+        "⤢ 맞춤": "F — 이미지 전체가 보이게 맞춰요",
+        "－": "축소 (마우스 휠 아래로)",
+        "＋": "확대 (마우스 휠 위로)",
+        "이동 모드": "켜면 왼쪽 버튼으로 끌어서 화면을 옮길 수 있어요 (끄면 다시 BBox 편집)",
+    }
+
+    def show_help(self):
+        """[도구 ▸ 단축키 도움말] / F1"""
+        show_shortcuts(self.root)
 
     @staticmethod
     def is_typing(event):
@@ -391,11 +423,13 @@ class Day1Labeler:
 
         win = tk.Toplevel(self.root)
         win.title("데이터 조사 결과 (RAW 를 읽기만 한 결과)")
-        win.geometry("760x560")
-        box = tk.Text(win, font=("Consolas", 10), wrap="none")
+        win.geometry("820x600")
+        win.configure(bg=theme.COLORS["bg"])
+        box = tk.Text(win, font=theme.mono(10), wrap="none", bg=theme.COLORS["card"], fg=theme.COLORS["text"],
+                      relief="flat", padx=12, pady=10, highlightthickness=1, highlightbackground=theme.COLORS["border"])
         box.insert("1.0", text)
         box.config(state="disabled")
-        btns = tk.Frame(win, pady=6)
+        btns = ttk.Frame(win, padding=(10, 8))
         btns.pack(side="bottom", fill="x")
 
         def copy():
@@ -403,8 +437,8 @@ class Day1Labeler:
             self.root.clipboard_append(text)
             self.set_status("조사 표를 복사했습니다. 옵시디언 노트에 붙여 넣으세요 (Ctrl+V).")
 
-        tk.Button(btns, text=" 표 복사 (마크다운)", command=copy, padx=8).pack(side="left", padx=8)
-        tk.Button(btns, text="닫기", command=win.destroy, padx=8).pack(side="left")
+        ttk.Button(btns, text="표 복사 (마크다운)", command=copy, style="Primary.TButton").pack(side="left", padx=(0, 8))
+        ttk.Button(btns, text="닫기", command=win.destroy, style="Tool.TButton").pack(side="left")
         box.pack(fill="both", expand=True)
 
     def run_validation(self):

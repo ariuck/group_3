@@ -313,7 +313,7 @@ class EditUiTest(unittest.TestCase):
         menu = [w for w in self.app.root.winfo_children()[0].winfo_children() if w.winfo_class() == "TMenubutton"]
         self.assertTrue(menu)
         tools = self.app.root.nametowidget(menu[0].cget("menu"))
-        entries = [tools.entrycget(i, "label") for i in range(tools.index("end") + 1)]
+        entries = [tools.entrycget(i, "label") for i in range(tools.index("end") + 1) if tools.type(i) == "command"]   # 구분선은 건너뜀
         for label in ("데이터 조사", "QA 검증 (무결성)", "다시 불러오기", "WORK 폴더 열기"):
             self.assertIn(label, entries)
 
