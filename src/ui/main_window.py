@@ -32,7 +32,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk   # Pillow: JPG 를 읽고 화면용으로 줄이는 데 사용
 
 from src import settings
-from src.bbox.bbox_edit import HANDLE_CURSORS, hit_handle, move_box, resize_box
+from src.bbox.bbox_edit import HANDLE_CURSORS, handle_points, hit_handle, move_box, resize_box
 from src.bbox.bbox_manager import MIN_DRAG_PX, find_box_at, make_box
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
@@ -691,6 +691,11 @@ class Day1Labeler:
                                 font=("Malgun Gothic", 9, "bold"), tags="box")
             bg = c.create_rectangle(c.bbox(tag), fill=color, outline=color, tags="box")
             c.tag_raise(tag, bg)                             # 글자가 배경 사각형 위에 오도록
+        if self.selected is not None and self.selected < len(self.boxes):
+            for hx, hy in handle_points(self.boxes[self.selected]).values():     # 선택된 BBox 의 크기 조절 핸들 8개
+                sx, sy = self.vp.image_to_canvas(hx, hy)
+                c.create_rectangle(sx - 4, sy - 4, sx + 4, sy + 4, fill="white", outline="#222222", width=1,
+                                   tags=("box", "handle"))
 
     def refresh_box_list(self):
         """오른쪽 '라벨 목록'을 현재 self.boxes 와 맞춘다."""

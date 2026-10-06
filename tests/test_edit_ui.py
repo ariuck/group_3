@@ -60,6 +60,17 @@ class EditUiTest(unittest.TestCase):
         b = self.app.boxes[i]
         return tuple(round(b[k], 1) for k in ("x1", "y1", "x2", "y2"))
 
+    def test_handles_are_drawn_only_for_the_selected_box(self):
+        c = self.app.canvas
+        self.assertEqual(len(c.find_withtag("handle")), 0)
+        self.app.select_box(0)
+        self.assertEqual(len(c.find_withtag("handle")), 8)
+        self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_drag(self.at(560, 300))
+        self.assertEqual(len(c.find_withtag("handle")), 8)         # 끄는 동안에도 따라다닌다
+        self.app.on_mouse_up(self.at(560, 300))
+        self.app.select_box(None)
+        self.assertEqual(len(c.find_withtag("handle")), 0)
+
     def test_click_only_selects(self):
         self.app.on_mouse_down(self.at(500, 300)); self.app.on_mouse_up(self.at(500, 300))
         self.assertEqual(self.app.selected, 0)
