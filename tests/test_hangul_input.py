@@ -3,6 +3,7 @@
     python tests/test_hangul_input.py
 """
 import sys
+import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import ttk
@@ -52,6 +53,12 @@ def press(keysym, char="", state=0):
     root.update()
 
 
+def tap(keysym):
+    """한/영 키를 사람이 누르는 것처럼: 이전 입력과 간격을 두고 누른다 (꾹 눌러 되풀이되는 신호와 구별되도록)."""
+    time.sleep(0.2)
+    press(keysym)
+
+
 for ch in "abc":
     press(ch, ch)
 ok("영어 상태: 그대로 영어", var.get() == "abc")
@@ -69,11 +76,11 @@ ok(f"조합 끝나면 보통 지우기 (got {var.get()!r})", var.get() == "abc�
 press("space", " ")
 press("1", "1")
 ok(f"공백·숫자는 그대로 (got {var.get()!r})", var.get() == "abc검 1")
-press("Hangul")
+tap("Hangul")
 ok("한/영 키로 영어 전환", not ime.korean)
 
 # Shift 를 눌러도 조합이 끊기지 않는다 (ㅖ = Shift+ㅔ, 'ㅎ' 다음에 Shift 를 누르면 예전에는 '혜' 가 'ㅎㅖ' 로 갈라졌다)
-press("Hangul")
+tap("Hangul")
 var.set("")
 ime.finish()
 entry.icursor("end")
@@ -101,7 +108,53 @@ press("Shift_R", "")             # 조합 중간에 Shift 만 눌렀다 떼도 �
 press("Caps_Lock", "")
 press("s", "s")
 ok(f"조합 중 Shift·CapsLock 만 눌러도 유지: 한 (got {var.get()!r})", var.get() == "한")
-press("Hangul")
+tap("Hangul")
+
+# ── 한/영 키: 눌렀다 떼면 한 번만 바뀐다 / 떼는 신호만 와도 바뀐다 / 이미지 화면(입력칸이 아닌 곳)에서도 바뀐다 ──
+def release(keysym):
+    entry.focus_force()
+    root.update()
+    entry.event_generate("<KeyRelease>", keysym=keysym, when="now")
+    root.update()
+
+
+before = ime.korean
+time.sleep(0.2)
+press("Hangul"); release("Hangul")
+ok("한/영 키를 눌렀다 떼면 한 번만 바뀐다", ime.korean != before)
+before = ime.korean
+press("Hangul"); press("Hangul"); press("Hangul")      # 꾹 눌러서 짧은 간격으로 되풀이되는 신호
+release("Hangul")
+ok("꾹 눌러 되풀이되는 신호는 한 번으로 친다", ime.korean != before)
+before = ime.korean
+tap("Hangul")                                          # 떼는 신호가 오지 않는 환경: 누를 때마다 바뀐다
+tap("Hangul")
+ok("떼는 신호가 없어도 누를 때마다 바뀐다 (두 번 누르면 원래대로)", ime.korean == before)
+before = ime.korean
+ime._toggle_down.clear()                             # (떼는 신호만 오는 환경을 흉내: 눌린 기록이 없다)
+release("Hangul")                                    # 누르는 신호 없이 떼는 신호만 온 경우 (Windows 가 가로챈 경우)
+ok("떼는 신호만 와도 바뀐다", ime.korean != before)
+before = ime.korean
+time.sleep(0.2)
+press("Alt_R"); release("Alt_R")
+ok("오른쪽 Alt 도 한/영 키처럼 한 번만 바뀐다", ime.korean != before)
+
+other = tk.Frame(root, width=50, height=20)          # 입력칸이 아닌 곳 (이미지 화면 대신)
+other.pack()
+ime.bind_global(root)
+other.focus_force()
+root.update()
+before = ime.korean
+time.sleep(0.2)
+other.event_generate("<KeyPress>", keysym="Hangul", when="now"); root.update()
+other.event_generate("<KeyRelease>", keysym="Hangul", when="now"); root.update()
+ok("입력칸이 아닌 곳에서도 한/영 키로 바뀐다", ime.korean != before)
+before = ime.korean
+time.sleep(0.2)
+entry.focus_force(); root.update()
+entry.event_generate("<KeyPress>", keysym="Hangul", when="now"); root.update()
+entry.event_generate("<KeyRelease>", keysym="Hangul", when="now"); root.update()
+ok("입력칸에서는 두 번 바뀌지 않는다 (전체 연결과 겹치지 않음)", ime.korean != before)
 
 root.destroy()
 sys.exit(1 if failed else 0)

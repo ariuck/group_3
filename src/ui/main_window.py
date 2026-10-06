@@ -231,7 +231,8 @@ class Day1Labeler:
 
         # 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) — 패널 맨 아래에 둔다.
         # (라벨 목록보다 먼저 pack 해야 창이 작아져도 입력칸이 가려지지 않는다)
-        self.form = FormPanel(side, on_change=self.on_form_changed)
+        self.form = FormPanel(side, on_change=self.on_form_changed, on_mode=self.on_ime_mode)
+        self.form.ime.bind_global(self.root)             # 한/영 키는 이미지 화면에 커서가 있어도 바뀐다
         self.form.pack(side="bottom", fill="x", pady=(8, 0))
 
         self.box_title = tk.Label(side, text="라벨 목록 (0개)", font=("Malgun Gothic", 10, "bold"))
@@ -714,6 +715,14 @@ class Day1Labeler:
             messagebox.showwarning("검수표 읽기 실패", f"검수표(CSV)를 읽지 못해 입력칸을 비워 둡니다.\n\n{e}")
             return
         self.form.set_values(values)
+
+    def on_ime_mode(self, korean):
+        """한/영 상태가 바뀌었을 때 상태줄에 알린다. (프로그램을 켤 때 처음 한 번은 알리지 않는다)"""
+        if not getattr(self, "_ime_ready", False):
+            self._ime_ready = True
+            return
+        self.set_status("한글 입력 — 검수 기록 칸에 한글로 쓸 수 있습니다. 영어로 바꾸려면 한/영 키를 다시 누르세요."
+                        if korean else "영어 입력 — 한/영 키를 누르면 한글로 바뀝니다.")
 
     def on_form_changed(self):
         """입력칸을 고쳤을 때: 저장 안 한 변경으로 표시한다. (사진을 열기 전에는 저장할 곳이 없으므로 무시)"""

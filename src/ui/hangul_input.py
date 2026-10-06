@@ -10,6 +10,7 @@ form_panel 에서 쓰는 방법
     ime = HangulIME()
     ime.attach(entry)          # 한글을 받을 입력칸마다
 """
+import time
 import tkinter as tk
 
 CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
@@ -142,6 +143,7 @@ class HangulIME:
         self._entry = None          # 지금 조합 중인 입력칸
         self._start = 0             # 조합 중인 글자의 위치
         self._shown = 0             # 화면에 보이는 조합 글자 수 (0 또는 1)
+        self._toggle_down = {}      # 눌렀을 때 이미 바꾼 한/영 키 → 마지막으로 누른 시각
 
     def toggle(self):
         self.finish()
@@ -149,8 +151,45 @@ class HangulIME:
         if self._on_mode_change:
             self._on_mode_change(self.korean)
 
+    REPEAT_SECONDS = 0.15           # 이 안에 또 들어오는 같은 키 신호는 '꾹 눌러서 되풀이되는 것'으로 본다
+    STALE_SECONDS = 1.0             # 마지막으로 누른 지 이만큼 지났으면 그 '눌림' 기록은 낡은 것으로 본다
+
+    def _press_toggle(self, keysym):
+        """한/영 키를 눌렀을 때. 꾹 누르고 있어서 빠르게 되풀이되는 신호는 한 번으로 친다.
+        (떼는 신호가 오지 않는 환경에서도 다음에 누르면 다시 바뀌도록, '눌려 있는 상태'가 아니라 시간 간격으로 판단한다)"""
+        now = time.monotonic()
+        last = self._toggle_down.get(keysym)
+        self._toggle_down[keysym] = now
+        if last is not None and now - last < self.REPEAT_SECONDS:
+            return
+        self.toggle()
+
+    def _release_toggle(self, keysym):
+        """한/영 키를 뗐을 때. 누를 때 이미 바꿨으면 그대로 두고,
+        '누르는 신호'는 못 받고 '떼는 신호'만 온 경우(Windows 가 먼저 가로챈 경우)에는 지금 바꾼다."""
+        last = self._toggle_down.pop(keysym, None)
+        if last is not None and time.monotonic() - last < self.STALE_SECONDS:
+            return                                           # 눌렀을 때 이미 바꿨다
+        self.toggle()                                        # 눌린 기록이 없거나 오래된 것 → 떼는 신호만 온 것
+
+    def _on_key_release(self, event):
+        if event.keysym in TOGGLE_KEYSYMS:
+            self._release_toggle(event.keysym)
+            return "break"
+        return None
+
+    def bind_global(self, root):
+        """입력칸이 아닌 곳(이미지 화면 등)에 커서가 있어도 한/영 키로 미리 바꿔 둘 수 있게 창 전체에 연결한다."""
+        for keysym in TOGGLE_KEYSYMS:
+            try:
+                root.bind(f"<KeyPress-{keysym}>", lambda e, k=keysym: (self._press_toggle(k), "break")[1], add=True)
+                root.bind(f"<KeyRelease-{keysym}>", lambda e, k=keysym: (self._release_toggle(k), "break")[1], add=True)
+            except tk.TclError:                              # 이 환경이 모르는 키 이름이면 건너뛴다
+                continue
+
     def attach(self, entry):
         entry.bind("<KeyPress>", self._on_key, add=True)
+        entry.bind("<KeyRelease>", self._on_key_release, add=True)
         for seq in ("<FocusOut>", "<ButtonPress>"):
             entry.bind(seq, lambda e: self.finish(), add=True)
 
@@ -161,7 +200,10 @@ class HangulIME:
 
     def _on_key(self, event):
         entry = event.widget
-        if event.keysym in TOGGLE_KEYSYMS or (event.keysym == "space" and event.state & 0x0001):
+        if event.keysym in TOGGLE_KEYSYMS:
+            self._press_toggle(event.keysym)
+            return "break"
+        if event.keysym == "space" and event.state & 0x0001:      # Shift+Space
             self.toggle()
             return "break"
         if event.keysym in MODIFIER_KEYSYMS:

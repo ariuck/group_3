@@ -44,9 +44,10 @@ RADIO_COLUMNS = {"상태": 3, "이미지 유형": 2}      # 라디오를 가로�
 class FormPanel(ttk.Frame):
     """사람이 직접 채우는 칸을 모아 둔 패널."""
 
-    def __init__(self, parent, on_change=None):
+    def __init__(self, parent, on_change=None, on_mode=None):
         super().__init__(parent, relief="groove", borderwidth=2, padding=2)
         self._on_change = on_change
+        self._on_mode = on_mode            # 한/영 상태가 바뀌었을 때 알림 (예: 상태줄에 안내)
         self._loading = False
         self._vars = {}
         self.ime = HangulIME(on_mode_change=self._show_mode)   # WSL 에서도 한글을 칠 수 있게 (hangul_input.py 참고)
@@ -108,6 +109,8 @@ class FormPanel(ttk.Frame):
 
     def _show_mode(self, korean):
         self._mode_btn.config(text="한/영: 한글" if korean else "한/영: 영어")
+        if self._on_mode:
+            self._on_mode(korean)
 
     def _changed(self, *_):
         # set_values 로 값을 채우는 동안에는 "사람이 고쳤다"로 보지 않는다.
