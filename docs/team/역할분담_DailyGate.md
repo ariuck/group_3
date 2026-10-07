@@ -3,7 +3,7 @@
 > 2일차 목표: **한 장에서 되던 것을 실제 라벨링 도구로 확장한다.**
 > `한 장 성공 → 여러 이미지 탐색 → 여러 BBox → Class 편집 → Zoom/Pan → 안전한 Save/Reload`
 >
-> 역할은 1일차 역할 5개를 그대로 쓰고, 담당자는 아래와 같다. (`docs/project_baseline.md` 와 같음)
+> 역할은 1일차 역할 5개를 그대로 쓰고, 담당자는 아래와 같다. (`docs/standards/project_baseline.md` 와 같음)
 
 ## 1. 어제 끝난 것 / 오늘 할 것
 
@@ -19,8 +19,8 @@
 |---|---|
 | 아침: 어제 결과를 **다른 사람이 처음부터 실행**해 보게 하고(4.1), 실패하면 오늘 새 기능보다 먼저 고치게 한다 | 실행 확인 기록 |
 | 브랜치 병합 담당 — **통합 시간(§4)에 `main` 으로 병합**하고 병합 후 `python tests/day1_selftest.py` 실행 | 병합 이력 |
-| 900장 담당 범위·교차검수 짝 확정 (`docs/project_baseline.md` 의 【기입】 채우기) | 업데이트된 baseline |
-| 오늘의 기록 정리: 핵심 기능 테스트 결과, 남은 오류, Daily Gate 점검 | `docs/day2/2일차_기록.md` |
+| 900장 담당 범위·교차검수 짝 확정 (`docs/standards/project_baseline.md` 의 【기입】 채우기) | 업데이트된 baseline |
+| 오늘의 기록 정리: 핵심 기능 테스트 결과, 남은 오류, Daily Gate 점검 | `docs/meetings/회의록_2일차.md` |
 | README 갱신 (구현된 기능, 실행 방법) | README |
 
 ### ② GUI / 이미지 — 이후영  ★ 이동 기능
@@ -62,7 +62,7 @@
 | **Golden Sample 20장 선정** — 데이터셋 3곳(학습데이터1/train, 2/train, 2/validation)과 BBox 1개·여러 개·작은 객체·가장자리 객체를 섞는다. **사람이 먼저 라벨을 눈으로 확인해 문제 없는 것만** 기준(Reference)으로 지정한다 | 선정 목록 |
 | Golden 시험은 **프로그램의 Load/Save 가 라벨을 망가뜨리지 않는지** 보는 것이다 (모델 평가가 아님). 저장 **전후 TXT 의 좌표·Class 를 비교**한다 | 비교 결과 기록 |
 | **Golden Test 실행·기록** (`reports/test_report.md` 의 1장) | 항목별 PASS/FAIL |
-| 오류 발견 시 **이슈 기록** (무엇이·원인·수정·재시험) | `docs/day2/2일차_기록.md` |
+| 오류 발견 시 **이슈 기록** (무엇이·원인·수정·재시험) | `docs/meetings/회의록_2일차.md` |
 
 ## 3. 파일 담당 (충돌 방지)
 

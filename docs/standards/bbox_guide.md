@@ -19,7 +19,7 @@
 - 기존 BBox 가 기준에 맞으면 **고치지 않고** 검수 완료로 둡니다. 맞지 않을 때만 고칩니다.
 - 판단이 어려우면 임의로 처리하지 않고 REVIEW 로 보냅니다.
 
-![BBox 예시 — 적절 · 너무 큼 · 너무 작음 · 겹친 객체](images/bbox_examples.png)
+![BBox 예시 — 적절 · 너무 큼 · 너무 작음 · 겹친 객체](../images/bbox_examples.png)
 
 ---
 

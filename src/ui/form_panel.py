@@ -28,7 +28,7 @@ from src.manifest.manifest_writer import STATUS_CHOICES
 from src.ui import theme
 from src.ui.hangul_input import HangulIME
 
-SCENE_CHOICES = ["김치+대상 객체", "정상 김치", "대상 객체 단독", "판단 어려움"]   # docs/manifest_guide.md 의 '이미지 유형' 값과 같게
+SCENE_CHOICES = ["김치+대상 객체", "정상 김치", "대상 객체 단독", "판단 어려움"]   # docs/standards/manifest_guide.md 의 '이미지 유형' 값과 같게
 
 # (검수표 머리글, 화면에 보이는 이름, 종류, 선택지, 값이 비었을 때 선택 버튼 이름)
 FIELDS = [
