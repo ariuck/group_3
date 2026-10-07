@@ -96,6 +96,60 @@ class ImportLabelsTest(unittest.TestCase):
         after = sorted((p.relative_to(self.raw).as_posix(), p.stat().st_mtime_ns) for p in self.raw.rglob("*") if p.is_file())
         self.assertEqual(before, after)
 
+    # ── 옛 라벨이 남아 있는 PC (실제로 검수표만 새것이 되고 라벨은 원본 그대로이던 문제) ─────────────
+    def run_main(self, *args):
+        import io
+        from contextlib import redirect_stdout
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            code = il.main([str(a) for a in args])
+        return code, buf.getvalue()
+
+    def stale_setup(self):
+        """내 PC 에 옛 라벨이 이미 있고, 받은 폴더에는 수정된 새 라벨이 있다."""
+        self.put("a.txt", OTHER)                                    # 받은 것 (새 라벨)
+        old = self.work / "DS1" / "labels" / "train" / "a.txt"
+        old.parent.mkdir(parents=True)
+        old.write_text(GOOD, encoding="utf-8")                      # 내 PC 의 옛 라벨
+        return old
+
+    def test_apply_without_overwrite_leaves_stale_labels_and_warns_loudly(self):
+        old = self.stale_setup()
+        settings_work, settings_raw = il.settings.WORK_DIR, il.settings.RAW_DIR
+        il.settings.WORK_DIR, il.settings.RAW_DIR = self.work, self.raw
+        self.addCleanup(lambda: (setattr(il.settings, "WORK_DIR", settings_work), setattr(il.settings, "RAW_DIR", settings_raw)))
+        code, text = self.run_main(self.src, "--apply")
+        self.assertEqual(code, 0)
+        self.assertEqual(old.read_text(encoding="utf-8"), GOOD)             # 옛 라벨이 그대로
+        self.assertIn("복사하지 않고 그대로 두었습니다", text)
+        self.assertIn("--apply --overwrite", text)                          # 다시 실행할 명령까지 알려 준다
+
+    def test_overwrite_replaces_stale_labels_and_backs_them_up(self):
+        old = self.stale_setup()
+        result = self.plan()
+        backup = self.tmp / "백업"
+        n = il.apply_import(result, overwrite=True, backup_dir=backup)
+        self.assertEqual(n, 1)
+        self.assertEqual(old.read_text(encoding="utf-8"), OTHER)            # 새 라벨로 바뀜
+        self.assertEqual((backup / "a.txt").read_text(encoding="utf-8"), GOOD)   # 덮어쓰기 전 파일이 백업에 남음
+
+    def test_backup_keeps_files_with_the_same_name_from_different_folders(self):
+        self.put("a.txt", OTHER)
+        self.put("c.txt", OTHER)
+        for ds, split, name in (("DS1", "train", "a.txt"), ("DS2", "validation", "c.txt")):
+            p = self.work / ds / "labels" / split / name
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(GOOD, encoding="utf-8")
+        backup = self.tmp / "백업2"
+        il.apply_import(self.plan(), overwrite=True, backup_dir=backup)
+        self.assertEqual(sorted(p.name for p in backup.rglob("*.txt")), ["a.txt", "c.txt"])
+
+    def test_no_backup_when_nothing_is_overwritten(self):
+        self.put("a.txt")
+        backup = self.tmp / "백업3"
+        il.apply_import(self.plan(), overwrite=True, backup_dir=backup)       # 새 라벨뿐이면 덮어쓸 것이 없다
+        self.assertFalse(backup.exists())
+
     def test_command_line_preview_and_missing_folder(self):
         self.put("a.txt")
         self.assertEqual(il.main([str(self.tmp / "없는폴더")]), 2)

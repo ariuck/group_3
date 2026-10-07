@@ -16,6 +16,7 @@ import argparse
 import filecmp
 import shutil
 import sys
+import time
 from collections import defaultdict
 from pathlib import Path
 
@@ -88,9 +89,20 @@ def plan_import(source, raw_dir=None, work_dir=None):
     return result
 
 
-def apply_import(result, overwrite=False):
-    """new 는 복사하고, overwrite 이면 conflict 도 덮어쓴다. 복사한 개수를 돌려준다."""
-    todo = list(result.get("new", [])) + (list(result.get("conflict", [])) if overwrite else [])
+def apply_import(result, overwrite=False, backup_dir=None):
+    """new 는 복사하고, overwrite 이면 conflict 도 덮어쓴다. 복사한 개수를 돌려준다.
+    backup_dir 를 주면 덮어쓰기 전의 파일을 그 폴더에 (작업 폴더와 같은 하위 경로로) 먼저 복사해 둔다."""
+    conflicts = list(result.get("conflict", [])) if overwrite else []
+    todo = list(result.get("new", [])) + conflicts
+    if backup_dir and conflicts:
+        for _src, target in conflicts:
+            dst = Path(backup_dir) / target.name
+            n = 1
+            while dst.exists():                              # 같은 이름이 다른 폴더에서 또 나오면 번호를 붙인다
+                n += 1
+                dst = Path(backup_dir) / f"{target.stem}_{n}{target.suffix}"
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(target, dst)
     for src, target in todo:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, target)                        # 내용만 복사 (Windows 의 표시 정보는 따라오지 않는다)
@@ -126,9 +138,21 @@ def main(argv=None):
     if not args.apply:
         print("\n미리보기입니다. 복사하려면 --apply 를 붙이세요.")
         return 0
-    n = apply_import(result, overwrite=args.overwrite)
-    held = len(result.get("conflict", [])) if not args.overwrite else 0
-    print(f"\n{n}개를 복사했습니다." + (f" 내용이 다른 {held}개는 그대로 두었습니다 (덮어쓰려면 --overwrite)." if held else ""))
+    conflicts = len(result.get("conflict", []))
+    backup = None
+    if args.overwrite and conflicts:
+        backup = settings.PROJECT_DIR / "data" / "backup" / f"라벨_가져오기_교체전_{time.strftime('%Y%m%d_%H%M%S')}"
+    n = apply_import(result, overwrite=args.overwrite, backup_dir=backup)
+    print(f"\n{n}개를 복사했습니다.")
+    if backup:
+        print(f"덮어쓰기 전의 라벨 {conflicts}개는 {backup} 에 백업해 두었습니다. (잘못 덮어썼으면 거기서 되돌리세요)")
+    if conflicts and not args.overwrite:
+        print("\n" + "!" * 60)
+        print(f"  ⚠ 내용이 다른 라벨 {conflicts}개는 **복사하지 않고 그대로 두었습니다.** (내 PC 의 옛 라벨이 남아 있습니다)")
+        print("  받은 라벨로 바꾸려면 아래처럼 --overwrite 를 붙여 다시 실행하세요.")
+        print(f"      python tools/import_labels.py {args.source} --apply --overwrite")
+        print("  (검수를 시작해서 저장한 라벨이 있다면 먼저 data/work 를 복사해 두세요. 덮어쓰기 전 파일은 자동으로 백업됩니다)")
+        print("!" * 60)
     return 0
 
 
