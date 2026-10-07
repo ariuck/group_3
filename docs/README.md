@@ -7,7 +7,7 @@
 | **standards/** 기준서 | 팀이 지키는 기준. **여기만 고치면 됩니다** | [project_baseline](standards/project_baseline.md) 팀 운영 기준 · [class_guide](standards/class_guide.md) Class 기준 · [bbox_guide](standards/bbox_guide.md) BBox 기준 · [manifest_guide](standards/manifest_guide.md) 검수표 작성 |
 | **design/** 설계 | 만들 프로그램의 기능·화면·동작 | [필수기능목록](design/필수기능목록.md) · [기능목록_화면설계](design/기능목록_화면설계.md) · [의사코드](design/의사코드.md) · [EndToEnd_실행계획](design/EndToEnd_실행계획.md) · [Manifest_초안_참고용](design/Manifest_초안_참고용.md) |
 | **survey/** 데이터 조사 | 데이터 구조와 사진 살펴보기 | [데이터조사표](survey/데이터조사표.md) |
-| **team/** 팀 운영 | 역할 분담, Daily Gate 확인 | [역할분담_DailyGate](team/역할분담_DailyGate.md) · [Gate_체크리스트](team/Gate_체크리스트.md) |
+| **team/** 팀 운영 | 역할 분담, Daily Gate 확인, 팀원 라벨 합치기 | [역할분담_DailyGate](team/역할분담_DailyGate.md) · [Gate_체크리스트](team/Gate_체크리스트.md) · [라벨_합치기](team/라벨_합치기.md) |
 | **records/** 작업 기록 | 과정 기록, 산출물 요약 | [과정기록](records/과정기록.md) · [산출물_요약](records/산출물_요약.md) |
 | **meetings/** 회의록 | 일차별 회의록 | [1일차](meetings/회의록_1일차.md) · [2일차](meetings/회의록_2일차.md) · [3일차](meetings/회의록_3일차.md) |
 | **images/** | 문서에 쓰는 그림 | |
