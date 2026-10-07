@@ -95,6 +95,31 @@ class QuickReviewTest(unittest.TestCase):
         self.settle()
         self.assertEqual(self.status_in_manifest("a3.jpg")[0], "수정 완료")            # 고쳤으면 '수정 완료' (고친 사진이라는 정보를 지키기 위해)
 
+    def test_reviewer_name_follows_to_the_next_photos_but_never_replaces_a_written_one(self):
+        """검수자 이름을 한 번 쓰면 다음 사진의 빈 칸에 미리 채워지고, 이미 이름이 있는 사진은 그대로 둔다"""
+        self.go_to("a3.jpg")
+        self.app.form._vars["검수자"].set("손상우")                         # 사람이 직접 씀
+        self.app.mark_ok_and_next()
+        self.settle()
+        self.assertEqual(self.app.image_path.name, "a4.jpg")
+        self.assertEqual(self.app.form.get_values()["검수자"], "손상우")    # 다음 사진(빈 칸)에 미리 채워짐
+        self.assertFalse(self.app.dirty)                                  # 채운 것만으로는 '저장 안 됨' 이 아니다
+        self.assertEqual(self.app._load_state, None)
+        # 이름이 이미 적힌 사진: 그대로
+        rows = mf._load(Path(settings.MANIFEST_PATH))
+        for r in rows:
+            if r["이미지 파일명"] == "a1.jpg":
+                r["검수자"] = "지혜성"
+        mf._save(Path(settings.MANIFEST_PATH), rows)
+        self.go_to("a1.jpg")
+        self.assertEqual(self.app.form.get_values()["검수자"], "지혜성")
+        # 저장하면 미리 채운 이름이 검수표에 기록된다
+        self.go_to("a4.jpg")
+        self.app.mark_ok_and_next()
+        self.settle()
+        self.assertEqual([r["검수자"] for r in mf._load(Path(settings.MANIFEST_PATH)) if r["이미지 파일명"] == "a4.jpg"], ["손상우"])
+        self.assertEqual([r["검수자"] for r in mf._load(Path(settings.MANIFEST_PATH)) if r["이미지 파일명"] == "a1.jpg"], ["지혜성"])
+
     def test_enter_on_the_last_photo_saves_and_stays(self):
         self.go_to("a5.jpg")
         self.app.mark_ok_and_next()

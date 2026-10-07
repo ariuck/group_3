@@ -964,6 +964,7 @@ class Day1Labeler:
         self._manifest_warned = "ok"
         self.manifest_ok = True
         self.form.set_values(values)
+        self.form.fill_remembered()          # 작성자·검수자 칸이 비어 있으면 내가 마지막으로 쓴 이름을 미리 채운다 (이미 적힌 이름은 그대로)
 
     def on_ime_mode(self, korean):
         """한/영 상태가 바뀌었을 때 상태줄에 알린다. (프로그램을 켤 때 처음 한 번은 알리지 않는다)"""

@@ -64,6 +64,65 @@ class FormPanelTest(unittest.TestCase):
         self.click("미정")
         self.assertEqual(self.form.get_values()["이미지 유형"], "")
 
+    # ── 작성자·검수자 이름 기억 (프로그램을 켜 둔 동안만, 파일에는 저장하지 않음) ───────────────────
+    def type_name(self, key, text):
+        self.form._vars[key].set(text)                               # 사람이 입력칸에 쓴 것과 같은 경로(write 추적)
+
+    def test_names_typed_by_the_person_fill_blank_cells_of_the_next_photo(self):
+        self.type_name("검수자", "손상우")
+        self.form.set_values({"상태": "검수 전", "작성자": "이후영"})            # 다른 사진을 열었다 (검수자 칸이 비어 있음)
+        self.form.fill_remembered()
+        v = self.form.get_values()
+        self.assertEqual((v["작성자"], v["검수자"], v["상태"]), ("이후영", "손상우", "검수 전"))
+
+    def test_existing_names_are_never_overwritten(self):
+        self.type_name("검수자", "손상우")
+        self.type_name("작성자", "강동연")
+        self.form.set_values({"작성자": "이후영", "검수자": "지혜성"})          # 이미 이름이 적힌 사진
+        self.form.fill_remembered()
+        v = self.form.get_values()
+        self.assertEqual((v["작성자"], v["검수자"]), ("이후영", "지혜성"))
+
+    def test_own_photo_is_not_prefilled_as_reviewer_and_vice_versa(self):
+        self.type_name("검수자", "손상우")
+        self.form.set_values({"작성자": "손상우"})                            # 내가 쓴 사진
+        self.form.fill_remembered()
+        self.assertEqual(self.form.get_values()["검수자"], "")                # 자기 사진을 자기가 검수하지 않게 비워 둔다
+        self.type_name("작성자", "김석범")
+        self.form.set_values({"검수자": "김석범"})
+        self.form.fill_remembered()
+        self.assertEqual(self.form.get_values()["작성자"], "")
+
+    def test_prefilling_is_not_a_change_and_does_not_change_the_memory(self):
+        self.type_name("검수자", "손상우")
+        self.changes.clear()
+        self.form.set_values({"작성자": "이후영"})
+        self.form.fill_remembered()
+        self.assertEqual(self.changes, [])                           # '저장 안 됨' 이 뜨지 않는다
+        self.form.set_values({"검수자": "지혜성"})                       # 불러온 값은 기억을 바꾸지 않는다
+        self.form.set_values({})
+        self.form.fill_remembered()
+        self.assertEqual(self.form.get_values()["검수자"], "손상우")
+
+    def test_clearing_the_cell_by_hand_stops_the_memory(self):
+        self.type_name("검수자", "손상우")
+        self.type_name("검수자", "")                                   # 사람이 지웠다
+        self.form.set_values({"작성자": "이후영"})
+        self.form.fill_remembered()
+        self.assertEqual(self.form.get_values()["검수자"], "")
+        self.type_name("검수자", "김동훈")                              # 이름을 바꾸면 다음 사진부터 새 이름
+        self.form.set_values({"작성자": "이후영"})
+        self.form.fill_remembered()
+        self.assertEqual(self.form.get_values()["검수자"], "김동훈")
+
+    def test_other_cells_are_not_remembered(self):
+        self.type_name("발견된 문제", "REVIEW: class_ambiguous")
+        self.click("수정 필요")
+        self.form.set_values({})
+        self.form.fill_remembered()
+        v = self.form.get_values()
+        self.assertEqual((v["발견된 문제"], v["상태"]), ("", ""))
+
     def test_set_values_fills_radios_and_entries_without_reporting_a_change(self):
         self.form.set_values({"상태": "수정 완료", "이미지 유형": "대상 객체 단독", "작성자": "혜성", "검수자": "동훈",
                               "발견된 문제": "REVIEW: class_ambiguous", "비고(수정 내용)": "메모"})
