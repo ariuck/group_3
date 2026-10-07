@@ -151,6 +151,30 @@ class ShareServerTest(unittest.TestCase):
         self.assertEqual(self.upload("a.zip", GOOD, pin="0000")[0], 403)
         self.assertEqual(list(self.server.recv_dir.glob("*.zip")), [])
 
+    # ── 가이드 화면 ────────────────────────────────────────────────────
+    def test_page_has_step_by_step_guides_and_the_review_ranges(self):
+        status, body, _h = self.call("GET", "/")
+        page = body.decode("utf-8")
+        for needle in ("검수자 가이드", "PM 가이드", "파일 받기·올리기", "C:\\받은결과", "git pull origin main",
+                       "import_labels.py", "merge_manifests.py", "pack_results.py", "dataset_manifest.내것.csv", "공유시작.bat",
+                       "Remove-NetFirewallRule", "백업"):
+            self.assertIn(needle, page, needle)
+        self.assertIn('"김동훈": [1, 300]', page)                         # 검수 범위가 화면에 들어간다
+        self.assertNotIn("__ASSIGN__", page)
+
+    def test_custom_review_ranges_are_shown(self):
+        server = ss.ShareServer(("127.0.0.1", 0), self.tmp / "다른", PIN, log=self.logs.append, assign={"가나다": [5, 9]})
+        self.addCleanup(server.server_close)
+        self.assertIn('"가나다": [5, 9]', server.page)
+        self.assertNotIn("김동훈", server.page.split("const ASSIGN=")[1].split(";")[0])
+
+    def test_parse_assign(self):
+        self.assertEqual(ss.parse_assign("김동훈:1-300, 이후영:301-600"), {"김동훈": [1, 300], "이후영": [301, 600]})
+        self.assertEqual(ss.parse_assign(ss.DEFAULT_ASSIGN), {"김동훈": [1, 300], "이후영": [301, 600], "지혜성": [601, 900]})
+        for bad in ("", "김동훈", "김동훈:1", "김동훈:a-b", "김동훈:5-2", "김동훈:0-3", ":1-3"):
+            with self.assertRaises(ValueError, msg=bad):
+                ss.parse_assign(bad)
+
     # ── 도우미 함수 ────────────────────────────────────────────────────
     def test_helpers(self):
         self.assertEqual(ss.safe_name("../../a b.zip"), "a b.zip")
