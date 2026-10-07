@@ -54,6 +54,23 @@ def near(a, b, eps=1e-6):
     return all(abs(x - y) < eps for x, y in zip(a, b))
 
 
+def free_drag(app, w=100, h=80, margin=12):
+    """화면에서 기존 BBox 와 겹치지 않는 빈 곳에 끌 수 있는 두 점 (시작, 끝)을 찾는다.
+    창 크기에 따라 같은 화면 좌표가 기존 BBox 위가 될 수 있어서(그러면 BBox 가 새로 만들어지지 않고 이동한다), 시험이 가끔 실패하던 것을 막는다."""
+    cw, ch = app.canvas.winfo_width(), app.canvas.winfo_height()
+
+    def clear(x, y):
+        x1, y1 = app.to_image(x - margin, y - margin)
+        x2, y2 = app.to_image(x + w + margin, y + h + margin)
+        return not any(b["x1"] < x2 and b["x2"] > x1 and b["y1"] < y2 and b["y2"] > y1 for b in app.boxes)
+
+    for y in range(40, max(41, ch - h - 40), 20):
+        for x in range(40, max(41, cw - w - 40), 20):
+            if clear(x, y):
+                return (x, y), (x + w, y + h)
+    return (100, 100), (100 + w, 100 + h)
+
+
 # ── Class 설정 (configs/classes.yaml) ───────────────────────────────────────
 ok("Class 7개(0~6)를 설정 파일에서 읽는다", [c["id"] for c in settings.CLASSES] == list(range(7)))
 ok("Class 이름이 기준 문서와 같다", settings.CLASSES[1]["name"] == "플라스틱류·돌·금속류" and settings.CLASSES[6]["name"] == "파·고추")
@@ -191,8 +208,9 @@ try:
 
     app.zoom_in(); app.zoom_in()
     app.choose_class(3)
-    expect = make_box(3, *app.to_image(100, 100), *app.to_image(200, 180), app.img_w, app.img_h)
-    app.on_mouse_down(E(100, 100)); app.on_mouse_drag(E(200, 180)); app.on_mouse_up(E(200, 180))
+    (sx, sy), (ex, ey) = free_drag(app)                                        # 기존 BBox 와 겹치지 않는 빈 곳
+    expect = make_box(3, *app.to_image(sx, sy), *app.to_image(ex, ey), app.img_w, app.img_h)
+    app.on_mouse_down(E(sx, sy)); app.on_mouse_drag(E(ex, ey)); app.on_mouse_up(E(ex, ey))
     ok("확대 상태에서 그린 BBox 도 원본 픽셀 좌표로 저장", len(app.boxes) == n0 + 1 and app.boxes[-1] == expect)
 
     ok("Undo: BBox 추가 취소", app.undo() and len(app.boxes) == n0 and not app.dirty)
