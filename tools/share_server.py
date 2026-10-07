@@ -270,6 +270,10 @@ PAGE = r"""<!doctype html>
   <pre data-cmd="pack"></pre>
   <div class="good">끝에 <code>라벨(txt) 300개, 검수표 300줄</code>이 나오면 정상입니다. 파일은 프로젝트의 <code>data\share</code> 폴더에 <code>결과_<span class="nm">이름</span>_날짜_시각.zip</code>으로 만들어집니다.</div>
   <div id="packpath" class="muted"></div>
+  <div class="warn"><b>라벨 개수가 내 장수와 다르거나 0개이면</b> 내가 저장한 라벨이 <code>data\work</code> 안의 다른 위치에 있을 수 있습니다. 사진 폴더 구조가 다른 PC 에서는 <code>work\data\labels\파일.txt</code> 처럼 저장되기도 합니다. 내 PC 에 txt 가 몇 개, 어느 폴더에 있는지 확인하세요.
+   <pre>find data/work -name "*.txt" -printf "%h\n" | sort | uniq -c</pre>
+   <div class="muted">Windows(PowerShell)는: <code>Get-ChildItem data\work -Recurse -Filter *.txt | Group-Object DirectoryName | Select-Object Count, Name</code></div>
+   저장한 라벨이 어디에도 없으면 프로그램에서 해당 사진을 다시 열어 저장해야 합니다. PM 에게 알려 주세요.</div>
  </div></div>
 
  <div class="card step"><div class="num">7</div><div class="body">

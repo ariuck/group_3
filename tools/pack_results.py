@@ -86,6 +86,10 @@ def pack(out_zip, work_dir=None, manifest_path=None, name=None, number_range=Non
     def in_range(ds, split, photo_name):
         return lo <= numbers.get((ds, split, photo_name), 0) <= hi
 
+    by_stem = {}
+    if numbers is not None:
+        for (_ds, _split, photo_name), num in numbers.items():
+            by_stem.setdefault(Path(photo_name).stem, []).append(num)
     kept, out_of_range = [], 0
     for p in labels:
         if numbers is None:
@@ -93,7 +97,13 @@ def pack(out_zip, work_dir=None, manifest_path=None, name=None, number_range=Non
             continue
         key = _label_key(work_dir, p)
         photo = next((n for n in (key[2] + e for e in (".jpg", ".JPG", ".jpeg", ".JPEG")) if (key[0], key[1], n) in numbers), None) if key else None
-        if photo and in_range(key[0], key[1], photo):
+        if photo:
+            ok = in_range(key[0], key[1], photo)
+        else:
+            # 폴더 구조가 다른 PC(예: work/data/labels/파일.txt)에서 저장된 라벨은 사진 이름으로 번호를 찾는다. (이름이 raw 에서 하나뿐일 때만)
+            nums = by_stem.get(p.stem, [])
+            ok = len(nums) == 1 and lo <= nums[0] <= hi
+        if ok:
             kept.append(p)
         else:
             out_of_range += 1

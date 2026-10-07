@@ -113,6 +113,31 @@ class PackResultsTest(unittest.TestCase):
         self.assertEqual([r["이미지 파일명"] for r in rows], ["p2.jpg", "p3.jpg", "p4.jpg", "q1.jpg"])
         self.assertEqual(rows[0]["비고(수정 내용)"], "줄1\\n줄2")               # 칸 안의 줄바꿈도 그대로
 
+    def test_labels_saved_in_a_different_folder_layout_are_found_by_photo_name(self):
+        """(실제로 있었던 일) 사진 폴더 구조가 달라 라벨이 work/data/labels/파일.txt 처럼 저장된 PC 의 결과도 번호 범위로 묶인다"""
+        raw, work, manifest = self.make_range_fixture()
+        shutil.rmtree(work)
+        flat = work / "data" / "labels"
+        flat.mkdir(parents=True)
+        for n in ("p1", "p2", "p3", "q1", "q2", "없는사진"):
+            (flat / f"{n}.txt").write_text("1 0.5 0.5 0.1 0.1\n", encoding="utf-8")
+        out = self.tmp / "평평.zip"
+        result = pr.pack(out, work, manifest, name="김석범", number_range=(2, 5), raw_dir=raw)
+        self.assertEqual(self.names(out), ["data/labels/p2.txt", "data/labels/p3.txt", "data/labels/q1.txt", "검수표_김석범.csv"])
+        self.assertEqual((result["labels"], result["out_of_range"]), (3, 3))        # p1(범위 밖), q2(범위 밖), 없는사진(raw 에 없음)
+
+    def test_same_photo_name_in_two_places_is_not_guessed_for_a_flat_layout(self):
+        from PIL import Image
+        raw, work, manifest = self.make_range_fixture()
+        d = raw / "DS3" / "images" / "train"
+        d.mkdir(parents=True)
+        Image.new("RGB", (10, 10)).save(d / "p2.jpg")                            # 같은 이름의 사진이 raw 의 두 곳에 있다
+        shutil.rmtree(work)
+        (work / "data" / "labels").mkdir(parents=True)
+        (work / "data" / "labels" / "p2.txt").write_text("1 0.5 0.5 0.1 0.1\n", encoding="utf-8")
+        result = pr.pack(self.tmp / "모호.zip", work, manifest, number_range=(1, 7), raw_dir=raw)
+        self.assertEqual(result["labels"], 0)                                      # 어느 사진인지 모르므로 담지 않는다
+
     def test_three_people_ranges_do_not_overlap_when_unpacked_together(self):
         raw, work, manifest = self.make_range_fixture()
         for who, rng in (("김동훈", (1, 2)), ("이후영", (3, 4)), ("지혜성", (5, 6))):
