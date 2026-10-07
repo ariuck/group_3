@@ -162,6 +162,23 @@ class ShareServerTest(unittest.TestCase):
         self.assertIn('"김동훈": [1, 300]', page)                         # 검수 범위가 화면에 들어간다
         self.assertNotIn("__ASSIGN__", page)
 
+    def test_page_has_drag_and_drop_upload_download_buttons_and_pin_boxes(self):
+        status, body, _h = self.call("GET", "/")
+        page = body.decode("utf-8")
+        for needle in ('id="drop"', 'role="button"', "dragover", "uploadFiles", "multiple",            # 끌어다 놓기 · 여러 개 · 바로 올리기
+                       "내려받기", 'setAttribute("download"', "/api/download?pin=",                    # 내려받기 버튼
+                       'id="pinrow"', "maxlength=\"1\"", "unlock(",                                    # 번호 4칸 · 자동 열기
+                       "prefers-color-scheme:dark", "dropveil", "toast", "rv-step-"):                # 다크 모드 · 페이지 어디에나 놓기 · 안내 · 단계 완료 기억
+            self.assertIn(needle, page, needle)
+        self.assertIn("const MAXMB=1;", page)                                                          # 서버의 올리기 한도(시험 서버는 1MB)가 화면에 들어간다
+        self.assertIn("최대 1MB", page)
+        self.assertNotIn("__MAXMB__", page)
+
+    def test_the_upload_limit_shown_follows_the_server_setting(self):
+        server = ss.ShareServer(("127.0.0.1", 0), self.tmp / "한도", PIN, max_mb=2.5, log=self.logs.append)
+        self.addCleanup(server.server_close)
+        self.assertIn("const MAXMB=2.5;", server.page)
+
     def test_custom_review_ranges_are_shown(self):
         server = ss.ShareServer(("127.0.0.1", 0), self.tmp / "다른", PIN, log=self.logs.append, assign={"가나다": [5, 9]})
         self.addCleanup(server.server_close)
