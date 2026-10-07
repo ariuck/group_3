@@ -2,7 +2,7 @@
 
     python tools/merge_manifests.py 나.csv 동훈.csv 혜성.csv ...          # 미리보기 (아무것도 쓰지 않음)
     python tools/merge_manifests.py 받은폴더                              # 폴더 안의 *.csv 를 모두 합친다
-    python tools/merge_manifests.py 나.csv 동훈.csv --apply               # manifests/merged_manifest.csv 로 저장
+    python tools/merge_manifests.py 받은폴더 --apply                      # manifests/dataset_manifest.csv 에 저장
     python tools/merge_manifests.py ... --apply -o 합친결과.csv            # 저장할 이름을 정한다
 
 규칙
@@ -11,12 +11,15 @@
   - 내용이 다르면(충돌) 아래 순서로 하나를 고르고, 어떤 사진이 어떻게 갈렸는지 알려 준다. 알려 준 사진은 직접 확인한다.
         ① '검수 전' 이 아닌 줄  ② 검수일이 더 늦은 줄  ③ 뒤에 넣은 파일의 줄
   - 합친 뒤 출처 데이터셋 · split · 파일명 순으로 정렬하고 No 를 1 부터 다시 매긴다.
-  - 입력 파일은 고치지 않는다. 저장할 파일이 입력 파일과 같으면 중단한다.
+  - 저장할 파일(기본: manifests/dataset_manifest.csv)이 이미 있으면 **먼저 같은 폴더에 백업**을 남기고 덮어쓴다.
+    그 파일이 입력에 없어도 내 기존 줄이 사라지지 않도록 자동으로 함께 합친다. (입력으로 받은 다른 파일은 고치지 않는다)
   - 머리글(19칸)이 다르거나 엑셀 cp949 로 저장된 파일은 어느 파일이 문제인지 알리고 중단한다.
 검수표에는 사진 파일명이 들어 있어 회사 데이터이므로 Git 에 올리지 않는다. (manifests/*.csv 는 .gitignore 에 있다)
 """
 import argparse
+import shutil
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -27,7 +30,7 @@ from src.manifest.manifest_writer import (HEADERS, STATUS_BEFORE, STATUS_REVIEW,
                                           _load, _save)
 
 KEY = ("출처 데이터셋", "원래 split", "이미지 파일명")
-DEFAULT_OUTPUT = settings.PROJECT_DIR / "manifests" / "merged_manifest.csv"
+DEFAULT_OUTPUT = settings.MANIFEST_PATH        # 프로그램이 읽고 쓰는 검수표 = manifests/dataset_manifest.csv
 
 
 def key_of(row):
@@ -127,7 +130,7 @@ def summarize(rows, raw_dir=None):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="팀원들의 검수표(CSV)를 하나로 합친다")
     ap.add_argument("inputs", nargs="+", help="합칠 CSV 파일들 또는 CSV 가 들어 있는 폴더")
-    ap.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT), help="저장할 파일 (기본: manifests/merged_manifest.csv)")
+    ap.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT), help="저장할 파일 (기본: manifests/dataset_manifest.csv)")
     ap.add_argument("--apply", action="store_true", help="실제로 저장한다 (없으면 미리보기만)")
     args = ap.parse_args(argv)
     try:
@@ -136,9 +139,13 @@ def main(argv=None):
         print(e)
         return 2
     out = Path(args.output).resolve()
-    if any(f.resolve() == out for f, _ in loaded):
-        print(f"저장할 파일이 입력 파일과 같습니다. 다른 이름을 정하세요: {out}")
-        return 2
+    if out.is_file() and not any(f.resolve() == out for f, _ in loaded):
+        try:
+            loaded.insert(0, (out, _load(out)))                 # 내 기존 검수표도 함께 합쳐서 기존 줄이 사라지지 않게 한다
+        except ManifestError as e:
+            print(f"[{out.name}] {e}")
+            return 2
+        print(f"저장할 파일({out.name})에 이미 있는 줄도 함께 합칩니다.")
     merged, conflicts, dup = merge(loaded)
     print("합치는 파일:")
     for f, rows in loaded:
@@ -157,12 +164,18 @@ def main(argv=None):
     if not args.apply:
         print("\n미리보기입니다. 저장하려면 --apply 를 붙이세요.")
         return 0
+    backup = None
     try:
+        if out.is_file():
+            backup = out.with_name(f"{out.stem}.백업-{time.strftime('%Y%m%d_%H%M%S')}{out.suffix}")
+            shutil.copy2(out, backup)                            # 덮어쓰기 전에 지금 파일을 그대로 남겨 둔다
         _save(out, merged)
-    except ManifestError as e:
+    except (ManifestError, OSError) as e:
         print(e)
         return 2
     print(f"\n저장했습니다: {out}")
+    if backup:
+        print(f"덮어쓰기 전 파일은 {backup.name} 로 남겨 두었습니다. (문제가 없으면 지워도 됩니다)")
     return 0
 
 

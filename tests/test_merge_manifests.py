@@ -100,12 +100,48 @@ class MergeManifestsTest(unittest.TestCase):
         self.assertFalse(out.exists())
         self.assertIn("미리보기", text)
 
-    def test_refuses_to_overwrite_an_input_file(self):
+    def test_default_output_is_the_programs_own_manifest(self):
+        self.assertEqual(Path(mm.DEFAULT_OUTPUT).name, "dataset_manifest.csv")
+        self.assertEqual(Path(mm.DEFAULT_OUTPUT).parent.name, "manifests")
+
+    def test_existing_target_is_backed_up_and_its_rows_are_kept(self):
+        """내 검수표가 저장할 파일일 때: 입력에 없어도 기존 줄이 사라지지 않고, 덮어쓰기 전 백업이 남는다"""
+        target = self.csv("dataset_manifest.csv", [row("mine.jpg", "수정 완료", author="나", date="2026-10-07")])
+        before = target.read_bytes()
+        other = self.csv("동훈.csv", [row("theirs.jpg", "수정 완료", author="동훈")])
+        code, text = self.run_main(other, "--apply", "-o", target)
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(r["이미지 파일명"] for r in self.rows_of(target)), ["mine.jpg", "theirs.jpg"])
+        backups = list(self.tmp.glob("dataset_manifest.백업-*.csv"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_bytes(), before)                          # 백업은 덮어쓰기 전과 똑같다
+        self.assertIn("함께 합칩니다", text)
+
+    def test_target_listed_as_an_input_is_merged_once_and_backed_up(self):
+        target = self.csv("dataset_manifest.csv", [row("a.jpg", "수정 완료", author="나")])
+        other = self.csv("b.csv", [row("b.jpg")])
+        code, _t = self.run_main(target, other, "--apply", "-o", target)
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.rows_of(target)), 2)
+        self.assertEqual(len(list(self.tmp.glob("dataset_manifest.백업-*.csv"))), 1)
+
+    def test_default_output_path_is_used_when_not_given(self):
+        target = self.tmp / "manifests" / "dataset_manifest.csv"
+        old, mm.DEFAULT_OUTPUT = mm.DEFAULT_OUTPUT, target
+        self.addCleanup(lambda: setattr(mm, "DEFAULT_OUTPUT", old))
         a = self.csv("a.csv", [row("a.jpg")])
-        before = a.read_bytes()
-        code, text = self.run_main(a, "--apply", "-o", a)
+        code, _t = self.run_main(a, "--apply")
+        self.assertEqual(code, 0)
+        self.assertEqual(len(self.rows_of(target)), 1)
+
+    def test_unreadable_existing_target_stops_without_changes(self):
+        target = self.tmp / "dataset_manifest.csv"
+        target.write_text("a,b\n1,2\n", encoding="utf-8")
+        before = target.read_bytes()
+        code, text = self.run_main(self.csv("a.csv", [row("a.jpg")]), "--apply", "-o", target)
         self.assertEqual(code, 2)
-        self.assertEqual(a.read_bytes(), before)
+        self.assertEqual(target.read_bytes(), before)
+        self.assertEqual(list(self.tmp.glob("*.백업-*")), [])
 
     def test_wrong_header_and_cp949_name_the_bad_file(self):
         good = self.csv("good.csv", [row("a.jpg")])
