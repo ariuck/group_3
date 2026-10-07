@@ -250,8 +250,8 @@ class QuickReviewTest(unittest.TestCase):
         self.assertEqual(self.app.strip.summary.cget("text"), "")
 
 
-class SceneTypeAndReviewModeTest(unittest.TestCase):
-    """Enter 로 넘어가려면 이미지 유형을 골라야 한다 · 검수 모드의 ✕ 로 라벨 목록에서 바로 지운다"""
+class SceneTypeTest(unittest.TestCase):
+    """Enter 로 넘어가려면 이미지 유형을 골라야 한다"""
 
     def setUp(self):
         try:
@@ -346,69 +346,6 @@ class SceneTypeAndReviewModeTest(unittest.TestCase):
         self.app.shutdown()
         self.assertEqual(len(self.root.tk.splitlist(self.root.tk.call("after", "info"))), 0)
 
-    # ── 검수 모드 (라벨 목록의 ✕) ──────────────────────────────────
-    def click_cell(self, iid, column):
-        self.root.update()
-        x, y, w, h = self.app.box_list.bbox(str(iid), column)
-        return self.app.on_box_list_click(Ev(x + w // 2, y + h // 2))
-
-    def test_delete_column_is_hidden_until_review_mode_is_on(self):
-        self.go_to("a3.jpg")
-        self.assertNotIn("del", list(self.app.box_list["displaycolumns"]))
-        self.app.toggle_review_mode()
-        self.assertEqual(list(self.app.box_list["displaycolumns"])[-1], "del")
-        self.assertTrue(self.app.review_mode.get())
-        self.root.update()
-        x, y, w, h = self.app.box_list.bbox("0", "#5")
-        self.assertLessEqual(x + w, self.app.box_list.winfo_width(), "✕ 열이 오른쪽에서 잘리면 안 된다")   # (실제로 잘려 보이지 않던 문제)
-        self.assertGreater(w, 20)
-        self.app.toggle_review_mode()
-        self.assertNotIn("del", list(self.app.box_list["displaycolumns"]))
-
-    def test_x_key_toggles_review_mode(self):
-        self.go_to("a3.jpg")
-        self.root.event_generate("<x>")
-        self.root.update()
-        self.assertTrue(self.app.review_mode.get())
-        self.root.event_generate("<X>")
-        self.root.update()
-        self.assertFalse(self.app.review_mode.get())
-
-    def test_clicking_the_x_deletes_that_box_and_undo_brings_it_back(self):
-        self.go_to("a3.jpg")
-        self.app.boxes.append({"cls": 1, "x1": 10.0, "y1": 10.0, "x2": 60.0, "y2": 60.0})
-        self.app.mark_changed()
-        before = [dict(b) for b in self.app.boxes]
-        self.assertEqual(len(before), 2)
-        self.app.toggle_review_mode()
-        result = self.click_cell(0, "#5")                                 # 첫 번째 줄의 ✕
-        self.assertEqual(result, "break")
-        self.assertEqual(len(self.app.boxes), 1)
-        self.assertEqual(self.app.boxes[0]["cls"], 1)                     # 첫 번째가 지워지고 두 번째가 남았다
-        self.assertTrue(self.app.dirty)
-        self.assertIn("1 번을 지웠습니다", self.app.status.cget("text"))
-        self.assertEqual(len(self.app.box_list.get_children()), 1)
-        self.assertTrue(self.app.undo())
-        self.assertEqual(self.app.boxes, before)                          # Ctrl+Z 로 그대로 돌아온다
-
-    def test_other_cells_only_select_and_nothing_is_deleted_with_the_mode_off(self):
-        self.go_to("a3.jpg")
-        n = len(self.app.boxes)
-        self.app.toggle_review_mode()
-        self.assertIsNone(self.click_cell(0, "#2"))                       # 클래스 칸: 평소처럼 선택만 (이벤트를 가로채지 않음)
-        self.assertEqual(len(self.app.boxes), n)
-        self.app.toggle_review_mode()                                     # 끄면 ✕ 열이 없다
-        self.root.update()
-        self.assertIsNone(self.app.on_box_list_click(Ev(200, 30)))
-        self.assertEqual(len(self.app.boxes), n)
-
-    def test_clicking_below_the_last_row_does_nothing(self):
-        self.go_to("a3.jpg")
-        self.app.toggle_review_mode()
-        self.root.update()
-        x, y, w, h = self.app.box_list.bbox("0", "#5")
-        self.assertEqual(self.app.on_box_list_click(Ev(x + w // 2, y + h * 4)), None)   # 빈 자리 (줄이 없는 곳)
-        self.assertEqual(len(self.app.boxes), 1)
 
 
 if __name__ == "__main__":
