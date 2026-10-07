@@ -40,6 +40,7 @@ FIELDS = [
     ("비고(수정 내용)", "비고", "text", None, None),
 ]
 CHIP_COLUMNS = 3                      # 선택 버튼을 가로로 몇 개씩 펼칠지
+REMEMBERED = ("작성자", "검수자")       # 직접 적으면 프로그램을 켜 둔 동안 기억하는 칸 (파일에는 저장하지 않는다)
 
 
 class FormPanel(tk.Frame):
@@ -52,6 +53,7 @@ class FormPanel(tk.Frame):
         self._on_mode = on_mode            # 한/영 상태가 바뀌었을 때 알림 (예: 상태줄에 안내)
         self._on_submit = on_submit        # 글자 칸에서 Enter 를 눌렀을 때 (예: 저장하고 다음 사진으로)
         self._loading = False
+        self._remembered = {key: "" for key in REMEMBERED}     # 내가 마지막으로 직접 쓴 이름
         self._vars = {}
         self._entries = {}
         self.ime = HangulIME(on_mode_change=self._show_mode)   # WSL 에서도 한글을 칠 수 있게 (hangul_input.py 참고)
@@ -98,7 +100,7 @@ class FormPanel(tk.Frame):
             names.columnconfigure(n * 2 + 1, weight=1)
             self.ime.attach(entry)
             entry.bind("<Return>", self._submit)
-            var.trace_add("write", self._changed)
+            var.trace_add("write", lambda *_a, k=key: self._typed(k))
             self._vars[key] = var
             self._entries[key] = entry
         row += 1
@@ -139,6 +141,28 @@ class FormPanel(tk.Frame):
         self._mode_btn.config(text="한/영: 한글" if korean else "한/영: 영어")
         if self._on_mode:
             self._on_mode(korean)
+
+    def _typed(self, key):
+        """작성자·검수자 칸을 사람이 직접 고쳤다: 그 이름을 기억해 둔다. (불러오기·미리 채우기 중에는 기억을 바꾸지 않는다)"""
+        if not self._loading:
+            self._remembered[key] = self._vars[key].get().strip()
+        self._changed()
+
+    def fill_remembered(self):
+        """비어 있는 작성자·검수자 칸에만 기억해 둔 이름을 미리 채운다. 이미 적힌 이름은 절대 바꾸지 않는다.
+
+        - 작성자와 검수자는 달라야 하므로, 다른 쪽 칸에 이미 같은 이름이 있으면 채우지 않는다. (자기 사진을 자기가 검수하는 실수 방지)
+        - 채운 것은 '사람이 고쳤다'로 보지 않는다. (저장 안 됨 표시가 뜨지 않는다. 저장할 때 검수표에 기록된다)
+        """
+        self._loading = True
+        try:
+            for key in REMEMBERED:
+                name = self._remembered[key]
+                other = self._vars["검수자" if key == "작성자" else "작성자"].get().strip()
+                if name and not self._vars[key].get().strip() and other != name:
+                    self._vars[key].set(name)
+        finally:
+            self._loading = False
 
     def _changed(self, *_):
         # set_values 로 값을 채우는 동안에는 "사람이 고쳤다"로 보지 않는다.
