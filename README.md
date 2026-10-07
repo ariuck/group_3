@@ -76,11 +76,14 @@ group_3/
 │   └── final/                    최종 QA 완료 데이터
 │
 ├── docs/
-│   ├── project_baseline.md       팀 공통 기준
-│   ├── class_guide.md            Class 기준서
-│   ├── bbox_guide.md             BBox 기준서
-│   ├── manifest_guide.md         검수표 작성 방법
-│   └── day1/                     1일차 산출물·과정 기록
+│   ├── README.md                 문서 목차
+│   ├── standards/                기준서 (팀 기준, Class, BBox, 검수표 작성)
+│   ├── design/                   기능 목록·의사코드·화면 설계·실행 계획
+│   ├── survey/                   데이터 조사
+│   ├── team/                     역할 분담, Daily Gate 체크리스트
+│   ├── records/                  작업 과정 기록, 산출물 요약
+│   ├── meetings/                 회의록
+│   └── images/                   문서에 쓰는 그림
 │
 ├── manifests/
 │   ├── dataset_manifest.xlsx     검수표 (팀이 입력하는 틀)
@@ -208,7 +211,7 @@ configs/classes.yaml
 상세한 Class 판단 기준은 다음 문서를 확인합니다.
 
 ```text
-docs/class_guide.md
+docs/standards/class_guide.md
 ```
 
 ---
@@ -220,7 +223,7 @@ BBox 는 객체 외곽에 최대한 밀착하여 작성합니다.
 상세한 BBox 기준은 다음 문서를 확인합니다.
 
 ```text
-docs/bbox_guide.md
+docs/standards/bbox_guide.md
 ```
 
 ---
@@ -276,7 +279,7 @@ manifests/dataset_manifest.xlsx
 작성 방법과 REVIEW 처리, FINAL 조건은 다음 문서를 확인합니다.
 
 ```text
-docs/manifest_guide.md
+docs/standards/manifest_guide.md
 ```
 
 **프로그램이 [저장]할 때 자동으로 채우는 칸**: No, 이미지·TXT 파일명, 원본/최종 BBox 수, Class, TXT 줄 수 = 화면 BBox 수, 상태(고쳤으면 `수정 완료`), 출처 데이터셋, 원래 split
