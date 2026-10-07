@@ -113,6 +113,8 @@ class Day1Labeler:
         self._nav_pending = None   # ← → 를 누르는 동안 '가려는 사진 번호' (아직 화면에 안 올린 것)
         self._nav_job = None       # 그 사진을 읽도록 예약한 작업
 
+        self._zone_clean_t = 0.0   # 표시 파일을 마지막으로 정리한 시각 (창으로 돌아올 때마다 매번 하지 않도록)
+
         self.build_widgets()
         self.bind_events()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -330,6 +332,7 @@ class Day1Labeler:
         c.bind("<Motion>", self.on_mouse_move)              # 그냥 움직일 때 (좌표 표시용)
         c.bind("<Leave>", lambda e: self.canvas.delete("cross"))   # 마우스가 캔버스를 벗어나면 십자선을 지운다
         c.bind("<Configure>", self.on_canvas_resize)        # 도화지 크기가 바뀔 때
+        self.root.bind("<FocusIn>", self.on_window_focus, add="+")   # 탐색기에서 라벨을 복사하고 이 창으로 돌아올 때
 
         # ③ 확대 / 이동
         c.bind("<MouseWheel>", self.on_mouse_wheel)         # Windows · macOS 휠
@@ -502,6 +505,18 @@ class Day1Labeler:
             filetypes=[("JPG 이미지", "*.jpg *.jpeg *.JPG *.JPEG")])
         if path:
             self.load_image(path)
+
+    def on_window_focus(self, event):
+        """다른 창(탐색기)에서 라벨을 복사하고 이 창으로 돌아오면 따라온 Zone.Identifier 표시 파일을 정리한다. (2초에 한 번만)"""
+        if event.widget is not self.root:                      # 안쪽 위젯의 포커스 변화는 무시
+            return
+        now = time.monotonic()
+        if now - self._zone_clean_t < 2.0:
+            return
+        self._zone_clean_t = now
+        removed = remove_zone_markers()
+        if removed:
+            self.set_status(f"작업 폴더에서 Windows 가 만든 표시 파일(Zone.Identifier) {removed}개를 정리했습니다. 라벨(TXT)은 그대로입니다.")
 
     def restore_session(self):
         """프로그램을 켠 직후, 마지막으로 보던 폴더와 사진을 그대로 연다. 이미 뭔가 열었거나 기록이 없으면 아무것도 안 한다."""
