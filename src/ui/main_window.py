@@ -47,7 +47,7 @@ from src.ui.form_panel import FormPanel
 from src.ui import theme
 from src.ui.class_picker import ClassPicker
 from src.ui.help_dialog import show_shortcuts
-from src.ui.tooltip import Tooltip
+from src.ui.tooltip import Tooltip, cancel_all as cancel_tooltips
 from src.ui.session import load_session, save_session
 from src.ui.thumb_strip import ThumbStrip
 from src.ui.validation_dialog import show_validation_dialog
@@ -1075,6 +1075,7 @@ class Day1Labeler:
                     pass
                 setattr(self, name, None)
         self.strip.stop()
+        cancel_tooltips()                                        # 뜨려고 예약된 설명 말풍선도 취소한다 (마우스가 버튼 위에 있을 때 남던 예약)
 
     def on_close(self):
         if self.confirm_discard():
