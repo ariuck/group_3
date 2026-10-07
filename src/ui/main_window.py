@@ -43,7 +43,7 @@ from src.data_paths import find_raw_image, is_inside, locate_in_raw, remove_zone
 from src.manifest.manifest_writer import (STATUS_DONE, STATUS_EDITED, STATUS_REVIEW, ManifestError, read_human,
                                           read_status_map, record_save, status_of)
 from src.ui.folder_drop import make_root, pick_target, register_drop
-from src.ui.form_panel import FormPanel
+from src.ui.form_panel import SCENE_CHOICES, FormPanel
 from src.ui import theme
 from src.ui.class_picker import ClassPicker
 from src.ui.help_dialog import show_shortcuts
@@ -113,6 +113,7 @@ class Day1Labeler:
         self._nav_pending = None   # ← → 를 누르는 동안 '가려는 사진 번호' (아직 화면에 안 올린 것)
         self._nav_job = None       # 그 사진을 읽도록 예약한 작업
 
+        self.require_scene_type = True   # Enter 로 넘어가려면 이미지 유형을 먼저 골라야 한다 (시험·특수한 경우에만 끈다)
         self._zone_clean_t = 0.0   # 표시 파일을 마지막으로 정리한 시각 (창으로 돌아올 때마다 매번 하지 않도록)
 
         self.build_widgets()
@@ -245,15 +246,25 @@ class Day1Labeler:
 
         box_card = theme.card(side, padx=12, pady=8)
         box_card.pack(fill="both", expand=True)
-        self.box_title = tk.Label(box_card, text="라벨 목록 (0개)", bg=C["card"], fg=C["text"], font=theme.font(11, True),
+        title_row = tk.Frame(box_card, bg=C["card"])
+        title_row.pack(fill="x", pady=(0, 4))
+        self.box_title = tk.Label(title_row, text="라벨 목록 (0개)", bg=C["card"], fg=C["text"], font=theme.font(11, True),
                                   anchor="w")
-        self.box_title.pack(fill="x", pady=(0, 4))
-        self.box_list = ttk.Treeview(box_card, columns=("no", "cls", "pos", "state"), show="headings", height=3,
+        self.box_title.pack(side="left")
+        self.review_mode = tk.BooleanVar(value=False)        # 검수 모드: 켜면 라벨 목록에 ✕ 삭제 열이 보인다
+        self.review_check = ttk.Checkbutton(title_row, text="검수 모드 (✕ 로 삭제)", variable=self.review_mode,
+                                            command=self.on_review_mode, takefocus=False)
+        self.review_check.pack(side="right")
+        Tooltip(self.review_check, "켜면 라벨 목록 오른쪽에 ✕ 가 생겨서 눌러 바로 지울 수 있어요 (X 키로도 켜고 꺼요 · Ctrl+Z 로 되돌려요)")
+        self.box_list = ttk.Treeview(box_card, columns=("no", "cls", "pos", "state", "del"), show="headings", height=3,
                                      selectmode="browse")
-        for col, text, width, anchor in (("no", "No", 36, "center"), ("cls", "클래스", 150, "w"),
-                                         ("pos", "위치 (x,y,w,h)", 140, "w"), ("state", "상태", 52, "center")):
+        # 열 너비의 합이 오른쪽 패널(약 380px)보다 크면 맨 오른쪽 열(검수 모드의 ✕)이 잘려서 안 보인다 → 합을 약 360px 로 맞춘다
+        for col, text, width, anchor in (("no", "No", 32, "center"), ("cls", "클래스", 118, "w"),
+                                         ("pos", "위치 (x,y,w,h)", 122, "w"), ("state", "상태", 50, "center"),
+                                         ("del", "삭제", 40, "center")):
             self.box_list.heading(col, text=text)
-            self.box_list.column(col, width=width, anchor=anchor, stretch=(col == "pos"))
+            self.box_list.column(col, width=width, minwidth=width, anchor=anchor, stretch=False)   # 늘어나는 열이 있으면 창이 좁아질 때 맨 오른쪽 열이 밀려 잘린다
+        self.box_list["displaycolumns"] = self.BOX_COLS      # 평소에는 삭제 열을 숨긴다 (실수로 누르지 않게)
         self.box_list.tag_configure("changed", foreground=C["warn"])        # 내가 고치거나 추가한 BBox 는 주황
         self.box_list.tag_configure("problem", foreground=C["danger"])      # 이미지 밖·Class 범위 밖 등 이상한 BBox 는 빨강
         self.box_list.pack(fill="both", expand=True)
@@ -345,6 +356,9 @@ class Day1Labeler:
             c.bind(f"<ButtonRelease-{btn}>", self.on_pan_end)
 
         self.box_list.bind("<<TreeviewSelect>>", self.on_box_list_selected)
+        self.box_list.bind("<Button-1>", self.on_box_list_click)         # 검수 모드의 ✕ 를 누르면 그 BBox 삭제
+        self.box_list.bind("<Motion>", self.on_box_list_motion)
+        self.box_list.bind("<Leave>", lambda e: self.box_list.config(cursor=""))
 
         r = self.root
         # 입력칸에 글자를 치는 중에는 글자·숫자 단축키가 동작하면 안 된다
@@ -387,6 +401,10 @@ class Day1Labeler:
             r.bind(f"<Control-Shift-{name}>", lambda e, d=(dx, dy): None if self.is_typing(e) else self.nudge(*d, big=True))
         for key in ("h", "H"):
             r.bind(key, lambda e: None if self.is_typing(e) else self.toggle_boxes())
+        for key in ("x", "X"):                                           # X = 검수 모드 켜기·끄기 (라벨 목록의 ✕ 삭제 열)
+            r.bind(key, lambda e: None if self.is_typing(e) else self.toggle_review_mode())
+        for i in range(len(SCENE_CHOICES)):                              # Ctrl+1~4 = 이미지 유형 선택
+            r.bind(f"<Control-Key-{i + 1}>", lambda e, i=i: None if self.is_typing(e) else self.choose_scene(i))
 
         r.bind("<F1>", lambda e: self.show_help())
 
@@ -1003,6 +1021,8 @@ class Day1Labeler:
         원본과 같으면 상태를 '검수 완료', BBox 를 고쳤으면 '수정 완료'로 기록한다. (고친 사진이라는 정보가 검수표에서 사라지지 않도록)"""
         if self.pil_image is None or self.drag:
             return
+        if not self.check_scene_type():
+            return
         values = self.form.get_values()
         d = diff_boxes(self.raw_boxes, self.boxes)
         edited = bool(d["added"] or d["modified"] or d["deleted"])
@@ -1027,6 +1047,8 @@ class Day1Labeler:
     def on_form_submit(self):
         """검수 기록 글자 칸에서 Enter: 저장하고 다음 사진으로. (이미지 화면으로 커서를 돌려 단축키가 바로 동작하게)"""
         self.canvas.focus_set()
+        if self.pil_image is not None and not self.check_scene_type():
+            return
         self.save_and_next()
 
     def go_next_unworked(self):
@@ -1076,6 +1098,7 @@ class Day1Labeler:
                     pass
                 setattr(self, name, None)
         self.strip.stop()
+        self.form.stop()                                         # 이미지 유형 안내 깜빡임 예약도 취소
         cancel_tooltips()                                        # 뜨려고 예약된 설명 말풍선도 취소한다 (마우스가 버튼 위에 있을 때 남던 예약)
 
     def on_close(self):
@@ -1313,7 +1336,7 @@ class Day1Labeler:
                 self.box_list.insert("", "end", iid=str(i), tags=tags, values=(
                     i + 1, f"{b['cls']} {settings.class_name(b['cls'], with_note=False)}",
                     f"[{b['x1']:.0f},{b['y1']:.0f},{w:.0f},{h:.0f}]",
-                    "⚠ 확인" if problem else ("변경" if changed else "원본")))
+                    "⚠ 확인" if problem else ("변경" if changed else "원본"), "✕"))
             if self.selected is not None and self.selected < len(self.boxes):
                 self.box_list.selection_set(str(self.selected))
                 self.box_list.see(str(self.selected))
@@ -1668,6 +1691,58 @@ class Day1Labeler:
                 self.class_list.set(cls)
         self.draw_boxes()
         self.refresh_box_list()
+
+    BOX_COLS = ("no", "cls", "pos", "state")                # 라벨 목록에 늘 보이는 열 (검수 모드에서만 'del' 열이 더 보인다)
+
+    def on_review_mode(self):
+        """검수 모드 켜기·끄기: 켜면 라벨 목록 오른쪽에 ✕ 삭제 열이 나타난다."""
+        on = self.review_mode.get()
+        self.box_list["displaycolumns"] = self.BOX_COLS + (("del",) if on else ())
+        self.set_status("검수 모드: 라벨 목록 오른쪽의 ✕ 를 누르면 그 BBox 가 지워집니다. (Ctrl+Z 로 되돌릴 수 있어요)" if on
+                        else "검수 모드를 껐습니다.")
+
+    def toggle_review_mode(self):
+        self.review_mode.set(not self.review_mode.get())
+        self.on_review_mode()
+
+    def _del_cell_index(self, event):
+        """라벨 목록에서 검수 모드의 ✕ 칸을 눌렀으면 그 BBox 번호(0부터), 아니면 None."""
+        if not self.review_mode.get() or self.box_list.identify_region(event.x, event.y) != "cell":
+            return None
+        if self.box_list.identify_column(event.x) != f"#{len(self.BOX_COLS) + 1}":      # 보이는 열 순서상 마지막 열
+            return None
+        row = self.box_list.identify_row(event.y)
+        return int(row) if row else None
+
+    def on_box_list_click(self, event):
+        """검수 모드에서 ✕ 를 누르면 그 BBox 를 지운다. (다른 칸을 누르면 평소처럼 선택만 한다)"""
+        idx = self._del_cell_index(event)
+        if idx is None or self.drag:
+            return None
+        if idx < len(self.boxes):
+            self.selected = idx
+            self.delete_selected()
+            self.set_status(f"BBox {idx + 1} 번을 지웠습니다 — Ctrl+Z 로 되돌릴 수 있어요.")
+        return "break"                                       # 줄 선택 이벤트로 넘어가지 않게
+
+    def on_box_list_motion(self, event):
+        self.box_list.config(cursor="hand2" if self._del_cell_index(event) is not None else "")
+
+    def choose_scene(self, index):
+        """Ctrl+1~4: 이미지 유형을 번호로 고른다."""
+        if self.pil_image is None:
+            return
+        self.set_status(f"이미지 유형: {self.form.choose_scene(index)}")
+
+    def check_scene_type(self):
+        """Enter 로 넘어가기 전에 이미지 유형이 골라져 있는지 본다. 비어 있으면 그 칸을 깜빡이고 안내한 뒤 False."""
+        if not self.require_scene_type or self.form.get_values()["이미지 유형"]:
+            return True
+        self.form.flash("이미지 유형")
+        guess = "정상 김치" if not self.boxes else "김치+대상 객체"
+        self.set_status("이미지 유형을 먼저 골라 주세요 — Ctrl+1 김치+대상 객체 · Ctrl+2 정상 김치 · Ctrl+3 대상 객체 단독 · "
+                        f"Ctrl+4 판단 어려움   (이 사진은 BBox {len(self.boxes)}개라서 '{guess}' 일 가능성이 높아요)")
+        return False
 
     def delete_selected(self):
         """[선택 BBox 삭제] / Delete 키."""
