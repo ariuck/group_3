@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 
 from src import settings
-from src.data_paths import find_raw_image, is_inside, locate_in_raw, work_label_path
+from src.data_paths import find_raw_image, is_inside, locate_in_raw, remove_zone_markers, work_label_path
 
 
 class DataPathsTest(unittest.TestCase):
@@ -57,6 +57,30 @@ class DataPathsTest(unittest.TestCase):
         outside = self.tmp / "other" / "x.jpg"
         self.assertEqual(locate_in_raw(outside), (None, None))
         self.assertEqual(work_label_path(outside), settings.WORK_DIR / "_RAW밖" / "x.txt")
+
+    # ── Windows 가 복사할 때 만드는 Zone.Identifier 표시 파일 정리 ──────────────────────
+    def test_zone_markers_are_removed_but_labels_are_kept(self):
+        d = settings.WORK_DIR / "DS1" / "labels" / "train"
+        d.mkdir(parents=True)
+        (d / "a.txt").write_text("2 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+        (d / "a.txtZone.Identifier").write_text("[ZoneTransfer]\nZoneId=3\n")          # 탐색기가 WSL 폴더에 만든 모양
+        (d / "b.txt:Zone.Identifier").write_text("[ZoneTransfer]\nZoneId=3\n")         # 콜론이 그대로 보이는 모양
+        (settings.WORK_DIR / "_session.json").write_text("{}", encoding="utf-8")
+        self.assertEqual(remove_zone_markers(), 2)
+        self.assertEqual(sorted(p.name for p in settings.WORK_DIR.rglob("*") if p.is_file()), ["_session.json", "a.txt"])
+        self.assertEqual((d / "a.txt").read_text(encoding="utf-8"), "2 0.5 0.5 0.2 0.2\n")
+        self.assertEqual(remove_zone_markers(), 0)                                      # 다시 해도 안전
+
+    def test_zone_cleanup_only_touches_the_work_folder(self):
+        raw_marker = settings.RAW_DIR / "DS1" / "labels" / "train" / "r.txtZone.Identifier"
+        raw_marker.parent.mkdir(parents=True)
+        raw_marker.write_text("x")
+        settings.WORK_DIR.mkdir(parents=True)
+        self.assertEqual(remove_zone_markers(), 0)
+        self.assertTrue(raw_marker.exists())                                             # RAW 는 건드리지 않는다
+
+    def test_zone_cleanup_without_a_work_folder(self):
+        self.assertEqual(remove_zone_markers(self.tmp / "없는폴더"), 0)
 
 
 if __name__ == "__main__":
