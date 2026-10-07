@@ -56,6 +56,20 @@ class TooltipTest(unittest.TestCase):
         self.assertIsNone(tip._job)
         self.assertIsNone(tip._tip)
 
+    def test_cancel_all_removes_pending_and_visible_tips(self):
+        """(수정한 문제) 마우스가 버튼 위에 있을 때 남던 말풍선 예약 때문에 창을 닫는 시험이 가끔 실패했다"""
+        from src.ui.tooltip import cancel_all
+        pending = Tooltip(self.btn, "예약", delay=5000)
+        self.btn.event_generate("<Enter>")
+        self.assertIsNotNone(pending._job)
+        shown = Tooltip(self.btn, "떠 있음", delay=5000)
+        shown.show()
+        self.assertIsNotNone(shown._tip)
+        cancel_all()
+        self.assertIsNone(pending._job)
+        self.assertIsNone(shown._tip)
+        self.assertEqual(len(self.root.tk.splitlist(self.root.tk.call("after", "info"))), 0)
+
     def test_text_can_be_a_function_and_empty_text_shows_nothing(self):
         calls = []
         tip = Tooltip(self.btn, lambda: (calls.append(1), "동적 설명")[1])

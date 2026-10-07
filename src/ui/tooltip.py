@@ -4,12 +4,22 @@
 글자 대신 함수를 넘기면(Tooltip(버튼, lambda: ...)) 말풍선이 뜰 때마다 그 함수가 돌려준 글자를 보여 준다.
 """
 import tkinter as tk
+import weakref
 
 from src.ui import theme
+
+_ALL = weakref.WeakSet()
+
+
+def cancel_all():
+    """떠 있는 말풍선과 뜨려고 예약된 말풍선을 모두 없앤다. (창을 닫기 직전에 부른다)"""
+    for tip in list(_ALL):
+        tip._hide()
 
 
 class Tooltip:
     def __init__(self, widget, text, delay=550):
+        _ALL.add(self)
         self.widget = widget
         self.text = text
         self.delay = delay
