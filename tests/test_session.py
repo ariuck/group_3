@@ -105,6 +105,26 @@ class RestoreInAppTest(unittest.TestCase):
         self.assertEqual(app2.strip.current, 3)
         self.assertIn("이어서", app2.status.cget("text"))
 
+    def test_returning_to_the_window_cleans_zone_markers(self):
+        """탐색기에서 복사하고 창으로 돌아오면 표시 파일이 정리된다 (켜져 있는 동안에도)"""
+        from types import SimpleNamespace
+        root, app = self.new_app()
+        d = settings.WORK_DIR / "DS1" / "labels" / "train"
+        d.mkdir(parents=True)
+        (d / "a0.txt").write_text("2 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+        marker = d / "a0.txtZone.Identifier"
+        marker.write_text("[ZoneTransfer]\nZoneId=3\n")
+        app._zone_clean_t = 0.0
+        app.on_window_focus(SimpleNamespace(widget=app.canvas))             # 안쪽 위젯의 포커스는 무시한다
+        self.assertTrue(marker.exists())
+        app.on_window_focus(SimpleNamespace(widget=root))
+        self.assertFalse(marker.exists())
+        self.assertTrue((d / "a0.txt").exists())                           # 라벨은 그대로
+        self.assertIn("1개", app.status.cget("text"))
+        marker.write_text("x")
+        app.on_window_focus(SimpleNamespace(widget=root))                   # 2초 안에 다시 와도 매번 정리하지 않는다
+        self.assertTrue(marker.exists())
+
     def test_shutdown_cancels_the_pending_restore(self):
         """(수정한 버그) 켜자마자 닫으면 예약된 복원 작업이 닫힌 창을 찾아 오류를 내던 문제"""
         root, app = self.new_app()
