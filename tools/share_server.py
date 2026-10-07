@@ -161,103 +161,156 @@ def list_files(folder):
 # ── 화면 ──────────────────────────────────────────────────────────────────
 PAGE = r"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>결과 주고받기</title>
 <style>
- :root{--bg:#f4f6f8;--card:#fff;--line:#d9e2ec;--text:#1f2933;--muted:#52606d;--accent:#2f6fed;--ok:#0a7d33;--bad:#c62828;--code:#0f172a}
- *{box-sizing:border-box} body{font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text);line-height:1.6}
- main{max-width:760px;margin:0 auto;padding:18px 16px 60px}
- h1{font-size:22px;margin:6px 0 2px} p.sub{margin:0 0 12px;color:var(--muted);font-size:14px}
- nav{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
- nav button{background:#e4e7eb;color:var(--text);border:0;border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer}
- nav button.on{background:var(--accent);color:#fff}
- section.tab{display:none} section.tab.on{display:block}
- .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:12px 0}
- h2{font-size:17px;margin:0 0 8px} h3{font-size:15px;margin:14px 0 6px}
- .step{display:flex;gap:12px;align-items:flex-start}
- .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;margin-top:2px}
- .step .body{flex:1;min-width:0} .step h2{margin-bottom:4px}
- ul,ol{margin:6px 0 6px 20px;padding:0} li{margin:3px 0}
- pre{position:relative;background:var(--code);color:#e2e8f0;border-radius:8px;padding:10px 74px 10px 12px;margin:8px 0;overflow-x:auto;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
- pre button{position:absolute;top:8px;right:8px;font-size:12px;padding:4px 9px;background:#334155;color:#fff;border:0;border-radius:6px;cursor:pointer}
- code{background:#eef1f4;border-radius:4px;padding:1px 5px;font-size:13.5px} pre code{background:none;padding:0}
- .note{background:#fff8e1;border:1px solid #f5d98b;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}
- .warn{background:#fdecea;border:1px solid #f1a9a0;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}
- .good{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px}
+ :root{--bg:#f5f7fb;--card:#fff;--line:#e3e8f0;--text:#1c2433;--muted:#5d6b82;--accent:#3366ff;--accent-2:#2450d6;--accent-soft:#eaf0ff;
+  --ok:#0f8a4b;--ok-soft:#e7f6ee;--bad:#d03b3b;--bad-soft:#fdeceb;--warn-soft:#fff6dd;--warn-line:#f0d58a;--code:#101827;--shadow:0 1px 2px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.05)}
+ @media (prefers-color-scheme:dark){:root{--bg:#0e1420;--card:#171f2e;--line:#2a3548;--text:#e8edf6;--muted:#9aa8bf;--accent:#6c8cff;--accent-2:#8aa4ff;--accent-soft:#1d2a4d;
+  --ok:#4cc58a;--ok-soft:#123525;--bad:#ff7b7b;--bad-soft:#3b1a1a;--warn-soft:#3a3115;--warn-line:#6d5b21;--code:#0a0f19;--shadow:none}}
+ *{box-sizing:border-box} html{scroll-behavior:smooth}
+ body{margin:0;background:var(--bg);color:var(--text);font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
+ main{max-width:820px;margin:0 auto;padding:22px 16px 80px}
+ header.top{display:flex;align-items:center;gap:14px;margin:4px 0 18px}
+ .logo{flex:none;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7a5cff);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--shadow)}
+ header h1{font-size:22px;margin:0;line-height:1.25} header p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+ .pill{margin-left:auto;font-size:12px;padding:5px 11px;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-weight:600;white-space:nowrap}
+ nav.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);position:sticky;top:8px;z-index:5;margin-bottom:16px}
+ nav.tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;color:var(--muted);padding:10px 8px;border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
+ nav.tabs button:hover{background:var(--accent-soft);color:var(--accent)} nav.tabs button.on{background:var(--accent);color:#fff}
+ nav.tabs svg{width:17px;height:17px;flex:none}
+ section.tab{display:none;animation:fade .18s ease} section.tab.on{display:block} @keyframes fade{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}
+ .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:14px 0;box-shadow:var(--shadow)}
+ h2{font-size:17px;margin:0 0 10px} h3{font-size:14.5px;margin:16px 0 6px;color:var(--muted)}
+ .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:8px 0}
  .muted{color:var(--muted);font-size:13px} .ok{color:var(--ok)} .bad{color:var(--bad)}
- table{border-collapse:collapse;width:100%;font-size:14px;margin:6px 0} td,th{border:1px solid var(--line);padding:6px 9px;text-align:left} th{background:#f0f4f8}
- .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:6px 0}
- select,input[type=password]{font-size:16px;padding:7px 10px} input[type=password]{width:110px;font-size:20px;letter-spacing:4px;text-align:center}
- button.main{font-size:15px;padding:9px 16px;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer} button.main:disabled{opacity:.5}
- label.pick{display:inline-flex;gap:5px;align-items:center;margin-right:10px;font-size:14px}
- ul.files{list-style:none;margin:0;padding:0} ul.files li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eef1f4;font-size:14px} ul.files li:first-child{border-top:0}
- progress{width:100%;height:10px;margin-top:10px} a{color:var(--accent);word-break:break-all}
- .flow{font-family:Consolas,monospace;font-size:13px;white-space:pre;overflow-x:auto;background:#f0f4f8;border-radius:8px;padding:10px 12px}
-</style></head><body><main>
-<h1>결과 주고받기</h1>
-<p class="sub">검수 결과를 같은 와이파이 안에서 주고받는 임시 페이지입니다. 위쪽 탭에서 <b>가이드</b>를 보고 따라 하세요.</p>
+ select{font-size:15.5px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-family:inherit}
+ label.pick{display:inline-flex;gap:6px;align-items:center;padding:7px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:14px}
+ label.pick:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+ .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:10px;padding:9px 16px;font-size:14.5px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;transition:transform .08s,background .15s}
+ .btn:active{transform:scale(.97)} .btn svg{width:17px;height:17px}
+ .btn.primary{background:var(--accent);color:#fff} .btn.primary:hover{background:var(--accent-2)}
+ .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)} .btn.ghost:hover{color:var(--accent);border-color:var(--accent)}
+ .btn.small{padding:6px 11px;font-size:13px}
+ .progress{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0} .progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#7a5cff);border-radius:99px;transition:width .2s}
 
-<nav>
- <button data-tab="rv" class="on">검수자 가이드</button>
- <button data-tab="pm">PM 가이드 (전체 흐름)</button>
- <button data-tab="files">파일 받기·올리기</button>
+ /* 가이드 단계 */
+ .step{display:flex;gap:14px;align-items:flex-start;transition:opacity .2s}
+ .step .num{flex:none;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;font-size:14px}
+ .step .body{flex:1;min-width:0} .step h2{margin-bottom:6px}
+ .step.done{opacity:.55} .step.done .num{background:var(--ok)} .step.done .num span{display:none} .step.done .num::after{content:"✓"}
+ .donebtn{margin-left:auto;flex:none}
+ .stephead{display:flex;align-items:center;gap:8px}
+ ul,ol{margin:6px 0 6px 20px;padding:0} li{margin:4px 0}
+ pre{position:relative;background:var(--code);color:#e2e8f0;border-radius:11px;padding:12px 78px 12px 14px;margin:9px 0;overflow-x:auto;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-all;font-family:Consolas,'D2Coding',monospace}
+ pre button{position:absolute;top:8px;right:8px;font-size:12px;padding:5px 10px;background:#33415c;color:#fff;border:0;border-radius:7px;cursor:pointer;font-family:inherit}
+ pre button:hover{background:#46567a}
+ code{background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:1px 6px;font-size:13.2px;font-family:Consolas,'D2Coding',monospace}
+ pre code{background:none;color:inherit;padding:0} kbd{background:var(--card);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:12.5px;font-family:inherit}
+ .note,.warn,.good{border-radius:11px;padding:10px 14px;margin:10px 0;font-size:14px;border:1px solid}
+ .note{background:var(--warn-soft);border-color:var(--warn-line)} .warn{background:var(--bad-soft);border-color:var(--bad)} .good{background:var(--ok-soft);border-color:var(--ok)}
+ table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden} td,th{border-bottom:1px solid var(--line);padding:8px 11px;text-align:left} th{background:var(--accent-soft)}
+ tr:last-child td{border-bottom:0}
+ .flow{font-family:Consolas,'D2Coding',monospace;font-size:12.8px;white-space:pre;overflow-x:auto;background:var(--accent-soft);border-radius:11px;padding:12px 14px}
+
+ /* 파일 탭 */
+ .lock{text-align:center;padding:30px 20px} .lock h2{font-size:19px}
+ .pin{display:flex;gap:10px;justify-content:center;margin:16px 0 6px}
+ .pin input{width:58px;height:68px;font-size:30px;text-align:center;border:2px solid var(--line);border-radius:14px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;transition:border-color .15s,transform .1s}
+ .pin input:focus{border-color:var(--accent);transform:translateY(-2px)} .pin.err input{border-color:var(--bad);animation:shake .3s}
+ @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+ .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:2px 0 4px}
+ .bar .status{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ok);font-weight:600} .bar .status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+ .bar .sp{flex:1}
+ ul.files{list-style:none;margin:0;padding:0}
+ ul.files li{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--line)} ul.files li:first-child{border-top:0}
+ .ficon{flex:none;width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
+ .ficon svg{width:21px;height:21px} .ficon.recv{background:var(--ok-soft);color:var(--ok)}
+ .finfo{flex:1;min-width:0} .fname{font-weight:600;word-break:break-all;font-size:14.5px} .fmeta{color:var(--muted);font-size:12.8px}
+ .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent);color:#fff;margin-left:6px;vertical-align:1px}
+ .empty{color:var(--muted);font-size:14px;padding:16px 4px;text-align:center}
+ .drop{border:2px dashed var(--line);border-radius:16px;padding:30px 16px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg);display:block;width:100%;font-family:inherit;color:inherit}
+ .drop:hover,.drop:focus-visible{border-color:var(--accent);outline:none} .drop.over{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.01)}
+ .drop svg{width:44px;height:44px;color:var(--accent);margin-bottom:6px} .drop .big{font-size:16.5px;font-weight:700} .drop .small{color:var(--muted);font-size:13px;margin-top:3px}
+ .qitem{padding:10px 4px;border-top:1px solid var(--line);font-size:14px} .qitem:first-child{border-top:0}
+ .qhead{display:flex;justify-content:space-between;gap:10px} .qname{font-weight:600;word-break:break-all}
+ .qstate{flex:none;font-size:13px;font-weight:600} .qmsg{font-size:13px;margin-top:2px}
+ #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);background:#1c2433;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .22s;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+ #toast.show{opacity:1;transform:translate(-50%,0)} #toast.bad{background:#b3261e}
+ #dropveil{position:fixed;inset:0;background:rgba(51,102,255,.14);border:4px dashed var(--accent);z-index:40;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--accent);pointer-events:none}
+ #dropveil.on{display:flex}
+ @media (max-width:560px){main{padding:14px 10px 70px}.card{padding:15px 14px}nav.tabs button{font-size:13px;padding:9px 4px}nav.tabs svg{display:none}.pin input{width:50px;height:60px}.pill{display:none}}
+</style></head><body><main>
+
+<header class="top">
+ <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></div>
+ <div><h1>결과 주고받기</h1><p>검수 결과를 같은 네트워크 안에서 주고받는 임시 페이지</p></div>
+ <span class="pill">같은 와이파이 전용</span>
+</header>
+
+<nav class="tabs" role="tablist">
+ <button data-tab="rv" class="on" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>검수자 가이드</button>
+ <button data-tab="pm" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>PM 가이드 (전체 흐름)</button>
+ <button data-tab="files" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>파일 받기·올리기</button>
 </nav>
 
 <!-- ───────────────────────── 검수자 가이드 ───────────────────────── -->
 <section class="tab on" id="tab-rv">
  <div class="card">
-  <h2>먼저 내 이름을 고르세요</h2>
-  <div class="row"><select id="who"></select>
-   <span id="whoinfo" class="muted"></span></div>
-  <div class="row"><b>VS Code 터미널 종류</b>
+  <h2>먼저 내 이름을 고르세요 <span class="muted">(고른 값과 완료 표시는 이 브라우저에 기억됩니다)</span></h2>
+  <div class="row"><select id="who"></select><span id="whoinfo" class="muted"></span></div>
+  <div class="row"><b style="font-size:14px">VS Code 터미널 종류</b>
    <label class="pick"><input type="radio" name="term" value="wsl" checked> WSL (Ubuntu)</label>
    <label class="pick"><input type="radio" name="term" value="win"> Windows (PowerShell)</label></div>
   <div class="muted">터미널 왼쪽 위 이름이 <b>WSL 또는 Ubuntu</b>이면 위쪽, <b>powershell</b>이면 아래쪽을 고르세요. 아래 명령이 자동으로 바뀝니다.</div>
+  <div style="margin-top:12px"><div class="muted" id="rvprog"></div><div class="progress"><i id="rvbar"></i></div></div>
  </div>
 
- <div class="card step"><div class="num">0</div><div class="body">
-  <h2>처음 한 번: 최신 도구 받기</h2>
+ <div class="card step" data-step="0"><div class="num"><span>0</span></div><div class="body">
+  <div class="stephead"><h2>처음 한 번: 최신 도구 받기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
   VS Code 에서 프로젝트 폴더를 열고, 터미널에 입력합니다.
   <pre>git pull origin main</pre>
   <div class="note">오류가 나면 화면의 문구를 PM 에게 알려 주세요. 작업 중이던 검수표(<code>manifests\dataset_manifest.csv</code>)가 있다면 먼저 다른 이름으로 복사해 두세요.</div>
  </div></div>
 
- <div class="card step"><div class="num">1</div><div class="body">
-  <h2>파일 받기</h2>
-  <ol><li>위쪽 <b>파일 받기·올리기</b> 탭을 누릅니다. <button class="main" onclick="showTab('files')">탭으로 이동</button></li>
-  <li>PM 이 알려 준 <b>4자리 번호</b>를 입력하고 확인을 누릅니다.</li>
-  <li>목록의 zip 파일(<code>결과_날짜_시각.zip</code>)을 클릭하면 내려받아집니다. 보통 <code>다운로드</code> 폴더에 저장됩니다.</li></ol>
+ <div class="card step" data-step="1"><div class="num"><span>1</span></div><div class="body">
+  <div class="stephead"><h2>파일 받기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
+  <ol><li>아래 버튼으로 <b>파일 받기·올리기</b> 탭에 갑니다. <button class="btn primary small" onclick="showTab('files')" type="button">탭으로 이동</button></li>
+  <li>PM 이 알려 준 <b>4자리 번호</b>를 입력합니다. (4칸을 다 채우면 자동으로 열립니다)</li>
+  <li>목록의 <b>[내려받기]</b> 버튼을 누르면 zip 이 저장됩니다. 보통 <code>다운로드</code> 폴더에 들어갑니다.</li></ol>
  </div></div>
 
- <div class="card step"><div class="num">2</div><div class="body">
-  <h2>C 드라이브에 <code>받은결과</code> 폴더를 만들고 풀기</h2>
+ <div class="card step" data-step="2"><div class="num"><span>2</span></div><div class="body">
+  <div class="stephead"><h2>C 드라이브에 <code>받은결과</code> 폴더를 만들고 풀기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
   <ol><li>탐색기에서 <b>C 드라이브</b>를 열고 새 폴더 <code>받은결과</code>를 만듭니다. (<code>C:\받은결과</code>) 이미 있으면 안의 내용을 모두 지웁니다.</li>
   <li>받은 zip 을 우클릭 ▸ <b>압축 풀기</b>(모두 압축 풀기)에서 위치를 <code>C:\받은결과</code>로 정합니다.</li></ol>
   <div class="good"><b>확인:</b> <code>C:\받은결과</code>를 열었을 때 바로 <code>검수표.csv</code>와 <code>이물검출_학습데이터1</code> 폴더가 보여야 합니다.</div>
   <div class="warn"><code>C:\받은결과\결과_2026…</code> 처럼 폴더가 <b>한 겹 더</b> 생겼다면 안쪽 내용을 위(<code>C:\받은결과</code>)로 꺼내 주세요. 그래야 아래 명령이 파일을 찾습니다.</div>
  </div></div>
 
- <div class="card step"><div class="num">3</div><div class="body">
-  <h2>내 검수표는 이름만 바꿔 치워 두기 (충돌 방지)</h2>
+ <div class="card step" data-step="3"><div class="num"><span>3</span></div><div class="body">
+  <div class="stephead"><h2>내 검수표는 이름만 바꿔 치워 두기 (충돌 방지)</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
   <ol><li>라벨링 프로그램을 <b>끕니다.</b></li>
   <li>VS Code 왼쪽 탐색기에서 <code>manifests</code> 폴더의 <code>dataset_manifest.csv</code>를 우클릭 ▸ <b>이름 바꾸기</b> ▸ <code>dataset_manifest.내것.csv</code></li></ol>
   <div class="note"><b>왜 하나요?</b> 받은 검수표에는 900장이 모두 들어 있습니다. 내 옛 파일과 합치면 같은 사진이 다르게 적혀 <b>충돌</b>이 날 수 있어서, 내 파일은 지우지 말고 이름만 바꿔 둡니다. 나중에 필요하면 이름을 되돌릴 수 있습니다. 파일이 없으면 건너뛰어도 됩니다.</div>
  </div></div>
 
- <div class="card step"><div class="num">4</div><div class="body">
-  <h2>명령 2개로 내 PC에 가져오기</h2>
+ <div class="card step" data-step="4"><div class="num"><span>4</span></div><div class="body">
+  <div class="stephead"><h2>명령 2개로 내 PC에 가져오기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
   VS Code 터미널(프로젝트 폴더)에서 <b>한 줄씩</b> 실행합니다.
   <h3>① 라벨(txt) 가져오기</h3>
   <pre data-cmd="import"></pre>
   <div class="good">이렇게 나오면 정상: 마지막에 <code>…개를 복사했습니다.</code>가 나오고, 덮어쓴 파일이 있으면 <code>…에 백업해 두었습니다</code>도 나옵니다.</div>
-  <div class="warn"><b><code>--overwrite</code>를 꼭 붙이세요.</b> 내 PC 에는 이전에 받은 <b>옛 라벨</b>이 남아 있을 수 있습니다. 붙이지 않으면 내용이 다른 라벨은 <b>복사하지 않고 건너뛰어서</b> 새 라벨이 하나도 안 들어옵니다. (검수표만 새것이 되고 라벨은 원본 그대로 보이는 증상)<br>덮어쓰기 전의 내 라벨은 <code>data/backup</code> 에 자동으로 백업됩니다. <b>검수를 시작하기 전에</b> 실행하세요. 이미 검수하며 저장했다면 <code>data/work</code> 를 먼저 복사해 두세요.</div>
+  <div class="warn"><b><code>--overwrite</code>를 꼭 붙이세요.</b> 내 PC 에는 이전에 받은 <b>옛 라벨</b>이 남아 있을 수 있습니다. 붙이지 않으면 내용이 다른 라벨은 <b>복사하지 않고 건너뛰어서</b> 새 라벨이 하나도 안 들어옵니다. (검수표만 새것이 되고 라벨은 원본 그대로 보이는 증상)<br>
+  덮어쓰기 전의 내 라벨은 <code>data/backup</code> 에 자동으로 백업됩니다. <b>검수를 시작하기 전에</b> 실행하세요. 이미 검수하며 저장했다면 <code>data/work</code> 를 먼저 복사해 두세요.</div>
   <h3>② 검수표 가져오기</h3>
   <pre data-cmd="merge"></pre>
   <div class="good">이렇게 나오면 정상: <code>합친 결과: 900줄</code> · <code>원본 사진 900장 중 검수표에 줄이 없는 사진: 0장</code> · 마지막에 <code>저장했습니다</code></div>
   <div class="warn"><b>"충돌"이라고 나오거나 줄 수가 900이 아니면</b> 3단계(내 검수표 이름 바꾸기)를 건너뛴 것입니다. 3단계를 하고 ②를 다시 실행하세요.</div>
  </div></div>
 
- <div class="card step"><div class="num">5</div><div class="body">
-  <h2>검수하기</h2>
+ <div class="card step" data-step="5"><div class="num"><span>5</span></div><div class="body">
+  <div class="stephead"><h2>검수하기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
   <ol><li>라벨링 프로그램을 켭니다.</li>
   <li><kbd>Ctrl</kbd>+<kbd>G</kbd>를 눌러 <b id="startno">내 시작 번호</b>로 이동합니다.</li>
   <li>검수자 칸에 <b>내 이름을 한 번</b> 씁니다. 다음 사진부터는 자동으로 채워집니다.</li>
@@ -267,8 +320,8 @@ PAGE = r"""<!doctype html>
   <div class="warn"><b>내 번호 범위(<span class="rng">내 범위</span>)의 사진만 저장하세요.</b> 다른 사람 범위를 저장하면 합칠 때 서로 덮어씁니다.</div>
  </div></div>
 
- <div class="card step"><div class="num">6</div><div class="body">
-  <h2>검수가 끝나면 내 범위만 묶기</h2>
+ <div class="card step" data-step="6"><div class="num"><span>6</span></div><div class="body">
+  <div class="stephead"><h2>검수가 끝나면 내 범위만 묶기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
   프로그램을 끄고 터미널에서 실행합니다.
   <pre data-cmd="pack"></pre>
   <div class="good">끝에 <code>라벨(txt) 300개, 검수표 300줄</code>이 나오면 정상입니다. 파일은 프로젝트의 <code>data\share</code> 폴더에 <code>결과_<span class="nm">이름</span>_날짜_시각.zip</code>으로 만들어집니다.</div>
@@ -279,9 +332,9 @@ PAGE = r"""<!doctype html>
    저장한 라벨이 어디에도 없으면 프로그램에서 해당 사진을 다시 열어 저장해야 합니다. PM 에게 알려 주세요.</div>
  </div></div>
 
- <div class="card step"><div class="num">7</div><div class="body">
-  <h2>이 페이지에 올리기</h2>
-  <ol><li>위쪽 <b>파일 받기·올리기</b> 탭 ▸ <b>올리기</b>에서 6단계의 zip 을 고르고 <b>올리기</b>를 누릅니다.</li>
+ <div class="card step" data-step="7"><div class="num"><span>7</span></div><div class="body">
+  <div class="stephead"><h2>이 페이지에 올리기</h2><button class="btn ghost small donebtn" type="button">완료</button></div>
+  <ol><li><b>파일 받기·올리기</b> 탭으로 가서 6단계의 zip 을 <b>끌어다 놓거나</b> 눌러서 고릅니다. 놓으면 <b>바로 올라갑니다.</b> <button class="btn primary small" onclick="showTab('files')" type="button">탭으로 이동</button></li>
   <li><span class="ok">받았습니다: 결과_…zip (라벨 300개, 검수표 300줄)</span> 이 나오면 끝입니다. PM 에게 올렸다고 알려 주세요.</li></ol>
   <div class="note">거부되면 화면에 이유가 나옵니다. 사진(jpg)이나 다른 파일이 섞인 zip 은 올라가지 않습니다. 6단계의 명령으로 만든 zip 을 쓰세요.</div>
  </div></div>
@@ -304,14 +357,14 @@ PAGE = r"""<!doctype html>
   <div class="muted">번호는 프로그램 화면의 <b>N / 900</b>과 같습니다. 3명 모두 자기가 쓴 사진이 없는 범위입니다.</div>
  </div>
 
- <div class="card step"><div class="num">①</div><div class="body">
+ <div class="card step"><div class="num"><span>①</span></div><div class="body">
   <h2>합친 결과 묶기 (처음 한 번)</h2>
   PM PC 의 WSL(프로젝트 폴더)에서:
   <pre>python tools/pack_results.py</pre>
   <div class="muted">라벨 900개와 검수표 900줄이 <code>data/share/결과_날짜_시각.zip</code>으로 만들어집니다. 검수표의 작성자 칸이 정리된 최신 상태여야 합니다.</div>
  </div></div>
 
- <div class="card step"><div class="num">②</div><div class="body">
+ <div class="card step"><div class="num"><span>②</span></div><div class="body">
   <h2>서버 켜기</h2>
   <ol><li><b>방화벽 규칙</b>(PM PC 에서 한 번만, 관리자 PowerShell):
    <pre>New-NetFirewallRule -DisplayName "라벨공유 8000" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow -Profile Private</pre></li>
@@ -319,20 +372,20 @@ PAGE = r"""<!doctype html>
   <li>검은 창에 나오는 <b>접속 주소</b>와 <b>4자리 번호</b>를 확인합니다.</li></ol>
  </div></div>
 
- <div class="card step"><div class="num">③</div><div class="body">
+ <div class="card step"><div class="num"><span>③</span></div><div class="body">
   <h2>검수자에게 알려 주기</h2>
   <ul><li>접속 주소: <b id="myurl"></b></li><li>4자리 번호 (검은 창에 표시된 것)</li><li>"이 페이지의 <b>검수자 가이드</b>를 따라 하세요"</li></ul>
   <div class="note">검수자 PC 에도 최신 도구가 필요합니다. 먼저 <code>git pull origin main</code> 을 하라고 알려 주세요. (<code>tools/pack_results.py</code> 가 있어야 자기 범위를 묶을 수 있습니다.)</div>
  </div></div>
 
- <div class="card step"><div class="num">④</div><div class="body">
+ <div class="card step"><div class="num"><span>④</span></div><div class="body">
   <h2>올라온 결과 확인</h2>
   <ul><li>이 페이지의 <b>파일 받기·올리기</b> 탭 ▸ <b>받은 파일</b>에 3개(김동훈·이후영·지혜성)가 보이는지 확인합니다.</li>
   <li>폴더로도 볼 수 있습니다: <code>C:\공유\받은결과</code> (zip) · <code>C:\공유\받은결과\풀림</code> (자동으로 풀린 라벨과 검수표)</li>
   <li>풀림 폴더에 <code>검수표_김동훈.csv</code>, <code>검수표_이후영.csv</code>, <code>검수표_지혜성.csv</code> 가 있어야 합니다.</li></ul>
  </div></div>
 
- <div class="card step"><div class="num">⑤</div><div class="body">
+ <div class="card step"><div class="num"><span>⑤</span></div><div class="body">
   <h2>명령 2개로 합치기</h2>
   PM PC 의 WSL(프로젝트 폴더)에서 <b>한 줄씩</b>:
   <pre>python tools/import_labels.py /mnt/c/공유/받은결과/풀림 --apply --overwrite</pre>
@@ -342,7 +395,7 @@ PAGE = r"""<!doctype html>
   <li>같은 사진이 다르게 적히면(충돌) 검수일이 늦은 줄이 이기고 화면에 알려 줍니다.</li></ul>
  </div></div>
 
- <div class="card step"><div class="num">⑥</div><div class="body">
+ <div class="card step"><div class="num"><span>⑥</span></div><div class="body">
   <h2>확인하기</h2>
   합치기 결과 요약에서 아래를 확인합니다.
   <table><tr><th>항목</th><th>기준</th></tr>
@@ -354,7 +407,7 @@ PAGE = r"""<!doctype html>
   라벨링 프로그램의 <b>[도구] ▸ Validation</b>도 실행해 <b>오류 0건</b>인지 확인합니다.
  </div></div>
 
- <div class="card step"><div class="num">⑦</div><div class="body">
+ <div class="card step"><div class="num"><span>⑦</span></div><div class="body">
   <h2>마무리</h2>
   <ul><li>검은 서버 창을 <b>닫습니다.</b> (공유가 바로 멈춥니다. 켠 지 120분이 지나도 저절로 꺼집니다)</li>
   <li>방화벽 규칙을 지웁니다. (관리자 PowerShell)
@@ -366,32 +419,68 @@ PAGE = r"""<!doctype html>
 
 <!-- ───────────────────────── 파일 받기·올리기 ───────────────────────── -->
 <section class="tab" id="tab-files">
- <div class="card" id="pinbox"><h2>번호 입력</h2>
-  <div class="row"><input id="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
-   <button class="main" id="go">확인</button> <span id="pinmsg" class="bad"></span></div>
-  <div class="muted">서버를 켠 PM PC 의 검은 창에 표시된 4자리 번호입니다.</div></div>
+ <div class="card lock" id="pinbox">
+  <h2>접속 번호를 입력하세요</h2>
+  <div class="muted">서버를 켠 PM PC 의 검은 창에 표시된 4자리 번호입니다.</div>
+  <div class="pin" id="pinrow">
+   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 1번째 자리">
+   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 2번째 자리">
+   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 3번째 자리">
+   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 4번째 자리">
+  </div>
+  <div id="pinmsg" class="bad" style="min-height:22px" role="alert"></div>
+ </div>
+
  <div id="filesmain" hidden>
-  <div class="card"><h2>내려받기 <span class="muted">(PM 이 내놓은 파일)</span></h2><ul class="files" id="send"></ul></div>
-  <div class="card"><h2>올리기 <span class="muted">(라벨 txt 와 검수표 csv 만 든 zip)</span></h2>
-   <div class="row"><input id="file" type="file" accept=".zip"> <button class="main" id="up">올리기</button></div>
-   <progress id="bar" value="0" max="100" hidden></progress>
-   <p id="upmsg"></p>
-   <div class="muted">받은 파일</div><ul class="files" id="recv"></ul></div>
+  <div class="bar"><span class="status">연결됨</span><span class="sp"></span>
+   <button class="btn ghost small" id="refresh" type="button">새로고침</button>
+   <button class="btn ghost small" id="relock" type="button">번호 다시 입력</button></div>
+
+  <div class="card">
+   <h2>내려받기 <span class="muted">PM 이 내놓은 파일</span></h2>
+   <ul class="files" id="send"></ul>
+  </div>
+
+  <div class="card">
+   <h2>올리기 <span class="muted">라벨(txt)과 검수표(csv)만 든 zip · 최대 __MAXMB__MB</span></h2>
+   <div class="drop" id="drop" role="button" tabindex="0" aria-label="zip 파일을 끌어다 놓거나 눌러서 고르기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><path d="M12 12v9M8 16l4-4 4 4"/></svg>
+    <div class="big">zip 파일을 여기로 끌어다 놓으세요</div>
+    <div class="small">놓으면 <b>바로 올라갑니다.</b> 눌러서 파일을 고를 수도 있어요. 여러 개도 한 번에 됩니다.</div>
+   </div>
+   <input type="file" id="file" accept=".zip" multiple hidden>
+   <div id="queue"></div>
+   <h3>받은 파일</h3>
+   <ul class="files" id="recv"></ul>
+  </div>
  </div>
 </section>
 
+<div id="dropveil">여기에 놓으면 바로 올라갑니다</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script>
 const ASSIGN=__ASSIGN__;
+const MAXMB=__MAXMB__;
 let PIN="";
 const $=id=>document.getElementById(id);
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const sstore={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
 const names=Object.keys(ASSIGN);
-function showTab(t){document.querySelectorAll("section.tab").forEach(s=>s.classList.toggle("on",s.id==="tab-"+t));
- document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));window.scrollTo(0,0)}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+const ICON={zip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M10 12h2M10 16h2M12 14h2"/></svg>',
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'};
 
-// 검수 범위 표 · 이름 선택
-const sel=$("who");
-names.forEach(n=>sel.add(new Option(n,n)));
+let toastTimer=null;
+function toast(msg,bad){const t=$("toast");t.textContent=msg;t.className="show"+(bad?" bad":"");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="",2600)}
+function showTab(t){document.querySelectorAll("section.tab").forEach(s=>s.classList.toggle("on",s.id==="tab-"+t));
+ document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));window.scrollTo({top:0});
+ if(t==="files"&&!$("pinbox").hidden){const f=[...document.querySelectorAll("#pinrow input")].find(i=>!i.value);if(f)f.focus()}}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+// ── 가이드: 이름·터미널 선택, 명령 자동 바뀜, 단계 완료 체크 ──
+const sel=$("who");names.forEach(n=>sel.add(new Option(n,n)));
+const savedWho=store.get("rv-who");if(savedWho&&names.includes(savedWho))sel.value=savedWho;
+const savedTerm=store.get("rv-term");if(savedTerm){const r=document.querySelector("input[name=term][value="+savedTerm+"]");if(r)r.checked=true}
 const tbl=$("assigntable");
 names.forEach(n=>{const [a,b]=ASSIGN[n];const tr=tbl.insertRow();tr.insertCell().textContent=n;tr.insertCell().textContent=a+" ~ "+b;tr.insertCell().textContent=(b-a+1)+"장"});
 $("myurl").textContent=location.origin;
@@ -402,7 +491,7 @@ function cmds(){const n=sel.value,[a,b]=ASSIGN[n]||[1,1],w=term()==="wsl";
   merge:`python tools/merge_manifests.py ${dir}${w?"/":"\\"}검수표.csv --apply`,
   pack:`python tools/pack_results.py --name ${n} --from ${a} --to ${b}`}}
 function addCopy(pre){const btn=document.createElement("button");btn.textContent="복사";btn.type="button";
- btn.onclick=()=>{const text=pre.dataset.text;const done=()=>{btn.textContent="복사됨";setTimeout(()=>btn.textContent="복사",1500)};
+ btn.onclick=()=>{const text=pre.dataset.text;const done=()=>{btn.textContent="복사됨";toast("명령을 복사했어요");setTimeout(()=>btn.textContent="복사",1500)};
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done)}
   else{const t=document.createElement("textarea");t.value=text;document.body.append(t);t.select();try{document.execCommand("copy")}catch(e){}t.remove();done()}};
  pre.append(btn)}
@@ -412,37 +501,102 @@ function render(){const n=sel.value,[a,b]=ASSIGN[n]||[1,1],c=cmds();
  $("startno").textContent=a+"번";document.querySelectorAll(".rng").forEach(e=>e.textContent=a+" ~ "+b+"번");
  document.querySelectorAll(".nm").forEach(e=>e.textContent=n);
  $("whoinfo").textContent="검수할 번호: "+a+" ~ "+b+" ("+(b-a+1)+"장)";
- $("packpath").textContent=term()==="wsl"?"탐색기 주소창에 \\\\wsl$\\Ubuntu\\home\\<사용자>\\group_3\\data\\share 를 붙여넣으면 파일이 보입니다. (WSL 에 프로젝트가 있는 경우)":"프로젝트 폴더 안의 data\\share 폴더에 만들어집니다."}
+ $("packpath").textContent=term()==="wsl"?"탐색기 주소창에 \\\\wsl$\\Ubuntu\\home\\<사용자>\\group_3\\data\\share 를 붙여넣으면 파일이 보입니다. (WSL 에 프로젝트가 있는 경우)":"프로젝트 폴더 안의 data\\share 폴더에 만들어집니다.";
+ store.set("rv-who",n);store.set("rv-term",term())}
 sel.onchange=render;document.querySelectorAll("input[name=term]").forEach(r=>r.onchange=render);render();
+const steps=[...document.querySelectorAll("#tab-rv .step")];
+function progress(){const done=steps.filter(s=>s.classList.contains("done")).length;
+ $("rvprog").textContent="내 진행: "+done+" / "+steps.length+" 단계 완료";$("rvbar").style.width=(done*100/steps.length)+"%"}
+steps.forEach(s=>{const k="rv-step-"+s.dataset.step,b=s.querySelector(".donebtn");
+ const apply=on=>{s.classList.toggle("done",on);b.textContent=on?"되돌리기":"완료"};
+ apply(store.get(k)==="1");
+ b.onclick=()=>{const on=!s.classList.contains("done");apply(on);store.set(k,on?"1":"0");progress();
+  if(on){const nx=steps[steps.indexOf(s)+1];if(nx)nx.scrollIntoView({behavior:"smooth",block:"start"})}}});
+progress();
 
-// 파일 받기·올리기
+// ── 파일 탭: 번호 4칸 ──
+const pins=[...document.querySelectorAll("#pinrow input")];
+pins.forEach((el,i)=>{
+ el.addEventListener("input",()=>{el.value=el.value.replace(/\D/g,"").slice(0,1);$("pinrow").classList.remove("err");$("pinmsg").textContent="";
+  if(el.value&&i<3)pins[i+1].focus();if(pins.every(p=>p.value))unlock(pins.map(p=>p.value).join(""))});
+ el.addEventListener("keydown",e=>{if(e.key==="Backspace"&&!el.value&&i>0){pins[i-1].focus();pins[i-1].value=""}
+  if(e.key==="ArrowLeft"&&i>0)pins[i-1].focus();if(e.key==="ArrowRight"&&i<3)pins[i+1].focus()});
+ el.addEventListener("paste",e=>{const t=(e.clipboardData.getData("text")||"").replace(/\D/g,"").slice(0,4);if(!t)return;e.preventDefault();
+  t.split("").forEach((c,j)=>pins[j].value=c);(pins[Math.min(t.length,3)]).focus();if(t.length===4)unlock(t)})});
+function pinError(msg){$("pinmsg").textContent=msg;$("pinrow").classList.add("err");pins.forEach(p=>p.value="");pins[0].focus();sstore.set("pin",null)}
+
+// ── 파일 목록 ──
 const kb=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
-function frow(f,link){const li=document.createElement("li");
- const a=document.createElement(link?"a":"span");a.textContent=f.name;if(link)a.href="/api/download?pin="+PIN+"&name="+encodeURIComponent(f.name);
- const s=document.createElement("span");s.className="muted";s.textContent=kb(f.size)+" · "+f.time;li.append(a,s);return li}
-const empty=t=>Object.assign(document.createElement("li"),{textContent:t});
-async function refresh(){
- const r=await fetch("/api/list?pin="+PIN);
- if(r.status==403){$("pinmsg").textContent="번호가 맞지 않습니다.";return false}
- if(r.status==429){$("pinmsg").textContent="너무 많이 틀렸습니다. 잠시 뒤에 다시 하세요.";return false}
+function frow(f,kind,first){const li=document.createElement("li");
+ const ic=document.createElement("div");ic.className="ficon"+(kind==="recv"?" recv":"");ic.innerHTML=ICON.zip;
+ const info=document.createElement("div");info.className="finfo";
+ const nm=document.createElement("div");nm.className="fname";nm.textContent=f.name;
+ if(kind==="send"&&first){const b=document.createElement("span");b.className="badge";b.textContent="최신";nm.append(b)}
+ const meta=document.createElement("div");meta.className="fmeta";meta.textContent=kb(f.size)+" · "+f.time+(kind==="recv"?" · 받음":"");
+ info.append(nm,meta);li.append(ic,info);
+ if(kind==="send"){const a=document.createElement("a");a.className="btn primary";a.href="/api/download?pin="+PIN+"&name="+encodeURIComponent(f.name);a.setAttribute("download",f.name);
+  a.innerHTML=ICON.down+"<span>내려받기</span>";a.onclick=()=>toast("내려받기를 시작했어요 — 브라우저의 다운로드 폴더를 확인하세요");li.append(a)}
+ return li}
+const emptyLi=t=>Object.assign(document.createElement("li"),{className:"empty",textContent:t});
+let refreshTimer=null;
+async function refresh(quiet){
+ let r;try{r=await fetch("/api/list?pin="+PIN)}catch(e){if(!quiet)toast("서버에 연결할 수 없어요. PM PC 의 서버가 켜져 있나요?",true);return false}
+ if(r.status===403){pinError("번호가 맞지 않습니다.");return false}
+ if(r.status===429){pinError("너무 많이 틀렸습니다. 잠시 뒤에 다시 하세요.");return false}
  const d=await r.json();
- $("send").replaceChildren(...(d.send.length?d.send.map(f=>frow(f,true)):[empty("내려받을 파일이 없습니다.")]));
- $("recv").replaceChildren(...(d.received.length?d.received.map(f=>frow(f,false)):[empty("아직 없습니다.")]));
+ $("send").replaceChildren(...(d.send.length?d.send.map((f,i)=>frow(f,"send",i===0)):[emptyLi("내려받을 파일이 없습니다. (PM 이 아직 올리지 않았어요)")]));
+ $("recv").replaceChildren(...(d.received.length?d.received.map(f=>frow(f,"recv")):[emptyLi("아직 받은 파일이 없습니다.")]));
  return true}
-$("go").onclick=async()=>{PIN=$("pin").value.trim();$("pinmsg").textContent="";
- if(await refresh()){$("pinbox").hidden=true;$("filesmain").hidden=false}};
-$("pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
-$("up").onclick=()=>{const f=$("file").files[0];const m=$("upmsg");m.className="";
- if(!f){m.textContent="올릴 zip 파일을 먼저 고르세요.";m.className="bad";return}
- if(!f.name.toLowerCase().endsWith(".zip")){m.textContent="zip 파일만 올릴 수 있습니다.";m.className="bad";return}
+async function unlock(pin){PIN=pin;$("pinmsg").textContent="";
+ if(await refresh()){sstore.set("pin",pin);$("pinbox").hidden=true;$("filesmain").hidden=false;
+  clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!document.hidden&&$("tab-files").classList.contains("on"))refresh(true)},8000)}}
+$("refresh").onclick=async()=>{if(await refresh())toast("목록을 새로 불러왔어요")};
+$("relock").onclick=()=>{PIN="";sstore.set("pin",null);clearInterval(refreshTimer);$("filesmain").hidden=true;$("pinbox").hidden=false;pins.forEach(p=>p.value="");pins[0].focus()};
+
+// ── 올리기: 끌어다 놓기 · 자동 업로드 · 진행 막대 ──
+const MAXB=MAXMB*1048576;
+function qitem(name){const d=document.createElement("div");d.className="qitem";
+ d.innerHTML='<div class="qhead"><span class="qname"></span><span class="qstate muted">대기</span></div><div class="progress"><i></i></div><div class="qmsg muted"></div>';
+ d.querySelector(".qname").textContent=name;$("queue").prepend(d);return {el:d,bar:d.querySelector("i"),state:d.querySelector(".qstate"),msg:d.querySelector(".qmsg")}}
+function setQ(q,cls,state,msg){q.state.className="qstate "+cls;q.state.textContent=state;q.msg.className="qmsg "+cls;q.msg.textContent=msg||""}
+function sendOne(f,q){return new Promise(res=>{
  const x=new XMLHttpRequest();x.open("PUT","/api/upload?pin="+PIN+"&name="+encodeURIComponent(f.name));
- $("bar").hidden=false;$("bar").value=0;$("up").disabled=true;m.textContent="올리는 중...";
- x.upload.onprogress=e=>{if(e.lengthComputable)$("bar").value=e.loaded*100/e.total};
- x.onload=async()=>{$("up").disabled=false;let d={};try{d=JSON.parse(x.responseText)}catch(e){}
-  if(x.status==200){m.textContent="받았습니다: "+d.saved+" (라벨 "+d.labels+"개, 검수표 "+d.rows+"줄)";m.className="ok";await refresh()}
-  else{m.textContent=d.error||("올리지 못했습니다 ("+x.status+")");m.className="bad"}};
- x.onerror=()=>{$("up").disabled=false;m.textContent="연결이 끊겼습니다. 서버 PC 가 켜져 있는지 확인하세요.";m.className="bad"};
- x.send(f)};
+ setQ(q,"muted","올리는 중…","");
+ x.upload.onprogress=e=>{if(e.lengthComputable){q.bar.style.width=(e.loaded*100/e.total)+"%";q.state.textContent=Math.round(e.loaded*100/e.total)+"%"}};
+ x.onload=()=>{let d={};try{d=JSON.parse(x.responseText)}catch(e){}
+  if(x.status===200){q.bar.style.width="100%";setQ(q,"ok","완료 ✓","받았습니다: "+d.saved+" (라벨 "+d.labels+"개, 검수표 "+d.rows+"줄)");res(true)}
+  else{setQ(q,"bad","실패",d.error||("올리지 못했습니다 ("+x.status+")"));res(false)}};
+ x.onerror=()=>{setQ(q,"bad","실패","연결이 끊겼습니다. 서버 PC 가 켜져 있는지 확인하세요.");res(false)};
+ x.send(f)})}
+let uploading=false;
+async function uploadFiles(list){
+ if($("filesmain").hidden){toast("먼저 접속 번호를 입력하세요",true);showTab("files");return}
+ const files=[...list];if(!files.length)return;
+ showTab("files");if(uploading){toast("올리는 중인 파일이 끝나면 다시 올려 주세요",true);return}
+ uploading=true;let okN=0;
+ for(const f of files){const q=qitem(f.name);
+  if(!f.name.toLowerCase().endsWith(".zip")){setQ(q,"bad","거부","zip 파일만 올릴 수 있습니다. (pack_results.py 로 만든 zip)");continue}
+  if(f.size>MAXB){setQ(q,"bad","거부","파일이 너무 큽니다. (최대 "+MAXMB+"MB)");continue}
+  if(await sendOne(f,q))okN++}
+ uploading=false;await refresh(true);
+ toast(okN===files.length?(okN+"개 올렸어요 ✓"):(okN+"개 올림, "+(files.length-okN)+"개는 실패했어요"),okN!==files.length)}
+$("drop").onclick=()=>$("file").click();
+$("drop").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("file").click()}});
+$("file").onchange=e=>{uploadFiles(e.target.files);e.target.value=""};
+const drop=$("drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>{e.stopPropagation();uploadFiles(e.dataTransfer.files)});
+// 페이지 아무 곳에나 놓아도 올라간다 (브라우저가 파일을 열어 버리는 것도 막는다)
+let depth=0;
+const hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
+window.addEventListener("dragenter",e=>{if(hasFiles(e)){depth++;$("dropveil").classList.add("on")}});
+window.addEventListener("dragleave",e=>{if(hasFiles(e)){depth=Math.max(0,depth-1);if(!depth)$("dropveil").classList.remove("on")}});
+window.addEventListener("dragover",e=>{if(hasFiles(e))e.preventDefault()});
+window.addEventListener("drop",e=>{if(!hasFiles(e))return;e.preventDefault();depth=0;$("dropveil").classList.remove("on");uploadFiles(e.dataTransfer.files)});
+
+// 새로고침해도 번호를 다시 묻지 않게 (이 탭을 닫으면 지워진다)
+const savedPin=sstore.get("pin");if(savedPin&&/^\d{4}$/.test(savedPin)){unlock(savedPin).then(()=>{if(!$("pinbox").hidden){$("pinmsg").textContent="서버가 다시 켜져서 번호가 바뀌었을 수 있어요. 새 번호를 입력하세요."}})}
 </script></main></body></html>
 """
 
@@ -453,7 +607,8 @@ class ShareServer(ThreadingHTTPServer):
 
     def __init__(self, address, base_dir, pin, max_mb=50, log=print, assign=None):
         super().__init__(address, Handler)
-        self.page = PAGE.replace("__ASSIGN__", json.dumps(assign or parse_assign(DEFAULT_ASSIGN), ensure_ascii=False))
+        self.page = (PAGE.replace("__ASSIGN__", json.dumps(assign or parse_assign(DEFAULT_ASSIGN), ensure_ascii=False))
+                     .replace("__MAXMB__", f"{max_mb:g}"))
         self.base = Path(base_dir)
         self.send_dir = self.base / SEND
         self.recv_dir = self.base / RECEIVED
