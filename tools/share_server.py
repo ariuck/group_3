@@ -40,7 +40,7 @@ ALLOWED_SUFFIX = {".txt", ".csv"}
 MAX_ENTRIES = 5000
 NAME_BAD = set('\\/:*?"<>|\r\n\t\0')
 MAX_FAILS, LOCK_SECONDS = 8, 60
-DEFAULT_ASSIGN = "김동훈:1-300,이후영:301-600,지혜성:601-900"      # 검수자별 번호 범위 (docs/team/검수_배정.md)
+DEFAULT_ASSIGN = "김동훈:1-300,이후영:301-500,지혜성:551-900"      # 검수자별 번호 범위 (docs/team/검수_배정.md)
 
 
 # ── 파일 검사 ─────────────────────────────────────────────────────────────

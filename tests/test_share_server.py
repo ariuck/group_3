@@ -188,7 +188,7 @@ class ShareServerTest(unittest.TestCase):
 
     def test_parse_assign(self):
         self.assertEqual(ss.parse_assign("김동훈:1-300, 이후영:301-600"), {"김동훈": [1, 300], "이후영": [301, 600]})
-        self.assertEqual(ss.parse_assign(ss.DEFAULT_ASSIGN), {"김동훈": [1, 300], "이후영": [301, 600], "지혜성": [601, 900]})
+        self.assertEqual(ss.parse_assign(ss.DEFAULT_ASSIGN), {"김동훈": [1, 300], "이후영": [301, 500], "지혜성": [551, 900]})
         for bad in ("", "김동훈", "김동훈:1", "김동훈:a-b", "김동훈:5-2", "김동훈:0-3", ":1-3"):
             with self.assertRaises(ValueError, msg=bad):
                 ss.parse_assign(bad)
