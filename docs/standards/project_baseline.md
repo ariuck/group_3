@@ -49,7 +49,9 @@
 - 실제 JPG·TXT 데이터와 FINAL 데이터는 **Git 저장소에 올리지 않는다** (`.gitignore` 로 제외)
 - 데이터는 개인 클라우드, 메신저, 공개 파일공유로 보내지 않는다
 - 실제 데이터를 캡처한 화면을 문서에 넣을 때는 공개 저장소에 올리지 않는다
-- Git 에 올리는 것: 소스코드, `requirements.txt`, `configs/classes.yaml`, 문서, Manifest, 보고서
+- **검수 기록이 쌓이는 검수표(`manifests/dataset_manifest.csv`)도 올리지 않는다.** 실제 사진 파일명이 들어 있어 회사 데이터로 본다. (프로그램이 저장할 때 만들고 `.gitignore` 로 제외)
+  엑셀 틀(`dataset_manifest.xlsx`)에 실제 기록을 적었다면 그 파일도 올리지 않는다.
+- Git 에 올리는 것: 소스코드, `requirements.txt`, `configs/classes.yaml`, 문서, 빈 검수표 틀(`dataset_manifest.xlsx`), 보고서
 
 ## 4. Git 기준
 

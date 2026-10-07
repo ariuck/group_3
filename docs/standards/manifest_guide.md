@@ -1,7 +1,7 @@
 # Dataset Manifest (검수표) 작성 가이드
 
 > 900장의 작업 상태를 한눈에 보기 위한 작업대장입니다. **이미지 1장 = 1행**입니다.
-> 파일: `manifests/dataset_manifest.xlsx` (시트 `검수표`, `Class 기준`) / 같은 19칸의 CSV 머리글: `manifests/dataset_manifest.csv`
+> 파일: `manifests/dataset_manifest.xlsx` (시트 `검수표`, `Class 기준`) / 프로그램이 저장할 때 만드는 CSV: `manifests/dataset_manifest.csv` (**실제 사진 파일명이 들어 있어 Git 에 올리지 않습니다**)
 >
 > 표시한 **(제안)** 은 팀 확인이 필요한 해석입니다. 팀이 다르게 정하면 이 문서를 고칩니다.
 
