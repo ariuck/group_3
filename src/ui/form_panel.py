@@ -56,6 +56,8 @@ class FormPanel(tk.Frame):
         self._remembered = {key: "" for key in REMEMBERED}     # 내가 마지막으로 직접 쓴 이름
         self._vars = {}
         self._entries = {}
+        self._chips = {}                   # 선택 버튼 묶음(상태·이미지 유형) — 안내할 때 깜빡이게 하려고 기억
+        self._flash_job = None
         self.ime = HangulIME(on_mode_change=self._show_mode)   # WSL 에서도 한글을 칠 수 있게 (hangul_input.py 참고)
         self.columnconfigure(0, weight=1)
 
@@ -77,6 +79,7 @@ class FormPanel(tk.Frame):
                 row=row, column=0, sticky="ew")
             chips = tk.Frame(self, bg=C["card"])
             chips.grid(row=row + 1, column=0, sticky="ew", pady=(2, 6))
+            self._chips[key] = chips
             options = [(blank_label, "")] + [(c, c) for c in choices]
             for n, (text, value) in enumerate(options):
                 ttk.Radiobutton(chips, text=text, value=value, variable=var, style="Chip.Toolbutton",
@@ -136,6 +139,39 @@ class FormPanel(tk.Frame):
         else:
             entry.icursor("end")
         return True
+
+    def choose_scene(self, index):
+        """Ctrl+1~4: 이미지 유형을 번호로 고른다 (김치+대상 객체 / 정상 김치 / 대상 객체 단독 / 판단 어려움). 고른 값을 돌려준다."""
+        value = SCENE_CHOICES[index]
+        self._vars["이미지 유형"].set(value)
+        return value
+
+    def flash(self, key, ms=1600):
+        """안내가 필요한 선택 칸(예: 이미지 유형)을 잠깐 빨간 테두리로 깜빡여 어디를 골라야 하는지 보여 준다."""
+        chips = self._chips.get(key)
+        if chips is None:
+            return
+        C = theme.COLORS
+        if self._flash_job is not None:
+            self.after_cancel(self._flash_job)
+        chips.config(highlightbackground=C["danger"], highlightcolor=C["danger"], highlightthickness=3)
+        self._flash_job = self.after(ms, lambda: self._unflash(chips))
+
+    def _unflash(self, chips):
+        self._flash_job = None
+        try:
+            chips.config(highlightthickness=0)
+        except tk.TclError:
+            pass
+
+    def stop(self):
+        """창을 닫을 때 깜빡임 예약을 정리한다."""
+        if self._flash_job is not None:
+            try:
+                self.after_cancel(self._flash_job)
+            except tk.TclError:
+                pass
+            self._flash_job = None
 
     def _show_mode(self, korean):
         self._mode_btn.config(text="한/영: 한글" if korean else "한/영: 영어")

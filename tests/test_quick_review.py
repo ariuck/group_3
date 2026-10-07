@@ -57,6 +57,7 @@ class QuickReviewTest(unittest.TestCase):
         except Exception as e:
             self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
         self.addCleanup(shutil.rmtree, tmp, True)
+        self.app.require_scene_type = False          # 이 시험들은 한 키 검수 흐름 자체를 본다 (이미지 유형 확인은 아래 SceneTypeTest 에서)
 
     def tearDown(self):
         self.app.shutdown()
@@ -247,6 +248,167 @@ class QuickReviewTest(unittest.TestCase):
         self.app.navigator.all_files = []
         self.app.update_summary()
         self.assertEqual(self.app.strip.summary.cget("text"), "")
+
+
+class SceneTypeAndReviewModeTest(unittest.TestCase):
+    """Enter 로 넘어가려면 이미지 유형을 골라야 한다 · 검수 모드의 ✕ 로 라벨 목록에서 바로 지운다"""
+
+    def setUp(self):
+        try:
+            self.root, self.app, tmp, self.infos = make_app()
+        except Exception as e:
+            self.skipTest(f"Tk 화면을 만들 수 없음: {e}")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        self.assertTrue(self.app.require_scene_type)                       # 기본은 '켜짐'
+
+    def tearDown(self):
+        self.app.shutdown()
+        self.root.destroy()
+
+    def settle(self):
+        for _ in range(200):
+            self.root.update()
+            if self.app._nav_pending is None and self.app._nav_job is None:
+                break
+
+    def go_to(self, name):
+        self.app.move_to(next(p for p in self.app.navigator.files if p.name == name))
+        self.settle()
+
+    def manifest_row(self, name):
+        hit = [r for r in mf._load(Path(settings.MANIFEST_PATH)) if r["이미지 파일명"] == name]
+        return hit[0] if hit else None
+
+    # ── 이미지 유형 ────────────────────────────────────────────────
+    def test_enter_does_not_move_on_while_the_image_type_is_blank(self):
+        self.go_to("a3.jpg")
+        self.assertEqual(self.app.form.get_values()["이미지 유형"], "")
+        self.app.mark_ok_and_next()
+        self.settle()
+        self.assertEqual(self.app.image_path.name, "a3.jpg")              # 그대로 머문다
+        self.assertIsNone(self.manifest_row("a3.jpg"))                    # 저장도 기록도 하지 않는다
+        self.assertIn("이미지 유형을 먼저 골라", self.app.status.cget("text"))
+        self.assertIn("Ctrl+1", self.app.status.cget("text"))
+        chips = self.app.form._chips["이미지 유형"]
+        self.assertGreater(int(str(chips.cget("highlightthickness"))), 0)   # 고를 곳이 깜빡인다
+        self.root.update()
+
+    def test_after_choosing_the_type_enter_works_and_it_is_recorded(self):
+        self.go_to("a3.jpg")
+        self.app.choose_scene(1)                                          # Ctrl+2 = 정상 김치
+        self.assertEqual(self.app.form.get_values()["이미지 유형"], "정상 김치")
+        self.app.mark_ok_and_next()
+        self.settle()
+        self.assertEqual(self.app.image_path.name, "a4.jpg")
+        self.assertEqual(self.manifest_row("a3.jpg")["이미지 유형"], "정상 김치")
+
+    def test_keys_ctrl_1_to_4_choose_the_four_types(self):
+        self.go_to("a3.jpg")
+        names = ["김치+대상 객체", "정상 김치", "대상 객체 단독", "판단 어려움"]
+        for i, name in enumerate(names, 1):
+            self.root.event_generate(f"<Control-Key-{i}>")
+            self.root.update()
+            self.assertEqual(self.app.form.get_values()["이미지 유형"], name)
+
+    def test_the_review_enter_in_the_text_cells_is_checked_too(self):
+        self.go_to("a4.jpg")
+        self.app.mark_review()                                            # R: 수정 필요 + 이유 쓰기
+        self.app.on_form_submit()                                         # 이유 칸에서 Enter
+        self.settle()
+        self.assertEqual(self.app.image_path.name, "a4.jpg")              # 이미지 유형을 안 골랐으므로 머문다
+        self.app.choose_scene(3)                                          # 판단 어려움
+        self.app.on_form_submit()
+        self.settle()
+        self.assertEqual(self.app.image_path.name, "a5.jpg")
+        self.assertEqual(self.manifest_row("a4.jpg")["상태"], "수정 필요")
+
+    def test_w_and_ctrl_s_are_not_blocked(self):
+        self.go_to("a3.jpg")
+        self.app.save_and_next()                                          # W = 작업 중 저장은 막지 않는다
+        self.settle()
+        self.assertEqual(self.app.image_path.name, "a4.jpg")
+        self.assertIsNotNone(self.manifest_row("a3.jpg"))
+
+    def test_already_chosen_type_is_kept_and_no_photo_means_no_error(self):
+        self.go_to("a3.jpg")
+        self.app.choose_scene(0)
+        self.app.mark_ok_and_next()
+        self.settle()
+        self.assertEqual(self.manifest_row("a3.jpg")["이미지 유형"], "김치+대상 객체")
+        self.app.pil_image = None
+        self.app.choose_scene(1)                                          # 사진이 없으면 아무 일도 없다
+        self.app.mark_ok_and_next()
+        self.app.on_form_submit()
+
+    def test_shutdown_leaves_no_pending_flash(self):
+        self.go_to("a3.jpg")
+        self.app.mark_ok_and_next()                                       # 깜빡임이 예약된다
+        self.app.shutdown()
+        self.assertEqual(len(self.root.tk.splitlist(self.root.tk.call("after", "info"))), 0)
+
+    # ── 검수 모드 (라벨 목록의 ✕) ──────────────────────────────────
+    def click_cell(self, iid, column):
+        self.root.update()
+        x, y, w, h = self.app.box_list.bbox(str(iid), column)
+        return self.app.on_box_list_click(Ev(x + w // 2, y + h // 2))
+
+    def test_delete_column_is_hidden_until_review_mode_is_on(self):
+        self.go_to("a3.jpg")
+        self.assertNotIn("del", list(self.app.box_list["displaycolumns"]))
+        self.app.toggle_review_mode()
+        self.assertEqual(list(self.app.box_list["displaycolumns"])[-1], "del")
+        self.assertTrue(self.app.review_mode.get())
+        self.root.update()
+        x, y, w, h = self.app.box_list.bbox("0", "#5")
+        self.assertLessEqual(x + w, self.app.box_list.winfo_width(), "✕ 열이 오른쪽에서 잘리면 안 된다")   # (실제로 잘려 보이지 않던 문제)
+        self.assertGreater(w, 20)
+        self.app.toggle_review_mode()
+        self.assertNotIn("del", list(self.app.box_list["displaycolumns"]))
+
+    def test_x_key_toggles_review_mode(self):
+        self.go_to("a3.jpg")
+        self.root.event_generate("<x>")
+        self.root.update()
+        self.assertTrue(self.app.review_mode.get())
+        self.root.event_generate("<X>")
+        self.root.update()
+        self.assertFalse(self.app.review_mode.get())
+
+    def test_clicking_the_x_deletes_that_box_and_undo_brings_it_back(self):
+        self.go_to("a3.jpg")
+        self.app.boxes.append({"cls": 1, "x1": 10.0, "y1": 10.0, "x2": 60.0, "y2": 60.0})
+        self.app.mark_changed()
+        before = [dict(b) for b in self.app.boxes]
+        self.assertEqual(len(before), 2)
+        self.app.toggle_review_mode()
+        result = self.click_cell(0, "#5")                                 # 첫 번째 줄의 ✕
+        self.assertEqual(result, "break")
+        self.assertEqual(len(self.app.boxes), 1)
+        self.assertEqual(self.app.boxes[0]["cls"], 1)                     # 첫 번째가 지워지고 두 번째가 남았다
+        self.assertTrue(self.app.dirty)
+        self.assertIn("1 번을 지웠습니다", self.app.status.cget("text"))
+        self.assertEqual(len(self.app.box_list.get_children()), 1)
+        self.assertTrue(self.app.undo())
+        self.assertEqual(self.app.boxes, before)                          # Ctrl+Z 로 그대로 돌아온다
+
+    def test_other_cells_only_select_and_nothing_is_deleted_with_the_mode_off(self):
+        self.go_to("a3.jpg")
+        n = len(self.app.boxes)
+        self.app.toggle_review_mode()
+        self.assertIsNone(self.click_cell(0, "#2"))                       # 클래스 칸: 평소처럼 선택만 (이벤트를 가로채지 않음)
+        self.assertEqual(len(self.app.boxes), n)
+        self.app.toggle_review_mode()                                     # 끄면 ✕ 열이 없다
+        self.root.update()
+        self.assertIsNone(self.app.on_box_list_click(Ev(200, 30)))
+        self.assertEqual(len(self.app.boxes), n)
+
+    def test_clicking_below_the_last_row_does_nothing(self):
+        self.go_to("a3.jpg")
+        self.app.toggle_review_mode()
+        self.root.update()
+        x, y, w, h = self.app.box_list.bbox("0", "#5")
+        self.assertEqual(self.app.on_box_list_click(Ev(x + w // 2, y + h * 4)), None)   # 빈 자리 (줄이 없는 곳)
+        self.assertEqual(len(self.app.boxes), 1)
 
 
 if __name__ == "__main__":
