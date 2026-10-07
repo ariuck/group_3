@@ -248,7 +248,8 @@ PAGE = r"""<!doctype html>
   VS Code 터미널(프로젝트 폴더)에서 <b>한 줄씩</b> 실행합니다.
   <h3>① 라벨(txt) 가져오기</h3>
   <pre data-cmd="import"></pre>
-  <div class="good">이렇게 나오면 정상: <code>새 라벨 …개</code>가 보이고 마지막에 <code>…개를 복사했습니다.</code></div>
+  <div class="good">이렇게 나오면 정상: 마지막에 <code>…개를 복사했습니다.</code>가 나오고, 덮어쓴 파일이 있으면 <code>…에 백업해 두었습니다</code>도 나옵니다.</div>
+  <div class="warn"><b><code>--overwrite</code>를 꼭 붙이세요.</b> 내 PC 에는 이전에 받은 <b>옛 라벨</b>이 남아 있을 수 있습니다. 붙이지 않으면 내용이 다른 라벨은 <b>복사하지 않고 건너뛰어서</b> 새 라벨이 하나도 안 들어옵니다. (검수표만 새것이 되고 라벨은 원본 그대로 보이는 증상)<br>덮어쓰기 전의 내 라벨은 <code>data/backup</code> 에 자동으로 백업됩니다. <b>검수를 시작하기 전에</b> 실행하세요. 이미 검수하며 저장했다면 <code>data/work</code> 를 먼저 복사해 두세요.</div>
   <h3>② 검수표 가져오기</h3>
   <pre data-cmd="merge"></pre>
   <div class="good">이렇게 나오면 정상: <code>합친 결과: 900줄</code> · <code>원본 사진 900장 중 검수표에 줄이 없는 사진: 0장</code> · 마지막에 <code>저장했습니다</code></div>
@@ -395,7 +396,7 @@ $("myurl").textContent=location.origin;
 const term=()=>document.querySelector("input[name=term]:checked").value;
 function cmds(){const n=sel.value,[a,b]=ASSIGN[n]||[1,1],w=term()==="wsl";
  const dir=w?"/mnt/c/받은결과":"C:\\받은결과";
- return {import:`python tools/import_labels.py ${dir} --apply`,
+ return {import:`python tools/import_labels.py ${dir} --apply --overwrite`,
   merge:`python tools/merge_manifests.py ${dir}${w?"/":"\\"}검수표.csv --apply`,
   pack:`python tools/pack_results.py --name ${n} --from ${a} --to ${b}`}}
 function addCopy(pre){const btn=document.createElement("button");btn.textContent="복사";btn.type="button";
