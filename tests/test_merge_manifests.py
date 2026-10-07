@@ -172,6 +172,61 @@ class MergeManifestsTest(unittest.TestCase):
         self.assertEqual((s["raw_total"], s["missing"]), (3, 1))                  # c.jpg 의 줄이 없다
         self.assertEqual(s["status"], {"검수 완료": 1, "수정 필요": 1})
 
+    # ── 팀원 컴퓨터의 폴더 이름이 출처로 적힌 경우 (실제로 401줄이 조용히 빠졌던 문제) ──────────────────
+    def make_raw(self):
+        raw = self.tmp / "raw"
+        for ds, split, name in (("이물검출_학습데이터1", "train", "a.jpg"), ("이물검출_학습데이터2", "validation", "b.jpg"),
+                                ("이물검출_학습데이터1", "train", "dup.jpg"), ("이물검출_학습데이터2", "train", "dup.jpg")):
+            d = raw / ds / "images" / split
+            d.mkdir(parents=True, exist_ok=True)
+            Image.new("RGB", (10, 10)).save(d / name)
+        return raw
+
+    def test_wrong_source_is_corrected_from_raw_instead_of_dropped(self):
+        raw = self.make_raw()
+        mine = self.csv("나.csv", [row("a.jpg", "수정 완료", ds="이물검출_학습데이터1", split="train")])
+        theirs = self.csv("동훈.csv", [row("b.jpg", "수정 완료", ds="project", split=""),          # 팀원 폴더 이름, split 비어 있음
+                                      row("a.jpg", "수정 완료", ds="data", split="")])               # 내 줄과 같은 사진
+        loaded = mm.load_inputs([mine, theirs])
+        fixed, unresolved = mm.normalize_sources(loaded, mm.raw_name_index(raw))
+        self.assertEqual((fixed, unresolved), ({"동훈.csv": 2}, []))
+        merged, conflicts, dup = mm.merge(loaded)
+        self.assertEqual([(r["출처 데이터셋"], r["원래 split"], r["이미지 파일명"]) for r in merged],
+                         [("이물검출_학습데이터1", "train", "a.jpg"), ("이물검출_학습데이터2", "validation", "b.jpg")])
+        self.assertEqual(dup, 1)                                                                 # a.jpg 는 같은 사진이므로 하나로
+
+    def test_unknown_source_is_reported_and_apply_is_refused(self):
+        raw = self.make_raw()
+        a = self.csv("a.csv", [row("a.jpg", ds="이물검출_학습데이터1", split="train"),
+                               row("없는사진.jpg", ds="project", split="")])
+        out = self.tmp / "out.csv"
+        code, text = self.run_main(a, "--raw", raw, "--apply", "-o", out)
+        self.assertEqual(code, 2)
+        self.assertFalse(out.exists())
+        self.assertIn("없는사진.jpg", text)
+        code, text = self.run_main(a, "--raw", raw)                                              # 미리보기에서도 알려 준다
+        self.assertEqual(code, 0)
+        self.assertIn("알 수 없는 줄 1개", text)
+
+    def test_same_name_in_two_places_uses_the_dataset_to_choose(self):
+        raw = self.make_raw()
+        a = self.csv("a.csv", [row("dup.jpg", ds="이물검출_학습데이터2", split="")])
+        loaded = mm.load_inputs([a])
+        fixed, unresolved = mm.normalize_sources(loaded, mm.raw_name_index(raw))
+        self.assertEqual(unresolved, [])
+        self.assertEqual((loaded[0][1][0]["출처 데이터셋"], loaded[0][1][0]["원래 split"]), ("이물검출_학습데이터2", "train"))
+        b = self.csv("b.csv", [row("dup.jpg", ds="project", split="")])                          # 데이터셋도 모르면 정할 수 없다
+        loaded = mm.load_inputs([b])
+        fixed, unresolved = mm.normalize_sources(loaded, mm.raw_name_index(raw))
+        self.assertEqual([(u[1], u[2]) for u in unresolved], [("dup.jpg", "같은 이름의 사진이 raw 의 여러 곳에 있음")])
+
+    def test_photo_not_in_raw_but_with_full_source_is_kept(self):
+        raw = self.make_raw()
+        a = self.csv("a.csv", [row("다른곳.jpg", ds="DS9", split="train")])
+        loaded = mm.load_inputs([a])
+        fixed, unresolved = mm.normalize_sources(loaded, mm.raw_name_index(raw))
+        self.assertEqual((fixed, unresolved), ({}, []))
+
     def test_blank_rows_are_ignored(self):
         a = self.csv("a.csv", [row("a.jpg"), {h: "" for h in HEADERS}])
         merged, _c, _d = mm.merge(mm.load_inputs([a]))

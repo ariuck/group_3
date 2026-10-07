@@ -7,6 +7,8 @@
 
 규칙
   - 사진 1장 = 1줄. 키 = 이미지 파일명 + 출처 데이터셋 + 원래 split.
+  - 출처 데이터셋·split 이 비었거나 data/raw 에 없는 값(예: 팀원 컴퓨터의 폴더 이름)이면 사진 이름으로 data/raw 에서 찾아 바로잡는다.
+    그래도 알 수 없는 줄이 있으면 **조용히 빼지 않고** 알려 주며, 그 줄이 있으면 저장하지 않는다.
   - 같은 사진이 여러 파일에 있고 내용이 같으면 하나로 합친다.
   - 내용이 다르면(충돌) 아래 순서로 하나를 고르고, 어떤 사진이 어떻게 갈렸는지 알려 준다. 알려 준 사진은 직접 확인한다.
         ① '검수 전' 이 아닌 줄  ② 검수일이 더 늦은 줄  ③ 뒤에 넣은 파일의 줄
@@ -66,6 +68,51 @@ def load_inputs(paths):
         except ManifestError as e:
             raise ManifestError(f"[{f.name}] {e}")
     return loaded
+
+
+def raw_name_index(raw_dir):
+    """{사진 파일명(확장자 포함): [(데이터셋, split), ...]}  — data/raw 의 실제 사진 위치"""
+    index = {}
+    for ds in sorted(p for p in Path(raw_dir).iterdir() if p.is_dir()):
+        images = ds / "images"
+        if not images.is_dir():
+            continue
+        for img in images.rglob("*"):
+            if img.is_file() and img.suffix.lower() in settings.IMAGE_EXTS:
+                index.setdefault(img.name, []).append((ds.name, img.parent.relative_to(images).as_posix()))
+    return index
+
+
+def normalize_sources(loaded, raw_index):
+    """출처 데이터셋·split 이 비었거나 raw 에 없는 조합이면 사진 이름으로 raw 에서 찾아 줄을 바로잡는다. (줄을 직접 고친다)
+
+    돌려주는 값: ({파일 이름: 바로잡은 줄 수}, [(파일 이름, 사진 이름 또는 '', 이유), ...] = 알 수 없는 줄)
+    - raw 에서 같은 이름의 사진이 한 곳뿐이면 그 위치로 바로잡는다. 여러 곳이면 줄에 적힌 데이터셋으로 좁혀 보고, 그래도 못 정하면 알 수 없는 줄.
+    - raw 에 없는 사진이라도 데이터셋과 split 이 둘 다 적혀 있으면 확인할 수 없으므로 그대로 둔다.
+    - 줄이 완전히 비어 있으면(엑셀의 빈 줄) 무시한다.
+    """
+    valid = {pair for pairs in raw_index.values() for pair in pairs}
+    fixed, unresolved = {}, []
+    for f, rows in loaded:
+        for row in rows:
+            name = row["이미지 파일명"]
+            if not name:
+                if any(row[h] for h in HEADERS if h != "No"):
+                    unresolved.append((f.name, "", "이미지 파일명이 비어 있음"))
+                continue
+            if (row["출처 데이터셋"], row["원래 split"]) in valid:
+                continue
+            cands = raw_index.get(name, [])
+            if len(cands) > 1:
+                cands = [c for c in cands if c[0] == row["출처 데이터셋"]] or cands
+            if len(cands) == 1:
+                row["출처 데이터셋"], row["원래 split"] = cands[0]
+                fixed[f.name] = fixed.get(f.name, 0) + 1
+            elif len(cands) > 1:
+                unresolved.append((f.name, name, "같은 이름의 사진이 raw 의 여러 곳에 있음"))
+            elif not (row["출처 데이터셋"] and row["원래 split"]):
+                unresolved.append((f.name, name, "raw 에 없는 사진이고 출처가 비어 있음"))
+    return fixed, unresolved
 
 
 def merge(loaded):
@@ -132,6 +179,7 @@ def main(argv=None):
     ap.add_argument("inputs", nargs="+", help="합칠 CSV 파일들 또는 CSV 가 들어 있는 폴더")
     ap.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT), help="저장할 파일 (기본: manifests/dataset_manifest.csv)")
     ap.add_argument("--apply", action="store_true", help="실제로 저장한다 (없으면 미리보기만)")
+    ap.add_argument("--raw", default=None, help="사진 위치를 확인할 원본 폴더 (기본: data/raw)")
     args = ap.parse_args(argv)
     try:
         loaded = load_inputs(args.inputs)
@@ -146,10 +194,15 @@ def main(argv=None):
             print(f"[{out.name}] {e}")
             return 2
         print(f"저장할 파일({out.name})에 이미 있는 줄도 함께 합칩니다.")
+    raw_dir = Path(args.raw or settings.RAW_DIR)
+    fixed, unresolved = ({}, [])
+    if raw_dir.is_dir():
+        fixed, unresolved = normalize_sources(loaded, raw_name_index(raw_dir))
     merged, conflicts, dup = merge(loaded)
     print("합치는 파일:")
     for f, rows in loaded:
-        print(f"  {f.name}: {len(rows)}줄")
+        note = f"  (출처 데이터셋·split 을 data/raw 에서 찾아 바로잡은 줄 {fixed[f.name]}개)" if f.name in fixed else ""
+        print(f"  {f.name}: {len(rows)}줄{note}")
     print(f"\n합친 결과: {len(merged)}줄  (같은 내용이라 하나로 합친 줄 {dup}개, 내용이 달라 고른 줄 {len(conflicts)}개)")
     for k, entries, winner in conflicts[:10]:
         print(f"  충돌: {k[0]}/{k[1]}/{k[2]}  → {winner} 의 줄을 선택 (" +
@@ -161,9 +214,18 @@ def main(argv=None):
     print(f"작성자가 비어 있는 줄: {s['no_author']}   작성자와 검수자가 같은 줄: {s['same_person']}   미처리 REVIEW: {s['open_review']}")
     if s["missing"] is not None:
         print(f"원본 사진 {s['raw_total']}장 중 검수표에 줄이 없는 사진: {s['missing']}장")
+    if unresolved:
+        print(f"\n⚠ 사진 위치(출처 데이터셋·split)를 알 수 없는 줄 {len(unresolved)}개가 있어 합친 결과에 들어가지 않았습니다.")
+        for fname, photo, why in unresolved[:8]:
+            print(f"  - [{fname}] {photo or '(이름 없음)'}: {why}")
+        if len(unresolved) > 8:
+            print(f"  … 외 {len(unresolved) - 8}개")
     if not args.apply:
         print("\n미리보기입니다. 저장하려면 --apply 를 붙이세요.")
         return 0
+    if unresolved:
+        print("\n알 수 없는 줄이 있어 저장하지 않았습니다. 해당 파일을 확인한 뒤 다시 실행하세요.")
+        return 2
     backup = None
     try:
         if out.is_file():
