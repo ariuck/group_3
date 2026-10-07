@@ -231,14 +231,13 @@ PAGE = r"""<!doctype html>
  .empty{color:var(--muted);font-size:14px;padding:16px 4px;text-align:center}
  .drop{border:2px dashed var(--line);border-radius:16px;padding:30px 16px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg);display:block;width:100%;font-family:inherit;color:inherit}
  .drop:hover,.drop:focus-visible{border-color:var(--accent);outline:none} .drop.over{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.01)}
+ .drop *{pointer-events:none}
  .drop svg{width:44px;height:44px;color:var(--accent);margin-bottom:6px} .drop .big{font-size:16.5px;font-weight:700} .drop .small{color:var(--muted);font-size:13px;margin-top:3px}
  .qitem{padding:10px 4px;border-top:1px solid var(--line);font-size:14px} .qitem:first-child{border-top:0}
  .qhead{display:flex;justify-content:space-between;gap:10px} .qname{font-weight:600;word-break:break-all}
  .qstate{flex:none;font-size:13px;font-weight:600} .qmsg{font-size:13px;margin-top:2px}
  #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);background:#1c2433;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .22s;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.25)}
  #toast.show{opacity:1;transform:translate(-50%,0)} #toast.bad{background:#b3261e}
- #dropveil{position:fixed;inset:0;background:rgba(51,102,255,.14);border:4px dashed var(--accent);z-index:40;display:none;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--accent);pointer-events:none}
- #dropveil.on{display:flex}
  @media (max-width:560px){main{padding:14px 10px 70px}.card{padding:15px 14px}nav.tabs button{font-size:13px;padding:9px 4px}nav.tabs svg{display:none}.pin input{width:50px;height:60px}.pill{display:none}}
 </style></head><body><main>
 
@@ -456,7 +455,6 @@ PAGE = r"""<!doctype html>
  </div>
 </section>
 
-<div id="dropveil">여기에 놓으면 바로 올라갑니다</div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -587,13 +585,11 @@ const drop=$("drop");
 ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over")}));
 ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over")}));
 drop.addEventListener("drop",e=>{e.stopPropagation();uploadFiles(e.dataTransfer.files)});
-// 페이지 아무 곳에나 놓아도 올라간다 (브라우저가 파일을 열어 버리는 것도 막는다)
-let depth=0;
+// 점선 영역 밖에 놓으면 브라우저가 파일을 열어 버려서 이 페이지를 벗어나므로, 그것만 막고 영역을 알려 준다
 const hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
-window.addEventListener("dragenter",e=>{if(hasFiles(e)){depth++;$("dropveil").classList.add("on")}});
-window.addEventListener("dragleave",e=>{if(hasFiles(e)){depth=Math.max(0,depth-1);if(!depth)$("dropveil").classList.remove("on")}});
 window.addEventListener("dragover",e=>{if(hasFiles(e))e.preventDefault()});
-window.addEventListener("drop",e=>{if(!hasFiles(e))return;e.preventDefault();depth=0;$("dropveil").classList.remove("on");uploadFiles(e.dataTransfer.files)});
+window.addEventListener("drop",e=>{if(!hasFiles(e))return;e.preventDefault();
+ if(!$("filesmain").hidden){showTab("files");toast("점선 영역 안에 놓아 주세요",true)}else toast("먼저 접속 번호를 입력하세요",true)});
 
 // 새로고침해도 번호를 다시 묻지 않게 (이 탭을 닫으면 지워진다)
 const savedPin=sstore.get("pin");if(savedPin&&/^\d{4}$/.test(savedPin)){unlock(savedPin).then(()=>{if(!$("pinbox").hidden){$("pinmsg").textContent="서버가 다시 켜져서 번호가 바뀌었을 수 있어요. 새 번호를 입력하세요."}})}
