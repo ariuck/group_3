@@ -39,7 +39,7 @@ from src.bbox.bbox_edit import HANDLE_CURSORS, handle_points, hit_handle, move_b
 from src.bbox.bbox_manager import MIN_DRAG_PX, box_problems, find_box_at, make_box
 from src.bbox.history import History
 from src.bbox.viewport import ZOOM_STEP, Viewport
-from src.data_paths import find_raw_image, is_inside, locate_in_raw, work_label_path
+from src.data_paths import find_raw_image, is_inside, locate_in_raw, remove_zone_markers, work_label_path
 from src.manifest.manifest_writer import (STATUS_DONE, STATUS_EDITED, STATUS_REVIEW, ManifestError, read_human,
                                           read_status_map, record_save, status_of)
 from src.ui.folder_drop import make_root, pick_target, register_drop
@@ -1759,6 +1759,9 @@ class Day1Labeler:
 # ============================================================================
 
 def main():
+    removed = remove_zone_markers()      # 탐색기로 라벨을 복사할 때 따라온 'Zone.Identifier' 표시 파일을 정리한다
     root = make_root()          # tkinterdnd2 가 있으면 폴더 끌어다 놓기가 켜진다
-    Day1Labeler(root)
+    app = Day1Labeler(root)
+    if removed:
+        app.set_status(f"작업 폴더에서 Windows 가 만든 표시 파일(Zone.Identifier) {removed}개를 정리했습니다. 라벨(TXT)은 그대로입니다.")
     root.mainloop()
