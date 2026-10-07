@@ -307,9 +307,9 @@ reports/test_report.md
 
 | 단계 | 상태 |
 |---|---|
-| Golden Test | 실제 데이터 900장 읽기 전용 점검(짝·Validation·Round-trip)과 자동 시험으로 11/12 확인, 화면 표시는 사람 확인 `미확인` |
-| Pilot Test (20~50장) | 미실시 — 사람이 실제 작업 흐름으로 해 보고 기록해야 함 |
-| Final Acceptance Test | 미실시 — 900장 검수 완료 후 |
+| Golden Test | 실제 데이터 900장 읽기 전용 점검(짝·Validation·Round-trip)과 자동 시험으로 11/12 확인, 화면 표시는 사람 확인 `확인 예정` |
+| Pilot Test (20~50장) | 진행 전 — 사람이 실제 작업 흐름으로 해 보고 기록해야 함 |
+| Final Acceptance Test | 진행 전 — 900장 검수 완료 후 |
 
 자동 시험은 가짜 데이터로 돌아가며, 한 번에 실행하려면 다음과 같이 합니다.
 
