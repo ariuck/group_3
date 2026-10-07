@@ -87,7 +87,7 @@ group_3/
 │
 ├── manifests/
 │   ├── dataset_manifest.xlsx     검수표 (팀이 입력하는 틀)
-│   └── dataset_manifest.csv      검수표와 같은 19칸의 CSV 머리글
+│   └── dataset_manifest.csv      저장할 때 프로그램이 만드는 검수표 CSV (회사 데이터라 Git 제외)
 │
 ├── reports/                      qa_summary.md, test_report.md (작성 예정)
 └── tests/
@@ -266,7 +266,7 @@ manifests/dataset_manifest.xlsx
   - 상태 · 발견된 문제 · 작성자 · 검수자 · 검수일 · 비고(수정 내용)
   - 출처 데이터셋 · 원래 split
 - 시트 `Class 기준`: Class ID / 이물 종류 / 사용 기준
-- 같은 19칸의 CSV 머리글: `manifests/dataset_manifest.csv`
+- 저장할 때 프로그램이 만드는 CSV: `manifests/dataset_manifest.csv` (같은 19칸, 실제 사진 파일명이 들어 있어 **Git 에 올리지 않음**)
 
 상태는 목록에서 고릅니다.
 
