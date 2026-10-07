@@ -263,7 +263,7 @@ PAGE = r"""<!doctype html>
   <li>검수자 칸에 <b>내 이름을 한 번</b> 씁니다. 다음 사진부터는 자동으로 채워집니다.</li>
   <li>한 장씩 보고: 맞으면 <kbd>Enter</kbd> · 틀리면 BBox 를 고치고 <kbd>Enter</kbd> · 애매하면 <kbd>R</kbd> 후 이유를 쓰고 <kbd>Enter</kbd></li>
   <li><b>이미지 유형도 꼭 고르세요.</b> 안 고르면 <kbd>Enter</kbd>가 넘어가지 않고 그 칸이 빨갛게 깜빡입니다. <kbd>Ctrl</kbd>+<kbd>1</kbd> 김치+대상 객체 · <kbd>Ctrl</kbd>+<kbd>2</kbd> 정상 김치 · <kbd>Ctrl</kbd>+<kbd>3</kbd> 대상 객체 단독 · <kbd>Ctrl</kbd>+<kbd>4</kbd> 판단 어려움</li>
-  <li>BBox 를 지울 때는 오른쪽 <b>라벨 목록의 [검수 모드]</b>(또는 <kbd>X</kbd>)를 켜면 줄마다 <b>✕</b>가 생겨서 눌러 바로 지울 수 있습니다. 잘못 지웠으면 <kbd>Ctrl</kbd>+<kbd>Z</kbd></li></ol>
+  <li>BBox 를 지울 때는 선택(클릭 또는 <kbd>Tab</kbd>)한 뒤 <kbd>Delete</kbd> 를 누릅니다. 잘못 지웠으면 <kbd>Ctrl</kbd>+<kbd>Z</kbd></li></ol>
   <div class="warn"><b>내 번호 범위(<span class="rng">내 범위</span>)의 사진만 저장하세요.</b> 다른 사람 범위를 저장하면 합칠 때 서로 덮어씁니다.</div>
  </div></div>
 

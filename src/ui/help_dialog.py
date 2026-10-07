@@ -28,7 +28,6 @@ SHORTCUT_GROUPS = [
         ("Tab / Shift + Tab", "다음·이전 BBox 선택", ["<Tab>", "<Shift-Tab>"]),
         ("Shift + 방향키", "선택한 BBox 를 1px 이동 (Ctrl 도 누르면 10px)", ["<Shift-Left>", "<Control-Shift-Left>"]),
         ("Delete", "선택한 BBox 삭제", ["<Delete>"]),
-        ("X", "검수 모드 켜기·끄기 — 켜면 라벨 목록 오른쪽에 ✕ 가 생겨서 눌러 바로 지워요 (Ctrl+Z 로 되돌려요)", ["x", "X"]),
         ("Ctrl + Z  /  Ctrl + Y", "되돌리기 / 다시 실행", ["<Control-z>", "<Control-y>"]),
         ("Esc", "드래그 취소, 아니면 선택 해제", ["<Escape>"]),
     ]),
