@@ -20,7 +20,7 @@
 | 작업 상태 | PENDING / WORKING / PASS / EDITED / REVIEW / REVIEWED / FINAL | `상태` = 검수 전 / 검수 완료 / 수정 필요 / 수정 완료 / 제외 |
 | 검수 사유 | 자유 문장(`issue`) | `발견된 문제`, `비고(수정 내용)` 칸 |
 | Class 설정 | `config/classes.json` | `configs/classes.yaml` |
-| 기준 문서 | 1일차_산출물 안의 기준 정리 | `docs/project_baseline.md`, `class_guide.md`, `bbox_guide.md` |
+| 기준 문서 | 1일차_산출물 안의 기준 정리 (통합됨) | `docs/project_baseline.md`, `class_guide.md`, `bbox_guide.md` — Class/BBox 기준은 이 두 기준서 한 곳에서만 고친다 |
 
 1일차 문서의 Manifest 초안(`3_Dataset_Manifest_초안`)은 칸의 **뜻을 이해하기 위한 참고**로만 보고,
 실제 작업 기록은 검수표(`dataset_manifest.xlsx`) 틀로 합니다.
