@@ -63,6 +63,12 @@ class QaSummaryTest(unittest.TestCase):
         self.assertIn("전체 **4장**", md)
         self.assertIn("미처리 REVIEW **0건**", md)
         self.assertIn("검수일", md)
+        self.assertIn("교차검수 범위", md)
+        self.assertIn("REVIEW 이력이 있던", md)
+        self.assertIn("Human Final QA", md)
+        self.assertIn("점검 40장", md)
+        self.assertIn("최종 잔여 이슈 **없음**", md)
+        self.assertIn("100% 가상 생성", md)
         self.assertNotIn("【기입】", md)
         self.assertNotIn("a.jpg", md)                                # 사진 파일명은 넣지 않는다
         self.assertIn("최종 FAIL **0건**", md)
