@@ -327,13 +327,22 @@ python tests/day1_selftest.py          # 1일차 자체 점검만
 
 ## 14. FINAL Dataset
 
-최종 QA 가 완료된 데이터는 다음 위치에 정리합니다. (작성 예정)
+최종 QA 가 완료된 데이터는 다음 위치에 정리합니다.
 
 ```text
 data/final/
-├── images/
-└── labels/
+├── 이물검출_학습데이터1/   images/train · labels/train        (500장)
+├── 이물검출_학습데이터2/   images/train · labels/train        (220장)
+│                          images/validation · labels/validation (180장)
+├── classes.txt            Class 0~6 이름 (번호 순서)
+└── 검수표.csv             들어간 900장의 검수 기록
 ```
+
+- **데이터셋·split 구조를 그대로 유지합니다.** 합치거나 다시 나누지 않습니다. (합칠지·재분할할지는 교과 8 에서 정합니다. [Project Baseline](docs/standards/project_baseline.md) §1)
+- 사진은 RAW 의 복사본, 라벨은 `data/work` 의 검수한 라벨입니다.
+- 만드는 방법: `python tools/build_final.py` (확인만) → `python tools/build_final.py --apply` (만들기). 이미 있으면 `--overwrite` (옛것은 `data/backup` 으로 옮김).
+- 아래 조건 중 하나라도 어긋나면 만들지 않습니다: 모든 사진이 검수표에 있고 상태가 `검수 완료`·`수정 완료`, 검수자 칸이 채워져 있고 작성자와 다름, 짝이 맞고 Validation 치명적 오류 0건. (`검수 전`·`수정 필요`·`제외` 사진은 최종본에 넣지 않습니다.)
+- FINAL 데이터는 회사 데이터라 Git 에 올리지 않습니다. (`data/` 는 `.gitignore`)
 
 FINAL 데이터는 교과 8 Object Detection 학습에 사용합니다.
 
