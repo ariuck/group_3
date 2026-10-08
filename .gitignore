@@ -35,3 +35,8 @@ reports/validation_report.csv
 manifests/dataset_manifest.csv
 # 팀원에게 받은 검수표, 합친 결과(merged_manifest.csv) 등 manifests 안의 CSV 는 모두 제외
 manifests/*.csv
+manifests/backup/
+
+# LMS 제출용 개인 산출물 폴더 및 중복 산출물 방지
+/07_Dataset_Manifest/
+
