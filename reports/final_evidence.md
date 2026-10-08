@@ -21,8 +21,8 @@
 ```text
 data/final/
 ├── images/
-│   ├── train/                 학습용 이미지 (.jpg/.png) - 720장
-│   └── validation/            검증용 이미지 (.jpg/.png) - 180장
+│   ├── train/                 학습용 이미지 (.jpg) - 720장
+│   └── validation/            검증용 이미지 (.jpg) - 180장
 └── labels/
     ├── train/                 학습용 YOLO TXT (train 이미지와 1:1 매칭) - 720개
     └── validation/            검증용 YOLO TXT (validation 이미지와 1:1 매칭) - 180개

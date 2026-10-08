@@ -110,7 +110,7 @@
 |---|---|:-:|
 | `data/raw/` | 회사 제공 원본. 읽기만 한다 (프로그램이 저장을 거부) | 제외 |
 | `data/work/` | 작업본. RAW 와 같은 구조로 수정한 라벨(TXT)만 저장 | 제외 |
-| `data/final/` | 최종본. `images/` · `labels/` · `classes.txt` · `검수표.csv` · `dataset_manifest.xlsx` | 제외 |
+| `data/final/` | 최종본. `images/{train,validation}` · `labels/{train,validation}` · `classes.txt` · `검수표.csv` · `dataset_manifest.xlsx` | 제외 |
 | `data/backup/`, `data/share/` | 합치기·교체 전 백업, 결과 zip | 제외 |
 | `manifests/dataset_manifest.csv` | 작업 상태 기록(검수표). 실제 사진 파일명이 있어 회사 데이터로 본다 | 제외 |
 
@@ -190,7 +190,7 @@ Git 기록은 2026-10-06 ~ 10-08 에 걸쳐 있고, 날짜별 커밋 수는 10-0
 
 ### 마무리 — FINAL 데이터와 제출 문서 (2026-10-08)
 
-- **FINAL 데이터**: 조건(검수 상태·검수자·짝·Validation)을 채운 사진·라벨만 `data/final/images`, `labels` 로 정리(`build_final`). 사진 이름이 겹치지 않아 한 폴더에 모으고 출처·원래 split 은 `검수표.csv` 에 남겼다.
+- **FINAL 데이터**: 조건(검수 상태·검수자·짝·Validation)을 채운 사진·라벨만 `data/final/images/{train,validation}`, `labels/{train,validation}` 로 정리(`build_final`). 원래 train / validation 구분을 폴더로 유지하고(720 / 180), 출처 데이터셋은 `검수표.csv` 에 남겼다.
 - **보고서**: QA Summary(`qa_summary`), FINAL 증빙(`final_evidence`), 제출용 엑셀(`export_manifest_xlsx`)을 도구로 만들어 숫자를 다시 만들 수 있게 했다.
 - **문서**: 교과 8 Handoff, Test Report(4일차 오류·Final Acceptance), README, 이 문서를 정리했다. 제출 안내 문서의 11개 산출물과 우선순위에 맞춰 파일 위치를 확인했다.
 - **남은 것**: 화면 캡처·시연 영상, 푸시. (§11)
