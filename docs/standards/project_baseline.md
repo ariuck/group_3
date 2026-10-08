@@ -60,7 +60,7 @@
 | 1. FINAL YOLO 라벨 데이터 및 증빙 | 손상우 | `data/final` 폴더 구조·이미지 수량·TXT 수량 캡처, 대표 검수 완료 이미지와 대표 YOLO TXT 정리 |
 | 3. Dataset Manifest | 지혜성 | 안내 문서의 칸 이름(`file_name` · `source_dataset` · `original_split` · `status` · `qa_status` 등) 기준의 제출용 Manifest 정리 |
 | 5. 라벨링 프로그램 | 김동훈 | 프로그램 실행 화면 캡처 2~3장, 짧은 시연 영상(Load → 수정 → 저장 → Reload → Validation) |
-| 9. Test Report | 김석범 | 사람이 직접 하는 시험(4K 화면 표시, 확대 상태 BBox 작성·저장·복원) 수행·기록, 최종 실측 확인 |
+| 9. Test Report | 김석범 | 사람이 직접 하는 시험(4K 화면 표시, 확대 상태 BBox 작성·저장·복원) 수행·기록, Pilot Test(20~50장) 수행·기록, 최종 실측 확인 |
 | 그 밖의 산출물 | 강동연 (PM) | 문서·도구 작성과 정리, `main` 병합, 푸시 |
 
 ### 실제 기여 (Git 기록과 검수표 기준)
@@ -332,9 +332,10 @@ docs: 검수 배정을 실제 분담으로 갱신
 | 항목 | 내용 |
 |---|---|
 | FINAL 데이터 증빙 (손상우) | 폴더 구조·이미지 수량·TXT 수량 캡처, 대표 검수 완료 이미지 3~5장. 실제 사진이 나오므로 외부에 공유하지 않는다 (NDA) |
-| Dataset Manifest 제출용 정리 (지혜성) | 안내 문서의 칸 이름 기준으로 정리. 프로그램이 쓰는 `manifests/dataset_manifest.csv` 는 고치지 않고 복사본으로 만든다 |
+| Dataset Manifest (지혜성) | 안내 문서의 칸 이름 기준 제출용 파일을 만들었으나, 실제 사진 파일명이 들어 있어 저장소에서는 뺐다. Manifest 는 프로그램이 쓰는 `manifests/dataset_manifest.csv`(Git 제외)로 별도 제출한다 |
 | 프로그램 증빙 (김동훈) | 프로그램 실행 화면 2~3장, 짧은 시연 영상 |
 | 검수표의 `위치 맞음`·`Class 맞음`·`누락 객체 여부` | 900줄 모두 비어 있음. 검수 상태로 갈음했으며, 채울지는 팀이 정한다 |
+| Pilot Test (김석범) | 20~50장을 실제 작업 흐름으로 처리하고 시작·종료 시각, 처리 장수, 결함을 Test Report §2 에 기록 |
 | 푸시 | `main` 과 `feature/ariuck` 을 GitHub 에 푸시 (VS Code). 올리기 전에 저장소 공개 범위와 문서 속 회사 데이터 설명을 확인한다 |
 
 ---
