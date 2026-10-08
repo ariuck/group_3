@@ -10,7 +10,7 @@
 - Label Format: YOLO Detection TXT (`class_id x_center y_center width height`, 0~1 비율값)
 - Class: 0~6 (회사 제공 번호 그대로, 재번호 금지) — 설정 파일 `configs/classes.yaml`
 - Class 4(고무장갑): 사용하지 않음 (발견 시 삭제하지 않고 REVIEW)
-- 기존 `train / validation` 구분과 데이터셋 출처는 **유지**한다 (섞거나 합치지 않음)
+- 기존 `train / validation` 구분과 데이터셋 출처는 **기록으로 유지**한다 (검수표의 `출처 데이터셋`·`원래 split` 칸). 검수는 합치지 않고 데이터셋별로 했고, `train / validation` 을 다시 나누는 것은 교과 8 에서 한다
 - RAW 데이터 수정 금지
 
 ## 2. 우리 팀 작업 기준
@@ -37,7 +37,7 @@
 - 처음에는 5명이 180장씩 맡아 옆 사람이 검수하는 순환 방식(1→2→3→4→5→1)을 생각했으나, 검수에 참여한 3명(이후영 · 지혜성 · 김동훈)이 위처럼 나눠서 진행했다.
 - REVIEW 최종 판단: 팀장 + 검수자 【기입】
 - 작업 중 데이터 저장 위치: `data/work/` (RAW 와 같은 폴더 구조)
-- 최종 QA 완료 데이터 저장 위치: `data/final/` — 데이터셋·split 구조를 그대로 유지한다. 만드는 방법은 [README §14](../../README.md)
+- 최종 QA 완료 데이터 저장 위치: `data/final/images/` · `data/final/labels/` (출처·원래 split 은 `검수표.csv` 에 기록). 만드는 방법은 [README §14](../../README.md), 인계는 [교과 8 Handoff](../handoff/subject08_handoff.md)
 - 작업 상태 기록: `manifests/dataset_manifest.xlsx` (작성 방법 [manifest_guide.md](manifest_guide.md))
 
 ### 역할 분담
@@ -103,6 +103,6 @@ fix: BBox 저장 위치 오류 수정
 | 900장 전체 검수 완료 | **달성** — 검수 완료 674 · 수정 완료 226, 검수자 칸 900줄 모두 기록, 작성자와 검수자가 같은 줄 0 |
 | FINAL 데이터 정리 완료 | **달성** — `data/final/` 900장 + 라벨 900개 (`tools/build_final.py`) |
 
-검수 결과 요약: BBox 수 원본 4399 → 최종 4561 (131장에서 수정, 늘어난 사진 128 · 줄어든 사진 3). 병해·갈변(Class 5)이 313 → 416 으로 가장 많이 보강되었다. 정상 김치 사진은 0장이고, 이미지 유형은 김치+대상 객체 749 · 대상 객체 단독 150 · 판단 어려움 1이다.
+검수 결과 요약: BBox 수 원본 4399 → 최종 4561 (추가 166 · 수정 173 · 삭제 4, 라벨이 원본과 달라진 사진 235장). 병해·갈변(Class 5)이 313 → 416 으로 가장 많이 보강되었다. 정상 김치 사진은 0장이고, 이미지 유형은 김치+대상 객체 749 · 대상 객체 단독 150 · 판단 어려움 1이다.
 
 > 위 숫자는 검수표와 `data/work` 를 읽어 센 값이다. 라벨을 더 고치면 `tools/build_final.py --apply --overwrite` 로 최종본을 다시 만들고 숫자를 갱신한다.
