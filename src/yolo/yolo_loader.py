@@ -24,6 +24,17 @@ def find_raw_label(image_path):
     return None
 
 
+def parse_class_id(text):
+    """Class 번호 글자를 정수로. '2' 와 '2.0' 은 받아 주고, '2.5' 같은 값은 ValueError."""
+    try:
+        return int(text)
+    except ValueError:
+        value = float(text)
+        if not value.is_integer():
+            raise
+        return int(value)
+
+
 def read_yolo_file(txt_path, img_w, img_h):
     """TXT 를 읽어 BBox 목록(원본 픽셀 좌표)으로 만든다.
 
@@ -33,7 +44,7 @@ def read_yolo_file(txt_path, img_w, img_h):
     ※ TXT 가 비어 있으면 boxes 도 빈 목록이다. 이건 '오류'가 아니라 '정상 김치(이물 없음)'일 수 있다.
     """
     boxes, bad_lines = [], 0
-    for line in Path(txt_path).read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in Path(txt_path).read_text(encoding="utf-8-sig", errors="replace").splitlines():   # utf-8-sig: Windows 가 붙이는 BOM 은 무시
         line = line.strip()
         if not line:
             continue
@@ -41,7 +52,7 @@ def read_yolo_file(txt_path, img_w, img_h):
         try:
             if len(parts) != 5:
                 raise ValueError("필드가 5개가 아님")
-            cls = int(parts[0])
+            cls = parse_class_id(parts[0])
             xc, yc, w, h = (float(p) for p in parts[1:])
         except ValueError:
             bad_lines += 1                     # 형식 오류: 개수만 세어 두고 계속 진행
@@ -49,3 +60,26 @@ def read_yolo_file(txt_path, img_w, img_h):
         x1, y1, x2, y2 = yolo_to_pixel(xc, yc, w, h, img_w, img_h)
         boxes.append({"cls": cls, "x1": x1, "y1": y1, "x2": x2, "y2": y2})
     return boxes, bad_lines
+
+
+def read_yolo_rows(txt_path):
+    """TXT 를 (class, x_center, y_center, width, height) 목록으로 읽는다 (좌표 변환 없음).
+    읽을 수 없는 줄은 건너뛰고, 파일이 없으면 빈 목록."""
+    p = Path(txt_path) if txt_path else None
+    if p is None or not p.is_file():
+        return []
+    rows = []
+    for line in p.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        parts = line.split()
+        try:
+            if len(parts) != 5:
+                raise ValueError
+            rows.append((parse_class_id(parts[0]), *(float(v) for v in parts[1:])))
+        except ValueError:
+            continue
+    return rows
+
+
+def label_signature(txt_path, digits=5):
+    """두 TXT 가 같은 내용인지 비교하기 위한 값 (소수 오차를 무시하도록 반올림 + 정렬)."""
+    return sorted((c, *(round(v, digits) for v in vals)) for c, *vals in read_yolo_rows(txt_path))

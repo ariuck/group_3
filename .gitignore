@@ -1,10 +1,15 @@
 # ── 회사 제공 데이터(NDA): 실제 이미지·라벨·최종 데이터는 Git 에 올리지 않는다 ──
-data/raw/*
-data/work/*
-data/final/*
-!data/raw/.gitkeep
-!data/work/.gitkeep
-!data/final/.gitkeep
+# data/ 아래는 빈 폴더가 보이도록 하는 .gitkeep 만 남기고 전부 제외한다.
+# (raw·work·final 어디에 두든, data/ 바로 아래에 두든 모두 막힌다)
+data/**
+!data/
+!data/*/
+!data/**/.gitkeep
+
+# ── 실수로 저장소 맨 위에 데이터셋 폴더를 놓은 경우도 막는다 ──
+/이물검출_학습데이터*/
+/images/
+/labels/
 
 # ── 원본 이미지·압축 파일이 실수로 들어가지 않도록 (문서용 샘플 캡처 PNG 는 허용) ──
 *.jpg
@@ -22,3 +27,11 @@ venv/
 .vscode/
 __pycache__/
 *.pyc
+
+# 프로그램이 만드는 검증 결과 (매번 새로 생성)
+reports/validation_report.csv
+
+# 검수 기록이 쌓이는 검수표 CSV: 실제 사진 파일명이 들어 있어 회사 데이터로 본다. 저장할 때 프로그램이 만들고 Git 에는 올리지 않는다.
+manifests/dataset_manifest.csv
+# 팀원에게 받은 검수표, 합친 결과(merged_manifest.csv) 등 manifests 안의 CSV 는 모두 제외
+manifests/*.csv

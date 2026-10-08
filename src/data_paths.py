@@ -45,3 +45,42 @@ def work_label_path(image_path):
     if dataset is None:
         return settings.WORK_DIR / "_RAW밖" / f"{stem}.txt"
     return settings.WORK_DIR.joinpath(dataset, "labels", *([split] if split else []), f"{stem}.txt")
+
+
+def remove_zone_markers(work_dir=None):
+    """작업 폴더(data/work) 안의 'Zone.Identifier' 표시 파일을 지우고 지운 개수를 돌려준다.
+
+    Windows 는 인터넷에서 받은 파일에 '받은 곳' 표시를 붙이는데, 그런 파일을 탐색기로 WSL 폴더에 복사하면
+    '파일.txtZone.Identifier' 라는 별도 파일이 txt 마다 같이 생긴다. 내용은 표시뿐이라 지워도 라벨에는 영향이 없다.
+    이름이 정확히 'Zone.Identifier' 로 끝나는 일반 파일만, 작업 폴더 안에서만 지운다. (RAW 와 다른 폴더는 건드리지 않는다)
+    """
+    work_dir = Path(work_dir or settings.WORK_DIR)
+    if not work_dir.is_dir():
+        return 0
+    removed = 0
+    for p in work_dir.rglob("*Zone.Identifier"):
+        if p.is_file() and not p.is_symlink():
+            try:
+                p.unlink()
+                removed += 1
+            except OSError:
+                pass                                # 지우지 못해도 프로그램 동작에는 영향이 없다
+    return removed
+
+
+def find_raw_image(rel_path):
+    """검증 결과의 상대 경로('데이터셋/split/파일이름' — 확장자 없음)로 RAW 안의 이미지를 정확히 찾는다. 없으면 None.
+
+    예) 'DS2/validation/a'  →  data/raw/DS2/images/validation/a.jpg  (대문자 .JPG 도 찾는다)
+    파일 이름만으로 찾으면 다른 데이터셋·split 에 같은 이름이 있을 때 엉뚱한 사진이 열릴 수 있어서 경로 전체를 쓴다.
+    """
+    parts = [p for p in str(rel_path).replace("\\", "/").split("/") if p]
+    if len(parts) < 2:
+        return None
+    folder = Path(settings.RAW_DIR).joinpath(parts[0], "images", *parts[1:-1])
+    if not folder.is_dir():
+        return None
+    for p in sorted(folder.iterdir()):
+        if p.is_file() and p.stem == parts[-1] and p.suffix.lower() in settings.IMAGE_EXTS:
+            return p
+    return None

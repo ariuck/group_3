@@ -15,6 +15,7 @@ RAW_DIR = PROJECT_DIR / "data" / "raw"                 # 회사 제공 원본 (�
 WORK_DIR = PROJECT_DIR / "data" / "work"               # 작업본 (저장 위치)
 FINAL_DIR = PROJECT_DIR / "data" / "final"             # 최종본
 CONFIG_PATH = PROJECT_DIR / "configs" / "classes.yaml"  # Class 기준 파일
+MANIFEST_PATH = PROJECT_DIR / "manifests" / "dataset_manifest.csv"   # 검수표(Manifest) CSV
 
 IMAGE_EXTS = {".jpg", ".jpeg"}
 DEFAULT_COLOR = "#ff00ff"      # 설정에 색이 없거나 Class 범위 밖일 때
