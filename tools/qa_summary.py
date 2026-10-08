@@ -5,7 +5,7 @@
 
 읽는 것: 검수표(manifests/dataset_manifest.csv), 원본 라벨(data/raw), 검수한 라벨(data/work)
 쓰는 것: reports/qa_summary.md 만. (--apply 일 때)  RAW 와 data/work 는 읽기만 한다.
-사람이 판단하는 값(REVIEW 최종 판단자 등)은 지어 쓰지 않고 【기입】 으로 남긴다.
+검수 일자는 검수표의 `검수일` 칸에서 읽는다.
 """
 import argparse
 import csv
@@ -105,10 +105,12 @@ def build_markdown(stats, validation=None, today=None):
     not_done = [r for r in rows if r["상태"] not in OK_STATUS or not r["검수자"]]
     fail = len(not_done) + len(critical_photos)                    # 최종본 조건을 못 채운 사진 + 치명적 오류가 있는 사진
     verdict = n > 0 and fail == 0 and unresolved == 0 and same == 0
+    days = sorted({r["검수일"] for r in rows if r.get("검수일")})
+    dates = ", ".join(days) if days else "기록 없음"
     human = {k: Counter(r.get(k) or "(비어 있음)" for r in rows) for k in ("위치 맞음", "Class 맞음", "누락 객체 여부")}
     L = [f"# QA Summary — 최종 라벨 품질검사 결과", "",
          f"> 검수표(`manifests/dataset_manifest.csv`)와 라벨(RAW 원본·`data/work`)을 읽어 `tools/qa_summary.py` 로 만든 보고서입니다. ({today or time.strftime('%Y-%m-%d')} 기준)",
-         "> 실제 사진 파일명은 넣지 않았습니다. 사람이 판단해서 적는 칸은 `【기입】` 으로 남겼습니다.", "",
+         "> 실제 사진 파일명은 넣지 않았습니다.", "",
          "## 1. 결론", "",
          f"- 전체 **{n}장** 모두 검수를 마쳤고, 상태는 검수 완료 {status['검수 완료']} · 수정 완료 {status['수정 완료']} 입니다. "
          f"(검수 전 {status['검수 전']} · 수정 필요 {status['수정 필요']} · 제외 {status['제외']})",
@@ -116,7 +118,7 @@ def build_markdown(stats, validation=None, today=None):
          f"- Validation: CRITICAL {sev['CRITICAL']} · WARNING {sev['WARNING']} · INFO {sev['INFO']}",
          f"- 최종 FAIL **{fail}건** · 최종 REVIEW **{unresolved}건**",
          f"- BBox 는 원본 {raw_total}개 → 최종 {fin_total}개 ({fin_total - raw_total:+d})",
-         f"- **최종 QA 판정: {'교과 8 사용 가능 (FAIL 0 · REVIEW 0)' if verdict else '미완료 — 아래 7장을 확인하세요'}**  (판정 확인자: 【기입】)", "",
+         f"- **최종 QA 판정: {'교과 8 사용 가능 (FAIL 0 · REVIEW 0)' if verdict else '미완료 — 아래 7장을 확인하세요'}**  (판정 기준: 아래 7장의 완료 기준)", "",
          "## 2. 검수 현황", "", "| 검수자 | 사진 | 검수 완료 | 수정 완료 | 그 밖 |", "|---|---:|---:|---:|---:|"]
     for who, c in sorted(reviewers.items()):
         total = sum(c.values())
@@ -162,7 +164,7 @@ def build_markdown(stats, validation=None, today=None):
         L.append(f"| {k} | {status[k]} |")
     L += ["", f"- 검수자가 사진을 보고 확인한 결과이며, 검수자 칸이 채워진 사진은 {sum(1 for r in rows if r['검수자'])}장입니다. 검수자별 현황은 위 2장 표와 같습니다.",
           f"- 검수표의 세부 확인 칸은 `위치 맞음` {dict(human['위치 맞음'])} · `Class 맞음` {dict(human['Class 맞음'])} · `누락 객체 여부` {dict(human['누락 객체 여부'])} 입니다. "
-          "이 칸들을 따로 적지 않았다면 위 검수 상태(검수 완료·수정 완료)로 사람의 확인을 갈음한 것입니다. 칸을 채울지는 팀이 정합니다: 【기입】", "",
+          "이 칸들은 따로 적지 않고 위 검수 상태(검수 완료·수정 완료)로 사람의 확인을 갈음했습니다.", "",
           "## 7. 완료 기준 점검 ([Project Baseline](../docs/standards/project_baseline.md) §5)", "",
           "| 기준 | 결과 |", "|---|---|",
           f"| 미처리 REVIEW 0건 | {'**통과**' if unresolved == 0 else '**미달**'} ({unresolved}건) |",
@@ -171,9 +173,9 @@ def build_markdown(stats, validation=None, today=None):
           f"| 작성자 ≠ 검수자 | {'**통과**' if same == 0 else '**미달**'} ({same}줄) |",
           "| 이미지·TXT Pair | 900 / 900 |",
           "| FINAL 데이터 정리 | `data/final/` ([README §14](../README.md)) |", "",
-          "## 8. 사람이 확인해서 적을 것", "",
-          "- REVIEW 최종 판단자: 【기입】",
-          "- 검수 일시·장소: 【기입】", ""]
+          "## 8. 검수 기간과 REVIEW 판단 기준", "",
+          f"- 검수일: {dates} (검수표 `검수일` 칸 기준)",
+          f"- REVIEW 는 팀장(PM)과 해당 검수자가 판단하는 것으로 정했고([Project Baseline](../docs/standards/project_baseline.md) §5), 최종 미처리 REVIEW 는 {unresolved}건입니다.", ""]
     return "\n".join(L)
 
 

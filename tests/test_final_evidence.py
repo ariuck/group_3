@@ -42,7 +42,7 @@ class FinalEvidenceTest(unittest.TestCase):
         md = fe.build_markdown(info)
         self.assertNotIn("a.jpg", md)
         self.assertNotIn("a.txt", md)
-        self.assertIn("【기입】", md)
+        self.assertIn("화면 캡처", md)
 
 
 if __name__ == "__main__":
