@@ -118,7 +118,7 @@ def build_markdown(stats, validation=None, today=None):
          f"- Validation: CRITICAL {sev['CRITICAL']} · WARNING {sev['WARNING']} · INFO {sev['INFO']}",
          f"- 최종 FAIL **{fail}건** · 최종 REVIEW **{unresolved}건**",
          f"- BBox 는 원본 {raw_total}개 → 최종 {fin_total}개 ({fin_total - raw_total:+d})",
-         f"- **최종 QA 판정: {'교과 8 사용 가능 (FAIL 0 · REVIEW 0)' if verdict else '미완료 — 아래 7장을 확인하세요'}**  (판정 기준: 아래 7장의 완료 기준 · 확인자: 강동연)", "",
+         f"- **최종 QA 판정: {'교과 8 사용 가능 (FAIL 0 · REVIEW 0)' if verdict else '미완료 — 아래 7장을 확인하세요'}**  (판정 기준: 아래 7장의 완료 기준 · 실측 확인자: 김석범 · 판정 확인자: 강동연)", "",
          "## 2. 검수 현황", "", "| 검수자 | 사진 | 검수 완료 | 수정 완료 | 그 밖 |", "|---|---:|---:|---:|---:|"]
     for who, c in sorted(reviewers.items()):
         total = sum(c.values())
