@@ -1,0 +1,1027 @@
+--- 62a1e27 2026-10-08 ariuck
+merge: Project Baseline 전체 정리
+--- 2f528a0 2026-10-08 ariuck
+docs: Project Baseline 전체 정리 — 팀 6명 역할·기여, 산출물 우선순위, 단계별 진행, 도구, Git 현황, 달성 현황
+
+ docs/standards/project_baseline.md | 288 +++++++++++++++++++++++++++++--------
+ 1 file changed, 225 insertions(+), 63 deletions(-)
+--- 2c15941 2026-10-08 ariuck
+merge: QA Summary·Handoff·최종본 증빙과 도구 추가
+--- 05ba365 2026-10-08 ariuck
+docs: Test Report 에 4일차 오류·수정과 Final Acceptance 결과 반영, README·Baseline 을 최종본 구조에 맞춤
+
+ README.md                          | 24 +++++++++++---------
+ docs/standards/project_baseline.md |  6 ++---
+ reports/test_report.md             | 45 ++++++++++++++++++++++++++++++--------
+ 3 files changed, 53 insertions(+), 22 deletions(-)
+--- 16062cd 2026-10-08 ariuck
+docs: 교과 8 Handoff 문서 추가 (수량·위치·형식·Class·QA·Manifest 칸 대응·최소 확인)
+
+ docs/README.md                    |   3 +-
+ docs/handoff/subject08_handoff.md | 133 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 135 insertions(+), 1 deletion(-)
+--- ab565eb 2026-10-08 ariuck
+feat: 검수표 CSV 를 엑셀 틀에 채워 제출용 xlsx 로 내보내는 도구 추가
+
+ tests/test_export_manifest_xlsx.py | 66 ++++++++++++++++++++++++++++++++++
+ tools/export_manifest_xlsx.py      | 72 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 138 insertions(+)
+--- b14d68f 2026-10-08 ariuck
+feat: FINAL 데이터 증빙(수량·짝·Class 분포·대표 TXT) 생성 도구와 문서 추가
+
+ reports/final_evidence.md    | 81 ++++++++++++++++++++++++++++++++++++++
+ tests/test_final_evidence.py | 49 +++++++++++++++++++++++
+ tools/final_evidence.py      | 92 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 222 insertions(+)
+--- 1be4abc 2026-10-08 ariuck
+feat: QA Summary 생성 도구와 보고서 추가
+
+ reports/qa_summary.md    | 109 ++++++++++++++++++++++++++
+ tests/test_qa_summary.py |  93 ++++++++++++++++++++++
+ tools/qa_summary.py      | 196 +++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 398 insertions(+)
+--- a40b3d7 2026-10-08 ariuck
+feat: 최종본을 data/final/images·labels 한 폴더 구조로 만들도록 변경
+
+ tests/test_build_final.py | 37 +++++++++++++++++++++++++++++--------
+ tools/build_final.py      | 37 +++++++++++++++++++++++++------------
+ 2 files changed, 54 insertions(+), 20 deletions(-)
+--- 0623dc5 2026-10-08 ariuck
+merge: Project Baseline 4일차 내용 반영
+--- 4de7a35 2026-10-08 ariuck
+docs: Project Baseline 에 4일차 검수 분담·결과·완료 기준 달성 현황 기록
+
+ docs/standards/project_baseline.md | 43 +++++++++++++++++++++++++++++---------
+ 1 file changed, 33 insertions(+), 10 deletions(-)
+--- a8de00a 2026-10-08 ariuck
+merge: 최종본 만들기 도구와 FINAL 문서
+--- 14ececb 2026-10-08 ariuck
+docs: README 의 FINAL Dataset 구조와 만드는 방법을 실제 도구에 맞게 작성
+
+ README.md | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+--- 5bdb34c 2026-10-08 ariuck
+feat: 검수 끝난 사진·라벨을 data/final 로 정리하는 최종본 만들기 도구 추가
+
+ tests/test_build_final.py | 129 ++++++++++++++++++++++++++++
+ tools/build_final.py      | 209 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 338 insertions(+)
+--- bb1be0d 2026-10-07 ariuck
+merge: 검수표 설명의 사진 파일명 예시 교체
+--- 09dd490 2026-10-07 ariuck
+docs: 검수표 설명의 사진 파일명 예시를 가짜 이름으로 교체
+
+ docs/standards/manifest_guide.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+--- a0a2833 2026-10-07 ariuck
+merge: 검수 배정을 실제 분담으로 갱신
+--- 1ba1849 2026-10-07 ariuck
+docs: 검수 배정을 실제 분담(김동훈 1~300·501~550, 이후영 301~500, 지혜성 551~900)으로 갱신
+
+ docs/team/검수_배정.md     | 35 ++++++++++++++++++++---------------
+ docs/team/결과_주고받기.md |  2 +-
+ tests/test_share_server.py |  2 +-
+ tools/share_server.py      |  2 +-
+ 4 files changed, 23 insertions(+), 18 deletions(-)
+--- f4a3e12 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 끌어다 놓기 안내 수정
+--- 51bca16 2026-10-07 ariuck
+fix: 끌어다 놓은 뒤에도 '여기에 놓으면 바로 올라갑니다' 안내가 사라지지 않던 문제 수정 (전체 화면 안내 제거)
+
+ tests/test_share_server.py |  3 ++-
+ tools/share_server.py      | 12 ++++--------
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+--- 5d0dfb7 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 결과 주고받기 페이지 새 디자인
+--- ee317a2 2026-10-07 ariuck
+feat: 결과 주고받기 페이지를 새로 디자인하고 끌어다 놓기 업로드·내려받기 버튼 추가
+
+ tests/test_share_server.py |  17 ++
+ tools/share_server.py      | 375 ++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 282 insertions(+), 110 deletions(-)
+--- d4646ac 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 검수 모드 제거
+--- dfea820 2026-10-07 ariuck
+fix: 검수 모드(라벨 목록의 ✕ 삭제 열)를 없애고 Delete 키 삭제로 단순화
+
+ README.md                    |  1 -
+ docs/standards/bbox_guide.md |  2 +-
+ src/ui/help_dialog.py        |  1 -
+ src/ui/main_window.py        | 65 +++++-------------------------------------
+ tests/test_quick_review.py   | 67 ++------------------------------------------
+ tools/share_server.py        |  2 +-
+ 6 files changed, 11 insertions(+), 127 deletions(-)
+--- 117a99a 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 이미지 유형 확인과 검수 모드 삭제
+--- 7592a29 2026-10-07 ariuck
+feat: Enter 로 넘어가려면 이미지 유형을 골라야 하고, 검수 모드에서 라벨 목록의 ✕ 로 BBox 를 바로 지움
+
+ README.md                    |   2 +
+ docs/standards/bbox_guide.md |   3 +-
+ src/ui/form_panel.py         |  36 ++++++++++
+ src/ui/help_dialog.py        |   4 +-
+ src/ui/main_window.py        |  91 +++++++++++++++++++++---
+ tests/test_quick_review.py   | 162 +++++++++++++++++++++++++++++++++++++++++++
+ tools/share_server.py        |   4 +-
+ 7 files changed, 291 insertions(+), 11 deletions(-)
+--- 6bece5b 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 옛 라벨 덮어쓰기 안내와 자동 백업
+--- 036e3a4 2026-10-07 ariuck
+fix: 옛 라벨이 남은 PC 에서 새 라벨이 안 들어오던 문제 — 가이드에 --overwrite, 덮어쓰기 전 자동 백업, 경고 강화
+
+ docs/team/검수_배정.md      |  2 +-
+ docs/team/라벨_합치기.md    | 11 +++++----
+ tests/test_import_labels.py | 54 +++++++++++++++++++++++++++++++++++++++++++++
+ tools/import_labels.py      | 36 +++++++++++++++++++++++++-----
+ tools/share_server.py       |  5 +++--
+ 5 files changed, 95 insertions(+), 13 deletions(-)
+--- 7489b67 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 라벨 위치가 다른 PC 의 묶기 보완
+--- 873fcd7 2026-10-07 ariuck
+fix: 폴더 구조가 다른 PC 에서 저장된 라벨도 번호 범위로 묶고, 라벨 위치 확인 안내 추가
+
+ docs/team/결과_주고받기.md |  7 +++++++
+ tests/test_pack_results.py | 25 +++++++++++++++++++++++++
+ tools/pack_results.py      | 12 +++++++++++-
+ tools/share_server.py      |  4 ++++
+ 4 files changed, 47 insertions(+), 1 deletion(-)
+--- 5d513d4 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 결과 주고받기 가이드 화면
+--- f77b40e 2026-10-07 ariuck
+feat: 결과 주고받기 서버 화면에 검수자·PM 단계별 가이드 탭 추가
+
+ docs/team/결과_주고받기.md |  14 ++
+ tests/test_share_server.py |  24 ++++
+ tools/share_server.py      | 321 ++++++++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 324 insertions(+), 35 deletions(-)
+--- 5deb86b 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 결과 주고받기 서버
+--- 3ec974e 2026-10-07 ariuck
+feat: 같은 네트워크에서 결과 zip 을 내려받고 올리는 임시 서버 tools/share_server.py 추가
+
+ docs/README.md             |   2 +-
+ docs/team/결과_주고받기.md |  66 ++++++++
+ docs/team/라벨_합치기.md   |   1 +
+ tests/test_share_server.py | 167 +++++++++++++++++++
+ tools/share_server.py      | 401 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 636 insertions(+), 1 deletion(-)
+--- edb756a 2026-10-07 ariuck
+test: 확대 상태 BBox 시험이 창 크기에 따라 가끔 실패하던 문제 수정
+
+ tests/day1_selftest.py | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
+--- c9ceee2 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 결과 묶기 이름·범위 옵션
+--- 1531847 2026-10-07 ariuck
+feat: 결과 묶기에 이름과 번호 범위 옵션을 추가해 여러 명의 검수 결과를 겹침 없이 모음
+
+ docs/team/검수_배정.md     | 21 ++++++++--
+ docs/team/라벨_합치기.md   |  2 +
+ tests/test_pack_results.py | 63 +++++++++++++++++++++++++++++-
+ tools/pack_results.py      | 97 +++++++++++++++++++++++++++++++++++++++-------
+ 4 files changed, 166 insertions(+), 17 deletions(-)
+--- d89dd6e 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 결과 묶기 도구
+--- 143a0ac 2026-10-07 ariuck
+feat: 라벨(txt)과 검수표를 압축 파일 하나로 묶는 tools/pack_results.py 추가
+
+ docs/team/라벨_합치기.md   | 31 ++++++++++++++++
+ tests/test_pack_results.py | 88 ++++++++++++++++++++++++++++++++++++++++++++++
+ tools/pack_results.py      | 83 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 202 insertions(+)
+--- c0411d9 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 검수 배정
+--- b7f545e 2026-10-07 ariuck
+docs: 이후영·지혜성·김동훈 3명의 교차검수 배정과 진행 방법 추가
+
+ docs/README.md         |  2 +-
+ docs/team/검수_배정.md | 55 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 56 insertions(+), 1 deletion(-)
+--- c2b4e48 2026-10-07 ariuck
+merge: feature/ariuck 병합 — README 이름 기억 설명
+--- 8f0da04 2026-10-07 ariuck
+docs: README 에 작성자·검수자 이름 기억 기능 설명 추가
+
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)
+--- fd75975 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 작성자·검수자 이름 기억
+--- 1a886c1 2026-10-07 ariuck
+feat: 작성자·검수자 이름을 프로그램을 켜 둔 동안 기억해 다음 사진의 빈 칸에 미리 채움
+
+ src/ui/form_panel.py       | 26 +++++++++++++++++++-
+ src/ui/main_window.py      |  1 +
+ tests/test_form_panel.py   | 59 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_quick_review.py | 25 ++++++++++++++++++++
+ 4 files changed, 110 insertions(+), 1 deletion(-)
+--- d41b2bf 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 검수표 합치기 출처 보정
+--- b4e5910 2026-10-07 ariuck
+fix: 검수표 합치기에서 출처가 잘못 적힌 줄이 조용히 빠지던 문제 수정
+
+ docs/team/라벨_합치기.md      |  1 +
+ tests/test_merge_manifests.py | 55 +++++++++++++++++++++++++++++++++++++
+ tools/merge_manifests.py      | 64 ++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 119 insertions(+), 1 deletion(-)
+--- 14d1ecf 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 검수표 합치기 저장 위치 변경
+--- 80f8949 2026-10-07 ariuck
+feat: 검수표 합치기의 저장 위치를 프로그램이 쓰는 manifests/dataset_manifest.csv 로 변경
+
+ docs/team/라벨_합치기.md      | 14 ++++++++------
+ tests/test_merge_manifests.py | 44 +++++++++++++++++++++++++++++++++++++++----
+ tools/merge_manifests.py      | 29 ++++++++++++++++++++--------
+ 3 files changed, 69 insertions(+), 18 deletions(-)
+--- 92d56e8 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 검수표 합치기 도구와 말풍선 정리
+--- 65e2379 2026-10-07 ariuck
+feat: 팀원들의 검수표(CSV)를 하나로 합치는 tools/merge_manifests.py 추가
+
+ .gitignore                    |   2 +
+ docs/team/라벨_합치기.md      |  31 +++++++-
+ tests/test_merge_manifests.py | 146 ++++++++++++++++++++++++++++++++++++
+ tools/merge_manifests.py      | 170 ++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 348 insertions(+), 1 deletion(-)
+--- f539e35 2026-10-07 ariuck
+fix: 창을 닫을 때 설명 말풍선 예약이 남아 시험이 가끔 실패하던 문제 수정
+
+ src/ui/main_window.py      |  3 ++-
+ src/ui/tooltip.py          | 10 ++++++++++
+ tests/test_tooltip_help.py | 14 ++++++++++++++
+ 3 files changed, 26 insertions(+), 1 deletion(-)
+--- 85727c8 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 창으로 돌아올 때 표시 파일 정리
+--- 0f8bd70 2026-10-07 ariuck
+feat: 탐색기에서 복사하고 창으로 돌아올 때도 Zone.Identifier 표시 파일을 정리
+
+ src/ui/main_window.py | 15 +++++++++++++++
+ tests/test_session.py | 20 ++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
+--- f572d85 2026-10-07 ariuck
+merge: feature/ariuck 병합 — Zone.Identifier 자동 정리
+--- 4c7042b 2026-10-07 ariuck
+feat: 프로그램을 켤 때 작업 폴더의 Zone.Identifier 표시 파일을 자동으로 정리
+
+ src/data_paths.py        | 21 +++++++++++++++++++++
+ src/ui/main_window.py    |  7 +++++--
+ tests/test_data_paths.py | 26 +++++++++++++++++++++++++-
+ 3 files changed, 51 insertions(+), 3 deletions(-)
+--- d278d6e 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 검수표 CSV Git 제외
+--- 07dad96 2026-10-07 ariuck
+chore: 검수 기록이 쌓이는 검수표 CSV 를 회사 데이터로 보고 Git 추적에서 제외
+
+ .gitignore                         | 3 +++
+ README.md                          | 4 ++--
+ docs/standards/manifest_guide.md   | 2 +-
+ docs/standards/project_baseline.md | 4 +++-
+ manifests/dataset_manifest.csv     | 1 -
+ 5 files changed, 9 insertions(+), 5 deletions(-)
+--- fa67359 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 라벨 가져오기 도구
+--- b136074 2026-10-07 ariuck
+feat: 팀원 라벨(TXT)을 작업 폴더로 가져오는 tools/import_labels.py 추가
+
+ docs/README.md              |   2 +-
+ docs/team/라벨_합치기.md    |  48 ++++++++++++++++
+ tests/test_import_labels.py | 105 ++++++++++++++++++++++++++++++++++
+ tools/__init__.py           |   0
+ tools/import_labels.py      | 136 ++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 290 insertions(+), 1 deletion(-)
+--- 1110319 2026-10-07 ariuck
+merge: feature/ariuck 병합 — docs 주제별 폴더 정리
+--- 87c73de 2026-10-07 ariuck
+docs: 문서를 일차별이 아니라 주제별 폴더로 재정리
+
+ README.md                                          |  19 +++++-----
+ docs/README.md                                     |  40 +++++++++++++++++++++
+ docs/day1/README.md                                |  37 -------------------
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  |  12 -------
+ .../EndToEnd_실행계획.md}                          |   0
+ .../Manifest_초안_참고용.md}                       |   2 +-
+ .../기능목록_화면설계.md}                          |   2 +-
+ docs/{day1/day1_의사코드.md => design/의사코드.md} |   0
+ .../필수기능목록.md}                               |   0
+ .../화면설계_피그마용.svg}                         |   0
+ .../day1_간단기록 => }/images/1_열기_TXT로드.png   | Bin
+ .../{day1/day1_간단기록 => }/images/2_BBox추가.png | Bin
+ .../images/3_저장후_다시불러오기.png               | Bin
+ docs/meetings/회의록_1일차.md                      |  12 +++----
+ docs/meetings/회의록_2일차.md                      |   4 +--
+ docs/meetings/회의록_3일차.md                      |   2 +-
+ .../1일차_과정기록.md => records/과정기록.md}      |  18 +++++-----
+ .../1일차_산출물.md => records/산출물_요약.md}     |   7 ++--
+ docs/{ => standards}/bbox_guide.md                 |   2 +-
+ docs/{ => standards}/class_guide.md                |   0
+ docs/{ => standards}/manifest_guide.md             |   0
+ docs/{ => standards}/project_baseline.md           |   0
+ .../1_데이터조사표.md => survey/데이터조사표.md}   |   0
+ .../Gate_체크리스트.md}                            |   8 ++---
+ .../역할분담_DailyGate.md}                         |   8 ++---
+ src/ui/form_panel.py                               |   2 +-
+ 26 files changed, 84 insertions(+), 91 deletions(-)
+--- 26e07b8 2026-10-07 ariuck
+merge: feature/ariuck 병합 — Class/BBox 기준 정리를 기준서로 통합
+--- 8d2c80d 2026-10-07 ariuck
+docs: 일차별로 따로 있던 Class/BBox 기준 정리를 Class·BBox 기준서로 통합
+
+ docs/bbox_guide.md                                 |  24 +++
+ docs/class_guide.md                                |  15 +-
+ docs/day1/README.md                                |   2 +-
+ docs/day1/day1_간단기록/1일차_산출물.md            |  41 ++---
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  | 175 +--------------------
+ 5 files changed, 55 insertions(+), 202 deletions(-)
+--- c058940 2026-10-07 ariuck
+merge: feature/ariuck 병합 — BBox 기준 정리 문서 Class 별 기준
+--- 6aaa508 2026-10-07 ariuck
+docs: Class/BBox 기준 정리 문서에 Class 별 BBox 작성 기준을 직접 반영
+
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  | 49 +++++++++++++++++++++-
+ 1 file changed, 48 insertions(+), 1 deletion(-)
+--- 6fd7c72 2026-10-07 ariuck
+merge: feature/ariuck 병합 — BBox 기준서 Class 별 기준
+--- a8f31e4 2026-10-07 ariuck
+docs: BBox 기준서에 Class 별 BBox 작성 기준을 직접 확정
+
+ docs/bbox_guide.md | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 50 insertions(+), 2 deletions(-)
+--- 175cbcb 2026-10-07 ariuck
+merge: feature/ariuck 병합 — Class 별 측정 기준과 갈변 체크리스트
+--- 4dc881d 2026-10-07 ariuck
+docs: Class 별 판정 기준을 실제 라벨 측정값으로 확정하고 갈변(Class 5) 체크리스트 추가
+
+ docs/class_guide.md                                | 83 +++++++++++++++-------
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  |  2 +-
+ 2 files changed, 58 insertions(+), 27 deletions(-)
+--- 8dfba7f 2026-10-07 ariuck
+merge: feature/ariuck 병합 — Class 4 단서 연결
+--- 15397e1 2026-10-07 ariuck
+docs: Class 4 항목에 고무장갑 판단 단서 기준 연결
+
+ docs/class_guide.md | 1 +
+ 1 file changed, 1 insertion(+)
+--- 7efe9d4 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 애매한 Class 구분 기준 확정
+--- cbafadc 2026-10-07 ariuck
+docs: 애매한 Class 를 구분하는 기준을 '단서 3개 중 2개' 규칙으로 확정
+
+ docs/class_guide.md                                | 181 ++++++++++++++++-----
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  |  12 ++
+ 2 files changed, 156 insertions(+), 37 deletions(-)
+--- e1e79fa 2026-10-07 ariuck
+merge: feature/ariuck 병합 — Class 별 기준 확정
+--- adf022d 2026-10-07 ariuck
+docs: Class 별 판단 기준을 확정하고 1일차 기준 정리 문서를 최신 기준으로 갱신
+
+ docs/bbox_guide.md                                 |   2 +
+ docs/class_guide.md                                | 222 +++++++++++----------
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  |  64 +++---
+ 3 files changed, 156 insertions(+), 132 deletions(-)
+--- a4fe857 2026-10-07 ariuck
+merge: feature/ariuck 병합 — BBox 기준서 확정
+--- bf0b99d 2026-10-07 ariuck
+docs: BBox 기준서를 제출용으로 확정 — 여백 허용치 수치, 예시 그림, 작업 방법
+
+ docs/bbox_guide.md            | 121 +++++++++++++++++++++++++++++++-----------
+ docs/images/bbox_examples.png | Bin 0 -> 42992 bytes
+ 2 files changed, 89 insertions(+), 32 deletions(-)
+--- 6d8b082 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 문서 표현 정리
+--- 6d73860 2026-10-07 ariuck
+docs: 시험 보고서와 회의록의 표현을 갱신 경위 중심으로 정리
+
+ README.md                     |  6 +++---
+ docs/meetings/회의록_2일차.md |  4 ++--
+ docs/meetings/회의록_3일차.md |  2 +-
+ reports/test_report.md        | 20 ++++++++++----------
+ 4 files changed, 16 insertions(+), 16 deletions(-)
+--- 4326797 2026-10-07 ariuck
+merge: feature/ariuck 병합 — 팀원 이름·역할 기입, 회의록 정리
+--- 55ffa4d 2026-10-07 ariuck
+docs: 팀원 이름과 역할 담당자를 기준 문서와 회의록에 반영
+
+ docs/day2/2일차_역할분담.md   | 12 ++++++------
+ docs/meetings/회의록_1일차.md |  7 ++++---
+ docs/meetings/회의록_2일차.md | 27 +++++++++++++--------------
+ docs/meetings/회의록_3일차.md | 21 +++++++++++----------
+ docs/project_baseline.md      | 16 +++++++++-------
+ 5 files changed, 43 insertions(+), 40 deletions(-)
+--- ce8d8c7 2026-10-06 ariuck
+merge: feat/hyesung 병합 — 과거 커밋 작성자 이름 통일(.mailmap)
+--- 02d8b1e 2026-10-06 ariuck
+docs: 시험 보고서를 실제 확인된 내용으로 정정하고 회의록·README 에 반영
+
+ README.md                     |  17 ++---
+ docs/meetings/회의록_2일차.md |   1 +
+ docs/meetings/회의록_3일차.md |  10 +--
+ reports/test_report.md        | 143 ++++++++++++++++++++++++------------------
+ 4 files changed, 98 insertions(+), 73 deletions(-)
+--- 66acce8 2026-10-06 ariuck
+test: 모든 시험을 한 번에 돌리는 tests/run_all.py 추가
+
+ tests/run_all.py | 59 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+--- 34eab76 2026-10-06 ariuck
+docs: 1·2·3일차 회의록 작성 (커밋 기록과 기존 문서 기준)
+
+ docs/meetings/회의록_1일차.md |  81 ++++++++++++++++++++++++++++++++++
+ docs/meetings/회의록_2일차.md |  91 ++++++++++++++++++++++++++++++++++++++
+ docs/meetings/회의록_3일차.md | 100 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 272 insertions(+)
+--- 3978964 2026-10-06 ariuck
+merge: feature/ariuck 병합 — 방향키 렉 해결, 검수표 보완, UI 개선
+--- 7bbca75 2026-10-06 ariuck
+fix: 검수표(CSV) 기록의 허점 3가지 수정 — 빈 파일 저장 막힘, 검수일 비어 있음, 경고창 반복
+
+ docs/manifest_guide.md          |   8 +-
+ src/manifest/manifest_writer.py |  17 ++-
+ src/ui/main_window.py           |  17 ++-
+ tests/day1_selftest.py          |   4 +-
+ tests/test_manifest_edge.py     | 224 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 261 insertions(+), 9 deletions(-)
+--- 9b13de9 2026-10-06 ariuck
+perf: 방향키를 꾹 눌러 넘길 때의 렉 해결 (사진 읽기를 다른 스레드로, 미리보기는 멈춘 뒤에)
+
+ src/ui/main_window.py     | 124 +++++++++++++++++++++++++++++++++++++++-----
+ src/ui/thumb_strip.py     |  22 ++++++--
+ tests/test_edit_ui.py     |   2 +-
+ tests/test_step_hold.py   | 128 ++++++++++++++++++++++++++++++++++++++++++++--
+ tests/test_thumb_strip.py |  22 +++++++-
+ 5 files changed, 275 insertions(+), 23 deletions(-)
+--- af11099 2026-10-06 ariuck
+docs: 화면 예시 그림을 제목줄 정리 후 모습으로 갱신
+
+ docs/images/ui_main.png | Bin 226537 -> 223950 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+--- 7c9de7e 2026-10-06 ariuck
+fix: 창이 좁을 때 이미지 목록 제목줄의 '보기' 선택이 잘리던 문제 수정
+
+ src/ui/main_window.py | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+--- 1a0fd31 2026-10-06 ariuck
+docs: README 에 빠른 검수·BBox 키보드 조작·안전 경고·도움말을 반영하고 화면 예시 그림을 갱신
+
+ README.md               |  15 ++++++++++++---
+ docs/images/ui_main.png | Bin 226995 -> 226537 bytes
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+--- db80b97 2026-10-06 ariuck
+fix: 저장 결과·경고 메시지가 마우스를 움직이자마자 사라지던 문제 수정
+
+ src/ui/main_window.py      | 12 +++++++++++-
+ tests/test_quick_review.py | 35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 1 deletion(-)
+--- 7603a93 2026-10-06 ariuck
+feat: 버튼 설명 말풍선과 단축키 도움말(F1) 추가
+
+ src/ui/help_dialog.py      |  94 ++++++++++++++++++++++++++++++
+ src/ui/main_window.py      |  54 +++++++++++++----
+ src/ui/tooltip.py          |  59 +++++++++++++++++++
+ tests/test_edit_ui.py      |   2 +-
+ tests/test_tooltip_help.py | 140 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 338 insertions(+), 11 deletions(-)
+--- 8813743 2026-10-06 Hyesung
+chore: 과거 커밋 작성자 이름을 Hyesung으로 통일 매핑하는 .mailmap 추가
+
+ .mailmap | 2 ++
+ 1 file changed, 2 insertions(+)
+--- 4bd5228 2026-10-06 ariuck
+feat: BBox 키보드 조작 — Tab 으로 선택 이동, Shift+방향키 미세 이동, H 로 BBox 숨기기
+
+ src/ui/main_window.py | 65 ++++++++++++++++++++++++++++++++++++++++++
+ tests/test_edit_ui.py | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 143 insertions(+)
+--- 3c629e1 2026-10-06 ariuck
+feat: 한 키 검수(Enter·R·N), 저장 안 됨 표시, 작업 진행 요약
+
+ src/ui/form_panel.py       |  27 ++++++-
+ src/ui/main_window.py      |  93 +++++++++++++++++++++-
+ src/ui/thumb_strip.py      |   4 +-
+ tests/test_quick_review.py | 193 +++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 311 insertions(+), 6 deletions(-)
+--- 9c342dd 2026-10-06 ariuck
+fix: BOM 붙은 라벨 파일을 읽지 못하던 문제와 읽지 못한 줄 경고가 금방 사라지던 문제 수정
+
+ src/ui/main_window.py       |  28 ++++++++++
+ src/ui/theme.py             |   2 +
+ src/validation/validator.py |   4 +-
+ src/yolo/yolo_loader.py     |  19 +++++--
+ tests/test_label_io.py      | 130 ++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 177 insertions(+), 6 deletions(-)
+--- 6907659 2026-10-06 ariuck
+fix: QA 검증 결과에서 사진으로 이동할 때 엉뚱한 사진이 열리거나 못 찾던 문제 수정
+
+ src/data_paths.py        | 18 ++++++++++++++
+ src/ui/main_window.py    |  9 +++----
+ tests/test_data_paths.py | 63 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 85 insertions(+), 5 deletions(-)
+--- e207de6 2026-10-06 ariuck
+feat: 이미지 밖으로 나가거나 Class 가 범위 밖인 이상한 BBox 를 눈에 띄게 경고
+
+ src/bbox/bbox_manager.py   |  18 +++++++
+ src/ui/main_window.py      |  35 ++++++++++----
+ tests/test_box_problems.py | 114 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 157 insertions(+), 10 deletions(-)
+--- d21e5c8 2026-10-06 ariuck
+fix: 필터 결과가 없을 때 번호 표시가 어긋나던 문제와 켜자마자 닫을 때 나던 오류 수정
+
+ src/ui/main_window.py   | 22 ++++++++++++++++++----
+ tests/test_filter_ui.py | 18 ++++++++++++++++++
+ tests/test_session.py   |  9 +++++++++
+ 3 files changed, 45 insertions(+), 4 deletions(-)
+--- 12d71d2 2026-10-06 ariuck
+docs: README 에 새 화면 예시 그림과 도구 메뉴 위치 반영
+
+ README.md               |  13 +++++++++----
+ docs/images/ui_main.png | Bin 0 -> 226995 bytes
+ 2 files changed, 9 insertions(+), 4 deletions(-)
+--- a08f4bf 2026-10-06 ariuck
+feat: 화면을 카드형 디자인으로 다시 구성하고 검수 기록 칸을 넓힘
+
+ src/ui/form_panel.py       |  61 ++++++-----
+ src/ui/main_window.py      | 266 ++++++++++++++++++++++++---------------------
+ src/ui/thumb_strip.py      |  42 +++----
+ tests/test_edit_ui.py      |  15 ++-
+ tests/test_hangul_input.py |  23 ++--
+ tests/test_thumb_strip.py  |   5 +-
+ 6 files changed, 229 insertions(+), 183 deletions(-)
+--- b40bfc0 2026-10-06 ariuck
+feat: 화면 디자인 체계(theme)와 보기 좋은 Class 선택 위젯 추가
+
+ src/ui/class_picker.py |  54 ++++++++++++++++++
+ src/ui/theme.py        | 147 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_theme.py    | 100 +++++++++++++++++++++++++++++++++
+ 3 files changed, 301 insertions(+)
+--- 42cce6d 2026-10-06 ariuck
+Merge branch 'feature/ariuck': 하단 이미지 목록과 화면 전체 UI 개선
+--- 40e86bb 2026-10-06 ariuck
+feat: 한/영 키로 평범하게 한글 입력 전환 (버튼을 누를 필요 없음)
+
+ src/ui/form_panel.py       |  5 +++-
+ src/ui/hangul_input.py     | 44 +++++++++++++++++++++++++++++++++-
+ src/ui/main_window.py      | 11 ++++++++-
+ tests/test_hangul_input.py | 59 +++++++++++++++++++++++++++++++++++++++++++---
+ 4 files changed, 113 insertions(+), 6 deletions(-)
+--- 3da535e 2026-10-06 ariuck
+docs: README 에 하단 이미지 목록·상태별 보기·이어서 시작·라디오 입력칸·라벨 표 반영
+
+ README.md | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+--- 743dffb 2026-10-06 ariuck
+fix: 이모지 대신 글자로 버튼 이름을 쓰고, 미리보기 줄 버튼·표 폭 다듬기
+
+ README.md             | 14 +++++------
+ src/ui/main_window.py | 67 +++++++++++++++++++++++++--------------------------
+ src/ui/thumb_strip.py |  4 +--
+ tests/test_edit_ui.py |  7 +++---
+ 4 files changed, 46 insertions(+), 46 deletions(-)
+--- 9198bc8 2026-10-06 ariuck
+feat: 프로그램을 다시 켜면 마지막으로 보던 폴더·사진에서 이어서 시작
+
+ src/ui/main_window.py |  19 +++++++
+ src/ui/session.py     |  43 ++++++++++++++++
+ tests/test_session.py | 135 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 197 insertions(+)
+--- 65d0499 2026-10-06 ariuck
+feat: 상태별 보기 필터 — '수정 필요'만 모아서 보기
+
+ src/ui/main_window.py   |  54 +++++++++++++++++-
+ src/ui/thumb_strip.py   |  13 ++++-
+ tests/test_filter_ui.py | 148 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 211 insertions(+), 4 deletions(-)
+--- 8a144aa 2026-10-06 ariuck
+feat: 사진 목록에 보기 필터 지원 (navigator)
+
+ src/ui/navigator.py     | 61 ++++++++++++++++++++++++++++++++++++++++---------
+ tests/test_navigator.py | 57 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 107 insertions(+), 11 deletions(-)
+--- 2ccd847 2026-10-06 ariuck
+feat: 화면 배치 정리 — 보기 옵션 줄, 이미지 위 머리글, 작은 미리보기
+
+ src/ui/main_window.py | 51 ++++++++++++++++++++++++---------------------------
+ src/ui/thumb_strip.py |  2 +-
+ 2 files changed, 25 insertions(+), 28 deletions(-)
+--- b09ffad 2026-10-06 ariuck
+feat: 검수 기록의 상태·이미지 유형을 라디오 버튼으로 바꿔 한눈에 보고 한 번에 선택
+
+ src/ui/form_panel.py     |  91 +++++++++++++++++++++++++++++-----------
+ tests/test_form_panel.py | 106 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 172 insertions(+), 25 deletions(-)
+--- 5ef61cd 2026-10-06 ariuck
+feat: 라벨 목록을 표(No · 클래스 · 위치 · 상태)로 바꾸고 원본/변경 표시
+
+ src/ui/main_window.py | 53 +++++++++++++++++++++++++++++++++++----------------
+ tests/test_edit_ui.py | 53 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 90 insertions(+), 16 deletions(-)
+--- 0ce74ea 2026-10-06 ariuck
+feat: 툴바를 기능별로 묶고 배율 표시·이동(Pan) 모드 추가, 창 크기 정리
+
+ src/ui/main_window.py | 70 +++++++++++++++++++++++++++++++++++----------------
+ tests/test_edit_ui.py | 35 ++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+), 22 deletions(-)
+--- c434910 2026-10-06 ariuck
+feat: 이미지 목록을 왼쪽 목록에서 화면 아래 미리보기 줄로 변경
+
+ src/ui/main_window.py   | 94 ++++++++++++++++++++++++++-----------------------
+ src/ui/thumb_strip.py   |  9 +++--
+ tests/test_step_hold.py |  2 +-
+ 3 files changed, 57 insertions(+), 48 deletions(-)
+--- 0f37c9f 2026-10-06 ariuck
+feat: 하단 사진 목록(썸네일 줄) 위젯과 검수표 상태 읽기 함수 추가
+
+ src/manifest/manifest_writer.py |  17 +++
+ src/ui/thumb_strip.py           | 237 ++++++++++++++++++++++++++++++++++++++++
+ tests/test_thumb_strip.py       | 186 +++++++++++++++++++++++++++++++
+ 3 files changed, 440 insertions(+)
+--- 884048a 2026-10-06 ariuck
+fix: Shift 를 누르면 한글 조합이 끊겨 '혜성'이 'ㅎㅖ성'으로 입력되던 문제 수정
+
+ src/ui/hangul_input.py     |  6 ++++++
+ tests/test_hangul_input.py | 31 +++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
+--- d12982a 2026-10-06 ariuck
+docs: README 에 BBox 수정·Diff·화면 보조 기능과 조작표 반영
+
+ README.md | 40 +++++++++++++++++++++++++---------------
+ 1 file changed, 25 insertions(+), 15 deletions(-)
+--- 06674e2 2026-10-06 ariuck
+feat: 화면 보정 버튼(밝기·대비·흑백)과 편집 도구 배치 정리
+
+ src/ui/main_window.py | 65 ++++++++++++++++++++++++++++++++++++++++++++-------
+ tests/test_edit_ui.py | 36 ++++++++++++++++++++++++++++
+ 2 files changed, 93 insertions(+), 8 deletions(-)
+--- 08b0281 2026-10-06 ariuck
+feat: 십자선 보기 옵션 (BBox 경계를 정밀하게 맞출 때)
+
+ src/ui/main_window.py | 21 +++++++++++++++++++++
+ tests/test_edit_ui.py | 23 +++++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+--- 6896567 2026-10-06 ariuck
+feat: [저장 후 다음] 버튼과 W 단축키
+
+ src/ui/main_window.py | 14 ++++++++++++++
+ tests/test_edit_ui.py | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+)
+--- b6fe24f 2026-10-06 ariuck
+feat: [RAW 와 비교(Diff)] 보기 — 추가·수정·삭제를 색으로 구분
+
+ src/ui/main_window.py | 54 +++++++++++++++++++++++++++++++++++++++++++++------
+ tests/test_edit_ui.py | 50 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 98 insertions(+), 6 deletions(-)
+--- 3e348e6 2026-10-06 ariuck
+feat: 원본(RAW)과 지금 BBox 를 비교하는 계산 모듈(bbox_diff) 추가
+
+ src/bbox/bbox_diff.py   | 69 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_bbox_diff.py | 74 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 143 insertions(+)
+--- 5a01d59 2026-10-06 ariuck
+feat: 이 사진의 BBox 를 한 번에 모두 지우는 [전체 삭제] 버튼
+
+ src/ui/main_window.py | 28 +++++++++++++++++++++++++++-
+ tests/test_edit_ui.py | 31 +++++++++++++++++++++++++++++++
+ 2 files changed, 58 insertions(+), 1 deletion(-)
+--- 8468291 2026-10-06 ariuck
+test: 시험이 만든 임시 폴더를 시험이 끝나면 지우도록 수정
+
+ tests/test_folder_drop.py |  2 ++
+ tests/test_navigator.py   | 18 ++++++++++++++----
+ tests/test_step_hold.py   |  9 ++++++---
+ 3 files changed, 22 insertions(+), 7 deletions(-)
+--- fd49a42 2026-10-06 ariuck
+feat: 선택한 BBox 의 좌표를 상태줄 위에 실시간 표시
+
+ src/ui/main_window.py | 18 ++++++++++++++++++
+ tests/test_edit_ui.py | 19 +++++++++++++++++--
+ 2 files changed, 35 insertions(+), 2 deletions(-)
+--- e78db58 2026-10-06 ariuck
+feat: 선택한 BBox 에 크기 조절 핸들(흰색 네모 8개) 표시
+
+ src/ui/main_window.py |  7 ++++++-
+ tests/test_edit_ui.py | 11 +++++++++++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+--- 311e792 2026-10-06 ariuck
+feat: 화면에서 BBox 이동·핸들 크기 조절·Shift+드래그·Esc 취소 지원
+
+ src/ui/main_window.py | 124 ++++++++++++++++++++++++++++++++++---
+ tests/test_edit_ui.py | 168 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 284 insertions(+), 8 deletions(-)
+--- dd65339 2026-10-06 ariuck
+feat: BBox 이동·크기 조절 계산 모듈(bbox_edit) 추가
+
+ src/bbox/bbox_edit.py   | 71 +++++++++++++++++++++++++++++++++++++++
+ tests/test_bbox_edit.py | 88 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 159 insertions(+)
+--- d5a50d7 2026-10-06 ariuck
+feat: 사진 번호를 직접 입력해 해당 사진으로 이동 (Ctrl+G)
+
+ src/ui/main_window.py   | 61 +++++++++++++++++++++++++++++++++++++++-----
+ src/ui/navigator.py     |  6 +++++
+ tests/test_navigator.py | 11 ++++++++
+ tests/test_step_hold.py | 68 ++++++++++++++++++++++++++++++++++++++++++++-----
+ 4 files changed, 134 insertions(+), 12 deletions(-)
+--- 1a752a3 2026-10-06 ariuck
+fix: 방향키를 누르고 있을 때 사진이 쌓여 멈춰 보이던 렉 해결
+
+ src/ui/main_window.py   |  36 ++++++++++++++++-
+ tests/test_step_hold.py | 105 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 139 insertions(+), 2 deletions(-)
+--- c2dbfd7 2026-10-06 ariuck
+Merge origin/main: 혜성의 폴더 열기·A/D 이동과 내 폴더 열기·끌어다 놓기를 하나로 합침
+--- 7b140a8 2026-10-06 ariuck
+docs: README 에 폴더 열기·끌어다 놓기 사용법 추가
+
+ README.md | 2 ++
+ 1 file changed, 2 insertions(+)
+--- 4198091 2026-10-06 ariuck
+feat: 폴더를 열거나 창에 끌어다 놓아 폴더 안의 사진 전체를 목록으로 열기
+
+ requirements.txt          |  1 +
+ src/ui/folder_drop.py     | 82 +++++++++++++++++++++++++++++++++++++++++++++++
+ src/ui/main_window.py     | 54 +++++++++++++++++++++++++++++--
+ src/ui/navigator.py       | 20 ++++++++++++
+ tests/test_folder_drop.py | 44 +++++++++++++++++++++++++
+ tests/test_navigator.py   | 43 +++++++++++++++++++++++++
+ 6 files changed, 242 insertions(+), 2 deletions(-)
+--- 09bbb68 2026-10-06 Hyesung
+Merge pull request #2 from ariuck/feat/hyesung
+--- a44c72d 2026-10-06 wlgptjd333
+Merge branch 'main' of https://github.com/ariuck/group_3: 최신 팀원 작업(동훈 사진 목록 패널 등) 병합
+--- 81fb11d 2026-10-06 ariuck
+Merge branch 'feature/donghun': 사진 목록 패널과 이전/다음 이동 개선
+--- 168789e 2026-10-06 wlgptjd333
+feat: 폴더 열기(open_folder) 및 A/D, 방향키 기반 연속 이미지 탐색 기능 추가
+
+ src/ui/main_window.py   | 30 ++++++++++++++++++++++++------
+ src/ui/navigator.py     | 17 +++++++++++++++--
+ tests/test_navigator.py |  9 +++++++++
+ 3 files changed, 48 insertions(+), 8 deletions(-)
+--- a26ab0e 2026-10-06 ccbb1296
+feat: 사진 목록 패널과 이전/다음 이동 개선
+
+ src/ui/main_window.py | 73 +++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 54 insertions(+), 19 deletions(-)
+--- 50d332b 2026-10-06 ariuck
+fix: WSL 에서도 'WORK 폴더 열기' 버튼이 Windows 탐색기를 열도록 수정
+
+ src/ui/main_window.py | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+--- e482e89 2026-10-06 ariuck
+Merge branch 'feature/huyoung': 이전/다음 이동·진행률(② 이동) 연결
+--- 1d0e470 2026-10-06 ariuck
+chore: 프로그램이 만드는 reports/validation_report.csv 는 Git 에서 제외
+
+ .gitignore | 3 +++
+ 1 file changed, 3 insertions(+)
+--- 9111592 2026-10-06 ariuck
+Merge branch 'feature/donghun': 검수표 입력칸(④ 저장·상태) 연결
+--- 7dd4e33 2026-10-06 ccbb1296
+feat: WSL 에서도 입력칸에 한글을 칠 수 있게 두벌식 한글 조합기 추가
+
+ src/ui/form_panel.py       |  11 +++
+ src/ui/hangul_input.py     | 196 +++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_hangul_input.py |  76 ++++++++++++++++++
+ 3 files changed, 283 insertions(+)
+--- 38b1796 2026-10-06 ccbb1296
+feat: 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) 추가
+
+ src/manifest/manifest_writer.py |  77 ++++++++++++++---
+ src/ui/form_panel.py            |  80 ++++++++++++++++++
+ src/ui/main_window.py           |  61 +++++++++++---
+ tests/test_manifest_input.py    | 179 ++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 376 insertions(+), 21 deletions(-)
+--- ba09488 2026-10-06 Hu250506
+navigator 추가 및 main_window 수정
+
+ src/ui/main_window.py | 56 +++++++++++++++++++++++++++++++++++++++++++++------
+ src/ui/navigator.py   | 51 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 101 insertions(+), 6 deletions(-)
+--- 07ba76a 2026-10-06 ariuck
+Merge branch 'feature/seokbeom': Zoom·Pan·Undo/Redo 화면 연결
+--- 27c54ba 2026-10-06 tjrqja021206@gmail.com
+feat: 라벨링 화면에 Zoom·Pan·Undo/Redo 연결
+
+ src/bbox/viewport.py   |  10 +-
+ src/ui/main_window.py  | 262 ++++++++++++++++++++++++++++++++++++++++++-------
+ tests/day1_selftest.py |  68 ++++++++++++-
+ tests/test_viewport.py |   7 ++
+ 4 files changed, 303 insertions(+), 44 deletions(-)
+--- 9a52e4b 2026-10-06 ariuck
+Merge branch 'main' of https://github.com/ariuck/group_3
+--- daa9dfb 2026-10-06 Hyesung
+Merge pull request #1 from ariuck/feat/hyesung
+--- b37a281 2026-10-06 ariuck
+chore: data/ 아래 데이터를 어디에 두든 Git 에서 제외
+
+ .gitignore | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+--- 1f71a73 2026-10-06 ariuck
+Merge remote-tracking branch 'origin/feature/seokbeom'
+--- 7bb4302 2026-10-06 tjrqja021206@gmail.com
+feat: Zoom·Pan 좌표 변환(viewport)과 BBox Undo/Redo(history) 추가
+
+ src/bbox/history.py    |  73 ++++++++++++++++++++++
+ src/bbox/viewport.py   |  96 +++++++++++++++++++++++++++++
+ tests/test_viewport.py | 162 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 331 insertions(+)
+--- 5a66b79 2026-10-06 wlgptjd333
+docs: Golden Test 및 Pilot Test 결과 보고서(test_report.md) 작성
+
+ reports/test_report.md | 90 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 90 insertions(+)
+--- 7837171 2026-10-06 wlgptjd333
+test: 검증 엔진 단위 테스트(test_validator.py) 11종 추가
+
+ tests/test_validator.py | 119 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 119 insertions(+)
+--- 282d1b0 2026-10-06 wlgptjd333
+feat: 900장 무결성 검증(validate_dataset) 및 검증 결과 다이얼로그 구현
+
+ src/ui/main_window.py       |  26 ++++++-
+ src/ui/validation_dialog.py | 127 +++++++++++++++++++++++++++++++
+ src/validation/validator.py | 182 +++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 322 insertions(+), 13 deletions(-)
+--- b0ef374 2026-10-06 ariuck
+docs: 2일차 Daily Gate 12개를 4명에게 분배
+
+ docs/day2/2일차_역할분담.md | 46 +++++++++++++++++++++++++++++----------------
+ 1 file changed, 30 insertions(+), 16 deletions(-)
+--- 9f50d3a 2026-10-06 ariuck
+docs: 2일차 역할 분담에 빠진 항목 보강
+
+ docs/day2/2일차_역할분담.md | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+--- d3a7c97 2026-10-06 ariuck
+docs: 2일차 역할 분담 작성
+
+ docs/day2/2일차_역할분담.md | 127 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
+--- 2b5e90f 2026-10-06 ariuck
+docs: 검수표 자동 기록 동작과 사람이 채울 칸을 문서에 반영
+
+ README.md                                             | 14 +++++++++-----
+ .../day1_간단기록/산출물/3_Dataset_Manifest_초안.md   |  2 +-
+ docs/manifest_guide.md                                | 19 +++++++++++++++++++
+ 3 files changed, 29 insertions(+), 6 deletions(-)
+--- 8c59cce 2026-10-06 ariuck
+test: 검수표 자동 기록 자체 점검 추가
+
+ tests/day1_selftest.py | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
+--- 74c4ed1 2026-10-06 ariuck
+feat: 저장 버튼에 검수표 기록 연결
+
+ src/ui/main_window.py | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+--- 6d202b4 2026-10-06 ariuck
+feat: 저장할 때 검수표(CSV) 자동 기록 구현
+
+ src/manifest/__init__.py        |   0
+ src/manifest/manifest_writer.py | 117 ++++++++++++++++++++++++++++++++++++++++
+ src/settings.py                 |   1 +
+ src/yolo/yolo_loader.py         |  23 ++++++++
+ 4 files changed, 141 insertions(+)
+--- d57c6d2 2026-10-06 ariuck
+docs: 검수표 19칸과 REVIEW 표시 규칙을 기준 문서에 반영
+
+ README.md                                            | 20 ++++++++++++++------
+ docs/bbox_guide.md                                   |  7 ++++---
+ docs/class_guide.md                                  |  4 +++-
+ docs/day1/README.md                                  |  9 +++++----
+ .../day1_간단기록/산출물/3_Dataset_Manifest_초안.md  |  2 +-
+ docs/project_baseline.md                             |  3 ++-
+ 6 files changed, 29 insertions(+), 16 deletions(-)
+--- 15deecf 2026-10-06 ariuck
+docs: Manifest 검수표 작성 가이드 추가
+
+ docs/manifest_guide.md | 104 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 104 insertions(+)
+--- bb504ab 2026-10-06 ariuck
+feat: 검수표에 출처 데이터셋·원래 split 칸 추가
+
+ manifests/dataset_manifest.csv  |   2 +-
+ manifests/dataset_manifest.xlsx | Bin 14147 -> 15220 bytes
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+--- 476579d 2026-10-06 ariuck
+docs: Manifest 기준 변경에 맞춰 README·BBox 기준서·1일차 문서 수정
+
+ README.md                                          | 26 ++++++++++++++--------
+ docs/bbox_guide.md                                 |  2 +-
+ docs/day1/README.md                                | 17 +++++++++-----
+ .../산출물/3_Dataset_Manifest_초안.md              |  2 +-
+ 4 files changed, 30 insertions(+), 17 deletions(-)
+--- a63b721 2026-10-06 ariuck
+docs: Manifest CSV 머리글을 검수표 17칸으로 변경
+
+ manifests/dataset_manifest.csv | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+--- b82362f 2026-10-06 ariuck
+feat: Manifest 검수표 틀 적용 (dataset_manifest.xlsx)
+
+ manifests/dataset_manifest.xlsx | Bin 0 -> 14147 bytes
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+--- f4a791b 2026-10-06 ariuck
+docs: 1일차 산출물과 과정 기록 정리
+
+ docs/day1/1일차_체크리스트.md                      |  88 ++++++
+ docs/day1/README.md                                |  31 ++
+ docs/day1/day1_Must_Have_기능목록.md               | 150 ++++++++++
+ docs/day1/day1_간단기록/1일차_과정기록.md          | 171 +++++++++++
+ docs/day1/day1_간단기록/1일차_산출물.md            | 249 ++++++++++++++++
+ docs/day1/day1_간단기록/images/1_열기_TXT로드.png  | Bin 0 -> 364619 bytes
+ docs/day1/day1_간단기록/images/2_BBox추가.png      | Bin 0 -> 346282 bytes
+ .../day1_간단기록/images/3_저장후_다시불러오기.png | Bin 0 -> 346810 bytes
+ docs/day1/day1_간단기록/산출물/1_데이터조사표.md   |  97 ++++++
+ .../day1_간단기록/산출물/2_Class_BBox_기준정리.md  | 102 +++++++
+ .../산출물/3_Dataset_Manifest_초안.md              | 264 +++++++++++++++++
+ .../day1_간단기록/산출물/4_기능목록_화면설계.md    |  97 ++++++
+ .../day1_간단기록/산출물/4_화면설계_피그마용.svg   | 102 +++++++
+ .../day1_간단기록/산출물/5_EndToEnd_실행계획.md    |  83 ++++++
+ docs/day1/day1_의사코드.md                         | 327 +++++++++++++++++++++
+ 15 files changed, 1761 insertions(+)
+--- c097a6b 2026-10-06 ariuck
+docs: README 작성
+
+ README.md | 291 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 290 insertions(+), 1 deletion(-)
+--- 057df54 2026-10-06 ariuck
+docs: BBox 기준서 작성
+
+ docs/bbox_guide.md | 119 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 119 insertions(+)
+--- b0e8f4f 2026-10-06 ariuck
+docs: Class 기준서 작성
+
+ docs/class_guide.md | 160 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 160 insertions(+)
+--- 00902f4 2026-10-06 ariuck
+docs: Project Baseline 작성
+
+ docs/project_baseline.md | 80 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
+--- cdcff41 2026-10-06 ariuck
+docs: Dataset Manifest 칸 정의 추가
+
+ manifests/dataset_manifest.csv | 1 +
+ 1 file changed, 1 insertion(+)
+--- 4853103 2026-10-06 ariuck
+test: 1일차 자체 점검 추가
+
+ tests/day1_selftest.py | 132 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 132 insertions(+)
+--- 8c7e739 2026-10-06 ariuck
+feat: 이미지 1장 라벨링 화면과 시작 파일 구현
+
+ main.py               |  10 ++
+ src/ui/main_window.py | 489 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 499 insertions(+)
+--- 00678e4 2026-10-06 ariuck
+feat: 데이터 조사 기능 구현
+
+ src/validation/validator.py | 74 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+--- 237f89f 2026-10-06 ariuck
+feat: BBox 생성·선택 로직 구현
+
+ src/bbox/bbox_manager.py | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+--- 31e2bc6 2026-10-06 ariuck
+feat: RAW 보호와 WORK 저장 경로 구현
+
+ src/data_paths.py | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+--- 0984b93 2026-10-06 ariuck
+feat: YOLO TXT 저장 구현
+
+ src/yolo/yolo_writer.py | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+--- 5d0e14d 2026-10-06 ariuck
+feat: 기존 YOLO TXT 불러오기 구현
+
+ src/yolo/coords.py      | 17 +++++++++++++++++
+ src/yolo/yolo_loader.py | 51 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+)
+--- 73e49f9 2026-10-06 ariuck
+feat: Class 0~6 설정 파일과 설정 읽기 구현
+
+ configs/classes.yaml | 39 ++++++++++++++++++++++++++++++
+ src/settings.py      | 67 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 106 insertions(+)
+--- 4709f5b 2026-10-06 ariuck
+chore: 프로젝트 기본 구조 생성
+
+ .gitignore                 | 24 ++++++++++++++++++++++++
+ data/final/.gitkeep        |  0
+ data/raw/.gitkeep          |  0
+ data/work/.gitkeep         |  0
+ reports/.gitkeep           |  0
+ requirements.txt           |  2 ++
+ src/__init__.py            |  0
+ src/bbox/__init__.py       |  0
+ src/ui/__init__.py         |  0
+ src/validation/__init__.py |  0
+ src/yolo/__init__.py       |  0
+ 11 files changed, 26 insertions(+)
+--- 1a76a5b 2026-10-06 tjrqja021206-a11y
+Initial commit
+
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)

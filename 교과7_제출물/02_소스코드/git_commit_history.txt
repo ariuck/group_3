@@ -1,0 +1,186 @@
+62a1e27 | 2026-10-08 09:44:46 +0900 | ariuck | merge: Project Baseline 전체 정리
+2f528a0 | 2026-10-08 09:44:46 +0900 | ariuck | docs: Project Baseline 전체 정리 — 팀 6명 역할·기여, 산출물 우선순위, 단계별 진행, 도구, Git 현황, 달성 현황
+2c15941 | 2026-10-08 09:40:15 +0900 | ariuck | merge: QA Summary·Handoff·최종본 증빙과 도구 추가
+05ba365 | 2026-10-08 09:40:15 +0900 | ariuck | docs: Test Report 에 4일차 오류·수정과 Final Acceptance 결과 반영, README·Baseline 을 최종본 구조에 맞춤
+16062cd | 2026-10-08 09:40:15 +0900 | ariuck | docs: 교과 8 Handoff 문서 추가 (수량·위치·형식·Class·QA·Manifest 칸 대응·최소 확인)
+ab565eb | 2026-10-08 09:40:15 +0900 | ariuck | feat: 검수표 CSV 를 엑셀 틀에 채워 제출용 xlsx 로 내보내는 도구 추가
+b14d68f | 2026-10-08 09:40:15 +0900 | ariuck | feat: FINAL 데이터 증빙(수량·짝·Class 분포·대표 TXT) 생성 도구와 문서 추가
+1be4abc | 2026-10-08 09:40:15 +0900 | ariuck | feat: QA Summary 생성 도구와 보고서 추가
+a40b3d7 | 2026-10-08 09:40:15 +0900 | ariuck | feat: 최종본을 data/final/images·labels 한 폴더 구조로 만들도록 변경
+0623dc5 | 2026-10-08 09:15:32 +0900 | ariuck | merge: Project Baseline 4일차 내용 반영
+4de7a35 | 2026-10-08 09:15:32 +0900 | ariuck | docs: Project Baseline 에 4일차 검수 분담·결과·완료 기준 달성 현황 기록
+a8de00a | 2026-10-08 09:13:46 +0900 | ariuck | merge: 최종본 만들기 도구와 FINAL 문서
+14ececb | 2026-10-08 09:13:46 +0900 | ariuck | docs: README 의 FINAL Dataset 구조와 만드는 방법을 실제 도구에 맞게 작성
+5bdb34c | 2026-10-08 09:13:46 +0900 | ariuck | feat: 검수 끝난 사진·라벨을 data/final 로 정리하는 최종본 만들기 도구 추가
+bb1be0d | 2026-10-07 17:40:07 +0900 | ariuck | merge: 검수표 설명의 사진 파일명 예시 교체
+09dd490 | 2026-10-07 17:40:07 +0900 | ariuck | docs: 검수표 설명의 사진 파일명 예시를 가짜 이름으로 교체
+a0a2833 | 2026-10-07 16:53:05 +0900 | ariuck | merge: 검수 배정을 실제 분담으로 갱신
+1ba1849 | 2026-10-07 16:53:05 +0900 | ariuck | docs: 검수 배정을 실제 분담(김동훈 1~300·501~550, 이후영 301~500, 지혜성 551~900)으로 갱신
+f4a3e12 | 2026-10-07 16:22:54 +0900 | ariuck | merge: feature/ariuck 병합 — 끌어다 놓기 안내 수정
+51bca16 | 2026-10-07 16:22:54 +0900 | ariuck | fix: 끌어다 놓은 뒤에도 '여기에 놓으면 바로 올라갑니다' 안내가 사라지지 않던 문제 수정 (전체 화면 안내 제거)
+5d0dfb7 | 2026-10-07 16:06:57 +0900 | ariuck | merge: feature/ariuck 병합 — 결과 주고받기 페이지 새 디자인
+ee317a2 | 2026-10-07 16:06:57 +0900 | ariuck | feat: 결과 주고받기 페이지를 새로 디자인하고 끌어다 놓기 업로드·내려받기 버튼 추가
+d4646ac | 2026-10-07 15:57:47 +0900 | ariuck | merge: feature/ariuck 병합 — 검수 모드 제거
+dfea820 | 2026-10-07 15:57:46 +0900 | ariuck | fix: 검수 모드(라벨 목록의 ✕ 삭제 열)를 없애고 Delete 키 삭제로 단순화
+117a99a | 2026-10-07 15:52:26 +0900 | ariuck | merge: feature/ariuck 병합 — 이미지 유형 확인과 검수 모드 삭제
+7592a29 | 2026-10-07 15:52:26 +0900 | ariuck | feat: Enter 로 넘어가려면 이미지 유형을 골라야 하고, 검수 모드에서 라벨 목록의 ✕ 로 BBox 를 바로 지움
+6bece5b | 2026-10-07 15:13:32 +0900 | ariuck | merge: feature/ariuck 병합 — 옛 라벨 덮어쓰기 안내와 자동 백업
+036e3a4 | 2026-10-07 15:13:32 +0900 | ariuck | fix: 옛 라벨이 남은 PC 에서 새 라벨이 안 들어오던 문제 — 가이드에 --overwrite, 덮어쓰기 전 자동 백업, 경고 강화
+7489b67 | 2026-10-07 14:58:45 +0900 | ariuck | merge: feature/ariuck 병합 — 라벨 위치가 다른 PC 의 묶기 보완
+873fcd7 | 2026-10-07 14:58:45 +0900 | ariuck | fix: 폴더 구조가 다른 PC 에서 저장된 라벨도 번호 범위로 묶고, 라벨 위치 확인 안내 추가
+5d513d4 | 2026-10-07 14:32:19 +0900 | ariuck | merge: feature/ariuck 병합 — 결과 주고받기 가이드 화면
+f77b40e | 2026-10-07 14:32:19 +0900 | ariuck | feat: 결과 주고받기 서버 화면에 검수자·PM 단계별 가이드 탭 추가
+5deb86b | 2026-10-07 14:17:48 +0900 | ariuck | merge: feature/ariuck 병합 — 결과 주고받기 서버
+3ec974e | 2026-10-07 14:17:48 +0900 | ariuck | feat: 같은 네트워크에서 결과 zip 을 내려받고 올리는 임시 서버 tools/share_server.py 추가
+edb756a | 2026-10-07 14:17:47 +0900 | ariuck | test: 확대 상태 BBox 시험이 창 크기에 따라 가끔 실패하던 문제 수정
+c9ceee2 | 2026-10-07 13:53:09 +0900 | ariuck | merge: feature/ariuck 병합 — 결과 묶기 이름·범위 옵션
+1531847 | 2026-10-07 13:53:09 +0900 | ariuck | feat: 결과 묶기에 이름과 번호 범위 옵션을 추가해 여러 명의 검수 결과를 겹침 없이 모음
+d89dd6e | 2026-10-07 13:42:02 +0900 | ariuck | merge: feature/ariuck 병합 — 결과 묶기 도구
+143a0ac | 2026-10-07 13:42:02 +0900 | ariuck | feat: 라벨(txt)과 검수표를 압축 파일 하나로 묶는 tools/pack_results.py 추가
+c0411d9 | 2026-10-07 13:33:04 +0900 | ariuck | merge: feature/ariuck 병합 — 검수 배정
+b7f545e | 2026-10-07 13:33:04 +0900 | ariuck | docs: 이후영·지혜성·김동훈 3명의 교차검수 배정과 진행 방법 추가
+c2b4e48 | 2026-10-07 13:28:30 +0900 | ariuck | merge: feature/ariuck 병합 — README 이름 기억 설명
+8f0da04 | 2026-10-07 13:28:30 +0900 | ariuck | docs: README 에 작성자·검수자 이름 기억 기능 설명 추가
+fd75975 | 2026-10-07 13:28:19 +0900 | ariuck | merge: feature/ariuck 병합 — 작성자·검수자 이름 기억
+1a886c1 | 2026-10-07 13:28:19 +0900 | ariuck | feat: 작성자·검수자 이름을 프로그램을 켜 둔 동안 기억해 다음 사진의 빈 칸에 미리 채움
+d41b2bf | 2026-10-07 12:52:02 +0900 | ariuck | merge: feature/ariuck 병합 — 검수표 합치기 출처 보정
+b4e5910 | 2026-10-07 12:52:02 +0900 | ariuck | fix: 검수표 합치기에서 출처가 잘못 적힌 줄이 조용히 빠지던 문제 수정
+14d1ecf | 2026-10-07 12:40:01 +0900 | ariuck | merge: feature/ariuck 병합 — 검수표 합치기 저장 위치 변경
+80f8949 | 2026-10-07 12:40:01 +0900 | ariuck | feat: 검수표 합치기의 저장 위치를 프로그램이 쓰는 manifests/dataset_manifest.csv 로 변경
+92d56e8 | 2026-10-07 12:34:42 +0900 | ariuck | merge: feature/ariuck 병합 — 검수표 합치기 도구와 말풍선 정리
+65e2379 | 2026-10-07 12:34:42 +0900 | ariuck | feat: 팀원들의 검수표(CSV)를 하나로 합치는 tools/merge_manifests.py 추가
+f539e35 | 2026-10-07 12:34:42 +0900 | ariuck | fix: 창을 닫을 때 설명 말풍선 예약이 남아 시험이 가끔 실패하던 문제 수정
+85727c8 | 2026-10-07 12:20:44 +0900 | ariuck | merge: feature/ariuck 병합 — 창으로 돌아올 때 표시 파일 정리
+0f8bd70 | 2026-10-07 12:20:44 +0900 | ariuck | feat: 탐색기에서 복사하고 창으로 돌아올 때도 Zone.Identifier 표시 파일을 정리
+f572d85 | 2026-10-07 12:15:08 +0900 | ariuck | merge: feature/ariuck 병합 — Zone.Identifier 자동 정리
+4c7042b | 2026-10-07 12:15:08 +0900 | ariuck | feat: 프로그램을 켤 때 작업 폴더의 Zone.Identifier 표시 파일을 자동으로 정리
+d278d6e | 2026-10-07 11:53:47 +0900 | ariuck | merge: feature/ariuck 병합 — 검수표 CSV Git 제외
+07dad96 | 2026-10-07 11:53:47 +0900 | ariuck | chore: 검수 기록이 쌓이는 검수표 CSV 를 회사 데이터로 보고 Git 추적에서 제외
+fa67359 | 2026-10-07 11:49:42 +0900 | ariuck | merge: feature/ariuck 병합 — 라벨 가져오기 도구
+b136074 | 2026-10-07 11:49:42 +0900 | ariuck | feat: 팀원 라벨(TXT)을 작업 폴더로 가져오는 tools/import_labels.py 추가
+1110319 | 2026-10-07 10:42:01 +0900 | ariuck | merge: feature/ariuck 병합 — docs 주제별 폴더 정리
+87c73de | 2026-10-07 10:42:01 +0900 | ariuck | docs: 문서를 일차별이 아니라 주제별 폴더로 재정리
+26e07b8 | 2026-10-07 10:39:03 +0900 | ariuck | merge: feature/ariuck 병합 — Class/BBox 기준 정리를 기준서로 통합
+8d2c80d | 2026-10-07 10:39:03 +0900 | ariuck | docs: 일차별로 따로 있던 Class/BBox 기준 정리를 Class·BBox 기준서로 통합
+c058940 | 2026-10-07 10:36:41 +0900 | ariuck | merge: feature/ariuck 병합 — BBox 기준 정리 문서 Class 별 기준
+6aaa508 | 2026-10-07 10:36:41 +0900 | ariuck | docs: Class/BBox 기준 정리 문서에 Class 별 BBox 작성 기준을 직접 반영
+6fd7c72 | 2026-10-07 10:34:28 +0900 | ariuck | merge: feature/ariuck 병합 — BBox 기준서 Class 별 기준
+a8f31e4 | 2026-10-07 10:34:28 +0900 | ariuck | docs: BBox 기준서에 Class 별 BBox 작성 기준을 직접 확정
+175cbcb | 2026-10-07 10:32:08 +0900 | ariuck | merge: feature/ariuck 병합 — Class 별 측정 기준과 갈변 체크리스트
+4dc881d | 2026-10-07 10:32:08 +0900 | ariuck | docs: Class 별 판정 기준을 실제 라벨 측정값으로 확정하고 갈변(Class 5) 체크리스트 추가
+8dfba7f | 2026-10-07 10:19:27 +0900 | ariuck | merge: feature/ariuck 병합 — Class 4 단서 연결
+15397e1 | 2026-10-07 10:19:27 +0900 | ariuck | docs: Class 4 항목에 고무장갑 판단 단서 기준 연결
+7efe9d4 | 2026-10-07 10:19:15 +0900 | ariuck | merge: feature/ariuck 병합 — 애매한 Class 구분 기준 확정
+cbafadc | 2026-10-07 10:19:15 +0900 | ariuck | docs: 애매한 Class 를 구분하는 기준을 '단서 3개 중 2개' 규칙으로 확정
+e1e79fa | 2026-10-07 10:16:43 +0900 | ariuck | merge: feature/ariuck 병합 — Class 별 기준 확정
+adf022d | 2026-10-07 10:16:43 +0900 | ariuck | docs: Class 별 판단 기준을 확정하고 1일차 기준 정리 문서를 최신 기준으로 갱신
+a4fe857 | 2026-10-07 10:04:42 +0900 | ariuck | merge: feature/ariuck 병합 — BBox 기준서 확정
+bf0b99d | 2026-10-07 10:04:42 +0900 | ariuck | docs: BBox 기준서를 제출용으로 확정 — 여백 허용치 수치, 예시 그림, 작업 방법
+6d8b082 | 2026-10-07 09:30:23 +0900 | ariuck | merge: feature/ariuck 병합 — 문서 표현 정리
+6d73860 | 2026-10-07 09:30:23 +0900 | ariuck | docs: 시험 보고서와 회의록의 표현을 갱신 경위 중심으로 정리
+4326797 | 2026-10-07 09:28:38 +0900 | ariuck | merge: feature/ariuck 병합 — 팀원 이름·역할 기입, 회의록 정리
+55ffa4d | 2026-10-07 09:28:38 +0900 | ariuck | docs: 팀원 이름과 역할 담당자를 기준 문서와 회의록에 반영
+ce8d8c7 | 2026-10-06 17:40:21 +0900 | ariuck | merge: feat/hyesung 병합 — 과거 커밋 작성자 이름 통일(.mailmap)
+02d8b1e | 2026-10-06 17:40:21 +0900 | ariuck | docs: 시험 보고서를 실제 확인된 내용으로 정정하고 회의록·README 에 반영
+66acce8 | 2026-10-06 17:40:21 +0900 | ariuck | test: 모든 시험을 한 번에 돌리는 tests/run_all.py 추가
+34eab76 | 2026-10-06 17:35:34 +0900 | ariuck | docs: 1·2·3일차 회의록 작성 (커밋 기록과 기존 문서 기준)
+3978964 | 2026-10-06 17:28:31 +0900 | ariuck | merge: feature/ariuck 병합 — 방향키 렉 해결, 검수표 보완, UI 개선
+7bbca75 | 2026-10-06 17:26:34 +0900 | ariuck | fix: 검수표(CSV) 기록의 허점 3가지 수정 — 빈 파일 저장 막힘, 검수일 비어 있음, 경고창 반복
+9b13de9 | 2026-10-06 17:22:19 +0900 | ariuck | perf: 방향키를 꾹 눌러 넘길 때의 렉 해결 (사진 읽기를 다른 스레드로, 미리보기는 멈춘 뒤에)
+af11099 | 2026-10-06 17:07:17 +0900 | ariuck | docs: 화면 예시 그림을 제목줄 정리 후 모습으로 갱신
+7c9de7e | 2026-10-06 17:07:16 +0900 | ariuck | fix: 창이 좁을 때 이미지 목록 제목줄의 '보기' 선택이 잘리던 문제 수정
+1a0fd31 | 2026-10-06 17:06:10 +0900 | ariuck | docs: README 에 빠른 검수·BBox 키보드 조작·안전 경고·도움말을 반영하고 화면 예시 그림을 갱신
+db80b97 | 2026-10-06 17:05:38 +0900 | ariuck | fix: 저장 결과·경고 메시지가 마우스를 움직이자마자 사라지던 문제 수정
+7603a93 | 2026-10-06 17:03:36 +0900 | ariuck | feat: 버튼 설명 말풍선과 단축키 도움말(F1) 추가
+8813743 | 2026-10-06 17:00:32 +0900 | Hyesung | chore: 과거 커밋 작성자 이름을 Hyesung으로 통일 매핑하는 .mailmap 추가
+4bd5228 | 2026-10-06 17:00:17 +0900 | ariuck | feat: BBox 키보드 조작 — Tab 으로 선택 이동, Shift+방향키 미세 이동, H 로 BBox 숨기기
+3c629e1 | 2026-10-06 16:58:42 +0900 | ariuck | feat: 한 키 검수(Enter·R·N), 저장 안 됨 표시, 작업 진행 요약
+9c342dd | 2026-10-06 16:55:35 +0900 | ariuck | fix: BOM 붙은 라벨 파일을 읽지 못하던 문제와 읽지 못한 줄 경고가 금방 사라지던 문제 수정
+6907659 | 2026-10-06 16:55:35 +0900 | ariuck | fix: QA 검증 결과에서 사진으로 이동할 때 엉뚱한 사진이 열리거나 못 찾던 문제 수정
+e207de6 | 2026-10-06 16:53:03 +0900 | ariuck | feat: 이미지 밖으로 나가거나 Class 가 범위 밖인 이상한 BBox 를 눈에 띄게 경고
+d21e5c8 | 2026-10-06 16:52:28 +0900 | ariuck | fix: 필터 결과가 없을 때 번호 표시가 어긋나던 문제와 켜자마자 닫을 때 나던 오류 수정
+12d71d2 | 2026-10-06 16:46:20 +0900 | ariuck | docs: README 에 새 화면 예시 그림과 도구 메뉴 위치 반영
+a08f4bf | 2026-10-06 16:46:20 +0900 | ariuck | feat: 화면을 카드형 디자인으로 다시 구성하고 검수 기록 칸을 넓힘
+b40bfc0 | 2026-10-06 16:46:20 +0900 | ariuck | feat: 화면 디자인 체계(theme)와 보기 좋은 Class 선택 위젯 추가
+42cce6d | 2026-10-06 16:32:45 +0900 | ariuck | Merge branch 'feature/ariuck': 하단 이미지 목록과 화면 전체 UI 개선
+40e86bb | 2026-10-06 16:28:49 +0900 | ariuck | feat: 한/영 키로 평범하게 한글 입력 전환 (버튼을 누를 필요 없음)
+3da535e | 2026-10-06 16:20:31 +0900 | ariuck | docs: README 에 하단 이미지 목록·상태별 보기·이어서 시작·라디오 입력칸·라벨 표 반영
+743dffb | 2026-10-06 16:20:12 +0900 | ariuck | fix: 이모지 대신 글자로 버튼 이름을 쓰고, 미리보기 줄 버튼·표 폭 다듬기
+9198bc8 | 2026-10-06 16:19:27 +0900 | ariuck | feat: 프로그램을 다시 켜면 마지막으로 보던 폴더·사진에서 이어서 시작
+65d0499 | 2026-10-06 16:15:22 +0900 | ariuck | feat: 상태별 보기 필터 — '수정 필요'만 모아서 보기
+8a144aa | 2026-10-06 16:14:34 +0900 | ariuck | feat: 사진 목록에 보기 필터 지원 (navigator)
+2ccd847 | 2026-10-06 16:13:19 +0900 | ariuck | feat: 화면 배치 정리 — 보기 옵션 줄, 이미지 위 머리글, 작은 미리보기
+b09ffad | 2026-10-06 16:13:19 +0900 | ariuck | feat: 검수 기록의 상태·이미지 유형을 라디오 버튼으로 바꿔 한눈에 보고 한 번에 선택
+5ef61cd | 2026-10-06 16:08:26 +0900 | ariuck | feat: 라벨 목록을 표(No · 클래스 · 위치 · 상태)로 바꾸고 원본/변경 표시
+0ce74ea | 2026-10-06 16:07:34 +0900 | ariuck | feat: 툴바를 기능별로 묶고 배율 표시·이동(Pan) 모드 추가, 창 크기 정리
+c434910 | 2026-10-06 16:05:18 +0900 | ariuck | feat: 이미지 목록을 왼쪽 목록에서 화면 아래 미리보기 줄로 변경
+0f37c9f | 2026-10-06 16:03:24 +0900 | ariuck | feat: 하단 사진 목록(썸네일 줄) 위젯과 검수표 상태 읽기 함수 추가
+884048a | 2026-10-06 15:56:09 +0900 | ariuck | fix: Shift 를 누르면 한글 조합이 끊겨 '혜성'이 'ㅎㅖ성'으로 입력되던 문제 수정
+d12982a | 2026-10-06 15:50:59 +0900 | ariuck | docs: README 에 BBox 수정·Diff·화면 보조 기능과 조작표 반영
+06674e2 | 2026-10-06 15:50:34 +0900 | ariuck | feat: 화면 보정 버튼(밝기·대비·흑백)과 편집 도구 배치 정리
+08b0281 | 2026-10-06 15:49:19 +0900 | ariuck | feat: 십자선 보기 옵션 (BBox 경계를 정밀하게 맞출 때)
+6896567 | 2026-10-06 15:47:53 +0900 | ariuck | feat: [저장 후 다음] 버튼과 W 단축키
+b6fe24f | 2026-10-06 15:46:44 +0900 | ariuck | feat: [RAW 와 비교(Diff)] 보기 — 추가·수정·삭제를 색으로 구분
+3e348e6 | 2026-10-06 15:45:53 +0900 | ariuck | feat: 원본(RAW)과 지금 BBox 를 비교하는 계산 모듈(bbox_diff) 추가
+5a01d59 | 2026-10-06 15:45:20 +0900 | ariuck | feat: 이 사진의 BBox 를 한 번에 모두 지우는 [전체 삭제] 버튼
+8468291 | 2026-10-06 15:44:55 +0900 | ariuck | test: 시험이 만든 임시 폴더를 시험이 끝나면 지우도록 수정
+fd49a42 | 2026-10-06 15:44:55 +0900 | ariuck | feat: 선택한 BBox 의 좌표를 상태줄 위에 실시간 표시
+e78db58 | 2026-10-06 15:43:22 +0900 | ariuck | feat: 선택한 BBox 에 크기 조절 핸들(흰색 네모 8개) 표시
+311e792 | 2026-10-06 15:42:58 +0900 | ariuck | feat: 화면에서 BBox 이동·핸들 크기 조절·Shift+드래그·Esc 취소 지원
+dd65339 | 2026-10-06 15:42:58 +0900 | ariuck | feat: BBox 이동·크기 조절 계산 모듈(bbox_edit) 추가
+d5a50d7 | 2026-10-06 15:28:40 +0900 | ariuck | feat: 사진 번호를 직접 입력해 해당 사진으로 이동 (Ctrl+G)
+1a752a3 | 2026-10-06 15:21:40 +0900 | ariuck | fix: 방향키를 누르고 있을 때 사진이 쌓여 멈춰 보이던 렉 해결
+c2dbfd7 | 2026-10-06 15:17:32 +0900 | ariuck | Merge origin/main: 혜성의 폴더 열기·A/D 이동과 내 폴더 열기·끌어다 놓기를 하나로 합침
+7b140a8 | 2026-10-06 15:13:17 +0900 | ariuck | docs: README 에 폴더 열기·끌어다 놓기 사용법 추가
+4198091 | 2026-10-06 15:13:17 +0900 | ariuck | feat: 폴더를 열거나 창에 끌어다 놓아 폴더 안의 사진 전체를 목록으로 열기
+09bbb68 | 2026-10-06 15:10:01 +0900 | Hyesung | Merge pull request #2 from ariuck/feat/hyesung
+a44c72d | 2026-10-06 15:02:46 +0900 | wlgptjd333 | Merge branch 'main' of https://github.com/ariuck/group_3: 최신 팀원 작업(동훈 사진 목록 패널 등) 병합
+81fb11d | 2026-10-06 14:48:33 +0900 | ariuck | Merge branch 'feature/donghun': 사진 목록 패널과 이전/다음 이동 개선
+168789e | 2026-10-06 14:45:25 +0900 | wlgptjd333 | feat: 폴더 열기(open_folder) 및 A/D, 방향키 기반 연속 이미지 탐색 기능 추가
+a26ab0e | 2026-10-06 14:43:46 +0900 | ccbb1296 | feat: 사진 목록 패널과 이전/다음 이동 개선
+50d332b | 2026-10-06 14:36:36 +0900 | ariuck | fix: WSL 에서도 'WORK 폴더 열기' 버튼이 Windows 탐색기를 열도록 수정
+e482e89 | 2026-10-06 14:15:41 +0900 | ariuck | Merge branch 'feature/huyoung': 이전/다음 이동·진행률(② 이동) 연결
+1d0e470 | 2026-10-06 14:12:03 +0900 | ariuck | chore: 프로그램이 만드는 reports/validation_report.csv 는 Git 에서 제외
+9111592 | 2026-10-06 14:09:29 +0900 | ariuck | Merge branch 'feature/donghun': 검수표 입력칸(④ 저장·상태) 연결
+7dd4e33 | 2026-10-06 13:52:18 +0900 | ccbb1296 | feat: WSL 에서도 입력칸에 한글을 칠 수 있게 두벌식 한글 조합기 추가
+38b1796 | 2026-10-06 13:52:18 +0900 | ccbb1296 | feat: 검수 기록 입력칸(상태·작성자·검수자·이미지 유형·발견된 문제·비고) 추가
+ba09488 | 2026-10-06 13:14:54 +0900 | Hu250506 | navigator 추가 및 main_window 수정
+07ba76a | 2026-10-06 12:37:28 +0900 | ariuck | Merge branch 'feature/seokbeom': Zoom·Pan·Undo/Redo 화면 연결
+27c54ba | 2026-10-06 12:34:32 +0900 | tjrqja021206@gmail.com | feat: 라벨링 화면에 Zoom·Pan·Undo/Redo 연결
+9a52e4b | 2026-10-06 12:11:43 +0900 | ariuck | Merge branch 'main' of https://github.com/ariuck/group_3
+daa9dfb | 2026-10-06 12:09:49 +0900 | Hyesung | Merge pull request #1 from ariuck/feat/hyesung
+b37a281 | 2026-10-06 12:08:50 +0900 | ariuck | chore: data/ 아래 데이터를 어디에 두든 Git 에서 제외
+1f71a73 | 2026-10-06 12:06:26 +0900 | ariuck | Merge remote-tracking branch 'origin/feature/seokbeom'
+7bb4302 | 2026-10-06 12:00:39 +0900 | tjrqja021206@gmail.com | feat: Zoom·Pan 좌표 변환(viewport)과 BBox Undo/Redo(history) 추가
+5a66b79 | 2026-10-06 11:56:59 +0900 | wlgptjd333 | docs: Golden Test 및 Pilot Test 결과 보고서(test_report.md) 작성
+7837171 | 2026-10-06 11:56:53 +0900 | wlgptjd333 | test: 검증 엔진 단위 테스트(test_validator.py) 11종 추가
+282d1b0 | 2026-10-06 11:56:26 +0900 | wlgptjd333 | feat: 900장 무결성 검증(validate_dataset) 및 검증 결과 다이얼로그 구현
+b0ef374 | 2026-10-06 11:40:35 +0900 | ariuck | docs: 2일차 Daily Gate 12개를 4명에게 분배
+9f50d3a | 2026-10-06 11:34:02 +0900 | ariuck | docs: 2일차 역할 분담에 빠진 항목 보강
+d3a7c97 | 2026-10-06 11:28:16 +0900 | ariuck | docs: 2일차 역할 분담 작성
+2b5e90f | 2026-10-06 11:24:29 +0900 | ariuck | docs: 검수표 자동 기록 동작과 사람이 채울 칸을 문서에 반영
+8c59cce | 2026-10-06 11:24:29 +0900 | ariuck | test: 검수표 자동 기록 자체 점검 추가
+74c4ed1 | 2026-10-06 11:24:29 +0900 | ariuck | feat: 저장 버튼에 검수표 기록 연결
+6d202b4 | 2026-10-06 11:24:29 +0900 | ariuck | feat: 저장할 때 검수표(CSV) 자동 기록 구현
+d57c6d2 | 2026-10-06 11:20:40 +0900 | ariuck | docs: 검수표 19칸과 REVIEW 표시 규칙을 기준 문서에 반영
+15deecf | 2026-10-06 11:20:40 +0900 | ariuck | docs: Manifest 검수표 작성 가이드 추가
+bb504ab | 2026-10-06 11:20:40 +0900 | ariuck | feat: 검수표에 출처 데이터셋·원래 split 칸 추가
+476579d | 2026-10-06 11:16:41 +0900 | ariuck | docs: Manifest 기준 변경에 맞춰 README·BBox 기준서·1일차 문서 수정
+a63b721 | 2026-10-06 11:16:41 +0900 | ariuck | docs: Manifest CSV 머리글을 검수표 17칸으로 변경
+b82362f | 2026-10-06 11:16:41 +0900 | ariuck | feat: Manifest 검수표 틀 적용 (dataset_manifest.xlsx)
+f4a791b | 2026-10-06 11:02:28 +0900 | ariuck | docs: 1일차 산출물과 과정 기록 정리
+c097a6b | 2026-10-06 11:02:28 +0900 | ariuck | docs: README 작성
+057df54 | 2026-10-06 11:02:28 +0900 | ariuck | docs: BBox 기준서 작성
+b0e8f4f | 2026-10-06 11:02:28 +0900 | ariuck | docs: Class 기준서 작성
+00902f4 | 2026-10-06 11:02:28 +0900 | ariuck | docs: Project Baseline 작성
+cdcff41 | 2026-10-06 11:02:28 +0900 | ariuck | docs: Dataset Manifest 칸 정의 추가
+4853103 | 2026-10-06 11:02:28 +0900 | ariuck | test: 1일차 자체 점검 추가
+8c7e739 | 2026-10-06 11:02:28 +0900 | ariuck | feat: 이미지 1장 라벨링 화면과 시작 파일 구현
+00678e4 | 2026-10-06 11:02:28 +0900 | ariuck | feat: 데이터 조사 기능 구현
+237f89f | 2026-10-06 11:02:28 +0900 | ariuck | feat: BBox 생성·선택 로직 구현
+31e2bc6 | 2026-10-06 11:02:28 +0900 | ariuck | feat: RAW 보호와 WORK 저장 경로 구현
+0984b93 | 2026-10-06 11:02:28 +0900 | ariuck | feat: YOLO TXT 저장 구현
+5d0e14d | 2026-10-06 11:02:28 +0900 | ariuck | feat: 기존 YOLO TXT 불러오기 구현
+73e49f9 | 2026-10-06 11:02:28 +0900 | ariuck | feat: Class 0~6 설정 파일과 설정 읽기 구현
+4709f5b | 2026-10-06 11:02:28 +0900 | ariuck | chore: 프로젝트 기본 구조 생성
+1a76a5b | 2026-10-06 10:20:57 +0900 | tjrqja021206-a11y | Initial commit
