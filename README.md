@@ -363,16 +363,21 @@ python tests/day1_selftest.py          # 1일차 자체 점검만
 
 ```text
 data/final/
-├── images/                FINAL 이미지 900장
-├── labels/                FINAL YOLO TXT 900개 (이미지와 같은 이름)
+├── images/
+│   ├── train/             학습용 이미지 720장
+│   └── validation/        검증용 이미지 180장
+├── labels/
+│   ├── train/             학습용 YOLO TXT 720개 (이미지와 같은 이름)
+│   └── validation/        검증용 YOLO TXT 180개
 ├── classes.txt            Class 0~6 이름 (번호 순서)
 ├── 검수표.csv             900장의 검수 기록 (출처 데이터셋 · 원래 split 포함)
 └── dataset_manifest.xlsx  같은 내용의 엑셀 (python tools/export_manifest_xlsx.py)
 ```
 
-- 사진 이름이 데이터셋·split 이 달라도 겹치지 않아서 한 폴더(`images/`, `labels/`)에 모았습니다. **원래 어느 데이터셋·split 이었는지는 `검수표.csv` 의 `출처 데이터셋`·`원래 split` 칸에 남아 있습니다.** train / validation 을 다시 나누지는 않았습니다. (교과 8 에서 구성)
-- 사진은 RAW 의 복사본, 라벨은 `data/work` 의 검수한 라벨입니다. 수량·짝·Class 분포의 근거는 [reports/final_evidence.md](reports/final_evidence.md) (`python tools/final_evidence.py --apply`) 입니다.
-- 만드는 방법: `python tools/build_final.py` (확인만) → `python tools/build_final.py --apply` (만들기). 이미 있으면 `--overwrite` (옛것은 `data/backup` 으로 옮김). 원래 폴더 구조로 두려면 `--layout nested`.
+- **원래의 `train` / `validation` 구분을 폴더로 그대로 유지했습니다.** 학습데이터1 train 500 + 학습데이터2 train 220 = `train` 720장, 학습데이터2 validation = `validation` 180장입니다. 새로 나누거나 섞지 않았습니다. (재구성은 교과 8 에서 결정)
+- 사진 이름이 겹치지 않아서 데이터셋 폴더(학습데이터1·2)는 합쳤고, **어느 데이터셋에서 왔는지는 `검수표.csv` 의 `출처 데이터셋` 칸에 남아 있습니다.**
+- 사진은 RAW 의 복사본, 라벨은 `data/work` 의 검수한 라벨입니다. 수량·짝·폴더 구조 캡처는 [reports/final_evidence.md](reports/final_evidence.md), 자동 계산한 숫자는 `python tools/final_evidence.py` 로 볼 수 있습니다.
+- 만드는 방법: `python tools/build_final.py` (확인만) → `python tools/build_final.py --apply` (만들기). 이미 있으면 `--overwrite` (옛것은 `data/backup` 으로 옮김). 다른 구조는 `--layout flat`(한 폴더) · `--layout nested`(데이터셋별 폴더).
 - 아래 조건 중 하나라도 어긋나면 만들지 않습니다: 모든 사진이 검수표에 있고 상태가 `검수 완료`·`수정 완료`, 검수자 칸이 채워져 있고 작성자와 다름, 짝이 맞고 Validation 치명적 오류 0건. (`검수 전`·`수정 필요`·`제외` 사진은 최종본에 넣지 않습니다.)
 - FINAL 데이터는 회사 데이터라 Git 에 올리지 않습니다. (`data/` 는 `.gitignore`)
 

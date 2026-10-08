@@ -3,15 +3,17 @@
     python tools/build_final.py              # 미리보기: 조건을 확인하고 어떻게 만들지만 보여 준다
     python tools/build_final.py --apply      # 실제로 data/final 을 만든다
     python tools/build_final.py --apply --overwrite   # data/final 에 이미 있으면 data/backup 으로 옮기고 다시 만든다
-    python tools/build_final.py --layout nested       # 데이터셋·split 폴더를 그대로 두고 만든다 (기본은 하나로 모은 flat)
+    python tools/build_final.py --layout flat         # train/validation 구분 없이 한 폴더에 모은다
+    python tools/build_final.py --layout nested       # 데이터셋·split 폴더를 그대로 두고 만든다
 
-만드는 것 (기본, flat — 교과 7 산출물 안내의 data/final/images/, data/final/labels/ 구조)
-  data/final/images/<사진>.jpg      RAW 의 사진 (복사)
-  data/final/labels/<사진>.txt      data/work 의 검수한 라벨 (없으면 RAW 라벨)
+만드는 것 (기본, split — 원래 train / validation 구분을 폴더로 유지)
+  data/final/images/train/<사진>.jpg · images/validation/<사진>.jpg      RAW 의 사진 (복사)
+  data/final/labels/train/<사진>.txt · labels/validation/<사진>.txt      data/work 의 검수한 라벨 (없으면 RAW 라벨)
   data/final/classes.txt            Class 0~6 이름 (한 줄에 하나, 번호 순서)
-  data/final/검수표.csv              들어간 사진의 검수표 줄 — 출처 데이터셋·원래 split 은 여기서 확인한다
-  (flat 은 사진 이름이 데이터셋·split 이 달라도 겹치지 않을 때만 만든다. 겹치면 만들지 않고 알려 준다)
-  nested 는 data/final/<데이터셋>/images|labels/<split>/ 로 원래 폴더를 그대로 둔다.  어느 쪽이든 train/validation 을 다시 나누지는 않는다 (교과 8 에서 결정)
+  data/final/검수표.csv              들어간 사진의 검수표 줄 — 출처 데이터셋은 여기서 확인한다
+  (split·flat 은 사진 이름이 겹치지 않을 때만 만든다. 겹치면 만들지 않고 알려 준다)
+  flat 은 split 구분 없이 images/ · labels/ 한 폴더, nested 는 data/final/<데이터셋>/images|labels/<split>/ 로 원래 폴더를 그대로 둔다.
+  어느 쪽이든 train/validation 을 새로 나누거나 섞지는 않는다 (교과 8 에서 결정)
 
 만들기 전에 확인하는 것 (하나라도 어긋나면 만들지 않는다)
   - 모든 사진이 검수표에 있고 상태가 '검수 완료' 또는 '수정 완료' 이다 (검수 전·수정 필요·제외는 최종본에 넣지 않는다)
@@ -62,11 +64,11 @@ def label_source(raw_dir, work_dir, ds, split, stem):
     return (r, True) if r.is_file() else (None, False)
 
 
-def check(raw_dir=None, work_dir=None, manifest_path=None, layout="flat"):
+def check(raw_dir=None, work_dir=None, manifest_path=None, layout="split"):
     """최종본을 만들 수 있는지 확인한다.
 
     {'items': 들어갈 사진 목록, 'blocked': {이유: [사진...]}, 'validation': {CRITICAL 등 개수}, 'raw_labels': RAW 라벨을 쓴 수, 'rows': 검수표 줄}
-    blocked 가 비어 있어야 만들 수 있다.  layout="flat" 이면 사진 이름이 겹치는 경우도 막는다.
+    blocked 가 비어 있어야 만들 수 있다.  layout 이 flat · split 이면 사진 이름이 겹치는 경우도 막는다.
     """
     raw_dir = Path(raw_dir or settings.RAW_DIR)
     work_dir = Path(work_dir or settings.WORK_DIR)
@@ -112,14 +114,14 @@ def check(raw_dir=None, work_dir=None, manifest_path=None, layout="flat"):
         items.append({"dataset": ds, "split": split, "image": img, "label": label, "name": name})
         kept_rows.append(row)
 
-    if layout == "flat":
+    if layout in ("flat", "split"):
         seen = {}
         for it in items:
-            seen.setdefault(it["image"].name, []).append(it["name"])
+            seen.setdefault((it["split"] if layout == "split" else "", it["image"].name), []).append(it["name"])
         for names in seen.values():
             if len(names) > 1:
                 for n in names:
-                    block("flat 구조에서 사진 이름이 겹침 (--layout nested 로 만들 수 있음)", n)
+                    block(f"{layout} 구조에서 사진 이름이 겹침 (--layout nested 로 만들 수 있음)", n)
     report = validator.validate_dataset(raw_dir=raw_dir, work_dir=work_dir)
     counts = {}
     for item in report:
@@ -139,7 +141,7 @@ def existing_content(final_dir):
     return sum(1 for p in final_dir.rglob("*") if p.is_file() and p.name != ".gitkeep")
 
 
-def build(result, final_dir=None, overwrite=False, backup_dir=None, classes=None, layout="flat"):
+def build(result, final_dir=None, overwrite=False, backup_dir=None, classes=None, layout="split"):
     """check() 결과로 data/final 을 만든다. 만든 사진 수를 돌려준다.  이미 내용이 있으면 overwrite 가 있어야 하고, 옛것은 backup_dir 로 옮긴다."""
     final_dir = Path(final_dir or settings.FINAL_DIR)
     if result["blocked"]:
@@ -156,7 +158,12 @@ def build(result, final_dir=None, overwrite=False, backup_dir=None, classes=None
     final_dir.mkdir(parents=True, exist_ok=True)
     for it in result["items"]:
         for kind, src in (("images", it["image"]), ("labels", it["label"])):
-            dst_dir = final_dir / kind if layout == "flat" else final_dir / it["dataset"] / kind / it["split"]
+            if layout == "flat":
+                dst_dir = final_dir / kind
+            elif layout == "split":
+                dst_dir = final_dir / kind / it["split"]
+            else:
+                dst_dir = final_dir / it["dataset"] / kind / it["split"]
             dst_dir.mkdir(parents=True, exist_ok=True)
             dst = dst_dir / (src.name if kind == "images" else f"{it['image'].stem}.txt")
             shutil.copyfile(src, dst)
@@ -184,8 +191,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="검수가 끝난 사진과 라벨을 data/final 로 정리한다")
     ap.add_argument("--apply", action="store_true", help="실제로 만든다 (없으면 미리보기만)")
     ap.add_argument("--overwrite", action="store_true", help="data/final 에 이미 있으면 data/backup 으로 옮기고 다시 만든다")
-    ap.add_argument("--layout", choices=("flat", "nested"), default="flat",
-                    help="flat: data/final/images · labels 로 모은다 (기본)  nested: 데이터셋·split 폴더를 그대로 둔다")
+    ap.add_argument("--layout", choices=("split", "flat", "nested"), default="split",
+                    help="split: images/train · images/validation 처럼 원래 split 을 폴더로 유지 (기본)  flat: 한 폴더에 모은다  nested: 데이터셋·split 폴더를 그대로 둔다")
     args = ap.parse_args(argv)
 
     result = check(layout=args.layout)

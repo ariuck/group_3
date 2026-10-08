@@ -26,16 +26,21 @@
 
 ```text
 data/final/
-├── images/               FINAL 이미지 900장 (.jpg)
-├── labels/               FINAL YOLO TXT 900개 (이미지와 같은 이름)
+├── images/
+│   ├── train/            학습용 이미지 720장 (.jpg)
+│   └── validation/       검증용 이미지 180장 (.jpg)
+├── labels/
+│   ├── train/            학습용 YOLO TXT 720개 (이미지와 같은 이름)
+│   └── validation/       검증용 YOLO TXT 180개
 ├── classes.txt           Class 0~6 이름 (번호 순서, 한 줄에 하나)
 ├── 검수표.csv             900장의 검수 기록 (출처·원래 split 포함)
 └── dataset_manifest.xlsx 같은 내용의 엑셀 (제출용)
 ```
 
-- 사진은 RAW 의 복사본, 라벨은 검수한 `data/work` 라벨입니다. 수량·짝·Class 분포의 근거: [final_evidence](../../reports/final_evidence.md) 파일 이름은 데이터셋·split 이 달라도 겹치지 않아서(고유 900개) 한 폴더에 모아 두었습니다.
-- **원래 어느 데이터셋·split 이었는지는 폴더가 아니라 `검수표.csv` 에서 확인합니다.** train / validation 을 다시 나누거나 합치지는 않았습니다. (교과 8 에서 구성)
-- 폴더 구조를 원래대로(`<데이터셋>/images|labels/<split>/`) 두고 싶다면 `python tools/build_final.py --apply --overwrite --layout nested` 로 다시 만들 수 있습니다.
+- 사진은 RAW 의 복사본, 라벨은 검수한 `data/work` 라벨입니다. 수량·짝·Class 분포의 근거: [final_evidence](../../reports/final_evidence.md)
+- **원래의 train / validation 구분을 폴더로 유지했습니다.** 학습데이터1 train 500 + 학습데이터2 train 220 = `train` 720장, 학습데이터2 validation = `validation` 180장입니다. 새로 나누거나 섞지 않았습니다. (재구성은 교과 8 에서 결정)
+- 어느 데이터셋(학습데이터1·2)에서 왔는지는 `검수표.csv` 의 `출처 데이터셋` 칸에서 확인합니다.
+- 다른 구조가 필요하면 `python tools/build_final.py --apply --overwrite --layout flat`(한 폴더) 또는 `--layout nested`(`<데이터셋>/images|labels/<split>/`) 로 다시 만들 수 있습니다.
 
 ## 3. YOLO Label 형식
 

@@ -90,6 +90,36 @@ class BuildFinalTest(unittest.TestCase):
             rows = list(csv.DictReader(f))
         self.assertEqual({(r["출처 데이터셋"], r["원래 split"]) for r in rows}, {("DS1", "train"), ("DS2", "validation")})   # 출처는 검수표에 남는다
 
+    def test_split_layout_keeps_train_and_validation_folders(self):
+        done = bf.build(self.check("split"), self.final, classes=[{"name": "x"}], layout="split")
+        self.assertEqual(done["photos"], 3)
+        self.assertEqual(sorted(p.name for p in (self.final / "images" / "train").iterdir()), ["a.jpg", "b.jpg"])
+        self.assertEqual(sorted(p.name for p in (self.final / "images" / "validation").iterdir()), ["c.jpg"])
+        self.assertEqual(sorted(p.name for p in (self.final / "labels" / "train").iterdir()), ["a.txt", "b.txt"])
+        self.assertEqual((self.final / "labels" / "train" / "a.txt").read_text(encoding="utf-8"), "2 0.4 0.4 0.2 0.2\n")   # 검수한 라벨
+        self.assertFalse((self.final / "DS1").exists())                                                                     # 데이터셋 폴더는 만들지 않는다
+
+    def test_split_layout_allows_same_name_in_different_splits_but_not_in_the_same_split(self):
+        img = self.raw / "DS2" / "images" / "validation"
+        lbl = self.raw / "DS2" / "labels" / "validation"
+        Image.new("RGB", (40, 40)).save(img / "a.jpg")                           # train 의 a.jpg 와 이름은 같지만 split 이 다르다
+        (lbl / "a.txt").write_text("1 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+        self.rows.append({"No": "4", "이미지 파일명": "a.jpg", "상태": "검수 완료", "작성자": "가", "검수자": "나",
+                          "출처 데이터셋": "DS2", "원래 split": "validation"})
+        self.write_manifest()
+        self.assertEqual(self.check("split")["blocked"], {})
+        self.assertTrue(any("겹침" in k for k in self.check("flat")["blocked"]))
+        img2 = self.raw / "DS2" / "images" / "train"
+        lbl2 = self.raw / "DS2" / "labels" / "train"
+        img2.mkdir(parents=True)
+        lbl2.mkdir(parents=True)
+        Image.new("RGB", (40, 40)).save(img2 / "a.jpg")                          # DS1/train/a.jpg 와 split 까지 같다
+        (lbl2 / "a.txt").write_text("1 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+        self.rows.append({"No": "5", "이미지 파일명": "a.jpg", "상태": "검수 완료", "작성자": "가", "검수자": "나",
+                          "출처 데이터셋": "DS2", "원래 split": "train"})
+        self.write_manifest()
+        self.assertTrue(any("겹침" in k for k in self.check("split")["blocked"]))
+
     def test_flat_layout_blocks_when_names_collide(self):
         img = self.raw / "DS2" / "images" / "validation"
         lbl = self.raw / "DS2" / "labels" / "validation"
