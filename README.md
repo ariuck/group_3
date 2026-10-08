@@ -399,4 +399,3 @@ FINAL 데이터는 교과 8 Object Detection 학습에 사용합니다.
 - 검수표의 `위치 맞음` · `Class 맞음` · `누락 객체 여부` 칸은 비어 있습니다. 검수 상태(검수 완료 · 수정 완료)로 갈음했습니다.
 - 한글 입력 시험(`test_hangul_input`)은 WSL 창의 포커스 타이밍 때문에 간혹 실패하며, 다시 실행하면 통과합니다.
 - 폴더 끌어다 놓기는 선택 패키지 `tkinterdnd2` 가 있어야 하고, 없어도 `[폴더 열기]` 버튼은 동작합니다.
-- 별도의 20~50장 Pilot Test 기록은 없습니다. ([Test Report](reports/test_report.md))
