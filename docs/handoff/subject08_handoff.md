@@ -2,6 +2,8 @@
 
 > 교과 7(조각김치 이물검출 라벨링)의 결과를 교과 8(Object Detection 학습)에서 바로 쓸 수 있도록 **무엇이 어디에 있고, 무엇을 지켜야 하는지** 한곳에 정리한 문서입니다.
 > 숫자는 2026-10-08 기준 검수표와 라벨에서 읽은 값이며, 자세한 통계는 [QA Summary](../../reports/qa_summary.md) 에 있습니다.
+>
+> **데이터 성격**: 본 프로젝트는 AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터를 활용하여 수행하였습니다. 실제 생산라인 원본 데이터라고 표현하지 않습니다.
 
 ## 1. FINAL Dataset 수량
 
@@ -68,6 +70,12 @@ class_id x_center y_center width height
 | 최종 REVIEW (미처리) | 0건 |
 | 검수 상태 | 검수 완료 674 · 수정 완료 226 (검수 전·수정 필요·제외 0) |
 | 작성자와 검수자가 같은 사진 | 0장 |
+| 교차검수 범위 | 900장 전부 (작성자와 다른 사람이 검수). 라벨이 원본과 달라진 235장도 모두 포함 |
+| PASS(검수 완료) 사진의 표본검수 | 전수 교차검수라 100% (가이드 권장 20~30% 이상) |
+| 최종 잔여 이슈 | 없음 (미처리 REVIEW 0 · Validation 0 · 검수 전·수정 필요·제외 0) |
+| 프로그램 Acceptance Test (가이드 §7.5) | 2026-10-08, 테스터 손상우 — 16단계 모두 통과 ([Test Report](../../reports/test_report.md) §4) |
+| Human Final QA (가이드 §7.3 우선순위 점검) | 2026-10-08, 강동연 — 40장 점검(Class 변경 1 · 작은 BBox 30 · BBox 많은 이미지 9), 이상 없음, 수정 0건 ([점검 목록](../../reports/human_qa_worklist.md)) |
+| REVIEW 이력 2장 (180번 · 601번) | 지혜성 · 김석범 확인. 180번은 잎사귀로 보기에는 너무 작아 갈변(Class 5)으로 라벨링, 601번은 REVIEW 로 잘못 표시된 것을 바로잡음 ([이슈 기록](../records/이슈기록.md)) |
 | 최종 QA 판정 | **교과 8 사용 가능** |
 
 자세한 내용: [QA Summary](../../reports/qa_summary.md) · 프로그램 시험: [Test Report](../../reports/test_report.md)
@@ -88,7 +96,7 @@ class_id x_center y_center width height
 | `qa_status` (PASS / WAIT) | `검수자` 칸이 채워지고 `상태`가 검수 완료·수정 완료이면 PASS, 아니면 WAIT. 지금은 900장 모두 PASS |
 | `worker` | `작성자` (검수자는 `검수자`) |
 | `review_reason` | `발견된 문제` (`REVIEW: 이유 코드`) |
-| `scene_type` | `이미지 유형` |
+| `scene_type` | `이미지 유형` — 김치+대상 객체 = `kimchi_with_target` · 정상 김치 = `normal_kimchi` · 대상 객체 단독 = `object_only` · 판단 어려움 = `other_review` |
 
 ## 7. Class / BBox 기준서 위치
 
@@ -104,6 +112,8 @@ class_id x_center y_center width height
 - **정상 김치(이물 없는) 사진이 0장**입니다. 이미지 유형은 김치+대상 객체 749 · 대상 객체 단독 150 · 판단 어려움 1 입니다. 모든 사진에 BBox 가 한 개 이상 있어서, 이물이 없는 사진에서 "없다"고 맞히는 능력은 이 데이터로는 학습·평가하기 어렵습니다.
 - 비슷한 사진이 Train 과 Test 에 함께 들어가는 Data Leakage 를 확인할 때 `검수표.csv` 의 출처·원래 split·이미지 유형을 사용하세요.
 - 기존 validation(180장)은 학습데이터2 한 곳에서만 왔습니다.
+- **중복·유사 장면 주의**: 파일명 앞 6자리(날짜로 보임: 250410 · 250411 · 250424 · 250513)가 train 과 validation 에 모두 나타납니다. 같은 때 찍힌 비슷한 장면이 양쪽에 나뉘어 있을 수 있으니, 학습 전에 Data Leakage(유사 사진 중복)를 점검하세요.
+- **FINAL Freeze**: `data/final` 은 2026-10-08 에 `tools/build_final.py` 로 만들었고 직접 고치지 않습니다. 라벨 문제를 찾으면 `data/work` 를 고치고 Validation · 검수 후 `python tools/build_final.py --apply --overwrite` 로 다시 만드세요.
 - 라벨을 더 고치면 최종본을 다시 만들어야 합니다: `python tools/build_final.py --apply --overwrite` (옛것은 `data/backup` 으로 옮김).
 
 ## 9. 교과 8 로 넘어가기 전 최소 확인
