@@ -1,7 +1,7 @@
-"""최종본(data/final)의 증빙 자료를 글로 만든다. (reports/final_evidence.md)
+"""최종본(data/final)의 증빙 자료를 글로 만든다. (자동 생성: reports/final_evidence_auto.md)
 
     python tools/final_evidence.py              # 화면에 미리보기
-    python tools/final_evidence.py --apply      # reports/final_evidence.md 로 저장
+    python tools/final_evidence.py --apply      # reports/final_evidence_auto.md 로 저장 (사람이 정리한 final_evidence.md 는 그대로 둔다)
 
 들어가는 것: 폴더 구조, 이미지·TXT 수량, 짝 일치, 최종본 자체의 Validation 결과, Class 분포, 대표 YOLO TXT 예시 3개
 사진 파일명은 넣지 않는다. (실제 파일명은 회사 데이터라 공개 문서에 두지 않는다)
@@ -18,15 +18,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src import settings                                    # noqa: E402
 from src.validation import validator                        # noqa: E402
 
-REPORT_PATH = settings.PROJECT_DIR / "reports" / "final_evidence.md"
+REPORT_PATH = settings.PROJECT_DIR / "reports" / "final_evidence_auto.md"      # reports/final_evidence.md 는 캡처를 넣어 사람이 정리한 문서라 덮어쓰지 않는다
 
 
 def inspect(final_dir=None):
-    """flat 구조(images/, labels/)의 최종본을 읽어 증빙 숫자를 모은다."""
+    """최종본(images/ · labels/ 또는 images/train · images/validation 처럼 나뉜 구조)을 읽어 증빙 숫자를 모은다."""
     final_dir = Path(final_dir or settings.FINAL_DIR)
-    images = sorted(p for p in (final_dir / "images").glob("*") if p.suffix.lower() in settings.IMAGE_EXTS)
-    labels = sorted((final_dir / "labels").glob("*.txt"))
-    istem, lstem = {p.stem for p in images}, {p.stem for p in labels}
+    img_root, lbl_root = final_dir / "images", final_dir / "labels"
+    images = sorted(p for p in img_root.rglob("*") if p.is_file() and p.suffix.lower() in settings.IMAGE_EXTS)
+    labels = sorted(p for p in lbl_root.rglob("*.txt") if p.is_file())
+    istem = {p.relative_to(img_root).with_suffix("").as_posix() for p in images}       # 'train/이름' 처럼 split 폴더까지 같아야 짝
+    lstem = {p.relative_to(lbl_root).with_suffix("").as_posix() for p in labels}
+    splits = {}
+    for p in images:
+        sub = p.relative_to(img_root).parts[0] if len(p.relative_to(img_root).parts) > 1 else ""
+        splits.setdefault(sub, [0, 0])[0] += 1
+    for p in labels:
+        sub = p.relative_to(lbl_root).parts[0] if len(p.relative_to(lbl_root).parts) > 1 else ""
+        splits.setdefault(sub, [0, 0])[1] += 1
     classes, issues, boxes_per_file, empty = Counter(), Counter(), [], 0
     for p in labels:
         rows, errors = validator.parse_label_file(p)
@@ -44,7 +53,7 @@ def inspect(final_dir=None):
             break
     return {"images": len(images), "labels": len(labels), "pairs": len(istem & lstem), "only_image": len(istem - lstem),
             "only_label": len(lstem - istem), "empty": empty, "classes": classes, "issues": issues, "boxes": sum(boxes_per_file),
-            "samples": samples, "has_classes_txt": (final_dir / "classes.txt").is_file(), "has_manifest": (final_dir / "검수표.csv").is_file()}
+            "splits": {k: tuple(v) for k, v in splits.items() if k}, "samples": samples, "has_classes_txt": (final_dir / "classes.txt").is_file(), "has_manifest": (final_dir / "검수표.csv").is_file()}
 
 
 def build_markdown(info, today=None):
@@ -53,7 +62,9 @@ def build_markdown(info, today=None):
          "> 사진 파일명은 넣지 않았습니다. 화면 캡처(폴더 구조 · 이미지 수량 · TXT 수량 · 대표 이미지 3~5장)는 사람이 찍어 따로 보관합니다.", "",
          "## 1. 폴더 구조", "", "```text", "data/final/",
          f"├── images/        {info['images']}장 (.jpg)",
+         *[f"│   ├── {k}/   {v[0]}장" for k, v in sorted(info["splits"].items())],
          f"├── labels/        {info['labels']}개 (.txt)",
+         *[f"│   ├── {k}/   {v[1]}개" for k, v in sorted(info["splits"].items())],
          f"├── classes.txt    {'있음' if info['has_classes_txt'] else '없음'}",
          f"└── 검수표.csv      {'있음' if info['has_manifest'] else '없음'}", "```", "",
          "## 2. 수량과 짝", "", "| 항목 | 수량 |", "|---|---:|",
@@ -76,8 +87,8 @@ def build_markdown(info, today=None):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="최종본의 증빙 숫자를 reports/final_evidence.md 로 만든다")
-    ap.add_argument("--apply", action="store_true", help="reports/final_evidence.md 로 저장한다 (없으면 화면에만 출력)")
+    ap = argparse.ArgumentParser(description="최종본의 증빙 숫자를 reports/final_evidence_auto.md 로 만든다")
+    ap.add_argument("--apply", action="store_true", help="reports/final_evidence_auto.md 로 저장한다 (없으면 화면에만 출력)")
     args = ap.parse_args(argv)
     md = build_markdown(inspect())
     if args.apply:

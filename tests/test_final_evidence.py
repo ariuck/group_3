@@ -44,6 +44,24 @@ class FinalEvidenceTest(unittest.TestCase):
         self.assertNotIn("a.txt", md)
         self.assertIn("화면 캡처", md)
 
+    def test_split_structure_is_read_and_paired_by_split_folder(self):
+        for sub in ("train", "validation"):
+            (self.tmp / "images" / sub).mkdir()
+            (self.tmp / "labels" / sub).mkdir()
+        for p in list((self.tmp / "images").glob("*.jpg")):
+            p.rename(self.tmp / "images" / "train" / p.name)
+        for p in list((self.tmp / "labels").glob("*.txt")):
+            p.rename(self.tmp / "labels" / "train" / p.name)
+        Image.new("RGB", (20, 20)).save(self.tmp / "images" / "validation" / "v.jpg")
+        (self.tmp / "labels" / "validation" / "v.txt").write_text("3 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+        info = fe.inspect(self.tmp)
+        self.assertEqual((info["images"], info["labels"], info["pairs"]), (4, 4, 4))
+        self.assertEqual(info["splits"], {"train": (3, 3), "validation": (1, 1)})
+        (self.tmp / "labels" / "validation" / "v.txt").rename(self.tmp / "labels" / "train" / "v.txt")                  # 짝이 다른 폴더에 있으면 짝이 아니다
+        info = fe.inspect(self.tmp)
+        self.assertEqual(info["pairs"], 3)
+        self.assertEqual((info["only_image"], info["only_label"]), (1, 1))
+
 
 if __name__ == "__main__":
     unittest.main()
