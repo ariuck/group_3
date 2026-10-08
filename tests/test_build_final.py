@@ -42,8 +42,8 @@ class BuildFinalTest(unittest.TestCase):
             w.writeheader()
             w.writerows(self.rows)
 
-    def check(self):
-        return bf.check(self.raw, self.work, self.manifest)
+    def check(self, layout="nested"):
+        return bf.check(self.raw, self.work, self.manifest, layout=layout)
 
     def test_ok_when_everything_is_reviewed(self):
         r = self.check()
@@ -80,8 +80,29 @@ class BuildFinalTest(unittest.TestCase):
         (self.work / "DS1" / "labels" / "train" / "a.txt").write_text("9 0.5 0.5 0.2 0.2\n", encoding="utf-8")   # Class 범위 밖
         self.assertTrue(any("Validation" in k for k in self.check()["blocked"]))
 
+    def test_flat_layout_puts_everything_in_images_and_labels(self):
+        done = bf.build(self.check("flat"), self.final, classes=[{"name": "x"}], layout="flat")
+        self.assertEqual(done["photos"], 3)
+        self.assertEqual(sorted(p.name for p in (self.final / "images").iterdir()), ["a.jpg", "b.jpg", "c.jpg"])
+        self.assertEqual(sorted(p.name for p in (self.final / "labels").iterdir()), ["a.txt", "b.txt", "c.txt"])
+        self.assertEqual((self.final / "labels" / "a.txt").read_text(encoding="utf-8"), "2 0.4 0.4 0.2 0.2\n")   # 검수한 라벨
+        with open(self.final / "검수표.csv", encoding="utf-8-sig", newline="") as f:
+            rows = list(csv.DictReader(f))
+        self.assertEqual({(r["출처 데이터셋"], r["원래 split"]) for r in rows}, {("DS1", "train"), ("DS2", "validation")})   # 출처는 검수표에 남는다
+
+    def test_flat_layout_blocks_when_names_collide(self):
+        img = self.raw / "DS2" / "images" / "validation"
+        lbl = self.raw / "DS2" / "labels" / "validation"
+        Image.new("RGB", (40, 40)).save(img / "a.jpg")                           # DS1/train/a.jpg 와 이름이 같다
+        (lbl / "a.txt").write_text("1 0.5 0.5 0.2 0.2\n", encoding="utf-8")
+        self.rows.append({"No": "4", "이미지 파일명": "a.jpg", "상태": "검수 완료", "작성자": "가", "검수자": "나",
+                          "출처 데이터셋": "DS2", "원래 split": "validation"})
+        self.write_manifest()
+        self.assertTrue(any("겹침" in k for k in self.check("flat")["blocked"]))
+        self.assertEqual(self.check("nested")["blocked"], {})                    # 폴더를 그대로 두면 만들 수 있다
+
     def test_build_keeps_structure_and_uses_reviewed_labels(self):
-        done = bf.build(self.check(), self.final, classes=[{"name": "x"}, {"name": "y"}])
+        done = bf.build(self.check(), self.final, classes=[{"name": "x"}, {"name": "y"}], layout="nested")
         self.assertEqual(done["photos"], 3)
         self.assertTrue((self.final / "DS1" / "images" / "train" / "a.jpg").is_file())
         self.assertTrue((self.final / "DS2" / "images" / "validation" / "c.jpg").is_file())     # train/validation 을 섞지 않는다
@@ -95,7 +116,7 @@ class BuildFinalTest(unittest.TestCase):
         def snapshot(root):
             return sorted((p.relative_to(root).as_posix(), p.read_bytes()) for p in root.rglob("*") if p.is_file())
         raw_before, work_before = snapshot(self.raw), snapshot(self.work)
-        bf.build(self.check(), self.final)
+        bf.build(self.check(), self.final, layout="nested")
         self.assertEqual(snapshot(self.raw), raw_before)
         self.assertEqual(snapshot(self.work), work_before)
         self.assertEqual((self.final / "DS1" / "images" / "train" / "a.jpg").read_bytes(),
@@ -109,11 +130,11 @@ class BuildFinalTest(unittest.TestCase):
         self.assertFalse(self.final.exists())
 
     def test_existing_final_needs_overwrite_and_is_backed_up(self):
-        bf.build(self.check(), self.final)
+        bf.build(self.check(), self.final, layout="nested")
         with self.assertRaises(FileExistsError):
-            bf.build(self.check(), self.final)
+            bf.build(self.check(), self.final, layout="nested")
         backup = self.tmp / "backup"
-        done = bf.build(self.check(), self.final, overwrite=True, backup_dir=backup)
+        done = bf.build(self.check(), self.final, overwrite=True, backup_dir=backup, layout="nested")
         self.assertEqual(done["moved_old_to"], backup)
         self.assertTrue((backup / "DS1" / "images" / "train" / "a.jpg").is_file())
         self.assertTrue((self.final / "DS1" / "images" / "train" / "a.jpg").is_file())
@@ -122,7 +143,7 @@ class BuildFinalTest(unittest.TestCase):
         (self.final / "DS1" / "images" / "train").mkdir(parents=True)
         (self.final / ".gitkeep").write_text("")
         self.assertEqual(bf.existing_content(self.final), 0)
-        bf.build(self.check(), self.final)                                      # --overwrite 없이도 만들어진다
+        bf.build(self.check(), self.final, layout="nested")                     # --overwrite 없이도 만들어진다
 
 
 if __name__ == "__main__":

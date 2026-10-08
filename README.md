@@ -292,11 +292,15 @@ docs/standards/manifest_guide.md
 
 ## 12. QA 결과
 
-최종 라벨 데이터의 품질검사 결과는 다음 파일에서 확인합니다. (작성 예정)
+최종 라벨 데이터의 품질검사 결과는 다음 파일에서 확인합니다.
 
 ```text
 reports/qa_summary.md
 ```
+
+검수 현황, BBox 변화(추가·수정·삭제), Class 별 증감, 이미지 유형, 완료 기준 점검이 들어 있습니다. 검수표를 읽어 다시 만들 수 있습니다: `python tools/qa_summary.py --apply`
+
+교과 8 에서 바로 쓸 수 있게 정리한 인계 문서: [교과 8 Handoff](docs/handoff/subject08_handoff.md)
 
 ---
 
@@ -313,8 +317,8 @@ reports/test_report.md
 | 단계 | 상태 |
 |---|---|
 | Golden Test | 실제 데이터 900장 읽기 전용 점검(짝·Validation·Round-trip)과 자동 시험으로 11/12 확인, 화면 표시는 사람 확인 `확인 예정` |
-| Pilot Test (20~50장) | 진행 전 — 사람이 실제 작업 흐름으로 해 보고 기록해야 함 |
-| Final Acceptance Test | 진행 전 — 900장 검수 완료 후 |
+| Pilot Test (20~50장) | 별도 기록 없음 — 900장 검수가 이 프로그램으로 진행되어 끝남. 일시·시험자는 사람이 적는 칸 |
+| Final Acceptance Test | 4가지 기준 모두 통과 (최종본 900장, 2026-10-08) |
 
 자동 시험은 가짜 데이터로 돌아가며, 한 번에 실행하려면 다음과 같이 합니다.
 
@@ -331,16 +335,16 @@ python tests/day1_selftest.py          # 1일차 자체 점검만
 
 ```text
 data/final/
-├── 이물검출_학습데이터1/   images/train · labels/train        (500장)
-├── 이물검출_학습데이터2/   images/train · labels/train        (220장)
-│                          images/validation · labels/validation (180장)
+├── images/                FINAL 이미지 900장
+├── labels/                FINAL YOLO TXT 900개 (이미지와 같은 이름)
 ├── classes.txt            Class 0~6 이름 (번호 순서)
-└── 검수표.csv             들어간 900장의 검수 기록
+├── 검수표.csv             900장의 검수 기록 (출처 데이터셋 · 원래 split 포함)
+└── dataset_manifest.xlsx  같은 내용의 엑셀 (python tools/export_manifest_xlsx.py)
 ```
 
-- **데이터셋·split 구조를 그대로 유지합니다.** 합치거나 다시 나누지 않습니다. (합칠지·재분할할지는 교과 8 에서 정합니다. [Project Baseline](docs/standards/project_baseline.md) §1)
-- 사진은 RAW 의 복사본, 라벨은 `data/work` 의 검수한 라벨입니다.
-- 만드는 방법: `python tools/build_final.py` (확인만) → `python tools/build_final.py --apply` (만들기). 이미 있으면 `--overwrite` (옛것은 `data/backup` 으로 옮김).
+- 사진 이름이 데이터셋·split 이 달라도 겹치지 않아서 한 폴더(`images/`, `labels/`)에 모았습니다. **원래 어느 데이터셋·split 이었는지는 `검수표.csv` 의 `출처 데이터셋`·`원래 split` 칸에 남아 있습니다.** train / validation 을 다시 나누지는 않았습니다. (교과 8 에서 구성)
+- 사진은 RAW 의 복사본, 라벨은 `data/work` 의 검수한 라벨입니다. 수량·짝·Class 분포의 근거는 [reports/final_evidence.md](reports/final_evidence.md) (`python tools/final_evidence.py --apply`) 입니다.
+- 만드는 방법: `python tools/build_final.py` (확인만) → `python tools/build_final.py --apply` (만들기). 이미 있으면 `--overwrite` (옛것은 `data/backup` 으로 옮김). 원래 폴더 구조로 두려면 `--layout nested`.
 - 아래 조건 중 하나라도 어긋나면 만들지 않습니다: 모든 사진이 검수표에 있고 상태가 `검수 완료`·`수정 완료`, 검수자 칸이 채워져 있고 작성자와 다름, 짝이 맞고 Validation 치명적 오류 0건. (`검수 전`·`수정 필요`·`제외` 사진은 최종본에 넣지 않습니다.)
 - FINAL 데이터는 회사 데이터라 Git 에 올리지 않습니다. (`data/` 는 `.gitignore`)
 
