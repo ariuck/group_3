@@ -127,7 +127,6 @@ class_id x_center y_center width height
 - RAW 원본은 수정하지 않습니다.
 - 학습 전에 `python tools/build_final.py` 로 조건(검수 상태·검수자·짝·Validation)을 다시 확인할 수 있습니다.
 
-## 11. 사람이 적는 칸
+## 11. 교과 8 에서 정할 것
 
-- 인계 일시·받는 사람: 【기입】
-- 교과 8 의 train / validation / test 구성 방식: 【기입】 (교과 8 에서 결정)
+- train / validation / test 구성 방식 (원래 split 은 `검수표.csv` 에 있음)

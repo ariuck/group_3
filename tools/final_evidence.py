@@ -70,7 +70,7 @@ def build_markdown(info, today=None):
     L += ["", "## 5. 대표 YOLO TXT 예시", "", "한 줄이 BBox 하나입니다: `class_id x_center y_center width height` (0~1 비율값)", ""]
     for i, s in enumerate(info["samples"], 1):
         L += [f"예시 {i} (BBox {len(s.splitlines())}개):", "", "```text", s, "```", ""]
-    L += ["## 6. 사람이 하는 것", "", "- 폴더 구조 · 이미지 수량 · TXT 수량 캡처, 대표 검수 완료 이미지 3~5장 캡처: 【기입】",
+    L += ["## 6. 화면 캡처", "", "- 폴더 구조 · 이미지 수량 · TXT 수량 캡처, 대표 검수 완료 이미지 3~5장 캡처는 이 숫자를 화면으로 보여 주는 자료입니다.",
           "- 캡처에는 실제 사진이 나오므로 외부에 공유하지 않는 곳에만 보관합니다. (NDA)", ""]
     return "\n".join(L)
 
