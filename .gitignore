@@ -38,6 +38,9 @@ manifests/*.csv
 
 # ── 증빙 자료: 실제 사진이 나오는 캡처와 영상은 올리지 않는다 (프로그램 캡처는 가짜 샘플로 찍어 올림)
 reports/evidence/final/
+# 김동훈 프로그램 증빙(실행 화면·시연 영상)도 Git 에 올리지 않는다 (폴더 자체를 유지하는 .gitkeep 만 예외)
+reports/evidence/program/*
+!reports/evidence/program/.gitkeep
 reports/evidence/**/*.mp4
 reports/evidence/**/*.mov
 reports/evidence/**/*.avi
