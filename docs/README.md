@@ -9,7 +9,7 @@
 | **survey/** 데이터 조사 | 데이터 구조와 사진 살펴보기 | [데이터조사표](survey/데이터조사표.md) |
 | **team/** 팀 운영 | 역할 분담, Daily Gate 확인, 팀원 라벨 합치기 | [역할분담_DailyGate](team/역할분담_DailyGate.md) · [Gate_체크리스트](team/Gate_체크리스트.md) · [라벨_합치기](team/라벨_합치기.md) · [결과_주고받기](team/결과_주고받기.md) · [검수_배정](team/검수_배정.md) |
 | **handoff/** 인계 | 교과 8 로 넘기는 최종 데이터 설명 | [subject08_handoff](handoff/subject08_handoff.md) |
-| **records/** 작업 기록 | 과정 기록, 산출물 요약 | [과정기록](records/과정기록.md) · [산출물_요약](records/산출물_요약.md) |
+| **records/** 작업 기록 | 과정 기록, 산출물 요약 | [과정기록](records/과정기록.md) · [산출물_요약](records/산출물_요약.md) · [이슈기록](records/이슈기록.md) |
 | **meetings/** 회의록 | 일차별 회의록 | [1일차](meetings/회의록_1일차.md) · [2일차](meetings/회의록_2일차.md) · [3일차](meetings/회의록_3일차.md) |
 | **images/** | 문서에 쓰는 그림 | |
 
