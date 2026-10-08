@@ -43,3 +43,7 @@ reports/evidence/**/*.mov
 reports/evidence/**/*.avi
 reports/evidence/**/*.mkv
 reports/evidence/**/*.webm
+
+# 제출용 Manifest(영문 칸 이름) 사본: 실제 사진 파일명이 들어 있어 Git 에 올리지 않는다
+07_Dataset_Manifest/
+manifests/dataset_manifest_교과8.xlsx
