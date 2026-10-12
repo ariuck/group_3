@@ -1,0 +1,17 @@
+# 회사 데이터 (NDA)
+data/
+
+# 모델 가중치 (yolo11n.pt 자동 다운로드 포함)
+*.pt
+
+# Ultralytics 실행 결과
+runs/
+
+# 회사 이미지가 들어가는 시연 결과
+demo/**/*.jpg
+demo/**/*.png
+demo/**/*.mp4
+
+# Python
+__pycache__/
+.venv/
