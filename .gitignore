@@ -54,3 +54,4 @@ manifests/backup/
 
 # LMS 제출용 개인 산출물 폴더 및 중복 산출물 방지
 /07_Dataset_Manifest/
+*.pt
