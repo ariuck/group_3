@@ -18,6 +18,17 @@ class SplitBuilder:
         self.yolo_dir = self.project_root / "data" / "yolo"
         self.bridge_dir = self.project_root / "data" / "bridge_holdout"
         self.configs_dir = self.project_root / "configs"
+        self.reports_dir = self.project_root / "reports"
+
+    def _find_file(self, base_dir: Path, filename: str) -> Path:
+        """직접 경로 또는 재귀 탐색(rglob)을 통해 파일 경로 반환"""
+        direct = base_dir / filename
+        if direct.exists():
+            return direct
+        matches = list(base_dir.rglob(filename))
+        if matches:
+            return matches[0]
+        return direct
 
     def assign_capture_groups(self, df: pd.DataFrame) -> pd.DataFrame:
         """파일명 타임스탬프 기준 5분(300초) 초과 간격으로 G00~G17 18개 묶음 부여"""
@@ -48,9 +59,22 @@ class SplitBuilder:
         df["capture_group"] = df.index.map(gid_map)
         return df
 
-    def assign_splits(self, df: pd.DataFrame) -> pd.DataFrame:
+    def assign_splits(self, df: pd.DataFrame, dataset_version: str = "kimchi_v1") -> pd.DataFrame:
         """방안 B: 17개 묶음 통째 배정 + G00 50장 시간순 연속 블록 분할 (Train 26, Val 8, Test 8, Bridge 8)"""
-        # 그룹별 기본 역할 맵
+        # 1. 묶음 무결성 사전 검증 (Assertion)
+        expected_groups = {f"G{i:02d}" for i in range(18)}
+        actual_groups = set(df["capture_group"].unique())
+        assert actual_groups == expected_groups, (
+            f"Capture group 불일치! 예상: {len(expected_groups)}개 ({sorted(expected_groups)}), 실제: {len(actual_groups)}개 ({sorted(actual_groups)})"
+        )
+
+        g00_count = len(df[df["capture_group"] == "G00"])
+        assert g00_count == 50, f"G00 장수 오류! 예상: 50장, 실제: {g00_count}장"
+
+        g17_count = len(df[df["capture_group"] == "G17"])
+        assert g17_count == 150, f"G17 장수 오류! 예상: 150장, 실제: {g17_count}장"
+
+        # 그룹별 기본 역할 맵 (17개 묶음)
         group_role_map = {
             "G01": "val",
             "G02": "train",
@@ -70,6 +94,9 @@ class SplitBuilder:
             "G16": "train",
             "G17": "train",  # 이물 단독 150장 전량 Train
         }
+
+        # 정의되지 않거나 누락된 묶음 검증
+        assert set(group_role_map.keys()) | {"G00"} == actual_groups, "group_role_map과 실제 묶음 집합 불일치!"
 
         # G00 시간순 정렬 후 블록 분할
         df_g00 = df[df["capture_group"] == "G00"].copy()
@@ -93,9 +120,11 @@ class SplitBuilder:
             if gid == "G00":
                 split_roles.append(g00_roles[fname])
             else:
-                split_roles.append(group_role_map.get(gid, "train"))
+                assert gid in group_role_map, f"미정의된 묶음 ID: {gid}"
+                split_roles.append(group_role_map[gid])
 
         df["split"] = split_roles
+        df["dataset_version"] = dataset_version
         return df
 
     def generate_manifests(self, df: pd.DataFrame) -> Dict[str, Path]:
@@ -115,8 +144,39 @@ class SplitBuilder:
         role_paths["split_manifest"] = main_manifest
         return role_paths
 
-    def build_physical_dataset(self, df: pd.DataFrame, use_copy: bool = True):
-        """data/yolo 및 data/bridge_holdout 폴더 구조화 및 파일 배치"""
+    def generate_dataset_summary(self, df: pd.DataFrame, dataset_version: str = "kimchi_v1") -> Path:
+        """reports/dataset_summary.csv 생성 (산출물 1 표준 양식)"""
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
+        summary_path = self.reports_dir / "dataset_summary.csv"
+
+        purposes = {
+            "train": "model_training",
+            "val": "model_validation",
+            "test": "final_evaluation",
+            "bridge_holdout": "subject14_bridge"
+        }
+        
+        rows = []
+        for role, purpose in purposes.items():
+            count = int((df["split"] == role).sum())
+            rows.append({
+                "dataset_version": dataset_version,
+                "role": role,
+                "image_count": count,
+                "purpose": purpose
+            })
+        summary_df = pd.DataFrame(rows)
+        summary_df.to_csv(summary_path, index=False, encoding="utf-8")
+        return summary_path
+
+    def build_physical_dataset(self, df: pd.DataFrame, clean: bool = True):
+        """data/yolo 및 data/bridge_holdout 폴더 구조화 및 파일 배치 (clean=True 시 기존 디렉토리 초기화 후 재배치)"""
+        if clean:
+            if self.yolo_dir.exists():
+                shutil.rmtree(self.yolo_dir)
+            if self.bridge_dir.exists():
+                shutil.rmtree(self.bridge_dir)
+
         # 폴더 생성
         for split in ["train", "val", "test"]:
             (self.yolo_dir / "images" / split).mkdir(parents=True, exist_ok=True)
@@ -131,8 +191,8 @@ class SplitBuilder:
             lbl_name = row["라벨(TXT) 파일명"]
             split = row["split"]
 
-            src_img = self.images_dir / img_name
-            src_lbl = self.labels_dir / lbl_name
+            src_img = self._find_file(self.images_dir, img_name)
+            src_lbl = self._find_file(self.labels_dir, lbl_name)
 
             if split in ["train", "val", "test"]:
                 dst_img = self.yolo_dir / "images" / split / img_name

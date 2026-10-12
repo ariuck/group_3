@@ -1,22 +1,5 @@
-﻿Category,Item,Count
-Overview,Total Images,900
-Overview,Total Labels,900
-Overview,Total Pairs,900
-Overview,Empty Labels (No BBox),0
-Overview,Images with BBoxes,900
-Overview,Total BBoxes,4561
-Overview,Total Issues Found,0
-Class BBox,Class 0 (leaf_paper),727
-Class BBox,Class 1 (plastic_stone_metal),1852
-Class BBox,Class 2 (branch),932
-Class BBox,Class 3 (insect),379
-Class BBox,Class 4 (rubber_glove_unused),0
-Class BBox,Class 5 (disease_browning),416
-Class BBox,Class 6 (green_onion_pepper),255
-Scene Type,김치+대상 객체,749
-Scene Type,대상 객체 단독,150
-Scene Type,판단 어려움,1
-Source Dataset,이물검출_학습데이터1,500
-Source Dataset,이물검출_학습데이터2,400
-Original Split,train,720
-Original Split,validation,180
+dataset_version,role,image_count,purpose
+kimchi_v1,train,574,model_training
+kimchi_v1,val,84,model_validation
+kimchi_v1,test,84,final_evaluation
+kimchi_v1,bridge_holdout,158,subject14_bridge

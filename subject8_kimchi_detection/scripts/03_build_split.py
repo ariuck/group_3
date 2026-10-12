@@ -46,17 +46,21 @@ def main():
     yaml_path = builder.generate_dataset_yaml()
     print(f" - configs/dataset.yaml generated -> {yaml_path}")
 
-    # 6. 분할 요약 통계 출력
+    # 6. reports/dataset_summary.csv 생성 (산출물 1 표준 양식)
+    summary_path = builder.generate_dataset_summary(df)
+    print(f" - reports/dataset_summary.csv generated -> {summary_path}")
+
+    # 7. 분할 요약 통계 출력
     print("\n-----------------------------------------------------------------")
     print(" [Split Distribution Summary]")
     print("-----------------------------------------------------------------")
     crosstab_scene = pd.crosstab(df["split"], df["이미지 유형"], margins=True)
     print(crosstab_scene)
 
-    # 7. 물리 파일 복사 (옵션)
+    # 8. 물리 파일 복사 (옵션)
     if args.copy_files:
         print("\n Copying physical files into data/yolo and data/bridge_holdout...")
-        builder.build_physical_dataset(df)
+        builder.build_physical_dataset(df, clean=True)
         print(" Physical dataset creation complete!")
     else:
         print("\n (Note: Physical file copy skipped. Run with --copy-files to generate data/yolo folders)")

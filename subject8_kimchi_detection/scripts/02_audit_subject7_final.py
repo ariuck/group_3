@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from pathlib import Path
 
 # Add project root to sys.path
@@ -25,7 +25,7 @@ def main():
     print("-----------------------------------------------------------------")
     print(f" - Total JPG Images  : {res['total_images']:>5} 장")
     print(f" - Total TXT Labels  : {res['total_labels']:>5} 개")
-    print(f" - Empty Labels (정상): {res['empty_labels']:>5} 개 (BBox 없는 정상 김치/배경)")
+    print(f" - Empty Labels      : {res['empty_labels']:>5} 개 (BBox 없는 정상 김치/배경)")
     print(f" - Total BBoxes      : {res['total_bboxes']:>5} 개")
     print(f" - Total Issues Found: {res['issues_count']:>5} 건 (audit_issue.csv)")
 

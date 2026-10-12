@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import csv
 import pandas as pd
 from typing import Dict, List
@@ -53,8 +53,8 @@ class DatasetAuditor:
         return issues
 
     def run_audit(self) -> Dict:
-        image_files = {p.stem: p for p in self.images_dir.glob('*.jpg')}
-        label_files = {p.stem: p for p in self.labels_dir.glob('*.txt')}
+        image_files = {p.stem: p for p in self.images_dir.rglob('*') if p.suffix.lower() in ['.jpg', '.jpeg', '.png']}
+        label_files = {p.stem: p for p in self.labels_dir.rglob('*.txt')}
 
         all_stems = sorted(set(image_files.keys()) | set(label_files.keys()))
         issues = []
@@ -134,7 +134,7 @@ class DatasetAuditor:
         for splt, cnt in split_counts.items():
             summary_rows.append({'Category': 'Original Split', 'Item': str(splt), 'Count': cnt})
 
-        summary_csv_path = self.report_dir / 'dataset_summary.csv'
+        summary_csv_path = self.report_dir / 'audit_summary.csv'
         pd.DataFrame(summary_rows).to_csv(summary_csv_path, index=False, encoding='utf-8-sig')
 
         return {
