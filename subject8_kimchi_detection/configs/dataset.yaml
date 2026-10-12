@@ -1,0 +1,14 @@
+# Subject 8: 조각김치 이물검출 YOLO11 Dataset 설정
+path: data/yolo
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: leaf_paper
+  1: plastic_stone_metal
+  2: branch
+  3: insect
+  4: rubber_glove_unused
+  5: disease_browning
+  6: green_onion_pepper
