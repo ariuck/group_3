@@ -12,6 +12,7 @@
 | **records/** 작업 기록 | 과정 기록, 산출물 요약 | [과정기록](records/과정기록.md) · [산출물_요약](records/산출물_요약.md) · [이슈기록](records/이슈기록.md) |
 | **meetings/** 회의록 | 일차별 회의록 | [1일차](meetings/회의록_1일차.md) · [2일차](meetings/회의록_2일차.md) · [3일차](meetings/회의록_3일차.md) |
 | **images/** | 문서에 쓰는 그림 | |
+| **code/** 코드 문서 | 코드 파일 1개 = 문서 1개. 경로를 그대로 따라간다 (`src/ui/tooltip.py` → `code/src/ui/tooltip.md`) | [코드 문서 목차](code/README.md) |
 
 시험 결과는 [reports/test_report.md](../reports/test_report.md), 품질검사 결과는 [reports/qa_summary.md](../reports/qa_summary.md), 검수표는 `manifests/` 에 있습니다.
 
