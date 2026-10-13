@@ -23,6 +23,44 @@
    - G17(이물 단독 150장)은 동일한 배경에서 연속 촬영되어 사진 간 유사도가 매우 높으므로, 여러 Split으로 쪼갤 경우 누수 위험이 큽니다.
    - 또한 교과 14는 컨베이어 벨트 위의 '김치+이물'을 검사하는 실전 프로젝트이므로, **G17(150장)은 모델의 순수 객체 표현력 학습을 위해 Train에 전량 배정**하고, Val / Test / Bridge는 100% '김치+이물' 실전 장면으로만 구성합니다.
 
+### 1.2 원본 데이터 출처 구성 (교과 7 FINAL)
+* **이물검출_학습데이터1 (train)**: 500장
+* **이물검출_학습데이터2 (train)**: 220장
+* **이물검출_학습데이터2 (validation)**: 180장
+* **총합**: 900장 (JPG 900장 + TXT 900개 전수 무결)
+
+### 1.3 데이터 분할 아키텍처
+```mermaid
+flowchart TD
+    Raw["교과 7 FINAL 데이터 (900장)"] --> Audit["Data Audit (무결성 전수 감사)"]
+    Audit --> Groups["18개 촬영 묶음 도출 (G00~G17)<br>5분 간격 분리 & dHash 유사도 검증"]
+    
+    Groups --> Decision{"Split 배정 전략 (Plan B)"}
+    
+    Decision -->|"일반 묶음 16개 격리"| Standard["16개 묶음 통째 배정"]
+    Decision -->|"G17 (이물 단독 150장)"| G17["누수 방지 & 표현력 학습<br>Train 전량 배정 (150장)"]
+    Decision -->|"G00 (Class 6 몰림 50장)"| G00["통제된 예외: 시간순 블록 분할<br>Train 26 / Val 8 / Test 8 / Bridge 8"]
+    
+    Standard --> Train["Train (574장)<br>• 모델 학습용"]
+    G17 --> Train
+    G00 --> Train
+    
+    Standard --> Val["Validation (84장)<br>• Baseline vs Improved 비교용"]
+    G00 --> Val
+    
+    Standard --> Test["Frozen Test (84장)<br>• 최종 성능 평가용 (FROZEN)"]
+    G00 --> Test
+    
+    Standard --> Bridge["Bridge Holdout (158장)<br>• 교과 14 실전 인계용 (RESERVED)"]
+    G00 --> Bridge
+
+    classDef default fill:#f9f9fb,stroke:#4b5563,stroke-width:1px;
+    classDef highlight fill:#e0f2fe,stroke:#0284c7,stroke-width:2px;
+    classDef holdout fill:#fef3c7,stroke:#d97706,stroke-width:2px;
+    class Train,Val,Test highlight;
+    class Bridge holdout;
+```
+
 ---
 
 ## 2. 🔍 촬영 묶음(`capture_group`) 정의 및 유사도 검증
