@@ -1,22 +1,37 @@
 ﻿Category,Item,Count
-Overview,Total Images,900
-Overview,Total Labels,900
-Overview,Total Pairs,900
-Overview,Empty Labels (No BBox),0
-Overview,Images with BBoxes,900
-Overview,Total BBoxes,4561
-Overview,Total Issues Found,0
-Class BBox,Class 0 (leaf_paper),727
-Class BBox,Class 1 (plastic_stone_metal),1852
-Class BBox,Class 2 (branch),932
-Class BBox,Class 3 (insect),379
-Class BBox,Class 4 (rubber_glove_unused),0
-Class BBox,Class 5 (disease_browning),416
-Class BBox,Class 6 (green_onion_pepper),255
-Scene Type,김치+대상 객체,749
-Scene Type,대상 객체 단독,150
-Scene Type,판단 어려움,1
-Source Dataset,이물검출_학습데이터1,500
-Source Dataset,이물검출_학습데이터2,400
-Original Split,train,720
-Original Split,validation,180
+Overview,Total Images,900.0
+Overview,Total Labels,900.0
+Overview,Total Pairs,900.0
+Overview,Empty Labels (No BBox),0.0
+Overview,Images with BBoxes,900.0
+Overview,Total BBoxes,4561.0
+Overview,Total Issues Found,0.0
+Class BBox,Class 0 (leaf_paper),727.0
+Class BBox,Class 1 (plastic_stone_metal),1852.0
+Class BBox,Class 2 (branch),932.0
+Class BBox,Class 3 (insect),379.0
+Class BBox,Class 4 (rubber_glove_unused),0.0
+Class BBox,Class 5 (disease_browning),416.0
+Class BBox,Class 6 (green_onion_pepper),255.0
+BBox per Image,min,1.0
+BBox per Image,median,5.0
+BBox per Image,mean,5.07
+BBox per Image,max,12.0
+BBox per Image Distribution,1 boxes,13.0
+BBox per Image Distribution,2 boxes,32.0
+BBox per Image Distribution,3 boxes,57.0
+BBox per Image Distribution,4 boxes,35.0
+BBox per Image Distribution,5 boxes,537.0
+BBox per Image Distribution,6 boxes,146.0
+BBox per Image Distribution,7 boxes,53.0
+BBox per Image Distribution,8 boxes,15.0
+BBox per Image Distribution,9 boxes,3.0
+BBox per Image Distribution,10 boxes,7.0
+BBox per Image Distribution,12 boxes,2.0
+Scene Type,김치+대상 객체,749.0
+Scene Type,대상 객체 단독,150.0
+Scene Type,판단 어려움,1.0
+Source Dataset,이물검출_학습데이터1,500.0
+Source Dataset,이물검출_학습데이터2,400.0
+Original Split,train,720.0
+Original Split,validation,180.0

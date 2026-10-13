@@ -10,7 +10,7 @@
 
 ## 모듈 관계
 
-```
+```D:\ai_이유정강사님_수업\Vision_AI_Class-main\handgonpo Vision_AI_Class main 교과 8 프로젝트 1\1. 교과8_Vision_객체검출_프로젝트_수행가이드.md
 main.py
   └─ src/ui/main_window.py ─────────────────────────────── 화면·이벤트·흐름
        ├─ src/ui/ form_panel(+hangul_input) · thumb_strip · navigator · class_picker
@@ -91,10 +91,12 @@ subject8_kimchi_detection/   교과 8 (자체 src/ 를 가진 별도 프로젝�
 | 코드 | 한 줄 설명 |
 |---|---|
 | [`scripts/01_check_environment.py`](subject8_kimchi_detection/scripts/01_check_environment.md) | PyTorch·CUDA·YOLO11n 환경 점검 |
-| [`scripts/02_audit_subject7_final.py`](subject8_kimchi_detection/scripts/02_audit_subject7_final.md) | 교과 7 최종본 900장 점검 |
+| [`scripts/02_audit_subject7_final.py`](subject8_kimchi_detection/scripts/02_audit_subject7_final.md) | 교과 7 최종본 900장 점검 + Data Leakage 확인 |
 | [`scripts/03_build_split.py`](subject8_kimchi_detection/scripts/03_build_split.md) | 방안 B 분할 + Manifest·`dataset.yaml` |
-| [`src/dataset_audit.py`](subject8_kimchi_detection/src/dataset_audit.md) | `DatasetAuditor` |
+| [`src/dataset_audit.py`](subject8_kimchi_detection/src/dataset_audit.md) | `DatasetAuditor` — 라벨 점검, 이미지별 BBox 수, Class×장면 |
+| [`src/leakage_check.py`](subject8_kimchi_detection/src/leakage_check.md) | 사진 지문(dHash)으로 촬영 묶음 누수 확인 |
 | [`src/split_builder.py`](subject8_kimchi_detection/src/split_builder.md) | `SplitBuilder` — 촬영 묶음 단위 분할 |
+| [`tests/test_dataset_audit.py`](subject8_kimchi_detection/tests/test_dataset_audit.md) | 감사·누수 검사가 일부러 넣은 오류를 잡는지 시험 |
 
 ## 문서 작성 규칙
 
@@ -119,4 +121,3 @@ subject8_kimchi_detection/   교과 8 (자체 src/ 를 가진 별도 프로젝�
 | [`share_server`](tools/share_server.md) | 기본 검수 범위에 501~550번이 빠져 있다. PM 가이드가 안내하는 `공유시작.bat` 은 저장소에 없다 |
 | [`qa_summary`](tools/qa_summary.md) | 사람 이름·Human QA 결과·일부 수치 문장이 코드에 고정되어 있다 |
 | [`yolo_writer`](src/yolo/yolo_writer.md) | TXT 를 원자적으로 저장하지 않는다 (검수표·세션은 원자적 저장) |
-| [subject8 `dataset_audit`](subject8_kimchi_detection/src/dataset_audit.md) | 라벨을 BOM 무시 없이 읽고, 이름(stem)만으로 짝을 지어 split 이 다른 같은 이름을 구분하지 못한다 |

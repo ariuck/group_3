@@ -70,7 +70,8 @@ Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/audit_summa
 | JPG / TXT | 900 / 900 |
 | 이미지 ↔ TXT Pair 오류 | 0 |
 | Empty Label | 0 |
-| 형식·Class 범위·좌표 오류 | 0 |
+| 형식·Class 범위·좌표·사진 밖 BBox·이름 중복 오류 | 0 |
+| 사진 1장당 BBox | 1~12개, 평균 5.07 (537장이 정확히 5개) |
 | BBox 합계 | 4561 |
 
 | scene_type (검수표 `이미지 유형`) | 사진 |
@@ -138,8 +139,16 @@ cp -r ../data/final data/subject7_final
 python scripts/02_audit_subject7_final.py
 ```
 
-- 이미지-라벨 1:1 매칭, YOLO 좌표(0~1), Class 범위(0~6) 전수 검사
-- 산출물: `reports/audit_summary.csv`, `reports/audit_issue.csv`
+- 이미지-라벨 1:1 매칭, YOLO 좌표(0~1)·사진 밖 BBox, Class 범위(0~6), 이름 중복, 검수표 대조 전수 검사
+- 이미지별 BBox 수, Class × 장면 분포 (가이드 15.1·15.2)
+- 촬영 묶음(5분 간격) × 사진 지문(dHash)으로 Data Leakage 확인 (가이드 15.3)
+- 산출물: `reports/audit_summary.csv`, `reports/audit_issue.csv`, `reports/audit_class_scene.csv`, `reports/leakage_check.csv`, `reports/capture_group_summary.csv`
+
+시험 (가짜 데이터로 감사·누수 검사가 오류를 잡는지 확인):
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 ### 6.4 3일차 — Dataset Split & Freeze
 
@@ -155,6 +164,7 @@ python scripts/03_build_split.py --copy-files
 
 - **정책**: 방안 B — 촬영 간격 5분 초과로 나눈 18개 `capture_group` 을 묶음 단위로 배정 + Class 6 평가를 위해 `G00` 50장만 시간순 연속 블록으로 분할
 - 상세 근거·유사도 검증·예외 사유: [docs/split_policy.md](docs/split_policy.md)
+- 과정 전체를 그림으로 정리한 문서: [docs/process/dataset_audit_and_split.md](docs/process/dataset_audit_and_split.md)
 - Bridge Holdout 은 교과 8 학습·튜닝·모델 선택·Frozen Test 에 사용하지 않고 교과 14 용으로 보존합니다. `dataset.yaml` 에 넣지 않습니다.
 
 | 역할 | 장수 | C0 | C1 | C2 | C3 | C5 | C6 | 용도 |
@@ -213,17 +223,24 @@ subject8_kimchi_detection/
 │   ├── subject7_final/             # 교과 7 FINAL 복사본 (JPG, TXT, 검수표.csv)
 │   ├── yolo/                       # --copy-files 로 만든 train / val / test
 │   └── bridge_holdout/             # --copy-files 로 만든 교과 14 보존용
-├── docs/split_policy.md            # Split 정책서 (산출물 1)
+├── docs/
+│   ├── split_policy.md             # Split 정책서 (산출물 1)
+│   └── process/                    # 과정 정리 (이해·포트폴리오용)
 ├── manifests/                      # split_manifest.csv + 역할별 CSV (산출물 1)
 ├── reports/
-│   ├── audit_summary.csv           # Data Audit 요약
+│   ├── audit_summary.csv           # Data Audit 요약 (이미지별 BBox 수 포함)
 │   ├── audit_issue.csv             # Data Audit 이슈 목록 (0건)
+│   ├── audit_class_scene.csv       # Class × 장면 분포
+│   ├── leakage_check.csv           # Data Leakage 지표 (dHash)
+│   ├── capture_group_summary.csv   # 촬영 묶음 18개 요약
 │   └── dataset_summary.csv         # 역할별 장수 (산출물 1)
 ├── scripts/
 │   ├── 01_check_environment.py     # 환경 점검 + YOLO11n Load
-│   ├── 02_audit_subject7_final.py  # Data Audit
+│   ├── 02_audit_subject7_final.py  # Data Audit + Leakage 확인
 │   └── 03_build_split.py           # Split · manifest · dataset.yaml 생성
-└── src/
-    ├── dataset_audit.py            # Data Audit 기능
-    └── split_builder.py            # capture_group · Split 기능
+├── src/
+│   ├── dataset_audit.py            # Data Audit 기능
+│   ├── leakage_check.py            # 사진 지문(dHash) 누수 확인
+│   └── split_builder.py            # capture_group · Split 기능
+└── tests/test_dataset_audit.py     # 감사·누수 검사 시험
 ```

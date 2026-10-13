@@ -1,0 +1,13 @@
+﻿metric,value
+images,900
+capture_groups,18
+hash_bits,256
+near_dup_threshold,10
+exact_duplicate_pairs,0
+near_duplicate_pairs,88
+near_duplicate_pairs_within_group,88
+near_duplicate_pairs_across_group,0
+mean_distance_within_group,74.8
+mean_distance_across_group,111.8
+nearest_neighbor_min,6
+nearest_neighbor_median,75.0
