@@ -7,7 +7,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
 from src.split_builder import SplitBuilder
-from src.dataset_audit import CLASS_NAMES
 
 def main():
     parser = argparse.ArgumentParser(description="Build Dataset Split (Plan B: 18 Capture Groups + G00 Block Split)")

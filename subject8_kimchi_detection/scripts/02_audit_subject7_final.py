@@ -5,7 +5,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from src.dataset_audit import DatasetAuditor, CLASS_NAMES
+from src.dataset_audit import DatasetAuditor
+from src.constants import CLASS_NAMES
 
 def main():
     data_root = PROJECT_ROOT / "data" / "subject7_final"
