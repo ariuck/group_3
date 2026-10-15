@@ -16,7 +16,7 @@ python scripts/03_build_split.py --version kimchi_v1 --copy-files   # 이전 분
 | 옵션 | 설명 |
 |---|---|
 | `--copy-files` | 실제 파일 배치까지 |
-| `--version` | `kimchi_v4`(기본) · `kimchi_v3` · `kimchi_v2` · `kimchi_v1`. 블록 분할 규칙은 [`BLOCK_RULES`](../src/split_builder.md). `kimchi_v3`·`v4` 는 라벨 수정본이 필요 ([`04_import_label_fixes`](04_import_label_fixes.md) 먼저) |
+| `--version` | `kimchi_v4`(기본) · `kimchi_v3` · `kimchi_v2` · `kimchi_v1`. 블록 분할 규칙은 [`constants.py` 의 `BLOCK_RULES`](../src/constants.md). `kimchi_v3`·`v4` 는 라벨 수정본이 필요 ([`04_import_label_fixes`](04_import_label_fixes.md) 먼저) |
 
 분할 정책 설명: `subject8_kimchi_detection/docs/split_policy.md`
 
@@ -40,7 +40,7 @@ python scripts/03_build_split.py --version kimchi_v1 --copy-files   # 이전 분
 
 ## 의존성
 
-- **사용하는 것**: [`subject8 src/split_builder`](../src/split_builder.md) (`SplitBuilder`), [`subject8 src/dataset_audit`](../src/dataset_audit.md) (`CLASS_NAMES` — 가져오기만 하고 쓰지 않음), `pandas`
+- **사용하는 것**: [`subject8 src/split_builder`](../src/split_builder.md) (`SplitBuilder`), [`subject8 src/constants`](../src/constants.md) (`BLOCK_RULES`, `DATASET_VERSIONS`, `DEFAULT_DATASET_VERSION`), `pandas`
 - **사용하는 곳**: 직접 실행
 
 ## 주의사항

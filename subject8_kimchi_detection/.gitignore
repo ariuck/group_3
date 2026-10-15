@@ -20,4 +20,5 @@ demo/**/*.mp4
 
 # Python
 __pycache__/
+.venv
 .venv/

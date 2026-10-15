@@ -39,7 +39,7 @@ python scripts/02_audit_subject7_final.py
 
 ## 의존성
 
-- **사용하는 것**: [`src/dataset_audit`](../src/dataset_audit.md) (`DatasetAuditor`, `CLASS_NAMES`, `SCENE_TYPES`), [`src/leakage_check`](../src/leakage_check.md), [`src/split_builder`](../src/split_builder.md) (`SplitBuilder`), `pandas`
+- **사용하는 것**: [`src/dataset_audit`](../src/dataset_audit.md) (`DatasetAuditor`), [`src/constants`](../src/constants.md) (`CLASS_NAMES`, `SCENE_TYPES`), [`src/leakage_check`](../src/leakage_check.md), [`src/split_builder`](../src/split_builder.md) (`SplitBuilder`), `pandas`
 - **사용하는 곳**: 직접 실행 (교과 8 2일차 데이터 점검)
 
 ## 주의사항

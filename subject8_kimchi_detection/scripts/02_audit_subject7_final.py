@@ -7,7 +7,8 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from src.dataset_audit import DatasetAuditor, CLASS_NAMES, SCENE_TYPES
+from src.constants import CLASS_NAMES, SCENE_TYPES
+from src.dataset_audit import DatasetAuditor
 from src.leakage_check import run_leakage_check, NEAR_DUP_THRESHOLD
 from src.split_builder import SplitBuilder
 

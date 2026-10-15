@@ -14,11 +14,10 @@
 
 | 이름 | 설명 |
 |---|---|
-| `CLASS_NAMES` | `{0: leaf_paper, 1: plastic_stone_metal, 2: branch, 3: insect, 4: rubber_glove_unused, 5: disease_browning, 6: green_onion_pepper}` |
-| `SCENE_TYPES` | 검수표 `이미지 유형` → 영문 scene_type (`김치+대상 객체` → `kimchi_with_target`, `정상 김치` → `normal_kimchi`, `대상 객체 단독` → `object_only`, `판단 어려움` → `other_review`) |
+| `CLASS_NAMES`, `SCENE_TYPES`, `NORMAL_SCENE` | [`src/constants`](constants.md) 에서 가져온다 (이 모듈 이름으로도 가져갈 수 있게 남겨 둠) |
 | `BOX_EDGE_TOLERANCE` | 사진 밖 BBox 로 볼 최소 초과량 `1e-6` (소수점 오차 허용) |
 | `DatasetAuditor(data_root, report_dir)` | `data_root/images`, `data_root/labels`, `data_root/검수표.csv` 를 읽음. 보고서 폴더 생성 |
-| `.validate_yolo_row(row, line_no, file_stem)` | 한 줄 검사 → 이슈 dict 목록 |
+| `.validate_yolo_row(row, line_no, file_stem)` (staticmethod) | 한 줄 검사 → `(이슈 dict 목록, Class ID 또는 None)`. Class 집계도 이 결과를 써서 줄을 한 번만 파싱한다 |
 | `.run_audit()` | 전체 검사 + CSV 3개 저장 + 결과 dict 반환 |
 
 `run_audit()` 반환 키: `total_images`, `total_labels`, `empty_labels`, `total_bboxes`, `issues_count`, `class_counts`, `scene_counts`, `source_counts`, `split_counts`, `bbox_per_image`(min·median·mean·max), `bbox_distribution`({박스 수: 사진 수}), `class_scene`({Class: {이미지 유형: 사진 수}}), `issue_csv`, `summary_csv`, `class_scene_csv`
@@ -49,8 +48,8 @@
 
 ## 의존성
 
-- **사용하는 것**: `pandas`, `csv`, `statistics`
-- **사용하는 곳**: [`scripts/02_audit_subject7_final`](../scripts/02_audit_subject7_final.md), [`scripts/03_build_split`](../scripts/03_build_split.md) (`CLASS_NAMES`)
+- **사용하는 것**: [`src/constants`](constants.md), `pandas`, `csv`, `statistics`, `logging`
+- **사용하는 곳**: [`scripts/02_audit_subject7_final`](../scripts/02_audit_subject7_final.md)
 
 ## 주의사항
 

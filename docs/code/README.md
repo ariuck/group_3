@@ -100,6 +100,7 @@ subject8_kimchi_detection/   교과 8 (자체 src/ 를 가진 별도 프로젝�
 | [`scripts/08_predict_images.py`](subject8_kimchi_detection/scripts/08_predict_images.md) | 사진 예측 + 정답 비교 이미지 · TP/FP/FN 표 |
 | [`scripts/09_collect_failures.py`](subject8_kimchi_detection/scripts/09_collect_failures.md) | 실패 사례 수집 → `failure_analysis.csv` · 요약 표 · 대표 사진 |
 | [`scripts/10_train_v2.py`](subject8_kimchi_detection/scripts/10_train_v2.md) | 개선 실험 exp001 — Baseline 조건에서 imgsz 640 → 1280 (공식: `kimchi_v4`) |
+| [`src/constants.py`](subject8_kimchi_detection/src/constants.md) | Class·장면·묶음 기준·Version 별 분할 규칙·역할 상수 (SSOT) |
 | [`src/dataset_audit.py`](subject8_kimchi_detection/src/dataset_audit.md) | `DatasetAuditor` — 라벨 점검, 이미지별 BBox 수, Class×장면 |
 | [`src/evaluate_detector.py`](subject8_kimchi_detection/src/evaluate_detector.md) | Weight 평가 (전체·Class 별 P·R·mAP), Frozen Test 보호 |
 | [`src/failure_analyzer.py`](subject8_kimchi_detection/src/failure_analyzer.md) | 실패 유형 분류(FN·CLASS_ERROR·FP 3종) · 크기별 Recall · Train/Val 비교 사진 |

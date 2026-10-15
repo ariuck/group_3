@@ -6,14 +6,14 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from src.split_builder import BLOCK_RULES, SplitBuilder
-from src.dataset_audit import CLASS_NAMES
+from src.constants import BLOCK_RULES, DATASET_VERSIONS, DEFAULT_DATASET_VERSION
+from src.split_builder import SplitBuilder
 
 def main():
     parser = argparse.ArgumentParser(description="Build Dataset Split (Plan B: 18 Capture Groups + G00 Block Split)")
     parser.add_argument("--copy-files", action="store_true", help="Physically copy images and labels into data/yolo and data/bridge_holdout")
-    parser.add_argument("--version", default="kimchi_v4", choices=["kimchi_v1", "kimchi_v2", "kimchi_v3", "kimchi_v4"],
-                        help="Dataset Version (블록 분할 규칙: src/split_builder.py 의 BLOCK_RULES)")
+    parser.add_argument("--version", default=DEFAULT_DATASET_VERSION, choices=DATASET_VERSIONS,
+                        help="Dataset Version (블록 분할 규칙: src/constants.py 의 BLOCK_RULES)")
     args = parser.parse_args()
 
     print("=" * 65)
