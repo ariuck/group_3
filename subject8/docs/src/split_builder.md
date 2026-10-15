@@ -37,7 +37,7 @@
 
 `kimchi_v3` 는 분할은 v2 와 같고 **라벨만 다르다** (Class 5 기준 개정). `kimchi_v4` 는 같은 수정본을 쓰고 G09 만 나눈다. `build_physical_dataset` 은 `data/label_fixes/kimchi_v3/` 에 같은 이름 TXT 가 있으면 교과 7 최종본 라벨 대신 그것을 복사한다. 수정본 폴더가 비어 있으면 `FileNotFoundError` ([`04_import_label_fixes`](../scripts/04_import_label_fixes.md) 를 먼저).
 
-index 는 파일명(=촬영 시각) 순 0부터. 이유는 [`split_policy.md`](../split_policy.md) 5·7장.
+index 는 파일명(=촬영 시각) 순 0부터. 이유는 [`split_policy.md`](../project/split_policy.md) 5·7장.
 
 `bridge_holdout` 은 교과 14 연계용으로 따로 떼어 두는 사진이다 (`purpose = subject14_bridge`).
 

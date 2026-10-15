@@ -51,7 +51,7 @@ WIN_RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), 
 MAX_FAILS, LOCK_SECONDS = 8, 60
 KEEP_FREE = 1024 ** 3                       # 보관함에 올려도 이 PC 에 남겨 둘 최소 공간 (1GB)
 CHUNK = 1024 * 1024
-DEFAULT_ASSIGN = "김동훈:1-300,이후영:301-500,지혜성:551-900"      # 검수자별 번호 범위 (docs/team/검수_배정.md)
+DEFAULT_ASSIGN = "김동훈:1-300,이후영:301-500,지혜성:551-900"      # 검수자별 번호 범위 (docs/project/team/검수_배정.md)
 
 
 # ── 파일 검사 ─────────────────────────────────────────────────────────────

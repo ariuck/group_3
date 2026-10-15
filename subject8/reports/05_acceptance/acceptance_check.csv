@@ -4,8 +4,8 @@ Dataset,Dataset Version 을 확인할 수 있다,PASS,manifest {'kimchi_v4': 900
 Dataset,Train/Validation/Frozen Test/Bridge Holdout Manifest 가 있고 합이 900장,PASS,"{'train': 526, 'val': 132, 'test': 84, 'bridge_holdout': 158} 합 900 · split_manifest 900"
 Dataset,dataset_summary.csv 가 Manifest 와 같다,PASS,"summary {'train': 526, 'val': 132, 'test': 84, 'bridge_holdout': 158}"
 Dataset,역할(Train/Val/Test/Bridge) 사이에 같은 이미지가 없다,PASS,겹침 0장
-Dataset,같은 촬영 묶음이 여러 역할에 섞이지 않았다 (또는 예외가 문서화됨),MANUAL,"섞인 묶음 ['G00', 'G09', 'G12'] — docs/split_policy.md 의 분할 예외로 문서화되어 있는지 사람이 확인"
-Dataset,Split 정책이 문서로 확정(FROZEN)되어 있다,PASS,docs/split_policy.md
+Dataset,같은 촬영 묶음이 여러 역할에 섞이지 않았다 (또는 예외가 문서화됨),MANUAL,"섞인 묶음 ['G00', 'G09', 'G12'] — docs/project/split_policy.md 의 분할 예외로 문서화되어 있는지 사람이 확인"
+Dataset,Split 정책이 문서로 확정(FROZEN)되어 있다,PASS,docs/project/split_policy.md
 Dataset,Class ID 0~6 을 그대로 쓴다,PASS,"dataset.yaml names [0, 1, 2, 3, 4, 5, 6]"
 Dataset,Bridge Holdout 이 dataset.yaml 에 포함되지 않는다,PASS,configs/dataset.yaml
 Dataset,Frozen Test 가 Final Model 선택 전에 사용되지 않았다,PASS,"runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음 (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)"

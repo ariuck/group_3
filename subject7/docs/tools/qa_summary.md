@@ -18,7 +18,7 @@ python tools/qa_summary.py --apply    # reports/qa_summary.md 로 저장
 | 이름 | 설명 |
 |---|---|
 | `REPORT_PATH` | `reports/qa_summary.md` |
-| `REVIEW_DECISIONS`, `REVIEW_CONFIRMERS` | REVIEW 이력 사진의 최종 판단과 확인자 (사람이 정한 기록, [records/이슈기록](../records/이슈기록.md) 과 같은 내용) |
+| `REVIEW_DECISIONS`, `REVIEW_CONFIRMERS` | REVIEW 이력 사진의 최종 판단과 확인자 (사람이 정한 기록, [records/이슈기록](../project/records/이슈기록.md) 과 같은 내용) |
 | `HUMAN_FINAL_QA` | Human Final QA 수행 기록 (날짜·점검자·장수·결과) |
 | `read_manifest(path)` | 검수표 CSV → dict 목록 |
 | `_boxes(label_path, w, h)` | 라벨 → [`bbox_diff`](../src/bbox/bbox_diff.md) 용 픽셀 BBox |

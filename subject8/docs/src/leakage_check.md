@@ -8,7 +8,7 @@
 
 - 가이드 15.3 Data Leakage 확인의 근거를 숫자로 남긴다: 완전 동일 사진, 이름만 다른 동일 사진, 거의 같은 장면.
 - [`split_builder`](split_builder.md) 의 시간 기준 묶음(5분 간격)이 실제 촬영 묶음과 맞는지 교차 검증한다 (가이드: "시간 문자열을 확인 없이 Session 이라고 단정하지 않는다").
-- [`split_policy.md`](../split_policy.md) 2.2·2.3 의 숫자를 재현한다.
+- [`split_policy.md`](../project/split_policy.md) 2.2·2.3 의 숫자를 재현한다.
 
 ## 주요 구성요소
 

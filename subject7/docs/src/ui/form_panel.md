@@ -15,7 +15,7 @@
 
 | 이름 | 설명 |
 |---|---|
-| `SCENE_CHOICES` | 김치+대상 객체 · 정상 김치 · 대상 객체 단독 · 판단 어려움 ([manifest_guide](../../standards/manifest_guide.md) 와 같은 값) |
+| `SCENE_CHOICES` | 김치+대상 객체 · 정상 김치 · 대상 객체 단독 · 판단 어려움 ([manifest_guide](../../project/standards/manifest_guide.md) 와 같은 값) |
 | `FIELDS` | (머리글, 화면 이름, 종류, 선택지, 빈 값 버튼 이름). 상태의 빈 값 = `자동`, 이미지 유형의 빈 값 = `미정` |
 | `CHIP_COLUMNS` | 3 — 칩을 한 줄에 몇 개씩 놓을지 |
 | `REMEMBERED` | `작성자`, `검수자` |
@@ -48,4 +48,4 @@ msg = record_save(image_path, raw_txt, work_txt, len(boxes), human=self.form.get
 
 - 이름 기억은 **메모리에만** 있다. 프로그램을 끄면 사라지고 파일에 저장하지 않는다.
 - `get_values()` 는 모든 칸을 문자열로 돌려준다 (`None` 없음). 그래서 저장할 때 빈 칸은 "지움"으로 기록된다. 입력칸을 다시 채운 뒤 저장하는 흐름이라 정상 동작이다.
-- 칩 선택지는 검수표 머리글·상태 목록과 **글자가 정확히 같아야** 한다. 바꾸려면 [`manifest_writer`](../manifest/manifest_writer.md) 와 [manifest_guide](../../standards/manifest_guide.md) 를 함께 고친다.
+- 칩 선택지는 검수표 머리글·상태 목록과 **글자가 정확히 같아야** 한다. 바꾸려면 [`manifest_writer`](../manifest/manifest_writer.md) 와 [manifest_guide](../../project/standards/manifest_guide.md) 를 함께 고친다.

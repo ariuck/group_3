@@ -14,7 +14,7 @@
 | 만든 것 | ① 라벨링 프로그램(Python · Tkinter · Pillow) ② 검수 보조 도구(합치기·묶기·공유 서버·최종본·QA 보고서) ③ 기준서(Class · BBox · 검수표) ④ FINAL 데이터 900장 ⑤ QA·시험 보고서와 교과 8 Handoff |
 | 데이터 성격 | 본 프로젝트는 AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터를 활용하여 수행하였습니다. 실제 생산라인에서 취득한 원본 데이터라고 표현하지 않는다 |
 | 기간 | 2026-10-06 ~ 2026-10-08 (Git 기록 기준) |
-| 결과 | 900장 모두 검수 완료. 미처리 REVIEW 0 · Validation 오류 0 · 최종 FAIL 0 ([QA Summary](../../reports/qa_summary.md)) |
+| 결과 | 900장 모두 검수 완료. 미처리 REVIEW 0 · Validation 오류 0 · 최종 FAIL 0 ([QA Summary](../../../reports/qa_summary.md)) |
 
 ### 교과 7 산출물 11개와 우선순위
 
@@ -22,16 +22,16 @@
 
 | 순위 | 산출물 | 우선순위 | 배점 | 위치 |
 |---:|---|:-:|---:|---|
-| 1 | FINAL YOLO 라벨 데이터 및 증빙 | P1 | 25 | `data/final/` · [reports/final_evidence.md](../../reports/final_evidence.md) |
+| 1 | FINAL YOLO 라벨 데이터 및 증빙 | P1 | 25 | `data/final/` · [reports/final_evidence.md](../../../reports/final_evidence.md) |
 | 2 | Class 기준서 | P1 | 10 | [class_guide.md](class_guide.md) |
 | 3 | Dataset Manifest | P1 | 12 | `manifests/dataset_manifest.csv` · [manifest_guide.md](manifest_guide.md) |
-| 4 | QA Summary | P1 | 13 | [reports/qa_summary.md](../../reports/qa_summary.md) |
+| 4 | QA Summary | P1 | 13 | [reports/qa_summary.md](../../../reports/qa_summary.md) |
 | 5 | 라벨링 프로그램 | P2 | 12 | `main.py` · `src/` |
 | 6 | BBox 기준서 | P2 | 7 | [bbox_guide.md](bbox_guide.md) |
 | 7 | 교과 8 Handoff | P2 | 6 | [subject08_handoff.md](../handoff/subject08_handoff.md) |
 | 8 | 소스코드 | P3 | 7 | `src/` · `tools/` · `tests/` · `requirements.txt` · `configs/classes.yaml` |
-| 9 | Test Report | P3 | 4 | [reports/test_report.md](../../reports/test_report.md) |
-| 10 | README | P3 | 2 | [README.md](../../README.md) |
+| 9 | Test Report | P3 | 4 | [reports/test_report.md](../../../reports/test_report.md) |
+| 10 | README | P3 | 2 | [README.md](../../../README.md) |
 | 11 | Project Baseline | P3 | 2 | 이 문서 |
 
 ---
@@ -185,7 +185,7 @@ Git 기록은 2026-10-06 ~ 10-08 에 걸쳐 있고, 날짜별 커밋 수는 10-0
   - 검수 배정과 진행 방법 문서, 라벨 합치기·결과 주고받기 문서
   - 이미지 유형이 비어 있으면 `Enter` 와 검수 기록 저장을 막는 규칙
 - **진행**: 김동훈 1~300 → 지혜성 551~600 → 이후영 301~500 → 지혜성 601~900 → 김동훈 501~550 순으로 결과가 올라왔다. 각자 범위만 골라 합치고(옛 라벨이 최신을 덮어쓰지 않게), 전체본을 다시 만들어 배포했다. 검수자 칸이 비었거나 검수 전으로 남은 4장, 판단 어려움 1장, 너무 작은 BBox 1개를 확인해 정리했다.
-- **발견해서 고친 오류**: 출처가 잘못 적힌 401줄이 합치기에서 조용히 빠짐 · 검수자가 원본 라벨을 보고 있었음(라벨 가져오기가 다른 내용을 건너뜀) · 공유 페이지의 끌어놓기 안내가 사라지지 않음 등. ([Test Report](../../reports/test_report.md) §2-1)
+- **발견해서 고친 오류**: 출처가 잘못 적힌 401줄이 합치기에서 조용히 빠짐 · 검수자가 원본 라벨을 보고 있었음(라벨 가져오기가 다른 내용을 건너뜀) · 공유 페이지의 끌어놓기 안내가 사라지지 않음 등. ([Test Report](../../../reports/test_report.md) §2-1)
 - **결과**: 900장 모두 검수 완료(검수 완료 674 · 수정 완료 226), 미처리 REVIEW 0, Validation 오류 0. (§5)
 
 ### 마무리 — FINAL 데이터와 제출 문서 (2026-10-08)
@@ -299,15 +299,15 @@ docs: 검수 배정을 실제 분담으로 갱신
 
 ## 9. 문서 체계
 
-문서는 일차별이 아니라 **주제별 폴더**로 정리하고, 기준은 `docs/standards/` 한 곳에서만 고칩니다. (목차: [docs/README.md](../README.md))
+문서는 일차별이 아니라 **주제별 폴더**로 정리하고, 기준은 `docs/project/standards/` 한 곳에서만 고칩니다. (목차: [docs/README.md](../../README.md))
 
 | 폴더 | 내용 |
 |---|---|
-| `docs/standards/` | 기준서: 이 문서, Class · BBox · 검수표 작성 |
-| `docs/design/` | 필수 기능, 화면 설계, 의사코드, End-to-End 계획 |
-| `docs/team/` | 역할 분담, Gate 체크리스트, 라벨 합치기, 결과 주고받기, 검수 배정 |
-| `docs/handoff/` | 교과 8 Handoff |
-| `docs/records/`, `docs/meetings/` | 과정 기록, 산출물 요약, 회의록(1~3일차) |
+| `docs/project/standards/` | 기준서: 이 문서, Class · BBox · 검수표 작성 |
+| `docs/project/design/` | 필수 기능, 화면 설계, 의사코드, End-to-End 계획 |
+| `docs/project/team/` | 역할 분담, Gate 체크리스트, 라벨 합치기, 결과 주고받기, 검수 배정 |
+| `docs/project/handoff/` | 교과 8 Handoff |
+| `docs/project/records/`, `docs/project/meetings/` | 과정 기록, 산출물 요약, 회의록(1~3일차) |
 | `reports/` | QA Summary, FINAL 증빙, Test Report |
 
 ---
@@ -321,7 +321,7 @@ docs: 검수 배정을 실제 분담으로 갱신
 | 이미지와 TXT Pair 확인 완료 | **달성** — 900 / 900 |
 | 900장 전체 검수 완료 | **달성** — 검수자 칸 900줄 모두 기록, 작성자와 검수자가 같은 줄 0 |
 | FINAL 데이터 정리 완료 | **달성** — `data/final/` 이미지 900장 + 라벨 900개 (`tools/build_final.py`) |
-| 교과 8 사용 가능 | **달성** — [QA Summary](../../reports/qa_summary.md) 최종 판정, [Handoff](../handoff/subject08_handoff.md) 최소 확인 8항목 통과 |
+| 교과 8 사용 가능 | **달성** — [QA Summary](../../../reports/qa_summary.md) 최종 판정, [Handoff](../handoff/subject08_handoff.md) 최소 확인 8항목 통과 |
 
 > 숫자는 검수표와 `data/work` 를 읽어 센 값이다. 라벨을 더 고치면 `python tools/build_final.py --apply --overwrite` 로 최종본을, `python tools/qa_summary.py --apply` 로 QA Summary 를 다시 만든다.
 

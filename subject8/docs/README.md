@@ -1,9 +1,15 @@
-# 교과 8 문서 목차 (코드 파일 1개 = 문서 1개)
+# 문서 목차 (교과 8)
 
-코드 경로 앞에 `docs/` 만 붙이면 그 파일의 설명서가 나온다. `src/inference.py` → [`docs/src/inference.md`](src/inference.md)
+```
+docs/
+├─ scripts/ · src/    코드 설명서 — 코드와 같은 경로 (src/inference.py → docs/src/inference.md)
+└─ project/           그 밖의 프로젝트 문서 (분할 정책·과정 기록·시연 절차)
+```
 
-- 이 폴더의 다른 문서: [split_policy](split_policy.md) 분할 정책 · [process/dataset_audit_and_split](process/dataset_audit_and_split.md) 데이터 점검·분할 과정
-- 교과 7 라벨링 프로그램의 코드 문서는 [`subject7/docs/`](../../subject7/docs/README.md) 에 같은 규칙으로 있다.
+- **코드 파일이 궁금하면** 코드 경로 앞에 `docs/` 를 붙인다 → 아래 표
+- **`project/`**: [split_policy](project/split_policy.md) 분할 정책 · [process/dataset_audit_and_split](project/process/dataset_audit_and_split.md) 데이터 점검·분할 과정 · [demo_procedure](project/demo_procedure.md) 시연 절차
+- 결과·보고서는 문서가 아니라 [`reports/`](../reports/README.md) 에 단계별(01_data ~ 05_acceptance)로 있다.
+- 교과 7 문서는 [`subject7/docs/`](../../subject7/docs/README.md) 에 같은 규칙으로 있다 (기준서는 `subject7/docs/project/standards/`).
 - 대응 점검 (이 폴더 `subject8/` 에서): `python ../subject7/tools/check_docs.py .`
 
 ## `scripts/` · `src/`

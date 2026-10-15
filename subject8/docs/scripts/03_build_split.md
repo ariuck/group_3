@@ -18,7 +18,7 @@ python scripts/03_build_split.py --version kimchi_v1 --copy-files   # 이전 분
 | `--copy-files` | 실제 파일 배치까지 |
 | `--version` | `kimchi_v4`(기본) · `kimchi_v3` · `kimchi_v2` · `kimchi_v1`. 블록 분할 규칙은 [`constants.py` 의 `BLOCK_RULES`](../src/constants.md). `kimchi_v3`·`v4` 는 라벨 수정본이 필요 ([`04_import_label_fixes`](04_import_label_fixes.md) 먼저) |
 
-분할 정책 설명: `subject8/docs/split_policy.md`
+분할 정책 설명: `subject8/docs/project/split_policy.md`
 
 ## 처리 순서
 

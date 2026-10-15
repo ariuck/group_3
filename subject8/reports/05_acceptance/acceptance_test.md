@@ -28,8 +28,8 @@
 | 네 역할 Manifest 가 있고 합이 900장 | PASS | Train 526 · Val 132 · Test 84 · Bridge 158 = 900 |
 | `dataset_summary.csv` 가 Manifest 와 같다 | PASS | 네 역할 수량 일치 |
 | 역할 사이에 같은 이미지가 없다 | PASS | 겹침 0장 |
-| 같은 촬영 묶음이 여러 역할에 섞이지 않았다 | PASS (예외) | **G00·G09·G12 는 섞임** — 의도한 분할 예외이며 `docs/split_policy.md` 에 기록됨. 가이드 Gate 와는 다르므로 예외로 설명해야 한다 |
-| Split 정책이 문서로 확정(FROZEN)되어 있다 | PASS | `docs/split_policy.md` |
+| 같은 촬영 묶음이 여러 역할에 섞이지 않았다 | PASS (예외) | **G00·G09·G12 는 섞임** — 의도한 분할 예외이며 `docs/project/split_policy.md` 에 기록됨. 가이드 Gate 와는 다르므로 예외로 설명해야 한다 |
+| Split 정책이 문서로 확정(FROZEN)되어 있다 | PASS | `docs/project/split_policy.md` |
 | Class ID 0~6 을 그대로 쓴다 | PASS | `configs/dataset.yaml` |
 | Bridge Holdout 이 `dataset.yaml` 에 없다 | PASS | |
 | Frozen Test 가 Final Model 선택 전에 사용되지 않았다 | PASS (휴리스틱) | `runs/` 에 test·final 실행 없음, `evaluate_detector.py` 에 `allow_test` 보호. **학습 로그로 사람이 한 번 더 확인** |

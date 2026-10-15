@@ -1,7 +1,7 @@
 # 데이터 감사와 분할 — 900장을 "공정한 시험"이 되도록 나누기
 
 > 교과 8 Dataset Audit & Split 과정 정리 (가이드 2~3일차 · 산출물 1)
-> 결과 기준서는 [split_policy.md](../split_policy.md), 실행 방법은 [README](../../README.md) 에 있습니다. 이 문서는 **왜 그렇게 했는지 과정을 이해하고 설명하기 위한 문서**입니다.
+> 결과 기준서는 [split_policy.md](../split_policy.md), 실행 방법은 [README](../../../README.md) 에 있습니다. 이 문서는 **왜 그렇게 했는지 과정을 이해하고 설명하기 위한 문서**입니다.
 
 | 핵심 숫자 | 값 |
 |---|---|
@@ -62,7 +62,7 @@ flowchart TD
 | 단계 | 코드 | 결과 파일 |
 |---|---|---|
 | ①②③ | `scripts/02_audit_subject7_final.py` (`src/dataset_audit.py`, `src/leakage_check.py`) | `reports/01_data/audit_summary.csv`, `audit_issue.csv`, `audit_class_scene.csv`, `leakage_check.csv`, `capture_group_summary.csv` |
-| ④⑤ | 사람이 판단 | `docs/split_policy.md` |
+| ④⑤ | 사람이 판단 | `docs/project/split_policy.md` |
 | ⑥ | `scripts/03_build_split.py` (`src/split_builder.py`) | `manifests/*.csv`, `configs/dataset.yaml`, `reports/01_data/dataset_summary.csv` |
 
 ---

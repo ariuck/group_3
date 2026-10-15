@@ -261,7 +261,7 @@ G09 시간순 75장
 
 | 변경 | 이유 | 영향 |
 |---|---|---|
-| Class 5 기준 개정 (`docs/standards/class_guide.md` "검출 대상 범위"): 흩어진 점을 묶은 BBox·초록 잎맥·흐린 부분 삭제, 확실한 점은 따로 그림 | Baseline(kimchi_v2) 갈변 Recall 0.11 — 놓친 갈변 다수가 정답 기준이 모호했음 | Class 5 BBox 416 → 256 (Train 266→216 · Val 53→**8** · Test 31→16 · Bridge 66→16) |
+| Class 5 기준 개정 (`docs/project/standards/class_guide.md` "검출 대상 범위"): 흩어진 점을 묶은 BBox·초록 잎맥·흐린 부분 삭제, 확실한 점은 따로 그림 | Baseline(kimchi_v2) 갈변 Recall 0.11 — 놓친 갈변 다수가 정답 기준이 모호했음 | Class 5 BBox 416 → 256 (Train 266→216 · Val 53→**8** · Test 31→16 · Bridge 66→16) |
 | 머리카락을 Class 2 로 그린 BBox 1개 삭제 (Val) | Class 0~6 에 없는 이물 | Val Class 2 38 → 37 |
 
 * 라벨 수정본: `data/label_fixes/kimchi_v3/` (153장, Git 제외) · 변경 기록 `reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` · 박스별 판정 `reports/01_data/label_fixes_kimchi_v3/class5_review.csv`

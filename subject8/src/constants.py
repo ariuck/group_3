@@ -77,7 +77,7 @@ BLOCK_RULES: Dict[str, Dict[str, List[Block]]] = {
         "G12": [(0, 25, "val"), (25, 50, "train"), (50, 75, "val")],
     },
 }
-# kimchi_v3: 분할은 v2 와 같고 라벨만 다르다 (Class 5 기준 개정 — docs/standards/class_guide.md)
+# kimchi_v3: 분할은 v2 와 같고 라벨만 다르다 (Class 5 기준 개정 — docs/project/standards/class_guide.md)
 BLOCK_RULES["kimchi_v3"] = BLOCK_RULES["kimchi_v2"]
 # kimchi_v4: v3 라벨 + G09 마지막 배치(50~74, 갈변 67개·다른 이물 섞인 장면)를 Val 로
 # — v3 는 갈변 256개 중 207개가 G09(전부 Train) 라 Val 갈변이 8개뿐이었다. 24|25 사이 262초, 49|50 은 배치 변경(플라스틱 4 → 43)

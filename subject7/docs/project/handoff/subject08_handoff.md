@@ -1,7 +1,7 @@
 # 교과 8 Handoff
 
 > 교과 7(조각김치 이물검출 라벨링)의 결과를 교과 8(Object Detection 학습)에서 바로 쓸 수 있도록 **무엇이 어디에 있고, 무엇을 지켜야 하는지** 한곳에 정리한 문서입니다.
-> 숫자는 2026-10-08 기준 검수표와 라벨에서 읽은 값이며, 자세한 통계는 [QA Summary](../../reports/qa_summary.md) 에 있습니다.
+> 숫자는 2026-10-08 기준 검수표와 라벨에서 읽은 값이며, 자세한 통계는 [QA Summary](../../../reports/qa_summary.md) 에 있습니다.
 >
 > **데이터 성격**: 본 프로젝트는 AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터를 활용하여 수행하였습니다. 실제 생산라인 원본 데이터라고 표현하지 않습니다.
 
@@ -37,7 +37,7 @@ data/final/
 └── dataset_manifest.xlsx 같은 내용의 엑셀 (제출용)
 ```
 
-- 사진은 RAW 의 복사본, 라벨은 검수한 `data/work` 라벨입니다. 수량·짝·Class 분포의 근거: [final_evidence](../../reports/final_evidence.md)
+- 사진은 RAW 의 복사본, 라벨은 검수한 `data/work` 라벨입니다. 수량·짝·Class 분포의 근거: [final_evidence](../../../reports/final_evidence.md)
 - **원래의 train / validation 구분을 폴더로 유지했습니다.** 학습데이터1 train 500 + 학습데이터2 train 220 = `train` 720장, 학습데이터2 validation = `validation` 180장입니다. 새로 나누거나 섞지 않았습니다. (재구성은 교과 8 에서 결정)
 - 어느 데이터셋(학습데이터1·2)에서 왔는지는 `검수표.csv` 의 `출처 데이터셋` 칸에서 확인합니다.
 - 다른 구조가 필요하면 `python tools/build_final.py --apply --overwrite --layout flat`(한 폴더) 또는 `--layout nested`(`<데이터셋>/images|labels/<split>/`) 로 다시 만들 수 있습니다.
@@ -78,12 +78,12 @@ class_id x_center y_center width height
 | 교차검수 범위 | 900장 전부 (작성자와 다른 사람이 검수). 라벨이 원본과 달라진 235장도 모두 포함 |
 | PASS(검수 완료) 사진의 표본검수 | 전수 교차검수라 100% (가이드 권장 20~30% 이상) |
 | 최종 잔여 이슈 | 없음 (미처리 REVIEW 0 · Validation 0 · 검수 전·수정 필요·제외 0) |
-| 프로그램 Acceptance Test (가이드 §7.5) | 2026-10-08, 테스터 손상우 — 16단계 모두 통과 ([Test Report](../../reports/test_report.md) §4) |
-| Human Final QA (가이드 §7.3 우선순위 점검) | 2026-10-08, 강동연 — 40장 점검(Class 변경 1 · 작은 BBox 30 · BBox 많은 이미지 9), 이상 없음, 수정 0건 ([점검 목록](../../reports/human_qa_worklist.md)) |
+| 프로그램 Acceptance Test (가이드 §7.5) | 2026-10-08, 테스터 손상우 — 16단계 모두 통과 ([Test Report](../../../reports/test_report.md) §4) |
+| Human Final QA (가이드 §7.3 우선순위 점검) | 2026-10-08, 강동연 — 40장 점검(Class 변경 1 · 작은 BBox 30 · BBox 많은 이미지 9), 이상 없음, 수정 0건 ([점검 목록](../../../reports/human_qa_worklist.md)) |
 | REVIEW 이력 2장 (180번 · 601번) | 지혜성 · 김석범 확인. 180번은 잎사귀로 보기에는 너무 작아 갈변(Class 5)으로 라벨링, 601번은 REVIEW 로 잘못 표시된 것을 바로잡음 ([이슈 기록](../records/이슈기록.md)) |
 | 최종 QA 판정 | **교과 8 사용 가능** |
 
-자세한 내용: [QA Summary](../../reports/qa_summary.md) · 프로그램 시험: [Test Report](../../reports/test_report.md)
+자세한 내용: [QA Summary](../../../reports/qa_summary.md) · 프로그램 시험: [Test Report](../../../reports/test_report.md)
 
 ## 6. Dataset Manifest 위치와 칸 대응
 
@@ -107,10 +107,10 @@ class_id x_center y_center width height
 
 | 문서 | 위치 |
 |---|---|
-| Class 기준서 | [docs/standards/class_guide.md](../standards/class_guide.md) |
-| BBox 기준서 | [docs/standards/bbox_guide.md](../standards/bbox_guide.md) |
-| Project Baseline | [docs/standards/project_baseline.md](../standards/project_baseline.md) |
-| 검수 분담 | [docs/team/검수_배정.md](../team/검수_배정.md) |
+| Class 기준서 | [docs/project/standards/class_guide.md](../standards/class_guide.md) |
+| BBox 기준서 | [docs/project/standards/bbox_guide.md](../standards/bbox_guide.md) |
+| Project Baseline | [docs/project/standards/project_baseline.md](../standards/project_baseline.md) |
+| 검수 분담 | [docs/project/team/검수_배정.md](../team/검수_배정.md) |
 
 ## 8. 교과 8 에서 알아 둘 점
 
@@ -132,7 +132,7 @@ class_id x_center y_center width height
 | 기존 데이터 출처와 Split 정보를 확인할 수 있다 | ✅ `검수표.csv` |
 | 미처리 REVIEW 가 없다 | ✅ 0건 |
 | Validation Critical Error 가 없다 | ✅ 0건 |
-| QA 결과가 최종 완료 상태이다 | ✅ [QA Summary](../../reports/qa_summary.md) |
+| QA 결과가 최종 완료 상태이다 | ✅ [QA Summary](../../../reports/qa_summary.md) |
 
 다음 단계는 교과 8 에서 합니다: `Train / Validation / Test 구성 → dataset.yaml 작성 → YOLO Object Detection 학습`
 

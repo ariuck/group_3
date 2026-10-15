@@ -13,13 +13,13 @@ BBox 와 Class 를 확인·수정하고 최종 학습데이터를 만드는 라�
 >
 > **NDA**: 이 데이터는 교육생 NDA(비밀유지계약) 아래 사용합니다. 원본 JPG·TXT, 작업본, 최종본, 검수표 CSV 는 공개 저장소·개인 클라우드·메신저로 보내지 않습니다. (`data/` 와 검수표 CSV 는 `.gitignore` 로 제외)
 >
-> **진행 상태**: 프로그램 개발, 900장 교차검수, FINAL 데이터 생성, QA·인계 문서까지 끝났습니다. ([QA Summary](reports/qa_summary.md) · [교과 8 Handoff](docs/handoff/subject08_handoff.md))
+> **진행 상태**: 프로그램 개발, 900장 교차검수, FINAL 데이터 생성, QA·인계 문서까지 끝났습니다. ([QA Summary](reports/qa_summary.md) · [교과 8 Handoff](docs/project/handoff/subject08_handoff.md))
 
 ---
 
 ## 2. 프로젝트 주요 기능
 
-![라벨링 화면](docs/images/ui_main.png)
+![라벨링 화면](docs/project/images/ui_main.png)
 
 *(화면 예시 — 직접 만든 가짜 사진 11장으로 띄운 것이며 회사 데이터가 아닙니다)*
 
@@ -30,22 +30,22 @@ BBox 와 Class 를 확인·수정하고 최종 학습데이터를 만드는 라�
 **1. 폴더를 열면 사진과 기존 BBox 가 함께 표시됩니다.**
 Class 마다 색이 다르고, 오른쪽 `라벨 목록`에 번호·Class·위치(x, y, w, h)·상태(원본/변경)가 나옵니다. 아래 `검수 기록`에서 상태·이미지 유형·작성자·검수자를 입력합니다.
 
-![기본 화면](docs/images/readme_1_기본화면.png)
+![기본 화면](docs/project/images/readme_1_기본화면.png)
 
 **2. `RAW 와 비교(Diff)` 를 켜면 원본에서 무엇이 바뀌었는지 색으로 보입니다.**
 초록 = 추가, 주황 = 수정(회색 점선 = 원래 위치), 빨강 점선 = 삭제. 위쪽에 `추가 1 · 수정 1 · 삭제 1 · 그대로 4` 처럼 요약됩니다.
 
-![RAW 와 비교](docs/images/readme_2_RAW비교.png)
+![RAW 와 비교](docs/project/images/readme_2_RAW비교.png)
 
 **3. 마우스 휠로 확대해서 작은 이물을 확인하고, BBox 를 선택하면 좌표가 나옵니다.**
 선택한 BBox 에는 크기 조절 핸들 8개가 보이고, 아래쪽에 픽셀 좌표와 YOLO 비율값이 표시됩니다. 오른쪽 위에 현재 배율(117%)이 나옵니다.
 
-![확대와 BBox 선택](docs/images/readme_3_확대와선택.png)
+![확대와 BBox 선택](docs/project/images/readme_3_확대와선택.png)
 
 **4. `도구` ▸ `QA 검증 (무결성)` 으로 전체 데이터를 자동 검사합니다.**
 짝이 없는 파일, TXT 형식, Class 범위, 좌표 범위, 중복 BBox 등을 찾아 줍니다. 문제가 있으면 줄을 더블클릭해서 해당 사진으로 이동합니다. (아래는 문제가 없는 경우)
 
-![Validation 결과](docs/images/readme_4_검증결과.png)
+![Validation 결과](docs/project/images/readme_4_검증결과.png)
 
 구현됨:
 
@@ -244,7 +244,7 @@ configs/classes.yaml
 상세한 Class 판단 기준은 다음 문서를 확인합니다.
 
 ```text
-docs/standards/class_guide.md
+docs/project/standards/class_guide.md
 ```
 
 ---
@@ -256,7 +256,7 @@ BBox 는 객체 외곽에 최대한 밀착하여 작성합니다.
 상세한 BBox 기준은 다음 문서를 확인합니다.
 
 ```text
-docs/standards/bbox_guide.md
+docs/project/standards/bbox_guide.md
 ```
 
 ---
@@ -312,7 +312,7 @@ manifests/dataset_manifest.xlsx
 작성 방법과 REVIEW 처리, FINAL 조건은 다음 문서를 확인합니다.
 
 ```text
-docs/standards/manifest_guide.md
+docs/project/standards/manifest_guide.md
 ```
 
 **프로그램이 [저장]할 때 자동으로 채우는 칸**: No, 이미지·TXT 파일명, 원본/최종 BBox 수, Class, TXT 줄 수 = 화면 BBox 수, 상태(고쳤으면 `수정 완료`), 출처 데이터셋, 원래 split
@@ -331,7 +331,7 @@ reports/qa_summary.md
 
 검수 현황, BBox 변화(추가·수정·삭제), Class 별 증감, 이미지 유형, 완료 기준 점검이 들어 있습니다. 검수표를 읽어 다시 만들 수 있습니다: `python tools/qa_summary.py --apply`
 
-교과 8 에서 바로 쓸 수 있게 정리한 인계 문서: [교과 8 Handoff](docs/handoff/subject08_handoff.md)
+교과 8 에서 바로 쓸 수 있게 정리한 인계 문서: [교과 8 Handoff](docs/project/handoff/subject08_handoff.md)
 
 ---
 

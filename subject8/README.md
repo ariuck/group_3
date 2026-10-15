@@ -34,7 +34,7 @@ Dataset Audit → Split → Smoke Test → Baseline → Validation 평가
 | 교과 8 사용 위치 | `data/subject7_final/` — FINAL 을 그대로 복사해 사용, 직접 수정하지 않음 |
 | 검수 기록 | `data/subject7_final/검수표.csv` (900행) |
 | QA 결과 | [QA Summary](../subject7/reports/qa_summary.md) — FAIL 0 · REVIEW 0 · **교과 8 사용 가능** |
-| 인계 문서 | [교과 8 Handoff](../subject7/docs/handoff/subject08_handoff.md) |
+| 인계 문서 | [교과 8 Handoff](../subject7/docs/project/handoff/subject08_handoff.md) |
 
 교과 8 에서 지키는 것:
 
@@ -96,7 +96,7 @@ Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/01_data/aud
 | 6 | 파·고추 | green_onion_pepper | 255 | 54 | O |
 
 - Class 4 는 사용하지 않지만 번호를 당기지 않습니다. Instance 0건이므로 Class 별 성능은 `미사용 Class / Instance 0건` 으로 기록합니다.
-- Class 6 은 사진 54장으로 가장 적고, 그중 50장이 한 촬영 묶음(G00)에 있습니다. → [Split 정책](docs/split_policy.md) 5장
+- Class 6 은 사진 54장으로 가장 적고, 그중 50장이 한 촬영 묶음(G00)에 있습니다. → [Split 정책](docs/project/split_policy.md) 5장
 
 ## 5. 실행환경
 
@@ -245,7 +245,7 @@ python scripts/10_train_v2.py --exp exp002  # exp002 (batch 6 — 1920 메모리
 
 ### 6.10 Class 5(갈변) 라벨 재검수 → `kimchi_v3`
 
-기준: [`docs/standards/class_guide.md`](../subject7/docs/standards/class_guide.md) Class 5 "검출 대상 범위" (2026-10-14 개정)
+기준: [`docs/project/standards/class_guide.md`](../subject7/docs/project/standards/class_guide.md) Class 5 "검출 대상 범위" (2026-10-14 개정)
 
 ```bash
 # 1) subject7/ 에서 라벨링 프로그램 실행 → [폴더 열기] 로 data/final 을 열고 작업 목록대로 고친 뒤 저장
@@ -267,9 +267,9 @@ cd ~/group_3/subject8
 ## 7. Dataset Split (`kimchi_v4` = `kimchi_v3` Class 5 개정 라벨 + G09 마지막 배치 Val, FROZEN)
 
 - **정책**: 방안 B — 촬영 간격 5분 초과로 나눈 18개 `capture_group` 을 묶음 단위로 배정 + 예외 3건: `G00` 을 파/파+고추 구간별 시간순 블록으로 분할, `G12` 가운데 배치 25장을 Train 으로 (마른 잎·반점 갈변이 Train 에 있도록), `G09` 마지막 배치 25장을 Val 로 (Val 갈변 8 → 75개). Val 이 한 회차에 몰리지 않게 `G05` 를 통째로 Val 로
-- 버전: `kimchi_v1`(2026-10-12) → `v2`(분할, H1·H2) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) — 이유는 [split_policy.md 7장](docs/split_policy.md). 버전마다 Val 이 달라 Validation 점수는 직접 비교하지 않습니다.
-- 상세 근거·유사도 검증·예외 사유: [docs/split_policy.md](docs/split_policy.md)
-- 과정 전체를 그림으로 정리한 문서: [docs/process/dataset_audit_and_split.md](docs/process/dataset_audit_and_split.md)
+- 버전: `kimchi_v1`(2026-10-12) → `v2`(분할, H1·H2) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) — 이유는 [split_policy.md 7장](docs/project/split_policy.md). 버전마다 Val 이 달라 Validation 점수는 직접 비교하지 않습니다.
+- 상세 근거·유사도 검증·예외 사유: [docs/split_policy.md](docs/project/split_policy.md)
+- 과정 전체를 그림으로 정리한 문서: [docs/project/process/dataset_audit_and_split.md](docs/project/process/dataset_audit_and_split.md)
 - Bridge Holdout 은 교과 8 학습·튜닝·모델 선택·Frozen Test 에 사용하지 않고 교과 14 용으로 보존합니다. `dataset.yaml` 에 넣지 않습니다.
 
 | 역할 | 장수 | C0 | C1 | C2 | C3 | C5 | C6 | 용도 |
@@ -282,7 +282,7 @@ cd ~/group_3/subject8
 
 *(숫자는 해당 Class BBox 가 1개 이상 있는 사진 수)*
 
-산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/split_policy.md`, `reports/01_data/dataset_summary.csv`
+산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/project/split_policy.md`, `reports/01_data/dataset_summary.csv`
 
 ## 8. Baseline (`baseline_v4` — kimchi_v4 · YOLO11n · imgsz 640)
 

@@ -12,7 +12,7 @@ python tools/import_labels.py <받은 폴더> --apply              # 새 라벨�
 python tools/import_labels.py <받은 폴더> --apply --overwrite  # 내용이 다른 것도 덮어씀 (덮어쓰기 전 백업)
 ```
 
-전체 흐름은 [team/결과_주고받기](../team/결과_주고받기.md) 와 [`pack_results`](pack_results.md) · [`merge_manifests`](merge_manifests.md) 를 함께 본다.
+전체 흐름은 [team/결과_주고받기](../project/team/결과_주고받기.md) 와 [`pack_results`](pack_results.md) · [`merge_manifests`](merge_manifests.md) 를 함께 본다.
 
 ## 분류 결과
 

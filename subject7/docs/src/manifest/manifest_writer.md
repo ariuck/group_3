@@ -6,7 +6,7 @@
 
 ## 역할
 
-- 파일: `manifests/dataset_manifest.csv` — 칸 19개. `dataset_manifest.xlsx` 검수표 틀과 같은 머리글이다. 기준 문서: [standards/manifest_guide](../../standards/manifest_guide.md)
+- 파일: `manifests/dataset_manifest.csv` — 칸 19개. `dataset_manifest.xlsx` 검수표 틀과 같은 머리글이다. 기준 문서: [standards/manifest_guide](../../project/standards/manifest_guide.md)
 - 같은 사진을 다시 저장하면 새 줄을 만들지 않고 그 줄을 갱신한다. 키는 **이미지 파일명 + 출처 데이터셋 + 원래 split** 이다.
 - 이미지를 열 때 그 사진의 사람 칸을 읽어 입력칸에 다시 보여 준다.
 

@@ -105,12 +105,12 @@ def check_dataset():
         grp.setdefault(r["capture_group"], set()).add(r["split"])
     mixed = sorted(g for g, s in grp.items() if len(s) > 1)
     add(A, "같은 촬영 묶음이 여러 역할에 섞이지 않았다 (또는 예외가 문서화됨)", "PASS" if not mixed else "MANUAL",
-        "섞인 묶음 없음" if not mixed else f"섞인 묶음 {mixed} — docs/split_policy.md 의 분할 예외로 문서화되어 있는지 사람이 확인")
+        "섞인 묶음 없음" if not mixed else f"섞인 묶음 {mixed} — docs/project/split_policy.md 의 분할 예외로 문서화되어 있는지 사람이 확인")
 
     # split_policy
-    sp = PROJECT_ROOT / "docs" / "split_policy.md"
+    sp = PROJECT_ROOT / "docs" / "project" / "split_policy.md"
     txt = sp.read_text(encoding="utf-8") if sp.is_file() else ""
-    add(A, "Split 정책이 문서로 확정(FROZEN)되어 있다", "PASS" if "FROZEN" in txt else "FAIL", "docs/split_policy.md")
+    add(A, "Split 정책이 문서로 확정(FROZEN)되어 있다", "PASS" if "FROZEN" in txt else "FAIL", "docs/project/split_policy.md")
 
     # dataset.yaml 에 Bridge 없음, Class 0~6
     ytxt = (PROJECT_ROOT / "configs" / "dataset.yaml").read_text(encoding="utf-8")

@@ -13,7 +13,7 @@ python scripts/qa_acceptance_check.py       # FAIL 이 있으면 종료 코드 1
 
 | 입력 | 출력 (Git 에 올림) |
 |---|---|
-| `manifests/*.csv`, `configs/dataset.yaml`, `docs/split_policy.md`, `models/**/*.pt`, `reports/*`, `runs/*/args.yaml`, `git ls-files` | 화면 표, `reports/05_acceptance/acceptance_check.csv` (`area, item, status, detail`) |
+| `manifests/*.csv`, `configs/dataset.yaml`, `docs/project/split_policy.md`, `models/**/*.pt`, `reports/*`, `runs/*/args.yaml`, `git ls-files` | 화면 표, `reports/05_acceptance/acceptance_check.csv` (`area, item, status, detail`) |
 
 ## 상태
 
@@ -38,5 +38,5 @@ python scripts/qa_acceptance_check.py       # FAIL 이 있으면 종료 코드 1
 
 - **Frozen Test 미사용은 휴리스틱이다.** `runs/` 이름·`args.yaml` 의 `split: test`·`evaluate_detector.py` 의 `allow_test` 보호만 본다. 학습 로그는 사람이 한 번 더 본다.
 - 해시는 파일 내용 SHA-256 의 앞 12자리로, `src/train_detector.py` 의 `sha256_short` 와 같은 방식이다. Weight 를 다시 학습·교체했는데 기록 문서를 갱신하지 않으면 `FAIL` 이 난다 (기록과 파일이 어긋났다는 뜻).
-- 촬영 묶음이 여러 역할에 걸친 경우(G00·G09·G12)는 `MANUAL` 로 표시한다 — 분할 예외가 `docs/split_policy.md` 에 문서화되어 있는지 사람이 확인한다.
+- 촬영 묶음이 여러 역할에 걸친 경우(G00·G09·G12)는 `MANUAL` 로 표시한다 — 분할 예외가 `docs/project/split_policy.md` 에 문서화되어 있는지 사람이 확인한다.
 - 사진·GPU 를 쓰는 항목(Detection 실행, Auto Label, 재현)은 이 스크립트가 판정하지 않는다.
