@@ -2,7 +2,7 @@
 
 > 교과 8 전체가 함께 쓰는 상수의 유일한 정의 (SSOT). Class 이름, 장면 유형, 촬영 묶음 기준, Dataset Version 별 분할 규칙, 라벨 수정본 경로, 역할·용도를 한 곳에서만 고친다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/constants.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/constants.py)
 
 ## 역할
 

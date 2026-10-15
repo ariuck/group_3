@@ -1,8 +1,8 @@
 # `subject8/scripts/09_collect_failures.py`
 
-> 6일차 Failure Analysis. Weight 가 Validation 에서 틀린 것을 모아 `reports/failure_analysis.csv`(산출물 3)와 요약 표 3개, 대표 실패 사진 모음(`demo/failure_analysis/`)을 만든다.
+> 6일차 Failure Analysis. Weight 가 Validation 에서 틀린 것을 모아 `reports/03_failure_analysis/failure_analysis.csv`(산출물 3)와 요약 표 3개, 대표 실패 사진 모음(`demo/failure_analysis/`)을 만든다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/09_collect_failures.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/09_collect_failures.py)
 
 ## 사용법
 
@@ -37,4 +37,4 @@ python scripts/09_collect_failures.py --weights models/improved/exp001_best.pt -
 ## 주의사항
 
 - Validation 만 분석한다 (Frozen Test 사용 안 함).
-- 원인 판단과 다음 실험은 이 스크립트가 아니라 `reports/failure_hypothesis.md` 에 사람이 정리한다.
+- 원인 판단과 다음 실험은 이 스크립트가 아니라 `reports/03_failure_analysis/failure_hypothesis.md` 에 사람이 정리한다.

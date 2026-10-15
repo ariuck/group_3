@@ -2,7 +2,7 @@
 
 > 교과 8 학습 환경 점검. Python · PyTorch · Ultralytics 버전과 CUDA(GPU) 사용 가능 여부를 출력하고, YOLO11n 사전학습 가중치를 불러와 본다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/01_check_environment.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/01_check_environment.py)
 
 ## 사용법
 

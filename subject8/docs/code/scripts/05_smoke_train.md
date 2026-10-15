@@ -2,7 +2,7 @@
 
 > 3일차 Smoke Test. 작은 데이터로 학습 → Weight → 이미지 Prediction 이 끝까지 되는지 확인하고 `reports/history/smoke_test.md` 를 남긴다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/05_smoke_train.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/05_smoke_train.py)
 
 ## 사용법
 

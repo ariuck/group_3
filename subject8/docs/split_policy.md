@@ -77,7 +77,7 @@ flowchart TD
 * **결과**: 총 **18개 묶음 (`G00` ~ `G17`)** 생성
 
 ### 2.2 이미지 유사도 (dHash) 검증 결과
-* 재현: `python scripts/02_audit_subject7_final.py` → `reports/audit/leakage_check.csv`, `reports/audit/capture_group_summary.csv` (코드: `src/leakage_check.py`)
+* 재현: `python scripts/02_audit_subject7_final.py` → `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv` (코드: `src/leakage_check.py`)
 * dHash 는 사진을 17×16 흑백으로 줄여 만든 256bit 지문입니다. 두 지문의 다른 bit 수(0~256)가 작을수록 비슷한 사진이며, **10 이하를 "거의 같은 사진"**으로 봅니다.
 * 900장 전체(약 40만 쌍)를 비교한 결과:
 
@@ -115,7 +115,7 @@ flowchart TD
 |  |  |  | **합계** | **720** | **180** |
 
 ### 2.4 Class 분포와 장면(scene_type) 분포를 함께 본 결과
-재현: `reports/audit/audit_class_scene.csv`. 숫자는 각 Class 가 1개 이상 들어 있는 **사진 수**입니다.
+재현: `reports/01_data/audit_class_scene.csv`. 숫자는 각 Class 가 1개 이상 들어 있는 **사진 수**입니다.
 
 | Class | 김치+대상 객체 (`kimchi_with_target`) | 대상 객체 단독 (`object_only`) | 판단 어려움 | 합계 |
 |---|---:|---:|---:|---:|
@@ -130,7 +130,7 @@ flowchart TD
 * **모든 Class 가 김치 장면에 충분히 있습니다.** 예: 나뭇가지(Class 2)는 이물 단독에만 몰려 있지 않고 김치 장면에 297장 있습니다.
 * **Class 5·6 은 이물 단독 사진에 0장입니다.** 갈변은 배추에서만, 파·고추는 김치 양념과 함께만 나타나기 때문입니다. 그래서 이물 단독 150장(G17)을 평가 역할로 보내면 Class 5·6 을 평가할 수 없고, Train 에 넣어도 Class 5·6 학습에는 영향이 없습니다 → 1.1 의 3번 원칙(G17 전량 Train) 근거.
 * **정상 김치(이물 없음) 사진은 0장**입니다 (`Empty Label` 0, 교과 7 Handoff 의 "빈 TXT 0개"와 일치). 모델이 "이물 없는 김치"를 따로 배우지 못하므로 FP 분석 때 참고합니다.
-* 사진 1장당 BBox 는 1~12개(평균 5.07)이며 **537장(60%)이 정확히 5개**입니다 (`reports/audit/audit_summary.csv` 의 `BBox per Image`). 실제 공장 사진(대부분 0~1개)과 분포가 다를 수 있어 교과 14 연결 시 참고합니다.
+* 사진 1장당 BBox 는 1~12개(평균 5.07)이며 **537장(60%)이 정확히 5개**입니다 (`reports/01_data/audit_summary.csv` 의 `BBox per Image`). 실제 공장 사진(대부분 0~1개)과 분포가 다를 수 있어 교과 14 연결 시 참고합니다.
 
 ---
 
@@ -238,7 +238,7 @@ G09 시간순 75장
 2. **Q. Val과 Test의 클래스 비율이 조금 다른 이유는 무엇인가요?**
    - **답변**: "묶음 단위(회차 단위)로 분할했기 때문에 회차별 이물 집중도에 따라 비율 차이가 발생합니다. 따라서 모델 비교 시 mAP 단일 점수뿐만 아니라 클래스별 mAP 및 Recall 지표를 반드시 교차 검증합니다."
 3. **Q. Split 을 동결했다가 왜 바꿨나요?**
-   - **답변**: "Baseline 실패 분석에서 Val 의 마른 잎·반점 갈변과 고추가 Train 에 거의 없다는 것을 확인했습니다 (`reports/failure_hypothesis.md` H1·H2). Frozen Test 는 아직 모델로 평가하지 않은 상태에서 Dataset Version 을 `kimchi_v2` 로 올리고 Baseline 을 다시 학습합니다. `kimchi_v1` 은 `--version kimchi_v1` 로 그대로 재현됩니다."
+   - **답변**: "Baseline 실패 분석에서 Val 의 마른 잎·반점 갈변과 고추가 Train 에 거의 없다는 것을 확인했습니다 (`reports/03_failure_analysis/failure_hypothesis.md` H1·H2). Frozen Test 는 아직 모델로 평가하지 않은 상태에서 Dataset Version 을 `kimchi_v2` 로 올리고 Baseline 을 다시 학습합니다. `kimchi_v1` 은 `--version kimchi_v1` 로 그대로 재현됩니다."
 4. **Q. G12 를 Train/Val 로 나누면 누수가 아닌가요?**
    - **답변**: "같은 날·같은 장소에서 같은 실물 잎을 다시 배치해 찍었을 가능성은 있습니다. 그래서 사진 단위가 아니라 배치(25장) 단위로 자르고, 경계는 촬영 간격·배치 변경 지점에 맞췄습니다. 그래도 Val 점수가 다소 낙관적일 수 있어, 마지막 판단은 G12 가 없는 Frozen Test 로 합니다."
 
@@ -264,7 +264,7 @@ G09 시간순 75장
 | Class 5 기준 개정 (`docs/standards/class_guide.md` "검출 대상 범위"): 흩어진 점을 묶은 BBox·초록 잎맥·흐린 부분 삭제, 확실한 점은 따로 그림 | Baseline(kimchi_v2) 갈변 Recall 0.11 — 놓친 갈변 다수가 정답 기준이 모호했음 | Class 5 BBox 416 → 256 (Train 266→216 · Val 53→**8** · Test 31→16 · Bridge 66→16) |
 | 머리카락을 Class 2 로 그린 BBox 1개 삭제 (Val) | Class 0~6 에 없는 이물 | Val Class 2 38 → 37 |
 
-* 라벨 수정본: `data/label_fixes/kimchi_v3/` (153장, Git 제외) · 변경 기록 `reports/class5/label_changes_kimchi_v3.csv` · 박스별 판정 `reports/class5/class5_review.csv`
+* 라벨 수정본: `data/label_fixes/kimchi_v3/` (153장, Git 제외) · 변경 기록 `reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` · 박스별 판정 `reports/01_data/label_fixes_kimchi_v3/class5_review.csv`
 * 재현: `python scripts/04_import_label_fixes.py --apply` → `python scripts/03_build_split.py --version kimchi_v3 --copy-files`
 * Val 갈변이 8개뿐이라 개발 중 갈변 성능을 잴 수 없었습니다 → `kimchi_v4` 로 해결. Frozen Test 는 최종 모델 확정 후 한 번만, Bridge 는 교과 14 에서 씁니다 (개발 중 판단에 쓰지 않음).
 

@@ -2,7 +2,7 @@
 
 > 학습된 Weight 의 검출 성능(Precision · Recall · mAP50 · mAP50-95, Class 별)을 측정한다. Baseline · 개선 실험 · Final 평가가 모두 이 함수를 쓴다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/evaluate_detector.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/evaluate_detector.py)
 
 ## 역할
 

@@ -2,7 +2,7 @@
 
 > 5일차 이미지 Detection. Weight 로 사진을 예측하고 정답과 나란히 그린 비교 이미지, 예측 목록, 사진별 TP·CLASS_ERROR·FP·FN 표를 만든다. 6일차 실패분석 후보(틀린 것이 많은 사진 Top 10)도 보여 준다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/08_predict_images.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/08_predict_images.py)
 
 ## 사용법
 

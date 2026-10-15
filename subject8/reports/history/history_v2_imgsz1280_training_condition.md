@@ -1,6 +1,6 @@
 # 데이터 개선 이력 학습 조건 (`history_v2_imgsz1280`, 처음 이름 `baseline_kimchi_v2`)
 
-> **이름 정리 (2026-10-14)**: kimchi_v2 데이터 개선 이력 (imgsz 1280). 공식 Baseline 은 `baseline_v4` (kimchi_v4 · YOLO11n · imgsz 640) — [`baseline_training_condition.md`](../baseline_training_condition.md).
+> **이름 정리 (2026-10-14)**: kimchi_v2 데이터 개선 이력 (imgsz 1280). 공식 Baseline 은 `baseline_v4` (kimchi_v4 · YOLO11n · imgsz 640) — [`baseline_training_condition.md`](../02_baseline/baseline_training_condition.md).
 
 
 > 자동 생성: `train_detector.py` · 2026-10-14 11:27

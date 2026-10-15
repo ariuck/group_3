@@ -11,7 +11,7 @@
 
 결과:
     data/label_fixes/kimchi_v3/*.txt          바뀐 사진의 TXT (data/ 는 Git 제외)
-    reports/class5/label_changes_kimchi_v3.csv       사진별 변경 기록 (지운 줄·추가된 줄 수, Class 별 BBox 수 변화)
+    reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv       사진별 변경 기록 (지운 줄·추가된 줄 수, Class 별 BBox 수 변화)
 """
 import argparse
 import csv
@@ -25,8 +25,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FINAL_LABELS = PROJECT_ROOT / "data" / "subject7_final" / "labels"
 FIX_DIR = PROJECT_ROOT / "data" / "label_fixes" / "kimchi_v3"
 DEFAULT_SRC = PROJECT_ROOT.parent / "subject7" / "data" / "work" / "_RAW밖"
-WORKLIST = PROJECT_ROOT / "reports" / "class5" / "class5_relabel_worklist.csv"
-REPORT = PROJECT_ROOT / "reports" / "class5" / "label_changes_kimchi_v3.csv"
+WORKLIST = PROJECT_ROOT / "reports" / "01_data" / "label_fixes_kimchi_v3" / "class5_relabel_worklist.csv"
+REPORT = PROJECT_ROOT / "reports" / "01_data" / "label_fixes_kimchi_v3" / "label_changes_kimchi_v3.csv"
 
 
 def read_lines(path):

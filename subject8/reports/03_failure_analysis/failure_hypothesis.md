@@ -2,7 +2,7 @@
 
 > **이후 진행 (2026-10-14)**: 이 분석(H1·H2)으로 Dataset 을 `kimchi_v2`(분할) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) 로 고쳤고, 가이드 11.5·20.5 에 따라 **같은 Version 에서 Baseline 을 다시 학습**했다 — 공식 Baseline `baseline_v4` (kimchi_v4 · YOLO11n · 640), 개선 실험 exp001 = H4 대응 `imgsz` 640 → 1280. 이 문서의 `baseline_v1` 결과는 이력이며, 파일 이름은 `models/baseline/baseline_v1_best.pt`, `reports/baseline_v1_*` 로 바뀌었다. 5장 "바꾸지 않을 것: 모델 크기·Epoch" 는 exp001 에서도 그대로 지켰다.
 
-> 산출물 3 · 6일차. 숫자 근거: `reports/failure_analysis.csv`, `failure_summary.csv`, `failure_recall_by_size.csv`, `failure_box_size_shift.csv` (재현: `python scripts/09_collect_failures.py`)
+> 산출물 3 · 6일차. 숫자 근거: `reports/03_failure_analysis/failure_analysis.csv`, `failure_summary.csv`, `failure_recall_by_size.csv`, `failure_box_size_shift.csv` (재현: `python scripts/09_collect_failures.py`)
 > 그림 근거: `demo/failure_analysis/*.jpg` (회사 사진이라 Git 제외 — 로컬에서 확인)
 > 판정 기준: confidence 0.25, IoU 0.5
 

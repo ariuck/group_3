@@ -1,6 +1,6 @@
 # Baseline 학습 조건 (`baseline_v1`)
 
-> **이름 정리 (2026-10-14)**: kimchi_v1 의 첫 Baseline (이력). 이 모델의 실패 분석이 Dataset v2~v4 수정의 근거다. 공식 Baseline 은 `baseline_v4` (kimchi_v4 · YOLO11n · imgsz 640) — [`baseline_training_condition.md`](../baseline_training_condition.md).
+> **이름 정리 (2026-10-14)**: kimchi_v1 의 첫 Baseline (이력). 이 모델의 실패 분석이 Dataset v2~v4 수정의 근거다. 공식 Baseline 은 `baseline_v4` (kimchi_v4 · YOLO11n · imgsz 640) — [`baseline_training_condition.md`](../02_baseline/baseline_training_condition.md).
 
 
 > 자동 생성: `train_detector.py` · 2026-10-14 09:59

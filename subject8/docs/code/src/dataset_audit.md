@@ -2,7 +2,7 @@
 
 > 교과 7 최종본의 YOLO 라벨을 점검하는 `DatasetAuditor`. 짝·열 개수·Class 범위·Class 4·좌표 범위·사진 밖 BBox·이름 중복·검수표 대조를 검사하고, 요약·이슈·Class×장면 CSV 를 만든다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/dataset_audit.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/dataset_audit.py)
 
 ## 역할
 
@@ -42,9 +42,9 @@
 
 | 파일 | 내용 |
 |---|---|
-| `reports/audit/audit_issue.csv` | `file, line, issue, detail` (UTF-8, BOM 없음) |
-| `reports/audit/audit_summary.csv` | `Category, Item, Count` — Overview · Class BBox · BBox per Image · BBox per Image Distribution · Scene Type · Source Dataset · Original Split (UTF-8 BOM) |
-| `reports/audit/audit_class_scene.csv` | `class_id, class_name, images_total, kimchi_with_target, object_only, …` — 각 Class 가 들어 있는 **사진 수**를 장면 유형별로 (UTF-8 BOM) |
+| `reports/01_data/audit_issue.csv` | `file, line, issue, detail` (UTF-8, BOM 없음) |
+| `reports/01_data/audit_summary.csv` | `Category, Item, Count` — Overview · Class BBox · BBox per Image · BBox per Image Distribution · Scene Type · Source Dataset · Original Split (UTF-8 BOM) |
+| `reports/01_data/audit_class_scene.csv` | `class_id, class_name, images_total, kimchi_with_target, object_only, …` — 각 Class 가 들어 있는 **사진 수**를 장면 유형별로 (UTF-8 BOM) |
 
 ## 의존성
 

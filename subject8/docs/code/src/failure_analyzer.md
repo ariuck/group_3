@@ -2,7 +2,7 @@
 
 > 모델이 틀린 것을 모아 실패 유형(FN · CLASS_ERROR · FP 3종)으로 나누고, 크기별 Recall · Train/Val 박스 크기 차이 · 대표 실패 사진 모음을 만든다 (6일차 Failure Analysis).
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/failure_analyzer.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/failure_analyzer.py)
 
 ## 역할
 

@@ -17,6 +17,8 @@
 | [`scripts/07_evaluate_baseline.py`](scripts/07_evaluate_baseline.md) | Baseline Validation 평가 → `baseline_metrics.csv`·Class 별 성능·그래프 |
 | [`scripts/08_predict_images.py`](scripts/08_predict_images.md) | 사진 예측 + 정답 비교 이미지 · TP/FP/FN 표 |
 | [`scripts/plot_runs.py`](scripts/plot_runs.md) | 모든 실행의 학습 곡선 · Version 별 비교 그래프 · `runs_summary.csv` (results.csv 만으로) |
+| [`scripts/qa_acceptance_check.py`](scripts/qa_acceptance_check.md) | Acceptance Test 자동 점검 (Dataset·Model·Evaluation·환경·보안) → `reports/05_acceptance/acceptance_check.csv` |
+| [`scripts/plot_improvement.py`](scripts/plot_improvement.md) | 개선 분석: Baseline vs exp001~003 비교 표(`improvement_summary.csv`)·2×2 그림(SVG) — 사진·GPU 없이 재생성 |
 | [`scripts/09_collect_failures.py`](scripts/09_collect_failures.md) | 실패 사례 수집 → `failure_analysis.csv` · 요약 표 · 대표 사진 |
 | [`scripts/10_train_v2.py`](scripts/10_train_v2.md) | 개선 실험 exp001 — Baseline 조건에서 imgsz 640 → 1280 (공식: `kimchi_v4`) |
 | [`src/constants.py`](src/constants.md) | Class·장면·묶음 기준·Version 별 분할 규칙·역할 상수 (SSOT) |

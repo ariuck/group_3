@@ -5,8 +5,8 @@
     python scripts/07_evaluate_baseline.py
 
 결과:
-    reports/baseline_metrics.csv          대표 성능 한 줄 (산출물 2)
-    reports/baseline_class_metrics.csv    Class 별 성능
+    reports/02_baseline/baseline_metrics.csv          대표 성능 한 줄 (산출물 2)
+    reports/02_baseline/baseline_class_metrics.csv    Class 별 성능
     reports/figures/baseline/baseline_results.png              학습 곡선 (산출물 5)
     reports/figures/baseline/baseline_confusion_matrix.png     Confusion Matrix (산출물 5)
     runs/eval/baseline_val/               Ultralytics 평가 원본 (PR 곡선 등)
@@ -35,6 +35,7 @@ TRAIN_RUN = PROJECT_ROOT / "runs" / MODEL_VERSION
 DATA_YAML = PROJECT_ROOT / "configs" / "dataset.yaml"
 REPORTS = PROJECT_ROOT / "reports"
 FIGURES = REPORTS / "figures" / "baseline"
+BASE_DIR = REPORTS / "02_baseline"
 
 
 def dataset_version():
@@ -52,8 +53,8 @@ def main():
     res = evaluate_detector(WEIGHT, DATA_YAML, split="val", imgsz=args["imgsz"], batch=args["batch"],
                             project=PROJECT_ROOT / "runs" / "eval", name=f"{MODEL_VERSION}_val")
 
-    REPORTS.mkdir(exist_ok=True)
-    metrics_csv = REPORTS / "baseline_metrics.csv"
+    BASE_DIR.mkdir(parents=True, exist_ok=True)
+    metrics_csv = BASE_DIR / "baseline_metrics.csv"
     with metrics_csv.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["model_version", "dataset_version", "split", "imgsz", "batch", "epochs", "seed",
@@ -61,7 +62,7 @@ def main():
         w.writerow([MODEL_VERSION, dataset_version(), "val", args["imgsz"], args["batch"], args["epochs"], args["seed"],
                     res["images"], res["instances"], res["precision"], res["recall"], res["map50"], res["map50_95"]])
 
-    class_csv = REPORTS / "baseline_class_metrics.csv"
+    class_csv = BASE_DIR / "baseline_class_metrics.csv"
     with class_csv.open("w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(res["per_class"][0]))
         w.writeheader()

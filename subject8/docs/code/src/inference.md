@@ -2,7 +2,7 @@
 
 > 예측 박스를 정답(GT)과 짝지어 TP · CLASS_ERROR · FP · FN 으로 나누고, 정답과 예측을 나란히 그린 비교 이미지를 만든다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/inference.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/inference.py)
 
 ## 역할
 

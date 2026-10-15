@@ -1,8 +1,8 @@
 # `subject8/scripts/07_evaluate_baseline.py`
 
-> Baseline Validation 평가. 공식 Baseline `baseline_best.pt` (`baseline_v4`, kimchi_v4 · 640) 를 Validation 132장에서 평가해 `reports/baseline_metrics.csv`(산출물 2)와 Class 별 성능, 그래프(산출물 5)를 남긴다.
+> Baseline Validation 평가. 공식 Baseline `baseline_best.pt` (`baseline_v4`, kimchi_v4 · 640) 를 Validation 132장에서 평가해 `reports/02_baseline/baseline_metrics.csv`(산출물 2)와 Class 별 성능, 그래프(산출물 5)를 남긴다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/07_evaluate_baseline.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/07_evaluate_baseline.py)
 
 ## 사용법
 
@@ -13,7 +13,7 @@ python scripts/07_evaluate_baseline.py
 
 | 입력 | 출력 |
 |---|---|
-| `models/baseline/baseline_best.pt`, `runs/baseline_v4/args.yaml`(학습 조건), `configs/dataset.yaml`, `manifests/val.csv`(Dataset Version) | `reports/baseline_metrics.csv`, `reports/baseline_class_metrics.csv`, `reports/figures/baseline/baseline_{results, confusion_matrix, confusion_matrix_normalized, pr_curve}.png`, `runs/eval/baseline_v4_val/` |
+| `models/baseline/baseline_best.pt`, `runs/baseline_v4/args.yaml`(학습 조건), `configs/dataset.yaml`, `manifests/val.csv`(Dataset Version) | `reports/02_baseline/baseline_metrics.csv`, `reports/02_baseline/baseline_class_metrics.csv`, `reports/figures/baseline/baseline_{results, confusion_matrix, confusion_matrix_normalized, pr_curve}.png`, `runs/eval/baseline_v4_val/` |
 
 이력: kimchi_v1 첫 Baseline 의 결과는 `reports/history/baseline_v1_metrics.csv`·`baseline_v1_class_metrics.csv`, 그래프 `reports/figures/history/baseline_v1_*.png` 로 이름을 바꿔 보관한다.
 

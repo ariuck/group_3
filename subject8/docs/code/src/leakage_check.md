@@ -2,13 +2,13 @@
 
 > 촬영 묶음(`capture_group`)이 실제로 "비슷한 사진 묶음"인지 사진 지문(dHash)으로 확인한다. 묶음 사이에 거의 같은 사진이 있으면 묶음 단위로 나눠도 누수가 생긴다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/leakage_check.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/leakage_check.py)
 
 ## 역할
 
 - 가이드 15.3 Data Leakage 확인의 근거를 숫자로 남긴다: 완전 동일 사진, 이름만 다른 동일 사진, 거의 같은 장면.
 - [`split_builder`](split_builder.md) 의 시간 기준 묶음(5분 간격)이 실제 촬영 묶음과 맞는지 교차 검증한다 (가이드: "시간 문자열을 확인 없이 Session 이라고 단정하지 않는다").
-- [`split_policy.md`](../../../../subject8/docs/split_policy.md) 2.2·2.3 의 숫자를 재현한다.
+- [`split_policy.md`](../../split_policy.md) 2.2·2.3 의 숫자를 재현한다.
 
 ## 주요 구성요소
 
@@ -32,8 +32,8 @@
 
 | 파일 | 내용 |
 |---|---|
-| `reports/audit/leakage_check.csv` | `metric, value` — 사진 수, 묶음 수, 완전 동일 쌍, 거의 같은 쌍(같은 묶음 / 다른 묶음), 평균 거리(같은 묶음 / 다른 묶음), 가장 가까운 사진까지 거리 최솟값·중앙값 |
-| `reports/audit/capture_group_summary.csv` | 묶음별 `images, date, start, end, scene, original_train, original_validation, near_dup_pairs, internal_median_distance` |
+| `reports/01_data/leakage_check.csv` | `metric, value` — 사진 수, 묶음 수, 완전 동일 쌍, 거의 같은 쌍(같은 묶음 / 다른 묶음), 평균 거리(같은 묶음 / 다른 묶음), 가장 가까운 사진까지 거리 최솟값·중앙값 |
+| `reports/01_data/capture_group_summary.csv` | 묶음별 `images, date, start, end, scene, original_train, original_validation, near_dup_pairs, internal_median_distance` |
 
 `df` 에는 `이미지 파일명`, `capture_group` 이 있어야 하고, `원래 split`·`이미지 유형` 이 있으면 묶음 표에 넣는다.
 

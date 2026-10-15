@@ -2,7 +2,7 @@
 
 > 교과 7 에서 넘겨받은 최종본(900장)을 점검해 수량·Class 분포·이미지별 BBox 수·장면 유형·Class×장면·출처·Data Leakage 를 콘솔에 보여 주고, 보고서 CSV 5개를 만든다. (가이드 2일차 15.1~15.3)
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/02_audit_subject7_final.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/02_audit_subject7_final.py)
 
 ## 사용법
 
@@ -13,7 +13,7 @@ python scripts/02_audit_subject7_final.py
 
 | 입력 | 출력 |
 |---|---|
-| `data/subject7_final/` (`images/`, `labels/`, `검수표.csv`) — 교과 7 [`build_final`](../../../../subject7/docs/code/tools/build_final.md) 결과 | `reports/audit/audit_issue.csv`, `reports/audit/audit_summary.csv`, `reports/audit/audit_class_scene.csv`, `reports/audit/leakage_check.csv`, `reports/audit/capture_group_summary.csv` |
+| `data/subject7_final/` (`images/`, `labels/`, `검수표.csv`) — 교과 7 [`build_final`](../../../../subject7/docs/code/tools/build_final.md) 결과 | `reports/01_data/audit_issue.csv`, `reports/01_data/audit_summary.csv`, `reports/01_data/audit_class_scene.csv`, `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv` |
 
 콘솔 출력:
 

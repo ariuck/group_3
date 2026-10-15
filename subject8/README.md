@@ -63,7 +63,7 @@ data/final/
 | 이물검출_학습데이터2 | validation | 180 |
 | **합계** | | **900** |
 
-Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/audit/audit_summary.csv`, `reports/audit/audit_issue.csv`):
+Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/01_data/audit_summary.csv`, `reports/01_data/audit_issue.csv`):
 
 | 확인 항목 | 결과 |
 |---|---|
@@ -162,7 +162,7 @@ git status                                                    # 아무것도 바
 
 | 그래프 | 어디에 | 크기 |
 |---|---|---|
-| 모든 실행의 학습 곡선 · 같은 Dataset Version 끼리 비교 | `python scripts/plot_runs.py` → `reports/figures/runs/<실행>.png`, `reports/figures/comparison/runs_comparison_<Version>.png`, `reports/runs_summary.csv` | 실행당 약 0.1MB |
+| 모든 실행의 학습 곡선 · 같은 Dataset Version 끼리 비교 | `python scripts/plot_runs.py` → `reports/figures/runs/<실행>.png`, `reports/figures/comparison/runs_comparison_<Version>.png`, `reports/04_improvement/runs_summary.csv` | 실행당 약 0.1MB |
 | 핵심 모델(Baseline·Final·발표에 쓸 실험)의 Confusion Matrix · PR 곡선 | `07_evaluate_baseline.py` 처럼 `reports/figures/` 에 복사 | 모델당 약 1MB |
 | 그 밖의 Ultralytics 원본 그래프 | `runs/` 에만 (Git 제외). 필요하면 Git 의 모델로 다시 평가해 만든다 | — |
 
@@ -177,7 +177,7 @@ python scripts/02_audit_subject7_final.py
 - 이미지-라벨 1:1 매칭, YOLO 좌표(0~1)·사진 밖 BBox, Class 범위(0~6), 이름 중복, 검수표 대조 전수 검사
 - 이미지별 BBox 수, Class × 장면 분포 (가이드 15.1·15.2)
 - 촬영 묶음(5분 간격) × 사진 지문(dHash)으로 Data Leakage 확인 (가이드 15.3)
-- 산출물: `reports/audit/audit_summary.csv`, `reports/audit/audit_issue.csv`, `reports/audit/audit_class_scene.csv`, `reports/audit/leakage_check.csv`, `reports/audit/capture_group_summary.csv`
+- 산출물: `reports/01_data/audit_summary.csv`, `reports/01_data/audit_issue.csv`, `reports/01_data/audit_class_scene.csv`, `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv`
 
 ### 6.4 3일차 — Dataset Split & Freeze
 
@@ -207,13 +207,13 @@ python scripts/06_train_baseline.py
 
 - 조건은 스크립트 맨 위 `BASELINE` 한 곳에서만 정합니다 (YOLO11n · epoch 50 · imgsz 640 · batch 16 · seed 42 · AdamW · lr0 0.001).
 - `data/yolo` 가 `kimchi_v4` 이고 train·val 이 manifest 와 정확히 같아야 시작합니다.
-- 결과: `runs/baseline_v4/`, `models/baseline/baseline_best.pt`, `reports/baseline_training_condition.md`
+- 결과: `runs/baseline_v4/`, `models/baseline/baseline_best.pt`, `reports/02_baseline/baseline_training_condition.md`
 - 이력: kimchi_v1 첫 Baseline 은 `runs/baseline_v1/`, `models/baseline/baseline_v1_best.pt`, `reports/baseline_v1_*` (실패 분석의 근거)
 
 ### 6.7 5일차 — Validation 평가 · 이미지 Detection
 
 ```bash
-# Validation 132장 공식 평가 → reports/baseline_metrics.csv, Class 별 성능, 그래프
+# Validation 132장 공식 평가 → reports/02_baseline/baseline_metrics.csv, Class 별 성능, 그래프
 python scripts/07_evaluate_baseline.py
 
 # 사진마다 예측을 정답과 나란히 그려 보기 → runs/predict/baseline_val_images/compare/
@@ -229,8 +229,8 @@ python scripts/08_predict_images.py --conf 0.5 --limit 10   # 기준을 바꿔 �
 python scripts/09_collect_failures.py
 ```
 
-- 결과: `reports/failure_analysis.csv` 외 요약 3개, `demo/failure_analysis/*.jpg`(대표 실패 사진, Git 제외)
-- 원인 가설과 다음 실험: [`reports/failure_hypothesis.md`](reports/failure_hypothesis.md)
+- 결과: `reports/03_failure_analysis/failure_analysis.csv` 외 요약 3개, `demo/failure_analysis/*.jpg`(대표 실패 사진, Git 제외)
+- 원인 가설과 다음 실험: [`reports/03_failure_analysis/failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md)
 
 ### 6.9 해상도 개선 실험 — exp001 (640 → 1280) · exp002 (1280 → 1920)
 
@@ -239,7 +239,7 @@ python scripts/10_train_v2.py               # exp001
 python scripts/10_train_v2.py --exp exp002  # exp002 (batch 6 — 1920 메모리 한계, gradient 누적으로 갱신당 사진 수는 거의 같음)
 ```
 
-- 공식 exp001 (`kimchi_v4`): Baseline(`baseline_v4`) 조건에서 imgsz 만 640 → 1280 → `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/exp001_training_condition.md`
+- 공식 exp001 (`kimchi_v4`): Baseline(`baseline_v4`) 조건에서 imgsz 만 640 → 1280 → `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/04_improvement/exp001_training_condition.md`
 - 이력: 예비 실험 `runs/pilot_v1_imgsz1280/` (kimchi_v1, mAP50-95 0.351 → 0.519), 데이터 개선 과정 `runs/history_v2_imgsz1280/`·`history_v3_imgsz1280/` (Weight 는 `models/improved/history_*`)
 - RTX 3060 batch 16 기준 GPU 약 9.2GB, 약 10~13분
 
@@ -261,7 +261,7 @@ cd ~/group_3/subject8
 .venv/bin/python scripts/10_train_v2.py
 ```
 
-- 작업 목록: `reports/class5/class5_relabel_worklist.csv` (화면 번호 = 검수표 No, 라벨 목록 No = 원본 TXT 줄 번호, 위치 좌표 포함). 박스별 측정값·1차 판정: `reports/class5/class5_review.csv`, 확대 사진: `demo/label_review/class5/` (Git 제외)
+- 작업 목록: `reports/01_data/label_fixes_kimchi_v3/class5_relabel_worklist.csv` (화면 번호 = 검수표 No, 라벨 목록 No = 원본 TXT 줄 번호, 위치 좌표 포함). 박스별 측정값·1차 판정: `reports/01_data/label_fixes_kimchi_v3/class5_review.csv`, 확대 사진: `demo/label_review/class5/` (Git 제외)
 - `data/final` 사진을 고치면 `data/work/_RAW밖/` 에만 저장되고 교과 7 작업본·검수표는 바뀌지 않습니다.
 
 ## 7. Dataset Split (`kimchi_v4` = `kimchi_v3` Class 5 개정 라벨 + G09 마지막 배치 Val, FROZEN)
@@ -282,13 +282,13 @@ cd ~/group_3/subject8
 
 *(숫자는 해당 Class BBox 가 1개 이상 있는 사진 수)*
 
-산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/split_policy.md`, `reports/dataset_summary.csv`
+산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/split_policy.md`, `reports/01_data/dataset_summary.csv`
 
 ## 8. Baseline (`baseline_v4` — kimchi_v4 · YOLO11n · imgsz 640)
 
 - Smoke Test: ✅ 통과 (2026-10-14, `reports/history/smoke_test.md` — batch 16 에서 GPU 2.1GB)
-- Baseline 학습: ✅ 완료 (2026-10-14, 50 epoch · 약 5분) — [`reports/baseline_training_condition.md`](reports/baseline_training_condition.md), `models/baseline/baseline_best.pt`, `runs/baseline_v4/results.csv`
-- Validation 평가 (2026-10-14, 132장 · 정답 BBox 696개) — [`reports/baseline_metrics.csv`](reports/baseline_metrics.csv), [`reports/baseline_class_metrics.csv`](reports/baseline_class_metrics.csv)
+- Baseline 학습: ✅ 완료 (2026-10-14, 50 epoch · 약 5분) — [`reports/02_baseline/baseline_training_condition.md`](reports/02_baseline/baseline_training_condition.md), `models/baseline/baseline_best.pt`, `runs/baseline_v4/results.csv`
+- Validation 평가 (2026-10-14, 132장 · 정답 BBox 696개) — [`reports/02_baseline/baseline_metrics.csv`](reports/02_baseline/baseline_metrics.csv), [`reports/02_baseline/baseline_class_metrics.csv`](reports/02_baseline/baseline_class_metrics.csv)
 
 | Precision | Recall | mAP50 | mAP50-95 |
 |---:|---:|---:|---:|
@@ -309,7 +309,7 @@ cd ~/group_3/subject8
 
 ## 9. Failure Analysis
 
-상세: [`reports/failure_hypothesis.md`](reports/failure_hypothesis.md) · 근거 표 `reports/failure_*.csv`
+상세: [`reports/03_failure_analysis/failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) · 근거 표 `reports/failure_*.csv`
 
 모델은 이물의 **위치는 대체로 찾지만 종류를 틀립니다** (정답 515개 중 TP 191 · CLASS_ERROR 171 · FN 153).
 
@@ -323,7 +323,7 @@ cd ~/group_3/subject8
 
 ## 10. Improvement — exp001: imgsz 640 → 1280 (H4)
 
-같은 `kimchi_v4` Val 132장, 나머지 조건 동일 (YOLO11n · epoch 50 · batch 16 · seed 42 · AdamW · lr0 0.001). 기록: [`reports/exp001_training_condition.md`](reports/exp001_training_condition.md), Weight `models/improved/exp001_best.pt`
+같은 `kimchi_v4` Val 132장, 나머지 조건 동일 (YOLO11n · epoch 50 · batch 16 · seed 42 · AdamW · lr0 0.001). 기록: [`reports/04_improvement/exp001_training_condition.md`](reports/04_improvement/exp001_training_condition.md), Weight `models/improved/exp001_best.pt`
 
 | | Precision | Recall | mAP50 | mAP50-95 |
 |---|---:|---:|---:|---:|
@@ -342,8 +342,9 @@ cd ~/group_3/subject8
 | 6 green_onion_pepper | 0.640 | 0.773 | 0.838 | +0.133 | +0.065 |
 
 - 갈변 (Val 75개, conf 0.25 · IoU 0.5): Baseline TP 60 · FN 15 · FP 5 → exp001 TP 63 · FN 12 · **FP 13** → exp002 TP 64 · FN 11 · FP 13 (놓침은 줄고 헛검출은 늘어남)
-- exp002: 기록 [`reports/exp002_training_condition.md`](reports/exp002_training_condition.md), Weight `models/improved/exp002_best.pt`. 학습 22분 (exp001 10분), batch 6 은 1920 메모리 한계 때문 (gradient 누적으로 갱신당 사진 수 64 → 66장)
+- exp002: 기록 [`reports/04_improvement/exp002_training_condition.md`](reports/04_improvement/exp002_training_condition.md), Weight `models/improved/exp002_best.pt`. 학습 22분 (exp001 10분), batch 6 은 1920 메모리 한계 때문 (gradient 누적으로 갱신당 사진 수 64 → 66장)
 - exp003 (exp002 대비 epochs 50 → 100, `runs/exp003_v4_imgsz1920_epoch100`, 43분): mAP50-95 **+0.018** (기준 +0.02 미만), 모든 Class 소폭 상승 (나뭇잎 +0.035 · 갈변 +0.025 · 나뭇가지 +0.020). Val cls_loss 최저 0.510 @ epoch 78 (exp002 0.520 @ 48) 이후 0.532 로 다시 오름 → 78 epoch 이후 과적합 시작, best.pt 는 epoch 77. 놓친 박스 50 → 49 (갈변 11 → 8, 나뭇잎 7 → 9)
+- 분석: [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (4개 실행 비교·비용·Final Model 후보 제안), 그림 `reports/figures/comparison/improvement_summary.svg`
 - 이력: 예비 실험 `pilot_v1_imgsz1280` (kimchi_v1), 데이터 개선 과정 `history_v2/v3_imgsz1280` — Val 이 달라 직접 비교하지 않음
 
 ## 11. Final Model

@@ -61,9 +61,9 @@ flowchart TD
 
 | 단계 | 코드 | 결과 파일 |
 |---|---|---|
-| ①②③ | `scripts/02_audit_subject7_final.py` (`src/dataset_audit.py`, `src/leakage_check.py`) | `reports/audit/audit_summary.csv`, `audit_issue.csv`, `audit_class_scene.csv`, `leakage_check.csv`, `capture_group_summary.csv` |
+| ①②③ | `scripts/02_audit_subject7_final.py` (`src/dataset_audit.py`, `src/leakage_check.py`) | `reports/01_data/audit_summary.csv`, `audit_issue.csv`, `audit_class_scene.csv`, `leakage_check.csv`, `capture_group_summary.csv` |
 | ④⑤ | 사람이 판단 | `docs/split_policy.md` |
-| ⑥ | `scripts/03_build_split.py` (`src/split_builder.py`) | `manifests/*.csv`, `configs/dataset.yaml`, `reports/dataset_summary.csv` |
+| ⑥ | `scripts/03_build_split.py` (`src/split_builder.py`) | `manifests/*.csv`, `configs/dataset.yaml`, `reports/01_data/dataset_summary.csv` |
 
 ---
 

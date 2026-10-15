@@ -2,7 +2,7 @@
 
 > Smoke Test 용 작은 Dataset(Train 40 / Val 8)을 `data/yolo` 에서 뽑아 `data/smoke` 에 만들고 `configs/smoke_dataset.yaml` 을 쓴다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/smoke_dataset.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/smoke_dataset.py)
 
 ## 역할
 

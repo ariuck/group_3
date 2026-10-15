@@ -2,7 +2,7 @@
 
 > 모든 학습 실행(`runs/*/results.csv`)의 학습 곡선과 같은 Dataset Version 끼리의 비교 그래프, 요약표를 만든다. 사진·모델 없이 Git 에 있는 기록만으로 다른 PC 에서도 그대로 다시 만들 수 있다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/scripts/plot_runs.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../scripts/plot_runs.py)
 
 ## 사용법
 
@@ -14,7 +14,7 @@ python scripts/plot_runs.py --runs baseline_v4 exp001_v4_imgsz1280
 
 | 입력 | 출력 (Git 에 올림) |
 |---|---|
-| `runs/<실행>/results.csv`, `runs/<실행>/args.yaml` | `reports/figures/runs/<실행>.png` (실행당 약 0.1MB), `reports/figures/comparison/runs_comparison_<Dataset Version>.png`, `reports/runs_summary.csv` |
+| `runs/<실행>/results.csv`, `runs/<실행>/args.yaml` | `reports/figures/runs/<실행>.png` (실행당 약 0.1MB), `reports/figures/comparison/runs_comparison_<Dataset Version>.png`, `reports/04_improvement/runs_summary.csv` |
 
 ## 주요 구성요소
 

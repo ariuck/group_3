@@ -2,7 +2,7 @@
 
 > YOLO11 학습 공통 기능. Smoke Test · Baseline · 7일차 개선 실험이 모두 같은 `train_detector()` 를 써서 "바꾼 변수 하나" 외에는 학습 방식이 같다는 것을 보장한다. 학습 점검·Weight 보관·조건 기록도 함께 한다.
 
-[← 코드 문서 목차](../README.md) · [코드 보기](../../../../subject8/src/train_detector.py)
+[← 코드 문서 목차](../README.md) · [코드 보기](../../../src/train_detector.py)
 
 ## 역할
 
