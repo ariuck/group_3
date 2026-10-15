@@ -6,12 +6,14 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
 
-from src.split_builder import SplitBuilder
+from src.split_builder import BLOCK_RULES, SplitBuilder
 from src.dataset_audit import CLASS_NAMES
 
 def main():
     parser = argparse.ArgumentParser(description="Build Dataset Split (Plan B: 18 Capture Groups + G00 Block Split)")
     parser.add_argument("--copy-files", action="store_true", help="Physically copy images and labels into data/yolo and data/bridge_holdout")
+    parser.add_argument("--version", default="kimchi_v4", choices=["kimchi_v1", "kimchi_v2", "kimchi_v3", "kimchi_v4"],
+                        help="Dataset Version (블록 분할 규칙: src/split_builder.py 의 BLOCK_RULES)")
     args = parser.parse_args()
 
     print("=" * 65)
@@ -19,7 +21,10 @@ def main():
     print("=" * 65)
 
     builder = SplitBuilder(project_root=PROJECT_ROOT)
-    
+    fix_dir = builder.label_fix_dir(args.version)   # kimchi_v3 인데 수정본이 없으면 Manifest 를 덮어쓰기 전에 멈춘다
+    if fix_dir is not None:
+        print(f" Label fixes: {len(list(fix_dir.glob('*.txt')))} TXT from {fix_dir.relative_to(PROJECT_ROOT)}")
+
     # 1. 메타데이터 로드
     df = pd.read_csv(builder.meta_csv, encoding="utf-8-sig")
     print(f" Loaded Subject 7 FINAL metadata: {len(df)} images")
@@ -30,8 +35,8 @@ def main():
     print(f" Assigned capture_groups: {n_groups} groups (G00 ~ G{n_groups-1:02d})")
 
     # 3. 방안 B 분할 할당
-    df = builder.assign_splits(df)
-    print(" Applied Split Plan B (G00 block split + G17 to train)")
+    df = builder.assign_splits(df, dataset_version=args.version)
+    print(f" Applied Split Plan B ({args.version}: block split {sorted(BLOCK_RULES[args.version])} + G17 to train)")
 
     # 4. Manifests CSV 생성
     manifest_paths = builder.generate_manifests(df)
@@ -47,7 +52,7 @@ def main():
     print(f" - configs/dataset.yaml generated -> {yaml_path}")
 
     # 6. reports/dataset_summary.csv 생성 (산출물 1 표준 양식)
-    summary_path = builder.generate_dataset_summary(df)
+    summary_path = builder.generate_dataset_summary(df, dataset_version=args.version)
     print(f" - reports/dataset_summary.csv generated -> {summary_path}")
 
     # 7. 분할 요약 통계 출력

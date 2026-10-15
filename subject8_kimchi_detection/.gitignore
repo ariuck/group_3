@@ -4,8 +4,14 @@ data/
 # 모델 가중치 (yolo11n.pt 자동 다운로드 포함)
 *.pt
 
-# Ultralytics 실행 결과
-runs/
+# Ultralytics 실행 결과 — 예측 사진(회사 이미지)은 제외하고 숫자 기록만 남긴다
+#   runs/<실행>/results.csv : 산출물 2 (epoch 별 학습 기록)
+#   runs/<실행>/args.yaml   : 실제로 쓰인 학습 설정 (재현용)
+runs/*
+!runs/*/
+runs/*/*
+!runs/*/results.csv
+!runs/*/args.yaml
 
 # 회사 이미지가 들어가는 시연 결과
 demo/**/*.jpg

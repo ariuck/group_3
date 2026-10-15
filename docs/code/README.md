@@ -93,11 +93,21 @@ subject8_kimchi_detection/   교과 8 (자체 src/ 를 가진 별도 프로젝�
 | [`scripts/01_check_environment.py`](subject8_kimchi_detection/scripts/01_check_environment.md) | PyTorch·CUDA·YOLO11n 환경 점검 |
 | [`scripts/02_audit_subject7_final.py`](subject8_kimchi_detection/scripts/02_audit_subject7_final.md) | 교과 7 최종본 900장 점검 + Data Leakage 확인 |
 | [`scripts/03_build_split.py`](subject8_kimchi_detection/scripts/03_build_split.md) | 방안 B 분할 + Manifest·`dataset.yaml` |
+| [`scripts/04_import_label_fixes.py`](subject8_kimchi_detection/scripts/04_import_label_fixes.md) | 라벨링 프로그램 수정본 → `kimchi_v3` 라벨 수정본 + 변경 기록 |
+| [`scripts/05_smoke_train.py`](subject8_kimchi_detection/scripts/05_smoke_train.md) | Smoke Test (Train 40 / Val 8, 3 epoch → Prediction) |
+| [`scripts/06_train_baseline.py`](subject8_kimchi_detection/scripts/06_train_baseline.md) | 공식 Baseline 학습 (`kimchi_v4` · YOLO11n · 640) + Weight 보관 + 학습 조건 기록 |
+| [`scripts/07_evaluate_baseline.py`](subject8_kimchi_detection/scripts/07_evaluate_baseline.md) | Baseline Validation 평가 → `baseline_metrics.csv`·Class 별 성능·그래프 |
+| [`scripts/08_predict_images.py`](subject8_kimchi_detection/scripts/08_predict_images.md) | 사진 예측 + 정답 비교 이미지 · TP/FP/FN 표 |
+| [`scripts/09_collect_failures.py`](subject8_kimchi_detection/scripts/09_collect_failures.md) | 실패 사례 수집 → `failure_analysis.csv` · 요약 표 · 대표 사진 |
+| [`scripts/10_train_v2.py`](subject8_kimchi_detection/scripts/10_train_v2.md) | 개선 실험 exp001 — Baseline 조건에서 imgsz 640 → 1280 (공식: `kimchi_v4`) |
 | [`src/dataset_audit.py`](subject8_kimchi_detection/src/dataset_audit.md) | `DatasetAuditor` — 라벨 점검, 이미지별 BBox 수, Class×장면 |
+| [`src/evaluate_detector.py`](subject8_kimchi_detection/src/evaluate_detector.md) | Weight 평가 (전체·Class 별 P·R·mAP), Frozen Test 보호 |
+| [`src/failure_analyzer.py`](subject8_kimchi_detection/src/failure_analyzer.md) | 실패 유형 분류(FN·CLASS_ERROR·FP 3종) · 크기별 Recall · Train/Val 비교 사진 |
+| [`src/inference.py`](subject8_kimchi_detection/src/inference.md) | 예측 ↔ 정답 짝짓기 (TP·CLASS_ERROR·FP·FN), 비교 이미지 |
 | [`src/leakage_check.py`](subject8_kimchi_detection/src/leakage_check.md) | 사진 지문(dHash)으로 촬영 묶음 누수 확인 |
+| [`src/smoke_dataset.py`](subject8_kimchi_detection/src/smoke_dataset.md) | Smoke Test 용 작은 Dataset 만들기 |
 | [`src/split_builder.py`](subject8_kimchi_detection/src/split_builder.md) | `SplitBuilder` — 촬영 묶음 단위 분할 |
-| [`tests/test_dataset_audit.py`](subject8_kimchi_detection/tests/test_dataset_audit.md) | 감사·누수 검사가 일부러 넣은 오류를 잡는지 시험 |
-
+| [`src/train_detector.py`](subject8_kimchi_detection/src/train_detector.md) | YOLO 학습 공통 함수 · 학습 점검 · 조건 기록 |
 ## 문서 작성 규칙
 
 1. 코드 파일을 **추가·이름 변경·삭제**하면 같은 커밋에서 이 폴더의 문서도 함께 추가·이동·삭제한다.

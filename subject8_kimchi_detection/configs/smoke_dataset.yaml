@@ -1,0 +1,13 @@
+# Smoke Test 전용 (진행용 보조파일) — scripts/05_smoke_train.py 가 자동 생성
+# Train 40장 / Val 8장. Frozen Test·Bridge Holdout 은 사용하지 않음
+path: data/smoke
+train: images/train
+val: images/val
+names:
+  0: leaf_paper
+  1: plastic_stone_metal
+  2: branch
+  3: insect
+  4: rubber_glove_unused
+  5: disease_browning
+  6: green_onion_pepper

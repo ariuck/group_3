@@ -1,0 +1,8 @@
+﻿class_id,class_name,images,instances,precision,recall,map50,map50_95,note
+0,leaf_paper,61,198,0.6284,0.2727,0.5042,0.3731,
+1,plastic_stone_metal,52,159,0.2758,0.8302,0.627,0.4729,
+2,branch,24,34,0.0878,0.5294,0.1688,0.1386,
+3,insect,19,19,0.6306,0.8421,0.8722,0.4951,
+4,rubber_glove_unused,0,0,,,,,Instance 0건 — 평가 불가
+5,disease_browning,44,65,0.1341,0.0308,0.0115,0.0025,
+6,green_onion_pepper,8,40,0.8334,0.3753,0.7614,0.6243,

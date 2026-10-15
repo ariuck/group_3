@@ -144,12 +144,6 @@ python scripts/02_audit_subject7_final.py
 - 촬영 묶음(5분 간격) × 사진 지문(dHash)으로 Data Leakage 확인 (가이드 15.3)
 - 산출물: `reports/audit_summary.csv`, `reports/audit_issue.csv`, `reports/audit_class_scene.csv`, `reports/leakage_check.csv`, `reports/capture_group_summary.csv`
 
-시험 (가짜 데이터로 감사·누수 검사가 오류를 잡는지 확인):
-
-```bash
-python -m unittest discover -s tests -v
-```
-
 ### 6.4 3일차 — Dataset Split & Freeze
 
 ```bash
@@ -160,36 +154,162 @@ python scripts/03_build_split.py
 python scripts/03_build_split.py --copy-files
 ```
 
-## 7. Dataset Split (`kimchi_v1`, FROZEN)
+### 6.5 3일차 — Smoke Test
 
-- **정책**: 방안 B — 촬영 간격 5분 초과로 나눈 18개 `capture_group` 을 묶음 단위로 배정 + Class 6 평가를 위해 `G00` 50장만 시간순 연속 블록으로 분할
+```bash
+python scripts/05_smoke_train.py              # Train 40 / Val 8, 3 epoch → Prediction 1장
+python scripts/05_smoke_train.py --overwrite  # 다시 할 때
+```
+
+- 결과: `reports/smoke_test.md` (점검 7항목), `runs/smoke_v1/`, `configs/smoke_dataset.yaml`
+- Smoke Weight 는 Baseline 이 아닙니다.
+
+### 6.6 Baseline 학습 (공식: `baseline_v4`)
+
+```bash
+python scripts/06_train_baseline.py
+```
+
+- 조건은 스크립트 맨 위 `BASELINE` 한 곳에서만 정합니다 (YOLO11n · epoch 50 · imgsz 640 · batch 16 · seed 42 · AdamW · lr0 0.001).
+- `data/yolo` 가 `kimchi_v4` 이고 train·val 이 manifest 와 정확히 같아야 시작합니다.
+- 결과: `runs/baseline_v4/`, `models/baseline/baseline_best.pt`, `reports/baseline_training_condition.md`
+- 이력: kimchi_v1 첫 Baseline 은 `runs/baseline_v1/`, `models/baseline/baseline_v1_best.pt`, `reports/baseline_v1_*` (실패 분석의 근거)
+
+### 6.7 5일차 — Validation 평가 · 이미지 Detection
+
+```bash
+# Validation 132장 공식 평가 → reports/baseline_metrics.csv, Class 별 성능, 그래프
+python scripts/07_evaluate_baseline.py
+
+# 사진마다 예측을 정답과 나란히 그려 보기 → runs/predict/baseline_val_images/compare/
+python scripts/08_predict_images.py
+python scripts/08_predict_images.py --conf 0.5 --limit 10   # 기준을 바꿔 보기
+```
+
+- Frozen Test 사진은 두 스크립트 모두 막혀 있습니다 (8일차에 `--allow-test`).
+
+### 6.8 6일차 — Failure Analysis
+
+```bash
+python scripts/09_collect_failures.py
+```
+
+- 결과: `reports/failure_analysis.csv` 외 요약 3개, `demo/failure_analysis/*.jpg`(대표 실패 사진, Git 제외)
+- 원인 가설과 다음 실험: [`reports/failure_hypothesis.md`](reports/failure_hypothesis.md)
+
+### 6.9 해상도 개선 실험 — exp001 (640 → 1280) · exp002 (1280 → 1920)
+
+```bash
+python scripts/10_train_v2.py               # exp001
+python scripts/10_train_v2.py --exp exp002  # exp002 (batch 6 — 1920 메모리 한계, gradient 누적으로 갱신당 사진 수는 거의 같음)
+```
+
+- 공식 exp001 (`kimchi_v4`): Baseline(`baseline_v4`) 조건에서 imgsz 만 640 → 1280 → `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/exp001_training_condition.md`
+- 이력: 예비 실험 `runs/pilot_v1_imgsz1280/` (kimchi_v1, mAP50-95 0.351 → 0.519), 데이터 개선 과정 `runs/history_v2_imgsz1280/`·`history_v3_imgsz1280/` (Weight 는 `models/improved/history_*`)
+- RTX 3060 batch 16 기준 GPU 약 9.2GB, 약 10~13분
+
+### 6.10 Class 5(갈변) 라벨 재검수 → `kimchi_v3`
+
+기준: [`docs/standards/class_guide.md`](../docs/standards/class_guide.md) Class 5 "검출 대상 범위" (2026-10-14 개정)
+
+```bash
+# 1) 저장소 루트에서 라벨링 프로그램 실행 → [폴더 열기] 로 data/final 을 열고 작업 목록대로 고친 뒤 저장
+cd ~/group_3 && .venv/bin/python main.py
+
+# 2) 고친 TXT 를 kimchi_v3 라벨 수정본으로 가져오기 (먼저 확인만, 그다음 --apply)
+cd ~/group_3/subject8_kimchi_detection
+.venv/bin/python scripts/04_import_label_fixes.py
+.venv/bin/python scripts/04_import_label_fixes.py --apply
+
+# 3) 데이터 만들기 → Baseline 학습 (v3 라벨은 kimchi_v4 도 같이 씀 — 지금 기본값은 kimchi_v4)
+.venv/bin/python scripts/03_build_split.py --version kimchi_v4 --copy-files
+.venv/bin/python scripts/10_train_v2.py
+```
+
+- 작업 목록: `reports/class5_relabel_worklist.csv` (화면 번호 = 검수표 No, 라벨 목록 No = 원본 TXT 줄 번호, 위치 좌표 포함). 박스별 측정값·1차 판정: `reports/class5_review.csv`, 확대 사진: `demo/label_review/class5/` (Git 제외)
+- `data/final` 사진을 고치면 `data/work/_RAW밖/` 에만 저장되고 교과 7 작업본·검수표는 바뀌지 않습니다.
+
+## 7. Dataset Split (`kimchi_v4` = `kimchi_v3` Class 5 개정 라벨 + G09 마지막 배치 Val, FROZEN)
+
+- **정책**: 방안 B — 촬영 간격 5분 초과로 나눈 18개 `capture_group` 을 묶음 단위로 배정 + 예외 3건: `G00` 을 파/파+고추 구간별 시간순 블록으로 분할, `G12` 가운데 배치 25장을 Train 으로 (마른 잎·반점 갈변이 Train 에 있도록), `G09` 마지막 배치 25장을 Val 로 (Val 갈변 8 → 75개). Val 이 한 회차에 몰리지 않게 `G05` 를 통째로 Val 로
+- 버전: `kimchi_v1`(2026-10-12) → `v2`(분할, H1·H2) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) — 이유는 [split_policy.md 7장](docs/split_policy.md). 버전마다 Val 이 달라 Validation 점수는 직접 비교하지 않습니다.
 - 상세 근거·유사도 검증·예외 사유: [docs/split_policy.md](docs/split_policy.md)
 - 과정 전체를 그림으로 정리한 문서: [docs/process/dataset_audit_and_split.md](docs/process/dataset_audit_and_split.md)
 - Bridge Holdout 은 교과 8 학습·튜닝·모델 선택·Frozen Test 에 사용하지 않고 교과 14 용으로 보존합니다. `dataset.yaml` 에 넣지 않습니다.
 
 | 역할 | 장수 | C0 | C1 | C2 | C3 | C5 | C6 | 용도 |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| Train | 574 | 143 | 421 | 206 | 97 | 86 | 29 | 모델 학습 (이물 단독 150장 포함) |
-| Validation | 84 | 61 | 52 | 24 | 19 | 44 | 8 | Baseline vs Improved 비교 · Final 선택 |
-| Frozen Test | 84 | 16 | 51 | 67 | 21 | 25 | 8 | Final Model 확정 후 마지막 평가 |
-| Bridge Holdout | 158 | 65 | 72 | 75 | 60 | 43 | 9 | 교과 14 인계 |
+| Train | 526 | 161 | 352 | 188 | 82 | 43 | 29 | 모델 학습 (이물 단독 150장 포함) |
+| Validation | 132 | 43 | 121 | 41 | 34 | 32 | 8 | Baseline vs Improved 비교 · Final 선택 |
+| Frozen Test | 84 | 16 | 51 | 68 | 21 | 9 | 8 | Final Model 확정 후 마지막 평가 |
+| Bridge Holdout | 158 | 65 | 72 | 75 | 60 | 13 | 9 | 교과 14 인계 |
 | **합계** | **900** | 285 | 596 | 372 | 197 | 198 | 54 | |
 
 *(숫자는 해당 Class BBox 가 1개 이상 있는 사진 수)*
 
 산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/split_policy.md`, `reports/dataset_summary.csv`
 
-## 8. Baseline
+## 8. Baseline (`baseline_v4` — kimchi_v4 · YOLO11n · imgsz 640)
 
-TBD (4~5일차) — `reports/baseline_training_condition.md`, `models/baseline/baseline_best.pt`, `reports/baseline_metrics.csv`
+- Smoke Test: ✅ 통과 (2026-10-14, `reports/smoke_test.md` — batch 16 에서 GPU 2.1GB)
+- Baseline 학습: ✅ 완료 (2026-10-14, 50 epoch · 약 5분) — [`reports/baseline_training_condition.md`](reports/baseline_training_condition.md), `models/baseline/baseline_best.pt`, `runs/baseline_v4/results.csv`
+- Validation 평가 (2026-10-14, 132장 · 정답 BBox 696개) — [`reports/baseline_metrics.csv`](reports/baseline_metrics.csv), [`reports/baseline_class_metrics.csv`](reports/baseline_class_metrics.csv)
+
+| Precision | Recall | mAP50 | mAP50-95 |
+|---:|---:|---:|---:|
+| 0.835 | 0.675 | 0.764 | 0.538 |
+
+| Class | P | R | mAP50 | mAP50-95 |
+|---|---:|---:|---:|---:|
+| 0 leaf_paper | 0.674 | 0.591 | 0.664 | 0.550 |
+| 1 plastic_stone_metal | 0.900 | 0.586 | 0.755 | 0.519 |
+| 2 branch | 0.662 | 0.641 | 0.664 | 0.521 |
+| 3 insect | 0.825 | 0.750 | 0.812 | 0.464 |
+| 4 rubber_glove_unused | - | - | - | - (Instance 0건) |
+| 5 disease_browning | 0.982 | 0.738 | 0.831 | 0.536 |
+| 6 green_onion_pepper | 0.968 | 0.743 | 0.857 | 0.640 |
+
+- 그래프: `reports/figures/baseline_results.png`, `baseline_confusion_matrix.png`, `baseline_pr_curve.png`
+- **이력 — 첫 Baseline `baseline_v1`** (kimchi_v1 · 640, Val 84장): P 0.432 · R 0.480 · mAP50 0.491 · mAP50-95 0.351 (`reports/baseline_v1_*`). 이 모델의 실패 분석(9장)으로 Dataset 을 v2~v4 로 고친 뒤, 같은 Version 에서 Baseline 을 다시 학습했습니다 (가이드 11.5·20.5). Val 이 달라 숫자를 직접 비교하지 않습니다.
 
 ## 9. Failure Analysis
 
-TBD (6일차) — `reports/failure_analysis.csv`, `reports/failure_hypothesis.md`
+상세: [`reports/failure_hypothesis.md`](reports/failure_hypothesis.md) · 근거 표 `reports/failure_*.csv`
 
-## 10. Improvement
+모델은 이물의 **위치는 대체로 찾지만 종류를 틀립니다** (정답 515개 중 TP 191 · CLASS_ERROR 171 · FN 153).
 
-TBD (7일차) — 한 번에 주요 변수 하나만 변경, 같은 Validation 에서 비교
+| 가설 | 분류 | 핵심 근거 | 대응 |
+|---|---|---|---|
+| H1 Val 의 나뭇잎·갈변이 Train 과 모습이 다름 | DATA | Val 75/84장이 G12. 나뭇잎 Train=빨간 꽃잎·종이 / Val=마른 잎. 갈변 Train 181px 썩은 잎 / Val 57px 반점 | Split 기준 보강 검토 |
+| H2 G00 시간순 분할로 고추가 Train 에 3개뿐 | SPLIT | Train 파 127·고추 3 / Val 고추 24 → 플라스틱으로 예측 | `kimchi_v2` 로 수정 + Baseline 재학습 |
+| H3 같은 물체를 두 Class 로 예측 | INFERENCE | FP 180 중 93 | `agnostic_nms` 비교 (재학습 없음) |
+| H4 작은 이물 놓침 | MODEL | 150px 미만 Recall: 나뭇가지 0.20 · 벌레 0.47 · 갈변 0 | `imgsz` 640 → 1280 |
+| H5 정상 김치를 이물로 | DATA | 배경 FP 23 (녹색 잎끝·반투명 배추) | 한계로 기록 |
+
+## 10. Improvement — exp001: imgsz 640 → 1280 (H4)
+
+같은 `kimchi_v4` Val 132장, 나머지 조건 동일 (YOLO11n · epoch 50 · batch 16 · seed 42 · AdamW · lr0 0.001). 기록: [`reports/exp001_training_condition.md`](reports/exp001_training_condition.md), Weight `models/improved/exp001_best.pt`
+
+| | Precision | Recall | mAP50 | mAP50-95 |
+|---|---:|---:|---:|---:|
+| Baseline v4 (640) | 0.835 | 0.675 | 0.764 | 0.538 |
+| **exp001 (1280)** | **0.938** | **0.782** | **0.885** | **0.712** |
+| exp002 (1920, batch 6) | 0.943 | 0.816 | 0.891 | 0.757 |
+| exp003 (exp002 + epoch 100) | 0.929 | 0.815 | 0.913 | 0.774 |
+
+| Class (mAP50-95) | Baseline | exp001 | exp002 | exp001 차이 | exp002 차이 (vs exp001) |
+|---|---:|---:|---:|---:|---:|
+| 0 leaf_paper | 0.550 | 0.728 | 0.755 | +0.177 | +0.027 |
+| 1 plastic_stone_metal | 0.519 | 0.749 | 0.808 | +0.230 | +0.060 |
+| 2 branch | 0.521 | 0.681 | 0.721 | +0.160 | +0.039 |
+| 3 insect | 0.465 | 0.691 | 0.764 | +0.226 | +0.073 |
+| 5 disease_browning | 0.536 | 0.651 | 0.653 | +0.116 | +0.002 |
+| 6 green_onion_pepper | 0.640 | 0.773 | 0.838 | +0.133 | +0.065 |
+
+- 갈변 (Val 75개, conf 0.25 · IoU 0.5): Baseline TP 60 · FN 15 · FP 5 → exp001 TP 63 · FN 12 · **FP 13** → exp002 TP 64 · FN 11 · FP 13 (놓침은 줄고 헛검출은 늘어남)
+- exp002: 기록 [`reports/exp002_training_condition.md`](reports/exp002_training_condition.md), Weight `models/improved/exp002_best.pt`. 학습 22분 (exp001 10분), batch 6 은 1920 메모리 한계 때문 (gradient 누적으로 갱신당 사진 수 64 → 66장)
+- exp003 (exp002 대비 epochs 50 → 100, `runs/exp003_v4_imgsz1920_epoch100`, 43분): mAP50-95 **+0.018** (기준 +0.02 미만), 모든 Class 소폭 상승 (나뭇잎 +0.035 · 갈변 +0.025 · 나뭇가지 +0.020). Val cls_loss 최저 0.510 @ epoch 78 (exp002 0.520 @ 48) 이후 0.532 로 다시 오름 → 78 epoch 이후 과적합 시작, best.pt 는 epoch 77. 놓친 박스 50 → 49 (갈변 11 → 8, 나뭇잎 7 → 9)
+- 이력: 예비 실험 `pilot_v1_imgsz1280` (kimchi_v1), 데이터 개선 과정 `history_v2/v3_imgsz1280` — Val 이 달라 직접 비교하지 않음
 
 ## 11. Final Model
 
@@ -208,6 +328,8 @@ TBD (8일차) — Auto Label 결과는 교과 7 라벨링 도구로 Human Review
 - 정상 김치(Negative) 이미지가 없습니다.
 - Class 6 은 평가 역할마다 8~9장이고 같은 촬영 묶음(G00) 출신이라, 다른 Class 보다 성능이 좋게 나올 수 있습니다.
 - 묶음 단위로 나눠 역할마다 Class 비율이 다릅니다. Val 과 Test 점수는 Class 별 결과와 함께 봅니다.
+- **머리카락·실 등 Class 0~6 에 없는 이물은 검출 대상이 아닙니다.** 식품 이물로 중요하지만 회사 Class 정의에 없어 라벨을 그리지 않았습니다 (`kimchi_v3` 에서 머리카락을 나뭇가지로 그린 BBox 1개 삭제). 교과 14 에서 Class 추가 여부를 회사와 확인해야 합니다.
+- **Class 5(갈변)**: 흩어진 점을 묶은 BBox·초록 잎맥·흐린 부분을 기준 개정으로 뺐습니다 (`kimchi_v3`). v3 에서 Val 갈변이 8개로 줄어 `kimchi_v4` 에서 G09 마지막 배치를 Val 로 보냈습니다 (Val 갈변 75개). 다만 Val 갈변의 대부분이 G09 한 회차 출신이라 Val 갈변 점수는 다소 낙관적일 수 있습니다. Frozen Test(갈변 16개)는 최종 모델 확정 후 한 번만 평가합니다. 작은 갈변(원본 짧은 변 20px 안팎)은 imgsz 1280 에서 3~5px 라 검출이 어렵습니다 (타일링 과제).
 - 그 밖: TBD
 
 ## 15. 교과 14 Handoff
@@ -238,9 +360,8 @@ subject8_kimchi_detection/
 │   ├── 01_check_environment.py     # 환경 점검 + YOLO11n Load
 │   ├── 02_audit_subject7_final.py  # Data Audit + Leakage 확인
 │   └── 03_build_split.py           # Split · manifest · dataset.yaml 생성
-├── src/
-│   ├── dataset_audit.py            # Data Audit 기능
-│   ├── leakage_check.py            # 사진 지문(dHash) 누수 확인
-│   └── split_builder.py            # capture_group · Split 기능
-└── tests/test_dataset_audit.py     # 감사·누수 검사 시험
+└── src/
+    ├── dataset_audit.py            # Data Audit 기능
+    ├── leakage_check.py            # 사진 지문(dHash) 누수 확인
+    └── split_builder.py            # capture_group · Split 기능
 ```

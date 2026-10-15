@@ -50,7 +50,7 @@
 ## 의존성
 
 - **사용하는 것**: `pandas`, `csv`, `statistics`
-- **사용하는 곳**: [`scripts/02_audit_subject7_final`](../scripts/02_audit_subject7_final.md), [`scripts/03_build_split`](../scripts/03_build_split.md) (`CLASS_NAMES`), [`tests/test_dataset_audit`](../tests/test_dataset_audit.md)
+- **사용하는 곳**: [`scripts/02_audit_subject7_final`](../scripts/02_audit_subject7_final.md), [`scripts/03_build_split`](../scripts/03_build_split.md) (`CLASS_NAMES`)
 
 ## 주의사항
 

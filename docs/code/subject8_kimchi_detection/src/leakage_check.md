@@ -40,7 +40,7 @@
 ## 의존성
 
 - **사용하는 것**: `Pillow`, `pandas`, `concurrent.futures`
-- **사용하는 곳**: [`scripts/02_audit_subject7_final`](../scripts/02_audit_subject7_final.md), [`tests/test_dataset_audit`](../tests/test_dataset_audit.md)
+- **사용하는 곳**: [`scripts/02_audit_subject7_final`](../scripts/02_audit_subject7_final.md)
 
 ## 주의사항
 

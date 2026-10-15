@@ -8,9 +8,15 @@
 
 ```bash
 cd subject8_kimchi_detection
-python scripts/03_build_split.py                 # Manifest·설정·요약만
+python scripts/03_build_split.py                 # Manifest·설정·요약만 (kimchi_v4 — 라벨 수정본 필요)
 python scripts/03_build_split.py --copy-files    # data/yolo, data/bridge_holdout 에 실제 파일까지 복사
+python scripts/03_build_split.py --version kimchi_v1 --copy-files   # 이전 분할 재현
 ```
+
+| 옵션 | 설명 |
+|---|---|
+| `--copy-files` | 실제 파일 배치까지 |
+| `--version` | `kimchi_v4`(기본) · `kimchi_v3` · `kimchi_v2` · `kimchi_v1`. 블록 분할 규칙은 [`BLOCK_RULES`](../src/split_builder.md). `kimchi_v3`·`v4` 는 라벨 수정본이 필요 ([`04_import_label_fixes`](04_import_label_fixes.md) 먼저) |
 
 분할 정책 설명: `subject8_kimchi_detection/docs/split_policy.md`
 
@@ -40,5 +46,6 @@ python scripts/03_build_split.py --copy-files    # data/yolo, data/bridge_holdou
 ## 주의사항
 
 - **`--copy-files` 는 `data/yolo` 와 `data/bridge_holdout` 을 통째로 지우고 다시 만든다** (`clean=True`). 그 안에 직접 넣어 둔 파일이 있으면 사라진다.
+- `manifests/*.csv` 와 `reports/dataset_summary.csv` 는 버전과 관계없이 같은 이름으로 덮어쓴다. 버전을 바꿔 실행한 뒤 학습하면 [`06`](06_train_baseline.md) 의 precheck 는 통과하지만, 이전 실험과 Val 구성이 달라진다.
 - 묶음 수(18)·G00(50장)·G17(150장)이 맞지 않으면 `assert` 로 중단된다. 이 데이터셋 전용 스크립트다.
 - [`02_audit`](02_audit_subject7_final.md) 와 마찬가지로 `src` 패키지 이름이 저장소 루트와 겹치므로 `python scripts/03_build_split.py` 형태로 실행한다.

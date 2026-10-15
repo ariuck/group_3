@@ -1,0 +1,7 @@
+﻿class_id,class_name,train_boxes,val_boxes,train_median_px,val_median_px,val_to_train
+0,leaf_paper,295,198,131,281,2.15
+1,plastic_stone_metal,1411,159,176,193,1.1
+2,branch,425,34,229,236,1.03
+3,insect,148,19,104,116,1.12
+5,disease_browning,254,65,181,57,0.32
+6,green_onion_pepper,134,40,144,137,0.95

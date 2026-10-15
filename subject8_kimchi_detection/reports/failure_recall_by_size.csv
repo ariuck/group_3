@@ -1,0 +1,16 @@
+﻿class_id,class_name,size_bucket,gt,tp,recall
+0,leaf_paper,S(<150px),14,0,0.0
+0,leaf_paper,M(150~300px),111,19,0.171
+0,leaf_paper,L(>=300px),73,10,0.137
+1,plastic_stone_metal,S(<150px),41,27,0.659
+1,plastic_stone_metal,M(150~300px),114,98,0.86
+1,plastic_stone_metal,L(>=300px),4,3,0.75
+2,branch,S(<150px),15,3,0.2
+2,branch,M(150~300px),10,8,0.8
+2,branch,L(>=300px),9,6,0.667
+3,insect,S(<150px),15,7,0.467
+3,insect,M(150~300px),4,3,0.75
+5,disease_browning,S(<150px),62,0,0.0
+5,disease_browning,M(150~300px),3,0,0.0
+6,green_onion_pepper,S(<150px),33,7,0.212
+6,green_onion_pepper,M(150~300px),7,0,0.0
