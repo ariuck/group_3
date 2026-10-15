@@ -1,0 +1,24 @@
+{
+    // 교과 8 전용 가상환경 (subject8_kimchi_detection/.venv)
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.extraPaths": ["${workspaceFolder}"],
+
+    // 모든 Script 는 이 폴더에서 실행 (dataset.yaml 의 path: data/yolo 기준)
+    "terminal.integrated.cwd": "${workspaceFolder}",
+
+    // 상위 폴더(group_3)의 Git 저장소를 바로 사용
+    "git.openRepositoryInParentFolders": "always",
+
+    // 이미지 2.5GB·학습 결과·가상환경은 감시·검색에서 제외 (속도)
+    "files.watcherExclude": {
+        "**/data/**": true,
+        "**/runs/**": true,
+        "**/.venv/**": true
+    },
+    "search.exclude": {
+        "**/data/**": true,
+        "**/runs/**": true,
+        "**/.venv/**": true
+    }
+}

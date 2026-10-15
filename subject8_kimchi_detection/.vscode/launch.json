@@ -1,0 +1,114 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "01 환경 점검",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/01_check_environment.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "02 Data Audit",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/02_audit_subject7_final.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "03 Split (manifest만)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/03_build_split.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "03 Split + 폴더 복사",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/03_build_split.py",
+            "args": ["--copy-files"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "04 라벨 수정본 확인 (kimchi_v3)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/04_import_label_fixes.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "04 라벨 수정본 가져오기 --apply (kimchi_v3)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/04_import_label_fixes.py",
+            "args": ["--apply"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "03 Split + 폴더 복사 (kimchi_v4)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/03_build_split.py",
+            "args": ["--version", "kimchi_v4", "--copy-files"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "06 Baseline 학습 (kimchi_v4 · 640)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/06_train_baseline.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "07 Baseline 평가 (Validation)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/07_evaluate_baseline.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "10 exp001 imgsz 1280",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/10_train_v2.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "10 exp002 imgsz 1920",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/10_train_v2.py",
+            "args": ["--exp", "exp002"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "10 exp003 epoch 100",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/10_train_v2.py",
+            "args": ["--exp", "exp003"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "현재 파일 실행",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}

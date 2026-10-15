@@ -1,24 +1,53 @@
-# 회사 데이터 (NDA)
-data/
+# ═══ 원칙: 김치·이물 "사진"만 올리지 않는다. 라벨 TXT·검수표·모델·기록·그래프는 올려서 다른 PC 에서 같이 작업한다 ═══
+# (저장소 루트 .gitignore 도 *.jpg / *.jpeg 를 전체에서 막는다 — 이중 안전장치)
 
-# 모델 가중치 (yolo11n.pt 자동 다운로드 포함)
+# ── 회사 사진 (NDA) — 어느 폴더에 있든 막는다 ──
+*.jpg
+*.jpeg
+*.JPG
+*.JPEG
+*.bmp
+*.webp
+*.heic
+*.mp4
+*.mov
+# demo/ 는 실패 사례·예측 사진 모음이라 PNG 도 막는다
+demo/**/*.png
+
+# ── data/: 사진은 막히고, 라벨 TXT·검수표만 올라간다 ──
+#   올라감: data/subject7_final/labels/**/*.txt, 검수표.csv, classes.txt  (교과 7 FINAL 입력 그대로)
+#           data/label_fixes/**/*.txt                                    (kimchi_v3~ 라벨 수정본)
+#   다른 PC 는 사진(images/) 만 따로 복사하면 된다 → README "다른 PC 에서 시작하기"
+#   다시 만들 수 있는 폴더: yolo·bridge_holdout 은 03_build_split.py --copy-files, smoke 는 05_smoke_train.py
+data/yolo/
+data/bridge_holdout/
+data/smoke/
+#   검수표.csv 와 같은 내용의 교과 7 제출용 엑셀
+data/subject7_final/dataset_manifest.xlsx
+#   Ultralytics 라벨 캐시
+*.cache
+
+# ── 모델 Weight: models/ 에 보관한 것만 올린다 ──
+#   루트 .gitignore 의 *.pt 를 여기서 풀어 준다. yolo11n.pt(사전학습, 자동 다운로드)와 runs/*/weights 중복본은 제외
 *.pt
+!models/**/*.pt
 
-# Ultralytics 실행 결과 — 예측 사진(회사 이미지)은 제외하고 숫자 기록만 남긴다
-#   runs/<실행>/results.csv : 산출물 2 (epoch 별 학습 기록)
+# ── Ultralytics 실행 결과: 숫자 기록만 (그래프는 scripts/plot_runs.py 로 reports/figures/runs/ 에 만든다) ──
+#   runs/<실행>/results.csv : epoch 별 학습 기록 (산출물 2·5)
 #   runs/<실행>/args.yaml   : 실제로 쓰인 학습 설정 (재현용)
+#   runs/eval, runs/predict 는 사진이 섞여 있어 통째로 제외
 runs/*
 !runs/*/
 runs/*/*
 !runs/*/results.csv
 !runs/*/args.yaml
+runs/eval/
+runs/predict/
 
-# 회사 이미지가 들어가는 시연 결과
-demo/**/*.jpg
-demo/**/*.png
-demo/**/*.mp4
+# ── VSCode: 팀 공통 설정은 올린다 (루트 .gitignore 의 .vscode/ 를 여기서 풀어 줌) ──
+!.vscode/
 
-# Python
+# ── Python ──
 __pycache__/
 .venv
 .venv/

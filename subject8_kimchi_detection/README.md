@@ -8,7 +8,7 @@
 >
 > **데이터 성격**: AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터를 사용합니다.
 >
-> **보안**: 이미지·라벨(`data/`)과 모델 Weight(`*.pt`), 학습 결과(`runs/`)는 `.gitignore` 로 제외합니다. 이미지는 Git 에 올리지 않습니다.
+> **보안**: 김치·이물 **사진만** Git 에 올리지 않습니다. 라벨 TXT·검수표·모델 Weight·학습 기록·그래프는 올려서 다른 PC 에서 같이 작업합니다 (6.2 "Git 에 올리는 것").
 >
 > 아직 정해지지 않은 값은 `TBD` 로 두고, 실제로 결정·측정한 날 채웁니다. 성능 숫자를 미리 적지 않습니다.
 
@@ -125,13 +125,48 @@ pip install -r requirements.txt
 python scripts/01_check_environment.py
 ```
 
-### 6.2 데이터 준비 (`data/subject7_final/`)
+### 6.2 다른 PC 에서 시작하기 · Git 에 올리는 것
+
+**Git 에 올리는 것 / 올리지 않는 것** (`subject8_kimchi_detection/.gitignore`)
+
+| 올림 ✅ | 올리지 않음 ❌ |
+|---|---|
+| 교과 7 FINAL 라벨 `data/subject7_final/labels/**/*.txt` (900개), `검수표.csv`, `classes.txt` | **김치·이물 사진** (`*.jpg` 등, 어느 폴더든) |
+| 라벨 수정본 `data/label_fixes/kimchi_v3/*.txt` (kimchi_v3·v4 재현에 필요) | `data/yolo/`, `data/bridge_holdout/`, `data/smoke/` — 03·05 가 다시 만듦 |
+| 모델 Weight `models/**/*.pt` (실험마다 best 1개, 약 5MB) | `runs/*/weights/` (models/ 와 중복), `yolo11n.pt` (자동 다운로드) |
+| `runs/<실행>/results.csv`·`args.yaml` | `runs/*/*.png` 등 Ultralytics 원본 그래프 (실행당 약 1.8MB) · `runs/eval`·`runs/predict` (사진 섞임) |
+| 그래프 `reports/figures/` (실행별 학습 곡선은 `plot_runs.py` 로 생성, 약 0.1MB) | `demo/` 의 사진 모음 |
+| manifest·보고서·문서, `.vscode/` 공통 설정 | `.venv/` |
+
+**다른 PC 에서 처음 받을 때**
 
 ```bash
-cp -r ../data/final data/subject7_final
+git clone https://github.com/ariuck/group_3.git ~/group_3
+cd ~/group_3/subject8_kimchi_detection
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+# 사진만 따로 복사 (USB 등 — 외부 클라우드·메신저 금지). 라벨·검수표는 이미 Git 에 있다
+#   원본 PC 의 subject8_kimchi_detection/data/subject7_final/images/ 를 같은 위치로
+cp -r <USB>/images data/subject7_final/images
+
+.venv/bin/python scripts/02_audit_subject7_final.py          # JPG 900 / TXT 900 / 이슈 0 이면 정상
+.venv/bin/python scripts/03_build_split.py --copy-files      # kimchi_v4 학습 폴더 생성 (manifest 는 바뀌지 않아야 함)
+git status                                                    # 아무것도 바뀌지 않았으면 같은 데이터·같은 분할
 ```
 
-평평한 구조(`images/`)와 교과 7 원본 구조(`images/train`, `images/validation`)를 모두 읽습니다.
+- VSCode 는 이 폴더를 직접 엽니다 (`code ~/group_3/subject8_kimchi_detection`). `.vscode/` 설정이 Git 에 있어 `.venv` 인터프리터·실행 메뉴(F5)가 바로 잡힙니다.
+- 모델이 Git 에 있으므로 학습 없이 바로 평가·예측할 수 있습니다 (`07`, `08`, `09`).
+- 사진 폴더는 평평한 구조(`images/`)와 교과 7 원본 구조(`images/train`, `images/validation`)를 모두 읽습니다.
+
+**그래프 정책 (실험이 수십 개가 되어도 저장소가 가볍게)**
+
+| 그래프 | 어디에 | 크기 |
+|---|---|---|
+| 모든 실행의 학습 곡선 · 같은 Dataset Version 끼리 비교 | `python scripts/plot_runs.py` → `reports/figures/runs/<실행>.png`, `reports/figures/runs_comparison_<Version>.png`, `reports/runs_summary.csv` | 실행당 약 0.1MB |
+| 핵심 모델(Baseline·Final·발표에 쓸 실험)의 Confusion Matrix · PR 곡선 | `07_evaluate_baseline.py` 처럼 `reports/figures/` 에 복사 | 모델당 약 1MB |
+| 그 밖의 Ultralytics 원본 그래프 | `runs/` 에만 (Git 제외). 필요하면 Git 의 모델로 다시 평가해 만든다 | — |
+
+새 학습을 하면 `python scripts/plot_runs.py` 를 한 번 실행하고 `runs/<실행>/results.csv`·`args.yaml`·`models/.../*.pt`·`reports/figures/runs/` 를 함께 커밋합니다.
 
 ### 6.3 2일차 — Data Audit
 
@@ -340,28 +375,30 @@ TBD (9일차) — `docs/handoff_subject14.md`
 
 ```text
 subject8_kimchi_detection/
+├── .vscode/                        # 팀 공통 VSCode 설정 (인터프리터 · F5 실행 메뉴)
 ├── configs/dataset.yaml            # YOLO 학습용 Dataset 설정 (산출물 1)
-├── data/                           # Git 제외
-│   ├── subject7_final/             # 교과 7 FINAL 복사본 (JPG, TXT, 검수표.csv)
-│   ├── yolo/                       # --copy-files 로 만든 train / val / test
-│   └── bridge_holdout/             # --copy-files 로 만든 교과 14 보존용
+├── data/                           # 사진(*.jpg)은 Git 제외, 라벨 TXT·검수표는 Git 에 있음
+│   ├── subject7_final/             # 교과 7 FINAL: labels/ · 검수표.csv (Git) + images/ (각 PC 에 복사)
+│   ├── label_fixes/kimchi_v3/      # kimchi_v3~ 라벨 수정본 TXT (Git)
+│   ├── yolo/                       # 03 --copy-files 로 만든 train / val / test (Git 제외)
+│   └── bridge_holdout/             # 03 --copy-files 로 만든 교과 14 보존용 (Git 제외)
 ├── docs/
 │   ├── split_policy.md             # Split 정책서 (산출물 1)
 │   └── process/                    # 과정 정리 (이해·포트폴리오용)
 ├── manifests/                      # split_manifest.csv + 역할별 CSV (산출물 1)
+├── models/                         # 실험별 best Weight (Git) — baseline/, improved/, final/
+├── runs/<실행>/                     # results.csv · args.yaml 만 Git (Ultralytics 원본은 Git 제외)
 ├── reports/
-│   ├── audit_summary.csv           # Data Audit 요약 (이미지별 BBox 수 포함)
-│   ├── audit_issue.csv             # Data Audit 이슈 목록 (0건)
-│   ├── audit_class_scene.csv       # Class × 장면 분포
-│   ├── leakage_check.csv           # Data Leakage 지표 (dHash)
-│   ├── capture_group_summary.csv   # 촬영 묶음 18개 요약
-│   └── dataset_summary.csv         # 역할별 장수 (산출물 1)
-├── scripts/
-│   ├── 01_check_environment.py     # 환경 점검 + YOLO11n Load
-│   ├── 02_audit_subject7_final.py  # Data Audit + Leakage 확인
-│   └── 03_build_split.py           # Split · manifest · dataset.yaml 생성
+│   ├── figures/                    # 핵심 모델 그래프 + runs/ (실행별 학습 곡선) + runs_comparison_<Version>.png
+│   ├── runs_summary.csv            # 실행별 조건과 best 지표
+│   ├── audit_*.csv · leakage_check.csv · capture_group_summary.csv   # Data Audit (2일차)
+│   ├── dataset_summary.csv         # 역할별 장수 (산출물 1)
+│   ├── *_training_condition.md     # 학습 조건 기록 (산출물 2·4)
+│   ├── baseline_*metrics.csv       # Validation 평가 (산출물 2)
+│   └── failure_*                   # 실패 분석 (산출물 3)
+├── scripts/                        # 01~10 일차별 실행 + plot_runs.py (그래프)
 └── src/
-    ├── dataset_audit.py            # Data Audit 기능
-    ├── leakage_check.py            # 사진 지문(dHash) 누수 확인
-    └── split_builder.py            # capture_group · Split 기능
+    ├── constants.py                # Class·장면·Version 별 분할 규칙 (SSOT)
+    ├── dataset_audit.py · leakage_check.py · split_builder.py · smoke_dataset.py
+    ├── train_detector.py · evaluate_detector.py · inference.py · failure_analyzer.py
 ```
