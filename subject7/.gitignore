@@ -1,0 +1,33 @@
+# 교과 7 라벨링 프로젝트 전용 규칙 (경로는 이 폴더 subject7/ 기준)
+# 공통 규칙(*.jpg, .venv, *.pt 등)은 저장소 맨 위 .gitignore 에 있다.
+
+# ── 회사 제공 데이터(NDA): 실제 이미지·라벨·최종 데이터는 Git 에 올리지 않는다 ──
+# data/ 아래는 빈 폴더가 보이도록 하는 .gitkeep 만 남기고 전부 제외한다.
+# (raw·work·final 어디에 두든, data/ 바로 아래에 두든 모두 막힌다)
+data/**
+!data/
+!data/*/
+!data/**/.gitkeep
+
+# 프로그램이 만드는 검증 결과 (매번 새로 생성)
+reports/validation_report.csv
+
+# 검수 기록이 쌓이는 검수표 CSV: 실제 사진 파일명이 들어 있어 회사 데이터로 본다. 저장할 때 프로그램이 만들고 Git 에는 올리지 않는다.
+manifests/dataset_manifest.csv
+# 팀원에게 받은 검수표, 합친 결과(merged_manifest.csv) 등 manifests 안의 CSV 는 모두 제외
+manifests/*.csv
+
+# ── 증빙 자료: 실제 사진이 나오는 캡처와 영상은 올리지 않는다 (프로그램 캡처는 가짜 샘플로 찍어 올림)
+reports/evidence/final/
+# 김동훈 프로그램 증빙(실행 화면·시연 영상)도 Git 에 올리지 않는다 (폴더 자체를 유지하는 .gitkeep 만 예외)
+reports/evidence/program/*
+!reports/evidence/program/.gitkeep
+reports/evidence/**/*.mp4
+reports/evidence/**/*.mov
+reports/evidence/**/*.avi
+reports/evidence/**/*.mkv
+reports/evidence/**/*.webm
+
+# 제출용 Manifest(영문 칸 이름) 사본
+manifests/dataset_manifest_교과8.xlsx
+manifests/backup/
