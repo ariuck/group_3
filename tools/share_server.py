@@ -7,22 +7,29 @@
     보내기/      여기에 있는 zip 을 다른 PC 가 내려받는다  (예: 합친 결과)
     받은결과/    다른 PC 가 올린 zip 이 저장된다
     받은결과/풀림/  올라온 zip 안의 라벨(txt)·검수표(csv)가 자동으로 풀린다  → tools/import_labels.py · merge_manifests.py 에 그대로 넣는다
+    보관함/      '공용 보관함' 탭에서 누구나 올리고 내려받는 파일 (종류 제한 없음, 한 개 최대 --cloud-max-gb)
+    보관함/휴지통/  보관함에서 지운 파일이 옮겨진다 (완전히 지우지 않는다)
 
 다른 PC 는 브라우저로 http://<이 PC 주소>:8000 에 접속하고, 콘솔에 나온 4자리 번호를 입력하면 된다.
+보관함만 쓸 때는 http://<이 PC 주소>:8000/#cloud 로 바로 열 수 있다.
 
 안전장치
   - 4자리 번호를 모르면 목록·내려받기·올리기가 모두 거부된다. (틀리면 잠시 잠긴다)
   - 같은 사설망(192.168.x.x, 10.x.x.x 등)의 PC 만 접속할 수 있다.
-  - 올릴 수 있는 것은 '라벨(.txt)과 검수표(.csv)만 든 zip' 뿐이다. 사진·프로그램·폴더를 벗어나는 경로·너무 큰 파일은 거부한다.
+  - '받은결과'에 올릴 수 있는 것은 '라벨(.txt)과 검수표(.csv)만 든 zip' 뿐이다. 사진·프로그램·폴더를 벗어나는 경로·너무 큰 파일은 거부한다.
+  - '보관함'은 파일을 열거나 실행하지 않고 그대로 저장·전달만 한다. 이 PC 의 남은 공간이 1GB 아래로 내려가는 파일은 거부한다.
+  - 큰 파일도 메모리에 올리지 않고 조금씩 받고 보낸다. 내려받기가 끊기면 브라우저의 '다시 시작'으로 이어받을 수 있다.
   - 같은 이름의 파일은 덮어쓰지 않고 이름 뒤에 시각을 붙여 저장한다.
-  - --minutes 가 지나면 서버가 저절로 꺼진다. (기본 120분)
+  - --minutes 가 지나면 서버가 저절로 꺼진다. (기본 120분, 0 이면 끄지 않음)
 라벨과 검수표는 사진 파일명이 들어 있는 회사 데이터다. 필요한 사람이 모두 받은 뒤에는 바로 끈다.
 """
 import argparse
 import csv
+import html
 import ipaddress
 import json
 import os
+import re
 import secrets
 import shutil
 import socket
@@ -36,20 +43,31 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import parse_qs, quote, urlparse
 
 SEND, RECEIVED, UNPACKED = "보내기", "받은결과", "풀림"
+CLOUD, TRASH = "보관함", "휴지통"
 ALLOWED_SUFFIX = {".txt", ".csv"}
 MAX_ENTRIES = 5000
 NAME_BAD = set('\\/:*?"<>|\r\n\t\0')
+WIN_RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 MAX_FAILS, LOCK_SECONDS = 8, 60
+KEEP_FREE = 1024 ** 3                       # 보관함에 올려도 이 PC 에 남겨 둘 최소 공간 (1GB)
+CHUNK = 1024 * 1024
 DEFAULT_ASSIGN = "김동훈:1-300,이후영:301-500,지혜성:551-900"      # 검수자별 번호 범위 (docs/team/검수_배정.md)
 
 
 # ── 파일 검사 ─────────────────────────────────────────────────────────────
-def safe_name(name):
-    """올라온 파일 이름에서 폴더 부분을 버리고 위험한 글자를 없앤다. 쓸 수 없으면 None."""
+def safe_name(name, any_type=False):
+    """올라온 파일 이름에서 폴더 부분을 버리고 위험한 글자를 없앤다. 쓸 수 없으면 None.
+
+    any_type=False 이면 .zip 만(120자 이하), True 이면 종류와 상관없이(150자 이하) 허용한다. (보관함용)
+    """
     name = PurePosixPath(str(name).replace("\\", "/")).name.strip()
-    name = "".join(ch for ch in name if ch not in NAME_BAD).strip(". ")
-    if not name or not name.lower().endswith(".zip") or len(name) > 120:
+    name = "".join(ch for ch in name if ch not in NAME_BAD and ch >= " ").strip(". ")
+    if not name or len(name) > (150 if any_type else 120):
         return None
+    if not any_type and not name.lower().endswith(".zip"):
+        return None
+    if name.split(".")[0].strip().upper() in WIN_RESERVED:             # Windows 가 만들 수 없는 이름 (CON.txt 등)
+        name = "_" + name
     return name
 
 
@@ -147,12 +165,14 @@ def parse_assign(text):
     return out
 
 
-def list_files(folder):
+def list_files(folder, pattern="*.zip"):
+    """폴더 바로 아래의 파일 목록 (최신순). 폴더와 '.' 으로 시작하는 임시 파일은 뺀다."""
     folder = Path(folder)
     if not folder.is_dir():
         return []
     out = []
-    for p in sorted(folder.glob("*.zip"), key=lambda q: q.stat().st_mtime, reverse=True):
+    files = [p for p in folder.glob(pattern) if p.is_file() and not p.name.startswith(".")]
+    for p in sorted(files, key=lambda q: q.stat().st_mtime, reverse=True):
         st = p.stat()
         out.append({"name": p.name, "size": st.st_size, "time": time.strftime("%m-%d %H:%M", time.localtime(st.st_mtime))})
     return out
@@ -168,7 +188,7 @@ PAGE = r"""<!doctype html>
   --ok:#0f8a4b;--ok-soft:#e7f6ee;--bad:#d03b3b;--bad-soft:#fdeceb;--warn-soft:#fff6dd;--warn-line:#f0d58a;--code:#101827;--shadow:0 1px 2px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.05)}
  @media (prefers-color-scheme:dark){:root{--bg:#0e1420;--card:#171f2e;--line:#2a3548;--text:#e8edf6;--muted:#9aa8bf;--accent:#6c8cff;--accent-2:#8aa4ff;--accent-soft:#1d2a4d;
   --ok:#4cc58a;--ok-soft:#123525;--bad:#ff7b7b;--bad-soft:#3b1a1a;--warn-soft:#3a3115;--warn-line:#6d5b21;--code:#0a0f19;--shadow:none}}
- *{box-sizing:border-box} html{scroll-behavior:smooth}
+ *{box-sizing:border-box} html{scroll-behavior:smooth} [hidden]{display:none!important}
  body{margin:0;background:var(--bg);color:var(--text);font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
  main{max-width:820px;margin:0 auto;padding:22px 16px 80px}
  header.top{display:flex;align-items:center;gap:14px;margin:4px 0 18px}
@@ -236,6 +256,11 @@ PAGE = r"""<!doctype html>
  .qitem{padding:10px 4px;border-top:1px solid var(--line);font-size:14px} .qitem:first-child{border-top:0}
  .qhead{display:flex;justify-content:space-between;gap:10px} .qname{font-weight:600;word-break:break-all}
  .qstate{flex:none;font-size:13px;font-weight:600} .qmsg{font-size:13px;margin-top:2px}
+ .qhead .qcancel{margin-left:auto;padding:2px 10px;font-size:12px}
+ .btn.danger{background:transparent;color:var(--bad);border:1px solid var(--line)} .btn.danger:hover{border-color:var(--bad);background:var(--bad-soft)}
+ .fact{display:flex;gap:6px;flex:none} .ficon.cloud{background:var(--warn-soft);color:var(--text)}
+ input.find{flex:1;min-width:150px;font-size:14.5px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:inherit}
+ .listhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px} .listhead h2{margin:0}
  #toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,30px);background:#1c2433;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .22s;z-index:50;max-width:92vw;box-shadow:0 8px 24px rgba(0,0,0,.25)}
  #toast.show{opacity:1;transform:translate(-50%,0)} #toast.bad{background:#b3261e}
  @media (max-width:560px){main{padding:14px 10px 70px}.card{padding:15px 14px}nav.tabs button{font-size:13px;padding:9px 4px}nav.tabs svg{display:none}.pin input{width:50px;height:60px}.pill{display:none}}
@@ -243,7 +268,7 @@ PAGE = r"""<!doctype html>
 
 <header class="top">
  <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></div>
- <div><h1>결과 주고받기</h1><p>검수 결과를 같은 네트워크 안에서 주고받는 임시 페이지</p></div>
+ <div><h1>결과 주고받기</h1><p>검수 결과와 큰 파일을 같은 네트워크 안에서 주고받는 임시 페이지</p></div>
  <span class="pill">같은 와이파이 전용</span>
 </header>
 
@@ -251,7 +276,21 @@ PAGE = r"""<!doctype html>
  <button data-tab="rv" class="on" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>검수자 가이드</button>
  <button data-tab="pm" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>PM 가이드 (전체 흐름)</button>
  <button data-tab="files" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>파일 받기·올리기</button>
+ <button data-tab="cloud" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9.5 4.75 4.75 0 0 0 7 19z"/></svg>공용 보관함</button>
 </nav>
+
+<!-- 번호 입력 — '파일 받기·올리기' 와 '공용 보관함' 탭이 함께 쓴다 -->
+<div class="card lock" id="pinbox" hidden>
+ <h2>접속 번호를 입력하세요</h2>
+ <div class="muted">서버를 켠 PC 의 검은 창에 표시된 4자리 번호입니다.</div>
+ <div class="pin" id="pinrow">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 1번째 자리">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 2번째 자리">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 3번째 자리">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 4번째 자리">
+ </div>
+ <div id="pinmsg" class="bad" style="min-height:22px" role="alert"></div>
+</div>
 
 <!-- ───────────────────────── 검수자 가이드 ───────────────────────── -->
 <section class="tab on" id="tab-rv">
@@ -414,22 +453,17 @@ PAGE = r"""<!doctype html>
   <li>검수가 모두 끝나면 최종본(<code>data/final</code>)을 정리합니다.</li></ul>
   <div class="warn">라벨과 검수표는 사진 파일명이 들어 있는 <b>회사 데이터</b>입니다. 필요한 사람이 모두 받으면 바로 서버를 끄고, Git 에는 올리지 마세요.</div>
  </div></div>
+
+ <div class="card">
+  <h2>공용 보관함 (큰 파일 주고받기)</h2>
+  <ul><li>위쪽 <b>공용 보관함</b> 탭은 zip 검사 없이 <b>어떤 파일이든</b> 올리고 내려받는 공간입니다. 한 개 최대 <b>__CLOUDMAXGB__GB</b>, 서버 PC 에 1GB 는 남겨 둡니다.</li>
+  <li>보관함만 쓸 때는 <code>보관함시작.bat</code> 을 켜고 주소 뒤에 <code>/#cloud</code> 를 붙여 알려 주면 바로 그 탭이 열립니다.</li>
+  <li>한도를 바꾸려면: <code>py tools/share_server.py --cloud-max-gb 50 --minutes 0</code> (<code>--minutes 0</code> 은 저절로 꺼지지 않음)</li></ul>
+ </div>
 </section>
 
 <!-- ───────────────────────── 파일 받기·올리기 ───────────────────────── -->
 <section class="tab" id="tab-files">
- <div class="card lock" id="pinbox">
-  <h2>접속 번호를 입력하세요</h2>
-  <div class="muted">서버를 켠 PM PC 의 검은 창에 표시된 4자리 번호입니다.</div>
-  <div class="pin" id="pinrow">
-   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 1번째 자리">
-   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 2번째 자리">
-   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 3번째 자리">
-   <input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="번호 4번째 자리">
-  </div>
-  <div id="pinmsg" class="bad" style="min-height:22px" role="alert"></div>
- </div>
-
  <div id="filesmain" hidden>
   <div class="bar"><span class="status">연결됨</span><span class="sp"></span>
    <button class="btn ghost small" id="refresh" type="button">새로고침</button>
@@ -455,24 +489,60 @@ PAGE = r"""<!doctype html>
  </div>
 </section>
 
+<!-- ───────────────────────── 공용 보관함 ───────────────────────── -->
+<section class="tab" id="tab-cloud">
+ <div id="cloudmain" hidden>
+  <div class="bar"><span class="status">연결됨</span><span class="muted" id="croom"></span><span class="sp"></span>
+   <button class="btn ghost small" id="crefresh" type="button">새로고침</button></div>
+
+  <div class="card">
+   <h2>올리기 <span class="muted">어떤 파일이든 · 한 개 최대 __CLOUDMAXGB__GB</span></h2>
+   <div class="drop" id="cdrop" role="button" tabindex="0" aria-label="파일을 끌어다 놓거나 눌러서 고르기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><path d="M12 12v9M8 16l4-4 4 4"/></svg>
+    <div class="big">파일을 여기로 끌어다 놓으세요</div>
+    <div class="small">사진·영상·zip·문서 무엇이든 됩니다. 여러 개를 놓으면 차례로 올라갑니다. 폴더는 zip 으로 묶어서 올려 주세요.</div>
+   </div>
+   <input type="file" id="cfile" multiple hidden>
+   <div id="cqueue"></div>
+  </div>
+
+  <div class="card">
+   <div class="listhead"><h2>보관함</h2><input type="search" class="find" id="cfind" placeholder="이름으로 찾기" aria-label="이름으로 찾기"></div>
+   <ul class="files" id="clist"></ul>
+  </div>
+
+  <div class="note">파일은 서버 PC 의 <code>보관함</code> 폴더(<code id="cpath">__CLOUDDIR__</code>)에 그대로 저장되고, 서버를 꺼도 남아 있습니다. 서버가 켜져 있는 동안만 받을 수 있어요.<br>
+  <b>지우기</b>는 완전히 지우지 않고 <code>보관함\휴지통</code> 으로 옮깁니다. 큰 파일을 올리는 동안에는 이 창을 닫지 마세요.</div>
+  <div class="warn">회사 사진·검수표 같은 <b>회사 데이터</b>는 팀 안에서만 주고받고, 다 받은 뒤에는 보관함에서 지워 주세요.</div>
+ </div>
+</section>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
 const ASSIGN=__ASSIGN__;
 const MAXMB=__MAXMB__;
-let PIN="";
+const CLOUDMAXGB=__CLOUDMAXGB__;
+let PIN="",UNLOCKED=false;
 const $=id=>document.getElementById(id);
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 const sstore={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
 const names=Object.keys(ASSIGN);
 const ICON={zip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M10 12h2M10 16h2M12 14h2"/></svg>',
- down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>'};
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+ file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'};
 
 let toastTimer=null;
 function toast(msg,bad){const t=$("toast");t.textContent=msg;t.className="show"+(bad?" bad":"");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="",2600)}
+const onTab=t=>$("tab-"+t).classList.contains("on");
+// 번호 칸은 '파일 받기·올리기'·'공용 보관함' 탭에서 아직 번호를 넣지 않았을 때만 보인다
+function syncPin(){$("pinbox").hidden=UNLOCKED||!(onTab("files")||onTab("cloud"))}
 function showTab(t){document.querySelectorAll("section.tab").forEach(s=>s.classList.toggle("on",s.id==="tab-"+t));
  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));window.scrollTo({top:0});
- if(t==="files"&&!$("pinbox").hidden){const f=[...document.querySelectorAll("#pinrow input")].find(i=>!i.value);if(f)f.focus()}}
+ try{history.replaceState(null,"",t==="cloud"?"#cloud":location.pathname+location.search)}catch(e){}
+ syncPin();
+ if(!$("pinbox").hidden){const f=[...document.querySelectorAll("#pinrow input")].find(i=>!i.value);if(f)f.focus()}
+ if(t==="cloud"&&UNLOCKED)refreshCloud(true)}
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
 // ── 가이드: 이름·터미널 선택, 명령 자동 바뀜, 단계 완료 체크 ──
@@ -521,10 +591,12 @@ pins.forEach((el,i)=>{
   if(e.key==="ArrowLeft"&&i>0)pins[i-1].focus();if(e.key==="ArrowRight"&&i<3)pins[i+1].focus()});
  el.addEventListener("paste",e=>{const t=(e.clipboardData.getData("text")||"").replace(/\D/g,"").slice(0,4);if(!t)return;e.preventDefault();
   t.split("").forEach((c,j)=>pins[j].value=c);(pins[Math.min(t.length,3)]).focus();if(t.length===4)unlock(t)})});
-function pinError(msg){$("pinmsg").textContent=msg;$("pinrow").classList.add("err");pins.forEach(p=>p.value="");pins[0].focus();sstore.set("pin",null)}
+function lockFiles(){UNLOCKED=false;PIN="";sstore.set("pin",null);clearInterval(refreshTimer);
+ $("filesmain").hidden=true;$("cloudmain").hidden=true;pins.forEach(p=>p.value="");syncPin()}
+function pinError(msg){lockFiles();$("pinmsg").textContent=msg;$("pinrow").classList.add("err");pins[0].focus()}
 
 // ── 파일 목록 ──
-const kb=n=>n>1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
+const kb=n=>n>=1073741824?(n/1073741824).toFixed(2)+" GB":n>1048576?(n/1048576).toFixed(1)+" MB":Math.max(n?1:0,Math.round(n/1024))+" KB";
 function frow(f,kind,first){const li=document.createElement("li");
  const ic=document.createElement("div");ic.className="ficon"+(kind==="recv"?" recv":"");ic.innerHTML=ICON.zip;
  const info=document.createElement("div");info.className="finfo";
@@ -546,16 +618,17 @@ async function refresh(quiet){
  $("recv").replaceChildren(...(d.received.length?d.received.map(f=>frow(f,"recv")):[emptyLi("아직 받은 파일이 없습니다.")]));
  return true}
 async function unlock(pin){PIN=pin;$("pinmsg").textContent="";
- if(await refresh()){sstore.set("pin",pin);$("pinbox").hidden=true;$("filesmain").hidden=false;
-  clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!document.hidden&&$("tab-files").classList.contains("on"))refresh(true)},8000)}}
+ if(await refresh()){UNLOCKED=true;sstore.set("pin",pin);$("filesmain").hidden=false;$("cloudmain").hidden=false;syncPin();refreshCloud(true);
+  clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(document.hidden)return;if(onTab("files"))refresh(true);else if(onTab("cloud"))refreshCloud(true)},8000)}}
 $("refresh").onclick=async()=>{if(await refresh())toast("목록을 새로 불러왔어요")};
-$("relock").onclick=()=>{PIN="";sstore.set("pin",null);clearInterval(refreshTimer);$("filesmain").hidden=true;$("pinbox").hidden=false;pins.forEach(p=>p.value="");pins[0].focus()};
+$("relock").onclick=()=>{lockFiles();pins[0].focus()};
 
 // ── 올리기: 끌어다 놓기 · 자동 업로드 · 진행 막대 ──
 const MAXB=MAXMB*1048576;
-function qitem(name){const d=document.createElement("div");d.className="qitem";
- d.innerHTML='<div class="qhead"><span class="qname"></span><span class="qstate muted">대기</span></div><div class="progress"><i></i></div><div class="qmsg muted"></div>';
- d.querySelector(".qname").textContent=name;$("queue").prepend(d);return {el:d,bar:d.querySelector("i"),state:d.querySelector(".qstate"),msg:d.querySelector(".qmsg")}}
+function qitem(name,box){const d=document.createElement("div");d.className="qitem";
+ d.innerHTML='<div class="qhead"><span class="qname"></span><button class="btn ghost small qcancel" type="button" hidden>취소</button><span class="qstate muted">대기</span></div><div class="progress"><i></i></div><div class="qmsg muted"></div>';
+ d.querySelector(".qname").textContent=name;$(box||"queue").prepend(d);
+ return {el:d,bar:d.querySelector("i"),state:d.querySelector(".qstate"),msg:d.querySelector(".qmsg"),cancel:d.querySelector(".qcancel")}}
 function setQ(q,cls,state,msg){q.state.className="qstate "+cls;q.state.textContent=state;q.msg.className="qmsg "+cls;q.msg.textContent=msg||""}
 function sendOne(f,q){return new Promise(res=>{
  const x=new XMLHttpRequest();x.open("PUT","/api/upload?pin="+PIN+"&name="+encodeURIComponent(f.name));
@@ -589,10 +662,83 @@ drop.addEventListener("drop",e=>{e.stopPropagation();uploadFiles(e.dataTransfer.
 const hasFiles=e=>e.dataTransfer&&[...e.dataTransfer.types].includes("Files");
 window.addEventListener("dragover",e=>{if(hasFiles(e))e.preventDefault()});
 window.addEventListener("drop",e=>{if(!hasFiles(e))return;e.preventDefault();
- if(!$("filesmain").hidden){showTab("files");toast("점선 영역 안에 놓아 주세요",true)}else toast("먼저 접속 번호를 입력하세요",true)});
+ if(!UNLOCKED){toast("먼저 접속 번호를 입력하세요",true);return}
+ if(!onTab("cloud"))showTab("files");toast("점선 영역 안에 놓아 주세요",true)});
+
+// ── 공용 보관함: 어떤 파일이든 · 차례로 올리기 · 속도/남은 시간 · 취소 · 지우기(휴지통) ──
+const CMAXB=CLOUDMAXGB*1073741824;
+let CFILES=[],CROOM=Infinity;
+const left=s=>s<60?Math.ceil(s)+"초":s<3600?Math.ceil(s/60)+"분":(s/3600).toFixed(1)+"시간";
+function crow(f){const li=document.createElement("li");
+ const ic=document.createElement("div");ic.className="ficon cloud";ic.innerHTML=ICON.file;
+ const info=document.createElement("div");info.className="finfo";
+ const nm=document.createElement("div");nm.className="fname";nm.textContent=f.name;
+ const meta=document.createElement("div");meta.className="fmeta";meta.textContent=kb(f.size)+" · "+f.time;
+ info.append(nm,meta);
+ const act=document.createElement("div");act.className="fact";
+ const a=document.createElement("a");a.className="btn primary small";a.href="/api/cloud/download?pin="+PIN+"&name="+encodeURIComponent(f.name);a.setAttribute("download",f.name);
+ a.innerHTML=ICON.down+"<span>받기</span>";a.onclick=()=>toast("내려받기를 시작했어요 — 브라우저의 다운로드 목록을 확인하세요");
+ const del=document.createElement("button");del.className="btn danger small";del.type="button";del.textContent="지우기";
+ del.onclick=async()=>{if(!confirm("'"+f.name+"' 을(를) 보관함에서 지울까요?\n(서버 PC 의 휴지통 폴더로 옮겨지고, 다른 사람 화면에서도 사라집니다)"))return;
+  let r;try{r=await fetch("/api/cloud/delete?pin="+PIN+"&name="+encodeURIComponent(f.name),{method:"POST"})}catch(e){toast("서버에 연결할 수 없어요",true);return}
+  if(r.status===403||r.status===429){pinError("번호를 다시 입력하세요.");return}
+  toast(r.ok?"지웠어요 (휴지통으로 옮김)":"이미 없는 파일이에요",!r.ok);refreshCloud(true)};
+ act.append(a,del);li.append(ic,info,act);return li}
+function renderCloud(){const q=$("cfind").value.trim().toLowerCase(),list=CFILES.filter(f=>!q||f.name.toLowerCase().includes(q));
+ $("clist").replaceChildren(...(list.length?list.map(crow):[emptyLi(CFILES.length?"찾는 이름의 파일이 없습니다.":"아직 올린 파일이 없습니다.")]))}
+async function refreshCloud(quiet){
+ let r;try{r=await fetch("/api/cloud/list?pin="+PIN)}catch(e){if(!quiet)toast("서버에 연결할 수 없어요. 서버 PC 가 켜져 있나요?",true);return false}
+ if(r.status===403){pinError("번호가 맞지 않습니다.");return false}
+ if(r.status===429){pinError("너무 많이 틀렸습니다. 잠시 뒤에 다시 하세요.");return false}
+ const d=await r.json();CFILES=d.files;CROOM=d.room;
+ const total=CFILES.reduce((s,f)=>s+f.size,0);
+ $("croom").textContent="파일 "+CFILES.length+"개 · "+kb(total)+" · 서버 PC 에 더 올릴 수 있는 공간 "+kb(d.room);
+ renderCloud();return true}
+$("crefresh").onclick=async()=>{if(await refreshCloud())toast("목록을 새로 불러왔어요")};
+$("cfind").oninput=renderCloud;
+
+const cwait=[];let cbusy=false;
+function csendOne(f,q){return new Promise(res=>{
+ const x=new XMLHttpRequest();x.open("PUT","/api/cloud/upload?pin="+PIN+"&name="+encodeURIComponent(f.name));
+ const t0=performance.now();setQ(q,"muted","올리는 중…","");q.cancel.hidden=false;q.cancel.onclick=()=>x.abort();
+ x.upload.onprogress=e=>{if(!e.lengthComputable||!e.total)return;const p=e.loaded/e.total,v=e.loaded/Math.max((performance.now()-t0)/1000,.001);
+  q.bar.style.width=(p*100)+"%";q.state.textContent=Math.floor(p*100)+"%";
+  q.msg.textContent=kb(e.loaded)+" / "+kb(e.total)+" · "+kb(v)+"/초"+(p<1?" · 약 "+left((e.total-e.loaded)/v)+" 남음":" · 저장하는 중…")};
+ const done=ok=>{q.cancel.hidden=true;res(ok)};
+ x.onload=()=>{let d={};try{d=JSON.parse(x.responseText)}catch(e){}
+  if(x.status===200){q.bar.style.width="100%";setQ(q,"ok","완료 ✓","올렸습니다: "+d.saved+" ("+kb(d.size)+", "+left((performance.now()-t0)/1000)+" 걸림)");done(true)}
+  else{setQ(q,"bad","실패",d.error||("올리지 못했습니다 ("+x.status+")"));done(false)}};
+ x.onerror=()=>{setQ(q,"bad","실패","연결이 끊겼습니다. 서버 PC 가 켜져 있는지 확인하고 다시 올려 주세요.");done(false)};
+ x.onabort=()=>{setQ(q,"muted","취소","올리기를 취소했습니다.");done(false)};
+ x.send(f)})}
+async function cloudPump(){cbusy=true;let okN=0,n=0;
+ while(cwait.length){const [f,q]=cwait.shift();n++;if(await csendOne(f,q))okN++;refreshCloud(true)}
+ cbusy=false;if(n)toast(okN===n?(okN+"개 올렸어요 ✓"):(okN+"개 올림, "+(n-okN)+"개는 못 올렸어요"),okN!==n)}
+function cloudUpload(list){
+ if(!UNLOCKED){toast("먼저 접속 번호를 입력하세요",true);return}
+ for(const f of list){const q=qitem(f.name,"cqueue");
+  if(f.size>CMAXB){setQ(q,"bad","거부","파일이 너무 큽니다. (한 개 최대 "+CLOUDMAXGB+"GB)");continue}
+  if(f.size>CROOM){setQ(q,"bad","거부","서버 PC 의 저장 공간이 부족합니다. (남은 공간 "+kb(CROOM)+")");continue}
+  const item=[f,q];cwait.push(item);setQ(q,"muted","대기",kb(f.size));q.cancel.hidden=false;
+  q.cancel.onclick=()=>{const i=cwait.indexOf(item);if(i>=0){cwait.splice(i,1);q.cancel.hidden=true;setQ(q,"muted","취소","올리기를 취소했습니다.")}}}
+ if(!cbusy)cloudPump()}
+const cdrop=$("cdrop");
+cdrop.onclick=()=>$("cfile").click();
+cdrop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("cfile").click()}});
+$("cfile").onchange=e=>{cloudUpload([...e.target.files]);e.target.value=""};
+["dragenter","dragover"].forEach(ev=>cdrop.addEventListener(ev,e=>{e.preventDefault();cdrop.classList.add("over")}));
+["dragleave","drop"].forEach(ev=>cdrop.addEventListener(ev,e=>{e.preventDefault();cdrop.classList.remove("over")}));
+cdrop.addEventListener("drop",e=>{e.stopPropagation();
+ const items=[...(e.dataTransfer.items||[])].filter(it=>it.kind==="file"),files=[...e.dataTransfer.files];
+ const dirs=new Set(items.map((it,i)=>it.webkitGetAsEntry&&it.webkitGetAsEntry()?.isDirectory?i:-1).filter(i=>i>=0));
+ if(dirs.size)toast("폴더는 올릴 수 없어요. zip 으로 묶어서 올려 주세요",true);
+ cloudUpload(files.filter((f,i)=>!dirs.has(i)))});
+window.addEventListener("beforeunload",e=>{if(cbusy||uploading){e.preventDefault();e.returnValue=""}});
+
+if(location.hash==="#cloud")showTab("cloud");
 
 // 새로고침해도 번호를 다시 묻지 않게 (이 탭을 닫으면 지워진다)
-const savedPin=sstore.get("pin");if(savedPin&&/^\d{4}$/.test(savedPin)){unlock(savedPin).then(()=>{if(!$("pinbox").hidden){$("pinmsg").textContent="서버가 다시 켜져서 번호가 바뀌었을 수 있어요. 새 번호를 입력하세요."}})}
+const savedPin=sstore.get("pin");if(savedPin&&/^\d{4}$/.test(savedPin)){unlock(savedPin).then(()=>{if(!UNLOCKED){$("pinmsg").textContent="서버가 다시 켜져서 번호가 바뀌었을 수 있어요. 새 번호를 입력하세요."}})}
 </script></main></body></html>
 """
 
@@ -601,18 +747,22 @@ const savedPin=sstore.get("pin");if(savedPin&&/^\d{4}$/.test(savedPin)){unlock(s
 class ShareServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, address, base_dir, pin, max_mb=50, log=print, assign=None):
+    def __init__(self, address, base_dir, pin, max_mb=50, log=print, assign=None, cloud_max_gb=20):
         super().__init__(address, Handler)
-        self.page = (PAGE.replace("__ASSIGN__", json.dumps(assign or parse_assign(DEFAULT_ASSIGN), ensure_ascii=False))
-                     .replace("__MAXMB__", f"{max_mb:g}"))
         self.base = Path(base_dir)
         self.send_dir = self.base / SEND
         self.recv_dir = self.base / RECEIVED
         self.unpacked_dir = self.recv_dir / UNPACKED
-        for d in (self.send_dir, self.recv_dir, self.unpacked_dir):
+        self.cloud_dir = self.base / CLOUD
+        self.trash_dir = self.cloud_dir / TRASH
+        self.page = (PAGE.replace("__ASSIGN__", json.dumps(assign or parse_assign(DEFAULT_ASSIGN), ensure_ascii=False))
+                     .replace("__MAXMB__", f"{max_mb:g}").replace("__CLOUDMAXGB__", f"{cloud_max_gb:g}")
+                     .replace("__CLOUDDIR__", html.escape(str(self.cloud_dir))))
+        for d in (self.send_dir, self.recv_dir, self.unpacked_dir, self.cloud_dir, self.trash_dir):
             d.mkdir(parents=True, exist_ok=True)
         self.pin = pin
         self.max_bytes = int(max_mb * 1024 * 1024)
+        self.cloud_max_bytes = int(cloud_max_gb * 1024 ** 3)
         self.log = log
         self.fails = {}                       # IP → (틀린 횟수, 잠금이 풀리는 시각)
         self._lock = threading.Lock()
@@ -629,6 +779,10 @@ class ShareServer(ThreadingHTTPServer):
             count += 1
             self.fails[ip] = (0, time.monotonic() + LOCK_SECONDS) if count >= MAX_FAILS else (count, 0.0)
             return False, 403
+
+    def cloud_room(self):
+        """보관함에 더 올릴 수 있는 바이트 수 (이 PC 에 KEEP_FREE 만큼은 남긴다)"""
+        return max(0, shutil.disk_usage(self.cloud_dir).free - KEEP_FREE)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -650,6 +804,90 @@ class Handler(BaseHTTPRequestHandler):
 
     def _json(self, code, data):
         self._send(code, json.dumps(data, ensure_ascii=False).encode("utf-8"))
+
+    def _fail(self, code, message):
+        """오류를 알리고 연결을 닫는다. 상대가 이미 끊었으면 조용히 넘어간다."""
+        self.close_connection = True
+        try:
+            self._json(code, {"error": message})
+        except OSError:
+            pass
+
+    def _send_file(self, path, ctype):
+        """파일을 조금씩 읽어 보낸다. 'Range: bytes=시작-끝' 이 오면 그 부분만 보낸다 (끊긴 내려받기 이어받기)."""
+        size = path.stat().st_size
+        start, end, partial = 0, size - 1, False
+        m = re.fullmatch(r"bytes=(\d*)-(\d*)", self.headers.get("Range", "").strip())
+        if m and (m.group(1) or m.group(2)):
+            if m.group(1):
+                start = int(m.group(1))
+                end = min(int(m.group(2)), size - 1) if m.group(2) else size - 1
+            else:
+                start = max(0, size - int(m.group(2)))
+            if start >= size or start > end:
+                return self._send(416, b"", extra={"Content-Range": f"bytes */{size}"})
+            partial = True
+        self.send_response(206 if partial else 200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(end - start + 1 if size else 0))
+        self.send_header("Content-Disposition", f"attachment; filename*=UTF-8''{quote(path.name)}")
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        if partial:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.end_headers()
+        remaining = end - start + 1 if size else 0
+        try:
+            with open(path, "rb") as f:
+                f.seek(start)
+                while remaining > 0:
+                    chunk = f.read(min(CHUNK, remaining))
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    remaining -= len(chunk)
+        except OSError:                                # 받는 쪽이 취소했다
+            self.close_connection = True
+            return False
+        return remaining == 0
+
+    def _receive(self, length, folder):
+        """본문 length 바이트를 folder 안의 임시 파일('.' 으로 시작, 목록에 안 보임)로 받아 그 경로를 돌려준다."""
+        fd, tmp_name = tempfile.mkstemp(prefix=".up-", suffix=".part", dir=folder)
+        tmp = Path(tmp_name)
+        try:
+            remaining = length
+            with os.fdopen(fd, "wb") as f:
+                while remaining > 0:
+                    chunk = self.rfile.read(min(CHUNK, remaining))
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    remaining -= len(chunk)
+            if remaining:
+                raise ValueError("파일이 중간에 끊겼습니다. 다시 올려 주세요.")
+        except BaseException:
+            tmp.unlink(missing_ok=True)
+            raise
+        return tmp
+
+    def _length(self, limit):
+        """Content-Length 를 읽는다. 없거나 한도를 넘으면 오류를 보내고 None."""
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            return self._fail(411, "파일 크기를 알 수 없습니다.")
+        if length < 0 or length > limit:
+            gb = limit / 1024 ** 3
+            return self._fail(413, f"파일이 너무 큽니다. (최대 {gb:g}GB)" if gb >= 1 else f"파일이 너무 큽니다. (최대 {limit // 1048576}MB)")
+        return length
+
+    def _cloud_file(self, query):
+        """?name= 에 해당하는 보관함 파일 (없으면 None)"""
+        name = safe_name((query.get("name") or [""])[0], any_type=True)
+        target = (self.server.cloud_dir / name) if name else None
+        return target if target and target.is_file() else None
 
     def _guard(self, query):
         ip = self.client_address[0]
@@ -680,15 +918,29 @@ class Handler(BaseHTTPRequestHandler):
             target = (self.server.send_dir / name) if name else None
             if not target or not target.is_file():
                 return self._json(404, {"error": "파일을 찾을 수 없습니다."})
-            data = target.read_bytes()
-            self.server.log(f"[내려받기] {self.client_address[0]} ← {name} ({len(data) // 1024} KB)")
-            return self._send(200, data, "application/zip",
-                              {"Content-Disposition": f"attachment; filename*=UTF-8''{quote(name)}"})
+            self.server.log(f"[내려받기] {self.client_address[0]} ← {name} ({target.stat().st_size // 1024} KB)")
+            return self._send_file(target, "application/zip")
+        if url.path == "/api/cloud/list":
+            if not self._guard(query):
+                return
+            return self._json(200, {"files": list_files(self.server.cloud_dir, "*"), "room": self.server.cloud_room(),
+                                    "max": self.server.cloud_max_bytes})
+        if url.path == "/api/cloud/download":
+            if not self._guard(query):
+                return
+            target = self._cloud_file(query)
+            if not target:
+                return self._json(404, {"error": "파일을 찾을 수 없습니다."})
+            if self._send_file(target, "application/octet-stream") and not self.headers.get("Range"):
+                self.server.log(f"[보관함 내려받기] {self.client_address[0]} ← {target.name} ({target.stat().st_size / 1048576:.1f} MB)")
+            return
         self._json(404, {"error": "없는 주소입니다."})
 
     def do_PUT(self):
         url = urlparse(self.path)
         query = parse_qs(url.query)
+        if url.path == "/api/cloud/upload":
+            return self._cloud_upload(query)
         if url.path != "/api/upload":
             return self._json(404, {"error": "없는 주소입니다."})
         if not self._guard(query):
@@ -696,30 +948,15 @@ class Handler(BaseHTTPRequestHandler):
             return
         name = safe_name((query.get("name") or [""])[0])
         if not name:
-            self.close_connection = True
-            return self._json(400, {"error": "zip 파일만 올릴 수 있습니다."})
+            return self._fail(400, "zip 파일만 올릴 수 있습니다.")
+        length = self._length(self.server.max_bytes)
+        if length is None:
+            return
+        if length == 0:
+            return self._fail(400, "빈 파일입니다.")
+        tmp = None
         try:
-            length = int(self.headers.get("Content-Length", ""))
-        except ValueError:
-            self.close_connection = True
-            return self._json(411, {"error": "파일 크기를 알 수 없습니다."})
-        if length <= 0 or length > self.server.max_bytes:
-            self.close_connection = True
-            return self._json(413, {"error": f"파일이 너무 큽니다. (최대 {self.server.max_bytes // 1048576}MB)"})
-        fd, tmp_name = tempfile.mkstemp(suffix=".part", dir=self.server.recv_dir)
-        os.close(fd)
-        tmp = Path(tmp_name)
-        try:
-            remaining = length
-            with open(tmp, "wb") as f:
-                while remaining > 0:
-                    chunk = self.rfile.read(min(65536, remaining))
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    remaining -= len(chunk)
-            if remaining:
-                raise ValueError("파일이 중간에 끊겼습니다. 다시 올려 주세요.")
+            tmp = self._receive(length, self.server.recv_dir)
             labels, rows, _entries = inspect_zip(tmp, self.server.max_bytes * 4)
             final = unique_path(self.server.recv_dir, name)
             tmp.replace(final)
@@ -728,10 +965,52 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"saved": final.name, "labels": labels, "rows": rows})
         except (ValueError, zipfile.BadZipFile, OSError) as e:
             self.server.log(f"[거부] {self.client_address[0]} 올린 파일: {e}")
-            self.close_connection = True
-            self._json(400, {"error": str(e)})
+            self._fail(400, str(e))
         finally:
-            tmp.unlink(missing_ok=True)
+            if tmp:
+                tmp.unlink(missing_ok=True)
+
+    def _cloud_upload(self, query):
+        """보관함에 올리기 — 종류는 묻지 않고, 크기 한도와 이 PC 의 남은 공간만 본다."""
+        if not self._guard(query):
+            self.close_connection = True
+            return
+        name = safe_name((query.get("name") or [""])[0], any_type=True)
+        if not name:
+            return self._fail(400, "파일 이름을 쓸 수 없습니다.")
+        length = self._length(self.server.cloud_max_bytes)
+        if length is None:
+            return
+        if length > self.server.cloud_room():
+            return self._fail(507, "서버 PC 의 저장 공간이 부족합니다.")
+        tmp = None
+        try:
+            tmp = self._receive(length, self.server.cloud_dir)
+            final = unique_path(self.server.cloud_dir, name)
+            tmp.replace(final)
+            self.server.log(f"[보관함 받음] {self.client_address[0]} → {final.name} ({length / 1048576:.1f} MB)")
+            self._json(200, {"saved": final.name, "size": length})
+        except (ValueError, OSError) as e:
+            self.server.log(f"[보관함 실패] {self.client_address[0]} {name}: {e}")
+            self._fail(400, str(e))
+        finally:
+            if tmp:
+                tmp.unlink(missing_ok=True)
+
+    def do_POST(self):
+        url = urlparse(self.path)
+        query = parse_qs(url.query)
+        if url.path != "/api/cloud/delete":
+            return self._json(404, {"error": "없는 주소입니다."})
+        if not self._guard(query):
+            return
+        target = self._cloud_file(query)
+        if not target:
+            return self._json(404, {"error": "파일을 찾을 수 없습니다."})
+        moved = unique_path(self.server.trash_dir, target.name)
+        target.replace(moved)
+        self.server.log(f"[보관함 지움] {self.client_address[0]} {target.name} → {TRASH}/{moved.name}")
+        self._json(200, {"trashed": moved.name})
 
 
 def local_addresses():
@@ -765,7 +1044,8 @@ def main(argv=None):
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--host", default="0.0.0.0", help="접속을 받을 주소. 이 PC 안에서만 시험하려면 127.0.0.1 (기본: 같은 네트워크의 다른 PC 도 접속 가능)")
     ap.add_argument("--max-mb", type=float, default=50, help="올릴 수 있는 zip 의 최대 크기(MB)")
-    ap.add_argument("--minutes", type=float, default=120, help="이 시간이 지나면 서버를 저절로 끈다")
+    ap.add_argument("--cloud-max-gb", type=float, default=20, help="공용 보관함에 올릴 수 있는 파일 한 개의 최대 크기(GB)")
+    ap.add_argument("--minutes", type=float, default=120, help="이 시간이 지나면 서버를 저절로 끈다 (0 이면 끄지 않음)")
     ap.add_argument("--assign", default=DEFAULT_ASSIGN, help="검수자별 번호 범위 (예: 김동훈:1-300,이후영:301-600,지혜성:601-900)")
     args = ap.parse_args(argv)
     pin = f"{secrets.randbelow(10000):04d}"
@@ -776,7 +1056,8 @@ def main(argv=None):
         return 2
     try:
         server = ShareServer((args.host, args.port), Path(args.dir).expanduser(), pin, args.max_mb,
-                             log=lambda m: print(f"  {time.strftime('%H:%M:%S')} {m}", flush=True), assign=assign)
+                             log=lambda m: print(f"  {time.strftime('%H:%M:%S')} {m}", flush=True), assign=assign,
+                             cloud_max_gb=args.cloud_max_gb)
     except OSError as e:
         print(f"서버를 시작하지 못했습니다: {e}\n(이미 같은 포트로 실행 중인 서버가 있으면 그 창을 먼저 닫으세요.)")
         return 2
@@ -791,11 +1072,16 @@ def main(argv=None):
     print(f"\n  접속 번호:  {pin}      (이 번호를 알려 준 사람만 쓸 수 있습니다)")
     print(f"  보낼 파일 폴더:   {server.send_dir}")
     print(f"  받은 파일 폴더:   {server.recv_dir}   (자동으로 풀린 것: {server.unpacked_dir})")
-    print(f"  {args.minutes:g}분 뒤 저절로 꺼지고, 끝나면 이 창을 닫거나 Ctrl+C 를 누르세요.")
+    print(f"  공용 보관함:      {server.cloud_dir}   (주소 뒤에 /#cloud 를 붙이면 바로 열림, "
+          f"한 개 최대 {args.cloud_max_gb:g}GB, 남은 공간 {server.cloud_room() / 1024 ** 3:.1f}GB)")
+    if args.minutes > 0:
+        print(f"  {args.minutes:g}분 뒤 저절로 꺼지고, 끝나면 이 창을 닫거나 Ctrl+C 를 누르세요.")
+        timer = threading.Timer(args.minutes * 60, server.shutdown)
+        timer.daemon = True
+        timer.start()
+    else:
+        print("  저절로 꺼지지 않습니다. 끝나면 이 창을 닫거나 Ctrl+C 를 누르세요.")
     print("=" * 62, flush=True)
-    timer = threading.Timer(args.minutes * 60, server.shutdown)
-    timer.daemon = True
-    timer.start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

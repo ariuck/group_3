@@ -4,6 +4,7 @@
 """
 import http.client
 import io
+from html import escape as html_escape
 import json
 import shutil
 import tempfile
@@ -24,6 +25,10 @@ def make_zip(files):
         for name, data in files.items():
             z.writestr(name, data)
     return buf.getvalue()
+
+
+def list_names(folder):
+    return sorted(p.name for p in Path(folder).iterdir() if p.is_file())
 
 
 GOOD = make_zip({"DS1/labels/train/a.txt": "2 0.5 0.5 0.2 0.2\n", "DS1/labels/train/b.txt": "",
@@ -151,6 +156,82 @@ class ShareServerTest(unittest.TestCase):
         self.assertEqual(self.upload("a.zip", GOOD, pin="0000")[0], 403)
         self.assertEqual(list(self.server.recv_dir.glob("*.zip")), [])
 
+    # ── 공용 보관함 ────────────────────────────────────────────────────
+    def cloud_upload(self, name, data, pin=PIN):
+        return self.api("PUT", f"/api/cloud/upload?pin={pin}&name={quote(name, safe='')}", data)
+
+    def test_cloud_takes_any_file_type_and_gives_it_back(self):
+        video = bytes(range(256)) * 4000                                        # 약 1MB, zip 이 아닌 아무 파일
+        status, data = self.cloud_upload("발표 영상.mp4", video)
+        self.assertEqual((status, data), (200, {"saved": "발표 영상.mp4", "size": len(video)}))
+        self.assertEqual(self.cloud_upload("빈 파일.txt", b"")[0], 200)                         # 빈 파일도 된다
+        status, data = self.api("GET", f"/api/cloud/list?pin={PIN}")
+        self.assertEqual(sorted(f["name"] for f in data["files"]), ["발표 영상.mp4", "빈 파일.txt"])   # 휴지통 폴더는 목록에 없다
+        self.assertGreater(data["room"], 0)
+        status, body, headers = self.call("GET", f"/api/cloud/download?pin={PIN}&name={quote('발표 영상.mp4')}")
+        self.assertEqual((status, body), (200, video))
+        self.assertEqual(headers["Content-Type"], "application/octet-stream")
+        self.assertIn("attachment", headers["Content-Disposition"])
+        self.assertEqual(headers["Accept-Ranges"], "bytes")
+        self.assertEqual([p.name for p in self.server.cloud_dir.glob(".*")], [])                # 임시 파일이 남지 않는다
+
+    def test_cloud_download_can_resume_with_range(self):
+        data = bytes(range(256)) * 10
+        self.cloud_upload("a.bin", data)
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        self.addCleanup(c.close)
+        for rng, part in (("bytes=100-", data[100:]), ("bytes=10-19", data[10:20]), ("bytes=-5", data[-5:])):
+            c.request("GET", f"/api/cloud/download?pin={PIN}&name=a.bin", headers={"Range": rng})
+            r = c.getresponse()
+            self.assertEqual((r.status, r.read()), (206, part), rng)
+        c.request("GET", f"/api/cloud/download?pin={PIN}&name=a.bin", headers={"Range": f"bytes={len(data)}-"})
+        r = c.getresponse()
+        r.read()
+        self.assertEqual((r.status, r.getheader("Content-Range")), (416, f"bytes */{len(data)}"))
+
+    def test_cloud_never_overwrites_and_drops_folder_parts(self):
+        self.cloud_upload("문서.pdf", b"one")
+        status, data = self.cloud_upload("문서.pdf", b"two")
+        self.assertNotEqual(data["saved"], "문서.pdf")
+        self.assertEqual((self.server.cloud_dir / "문서.pdf").read_bytes(), b"one")
+        status, data = self.cloud_upload("../../밖.exe", b"x")
+        self.assertEqual((status, data["saved"]), (200, "밖.exe"))
+        self.assertFalse((self.tmp / "밖.exe").exists())
+        self.assertEqual(self.cloud_upload("CON.txt", b"x")[1]["saved"], "_CON.txt")             # Windows 예약 이름
+        self.assertEqual(self.cloud_upload("", b"x")[0], 400)
+        self.assertEqual(self.cloud_upload("...", b"x")[0], 400)
+
+    def test_cloud_delete_moves_the_file_to_the_trash(self):
+        self.cloud_upload("지울것.zip", b"data")
+        self.assertEqual(self.api("POST", f"/api/cloud/delete?pin=0000&name={quote('지울것.zip')}")[0], 403)
+        status, data = self.api("POST", f"/api/cloud/delete?pin={PIN}&name={quote('지울것.zip')}")
+        self.assertEqual(status, 200)
+        self.assertFalse((self.server.cloud_dir / "지울것.zip").exists())
+        self.assertEqual((self.server.trash_dir / data["trashed"]).read_bytes(), b"data")       # 완전히 지우지 않는다
+        self.assertEqual(self.api("GET", f"/api/cloud/list?pin={PIN}")[1]["files"], [])
+        self.assertEqual(self.api("POST", f"/api/cloud/delete?pin={PIN}&name={quote(ss.TRASH)}")[0], 404)   # 폴더는 못 지운다
+        self.assertEqual(self.api("POST", f"/api/cloud/delete?pin={PIN}&name={quote('없음.txt')}")[0], 404)
+
+    def test_cloud_needs_the_pin_and_respects_the_limits(self):
+        self.assertEqual(self.cloud_upload("a.txt", b"x", pin="0000")[0], 403)
+        self.assertEqual(self.api("GET", "/api/cloud/list")[0], 403)
+        self.assertEqual(self.api("GET", "/api/cloud/download?name=a.txt")[0], 403)
+        self.server.cloud_max_bytes = 100                                       # 시험용으로 아주 작게
+        self.assertEqual(self.cloud_upload("big.bin", b"\0" * 5000)[0], 413)
+        self.server.cloud_max_bytes = 10 ** 12
+        self.server.cloud_room = lambda: 10                                     # 디스크가 거의 찼을 때
+        self.assertEqual(self.cloud_upload("big.bin", b"\0" * 5000)[0], 507)
+        self.assertEqual(list_names(self.server.cloud_dir), [])
+
+    def test_cloud_tab_is_on_the_page(self):
+        server = ss.ShareServer(("127.0.0.1", 0), self.tmp / "보관", PIN, log=self.logs.append, cloud_max_gb=7.5)
+        self.addCleanup(server.server_close)
+        for needle in ("공용 보관함", 'id="cdrop"', "/api/cloud/upload?pin=", "/api/cloud/download?pin=", "/api/cloud/delete?pin=",
+                       "const CLOUDMAXGB=7.5;", "최대 7.5GB", "#cloud", "휴지통", "x.abort()", html_escape(str(server.cloud_dir))):
+            self.assertIn(needle, server.page, needle)
+        for placeholder in ("__CLOUDMAXGB__", "__CLOUDDIR__"):
+            self.assertNotIn(placeholder, server.page)
+
     # ── 가이드 화면 ────────────────────────────────────────────────────
     def test_page_has_step_by_step_guides_and_the_review_ranges(self):
         status, body, _h = self.call("GET", "/")
@@ -199,6 +280,9 @@ class ShareServerTest(unittest.TestCase):
         self.assertEqual(ss.safe_name("C:\\x\\y.zip"), "y.zip")
         self.assertIsNone(ss.safe_name("a.exe"))
         self.assertIsNone(ss.safe_name(".zip"))
+        self.assertEqual(ss.safe_name("C:\\영상\\회의 1.mp4", any_type=True), "회의 1.mp4")
+        self.assertEqual(ss.safe_name("a\x01b.txt", any_type=True), "ab.txt")
+        self.assertIsNone(ss.safe_name("x" * 151, any_type=True))
         self.assertTrue(ss.is_local_client("192.168.0.5") and ss.is_local_client("10.1.2.3") and ss.is_local_client("127.0.0.1"))
         self.assertTrue(ss.is_local_client("::ffff:192.168.1.1"))
         self.assertFalse(ss.is_local_client("8.8.8.8"))
