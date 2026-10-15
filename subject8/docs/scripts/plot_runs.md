@@ -14,7 +14,7 @@ python scripts/plot_runs.py --runs baseline_v4 exp001_v4_imgsz1280
 
 | 입력 | 출력 (Git 에 올림) |
 |---|---|
-| `runs/<실행>/results.csv`, `runs/<실행>/args.yaml` | `reports/figures/runs/<실행>.png` (실행당 약 0.1MB), `reports/figures/comparison/runs_comparison_<Dataset Version>.png`, `reports/runs_summary.csv` |
+| `runs/<실행>/results.csv`, `runs/<실행>/args.yaml` | `reports/figures/runs/<실행>.png` (실행당 약 0.1MB), `reports/figures/comparison/runs_comparison_<Dataset Version>.png`, `reports/04_improvement/runs_summary.csv` |
 
 ## 주요 구성요소
 

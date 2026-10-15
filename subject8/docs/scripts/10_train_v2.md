@@ -17,9 +17,9 @@ VS Code: 실행·디버그 → `10 exp001 imgsz 1280` / `10 exp002 imgsz 1920` /
 
 | Dataset Version | 역할 | 출력 |
 |---|---|---|
-| `kimchi_v4` | **공식 개선 실험 exp001** (Baseline = `baseline_v4`, 같은 Val) | `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/exp001_training_condition.md` |
-| `kimchi_v4` + `--exp exp002` | **개선 실험 exp002** (비교 대상 exp001) | `runs/exp002_v4_imgsz1920/`, `models/improved/exp002_best.pt`, `reports/exp002_training_condition.md` |
-| `kimchi_v4` + `--exp exp003` | **개선 실험 exp003** — epochs 50 → 100 (비교 대상 exp002) | `runs/exp003_v4_imgsz1920_epoch100/`, `models/improved/exp003_best.pt`, `reports/exp003_training_condition.md` |
+| `kimchi_v4` | **공식 개선 실험 exp001** (Baseline = `baseline_v4`, 같은 Val) | `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/04_improvement/exp001_training_condition.md` |
+| `kimchi_v4` + `--exp exp002` | **개선 실험 exp002** (비교 대상 exp001) | `runs/exp002_v4_imgsz1920/`, `models/improved/exp002_best.pt`, `reports/04_improvement/exp002_training_condition.md` |
+| `kimchi_v4` + `--exp exp003` | **개선 실험 exp003** — epochs 50 → 100 (비교 대상 exp002) | `runs/exp003_v4_imgsz1920_epoch100/`, `models/improved/exp003_best.pt`, `reports/04_improvement/exp003_training_condition.md` |
 | `kimchi_v3` | 이력 (데이터 개선 과정) | `runs/history_v3_imgsz1280/`, `models/improved/history_v3_imgsz1280_best.pt`, `reports/history/history_v3_imgsz1280_training_condition.md` |
 | `kimchi_v2` | 이력 (데이터 개선 과정) | `runs/history_v2_imgsz1280/`, `models/improved/history_v2_imgsz1280_best.pt`, `reports/history/history_v2_imgsz1280_training_condition.md` |
 | `kimchi_v1` | 예비 실험 (해상도 가설 첫 확인) | `runs/pilot_v1_imgsz1280/` (Weight 보관·기록 없음) |
@@ -33,7 +33,7 @@ VS Code: 실행·디버그 → `10 exp001 imgsz 1280` / `10 exp002 imgsz 1920` /
 | `EXPERIMENTS` | 실험별로 06 `BASELINE` 에서 바꾸는 값과 비교 대상 (+ 선택 `run_name`, `note`). exp001 `imgsz=1280`, exp002 `imgsz=1920, batch=6`, exp003 exp002 + `epochs=100` |
 | `CONDITION` | `main()` 안에서 `BASELINE` + 실험의 바꾸는 값 |
 | `RUN_NAMES` | Dataset Version → 실행 폴더 이름 |
-| `SAVE_NAMES` | Weight·기록 파일 이름 (`models/improved/<이름>_best.pt`, `reports/<이름>_training_condition.md`). `kimchi_v1` 은 없음 = 보관하지 않음 |
+| `SAVE_NAMES` | Weight·기록 파일 이름 (`models/improved/<이름>_best.pt`, `reports/04_improvement/<이름>_training_condition.md`). `kimchi_v1` 은 없음 = 보관하지 않음 |
 | `SPLIT_NOTES` | 조건 기록 메모에 넣을 버전별 데이터 설명 |
 | `main()` | 06 의 `precheck()` → [`train_detector`](../src/train_detector.md) → 점검 → (`SAVE_NAMES` 에 있으면) Weight 보관 · 조건 기록 |
 

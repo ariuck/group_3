@@ -9,13 +9,13 @@
 ```bash
 cd subject8
 python scripts/04_import_label_fixes.py            # 확인만 — 바뀐 사진 수, Class 별 BBox 변화, 작업 목록 대조
-python scripts/04_import_label_fixes.py --apply    # 복사 + reports/class5/label_changes_kimchi_v3.csv
+python scripts/04_import_label_fixes.py --apply    # 복사 + reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv
 python scripts/03_build_split.py --version kimchi_v3 --copy-files
 ```
 
 | 입력 | 출력 |
 |---|---|
-| `--src` (기본 `group_3/subject7/data/work/_RAW밖/`), `data/subject7_final/labels/`, `reports/class5/class5_relabel_worklist.csv` | `data/label_fixes/kimchi_v3/*.txt`, `reports/class5/label_changes_kimchi_v3.csv` |
+| `--src` (기본 `group_3/subject7/data/work/_RAW밖/`), `data/subject7_final/labels/`, `reports/01_data/label_fixes_kimchi_v3/class5_relabel_worklist.csv` | `data/label_fixes/kimchi_v3/*.txt`, `reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` |
 
 ## 주요 구성요소
 
@@ -40,4 +40,4 @@ python scripts/03_build_split.py --version kimchi_v3 --copy-files
 
 - 작업 목록의 "라벨 목록 No" 는 **원본 TXT 줄 번호**다. 한 사진에서 여러 개를 지울 때는 큰 번호부터 지운다 (지우면 뒤 번호가 당겨짐). 대조는 원본 줄 기준이라 지운 순서와 관계없이 맞게 나온다.
 - `_RAW밖` 은 파일 이름만으로 저장되므로, 다른 목적으로 `data/raw` 밖 사진을 고친 적이 있으면 그 TXT 도 함께 비교된다 (교과 7 최종본에 없는 이름은 건너뜀).
-- `data/` 는 Git 에 올라가지 않는다. 변경 내역은 `reports/class5/label_changes_kimchi_v3.csv` 로 남는다.
+- `data/` 는 Git 에 올라가지 않는다. 변경 내역은 `reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` 로 남는다.

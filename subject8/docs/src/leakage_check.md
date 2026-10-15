@@ -32,8 +32,8 @@
 
 | 파일 | 내용 |
 |---|---|
-| `reports/audit/leakage_check.csv` | `metric, value` — 사진 수, 묶음 수, 완전 동일 쌍, 거의 같은 쌍(같은 묶음 / 다른 묶음), 평균 거리(같은 묶음 / 다른 묶음), 가장 가까운 사진까지 거리 최솟값·중앙값 |
-| `reports/audit/capture_group_summary.csv` | 묶음별 `images, date, start, end, scene, original_train, original_validation, near_dup_pairs, internal_median_distance` |
+| `reports/01_data/leakage_check.csv` | `metric, value` — 사진 수, 묶음 수, 완전 동일 쌍, 거의 같은 쌍(같은 묶음 / 다른 묶음), 평균 거리(같은 묶음 / 다른 묶음), 가장 가까운 사진까지 거리 최솟값·중앙값 |
+| `reports/01_data/capture_group_summary.csv` | 묶음별 `images, date, start, end, scene, original_train, original_validation, near_dup_pairs, internal_median_distance` |
 
 `df` 에는 `이미지 파일명`, `capture_group` 이 있어야 하고, `원래 split`·`이미지 유형` 이 있으면 묶음 표에 넣는다.
 

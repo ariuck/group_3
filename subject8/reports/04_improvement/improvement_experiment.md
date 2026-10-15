@@ -1,6 +1,6 @@
 # 개선 실험 설계 (`exp001`)
 
-> 산출물 · 20.3. 입력: 3일차 Dataset Version(`kimchi_v4`) + 6일차 [`failure_hypothesis.md`](failure_hypothesis.md)
+> 산출물 · 20.3. 입력: 3일차 Dataset Version(`kimchi_v4`) + 6일차 [`failure_hypothesis.md`](../03_failure_analysis/failure_hypothesis.md)
 > 숫자 근거: [`runs_summary.csv`](runs_summary.csv), [`exp001_training_condition.md`](exp001_training_condition.md) · 전체 기록: [`experiment_log.csv`](experiment_log.csv)
 
 > **작성 시점 메모**: 이 문서는 exp001 학습(2026-10-14) **이후에** 정리했다. 변경 변수와 이유는 학습 전 `failure_hypothesis.md` 5장(H4 → imgsz)에서 이미 정해져 있었고, 이 문서는 그것을 20.3 형식으로 옮겨 적은 것이다. 아래 "Validation 결과"는 학습 후에 채웠다.
@@ -14,7 +14,7 @@ Dataset kimchi_v4  +  failure_hypothesis.md (H4)
         ↓
 확인할 Validation 지표와 실패 패턴
         ↓
-reports/improvement_experiment.md
+reports/04_improvement/improvement_experiment.md
         ↓ (학습)
 runs/exp001_v4_imgsz1280/weights/best.pt → models/improved/exp001_best.pt
 ```
@@ -75,6 +75,7 @@ runs/exp001_v4_imgsz1280/weights/best.pt → models/improved/exp001_best.pt
 
 - 기대한 방향(mAP50-95·Recall 상승, Precision 유지)과 일치한다. best epoch 는 39 / 50.
 - 학습 시간 4분 36초 → 10분 16초, GPU 최대 메모리 2.1GB → 8.4GB.
+- 4개 실행의 비교·Class 별·비용 분석은 [`baseline_vs_improved.md`](baseline_vs_improved.md) 에 있다.
 - **아직 확인하지 않은 것**: 위 4장의 "작은 박스 Recall"과 CLASS_ERROR·FP_DUPLICATE 건수를 exp001 Weight 로 다시 집계하는 일 (`scripts/09_collect_failures.py`). 이 결과가 나오기 전까지 "H4 가 맞았다"고 단정하지 않고, "mAP50-95 가 올랐다"까지만 말할 수 있다.
 - Frozen Test 는 아직 평가하지 않았다.
 

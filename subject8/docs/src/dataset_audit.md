@@ -42,9 +42,9 @@
 
 | 파일 | 내용 |
 |---|---|
-| `reports/audit/audit_issue.csv` | `file, line, issue, detail` (UTF-8, BOM 없음) |
-| `reports/audit/audit_summary.csv` | `Category, Item, Count` — Overview · Class BBox · BBox per Image · BBox per Image Distribution · Scene Type · Source Dataset · Original Split (UTF-8 BOM) |
-| `reports/audit/audit_class_scene.csv` | `class_id, class_name, images_total, kimchi_with_target, object_only, …` — 각 Class 가 들어 있는 **사진 수**를 장면 유형별로 (UTF-8 BOM) |
+| `reports/01_data/audit_issue.csv` | `file, line, issue, detail` (UTF-8, BOM 없음) |
+| `reports/01_data/audit_summary.csv` | `Category, Item, Count` — Overview · Class BBox · BBox per Image · BBox per Image Distribution · Scene Type · Source Dataset · Original Split (UTF-8 BOM) |
+| `reports/01_data/audit_class_scene.csv` | `class_id, class_name, images_total, kimchi_with_target, object_only, …` — 각 Class 가 들어 있는 **사진 수**를 장면 유형별로 (UTF-8 BOM) |
 
 ## 의존성
 

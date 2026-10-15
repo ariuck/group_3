@@ -43,7 +43,7 @@ def _clock(name: str) -> str:
 def run_leakage_check(df: pd.DataFrame, images_dir: Path, report_dir: Path, workers: int = None) -> Dict:
     """df 에는 `이미지 파일명`, `capture_group` 이 있어야 한다. (`원래 split`, `이미지 유형` 이 있으면 요약에 넣는다)
 
-    출력: reports/audit/leakage_check.csv (지표), reports/audit/capture_group_summary.csv (묶음별 표)
+    출력: reports/01_data/leakage_check.csv (지표), reports/01_data/capture_group_summary.csv (묶음별 표)
     """
     images_dir, report_dir = Path(images_dir), Path(report_dir)
     report_dir.mkdir(parents=True, exist_ok=True)

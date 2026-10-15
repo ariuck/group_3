@@ -21,7 +21,7 @@ def section(title):
 
 def main():
     data_root = PROJECT_ROOT / "data" / "subject7_final"
-    report_dir = PROJECT_ROOT / "reports" / "audit"
+    report_dir = PROJECT_ROOT / "reports" / "01_data"
 
     print("=" * 65)
     print(" [Subject 08] Day 2: Dataset Audit (Subject 7 FINAL 900 Images)")

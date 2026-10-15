@@ -13,7 +13,7 @@ python scripts/02_audit_subject7_final.py
 
 | 입력 | 출력 |
 |---|---|
-| `data/subject7_final/` (`images/`, `labels/`, `검수표.csv`) — 교과 7 [`build_final`](../../../subject7/docs/tools/build_final.md) 결과 | `reports/audit/audit_issue.csv`, `reports/audit/audit_summary.csv`, `reports/audit/audit_class_scene.csv`, `reports/audit/leakage_check.csv`, `reports/audit/capture_group_summary.csv` |
+| `data/subject7_final/` (`images/`, `labels/`, `검수표.csv`) — 교과 7 [`build_final`](../../../subject7/docs/tools/build_final.md) 결과 | `reports/01_data/audit_issue.csv`, `reports/01_data/audit_summary.csv`, `reports/01_data/audit_class_scene.csv`, `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv` |
 
 콘솔 출력:
 

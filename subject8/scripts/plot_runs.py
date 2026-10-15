@@ -6,7 +6,7 @@
 결과 (Git 에 올림):
     reports/figures/runs/<실행>.png                       실행별 학습 곡선 (Loss 3종 · P/R · mAP50 · mAP50-95, best epoch 표시)
     reports/figures/comparison/runs_comparison_<Dataset Version>.png  같은 Version 실행끼리 Val mAP50-95 비교 (Val 이 같아야 비교가 공정)
-    reports/runs_summary.csv                               실행별 Dataset Version · 조건(args.yaml) · best epoch 지표
+    reports/04_improvement/runs_summary.csv                               실행별 Dataset Version · 조건(args.yaml) · best epoch 지표
 
 Dataset Version 은 실행 이름의 `_v<N>` 으로 정한다 (예: exp001_v4_imgsz1280 → kimchi_v4). smoke_* 는 비교에서 뺀다.
 새 실행도 이름에 `_v<N>` 을 넣는다.
@@ -31,7 +31,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNS = PROJECT_ROOT / "runs"
 FIG_DIR = PROJECT_ROOT / "reports" / "figures" / "runs"
 COMPARE_DIR = PROJECT_ROOT / "reports" / "figures" / "comparison"
-SUMMARY_CSV = PROJECT_ROOT / "reports" / "runs_summary.csv"
+SUMMARY_CSV = PROJECT_ROOT / "reports" / "04_improvement" / "runs_summary.csv"
 SKIP = {"eval", "predict"}
 PNG_META = {"Software": None}  # 다시 그려도 내용이 같으면 파일이 바뀌지 않게
 VERSION_RE = re.compile(r"(?:^|_)v(\d+)(?:_|$)")
@@ -167,7 +167,7 @@ def main():
         w.writeheader()
         w.writerows(summary)
 
-    print(f"\n 저장: reports/figures/runs/ ({len(data)}장), reports/figures/comparison/ ({', '.join(compare_files)}), reports/runs_summary.csv")
+    print(f"\n 저장: reports/figures/runs/ ({len(data)}장), reports/figures/comparison/ ({', '.join(compare_files)}), reports/04_improvement/runs_summary.csv")
     print(" 비교 그래프는 같은 Dataset Version(같은 Validation)끼리만 묶었다.")
     print(" (참고) 학습 중 Validation 지표이며, 공식 평가는 07_evaluate_baseline.py 등으로 따로 한다.")
 

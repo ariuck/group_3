@@ -50,7 +50,7 @@ index 는 파일명(=촬영 시각) 순 0부터. 이유는 [`split_policy.md`](.
 | `assign_capture_groups(df)` | 파일명 앞 `YYMMDD_HHMMSS` 를 시각으로 읽어 정렬, `CAPTURE_GROUP_INTERVAL_SECONDS`(**300초**) 넘게 벌어지면 다음 묶음. `capture_group` 열 추가 |
 | `assign_splits(df, dataset_version=DEFAULT_DATASET_VERSION)` | 묶음 수 18 · G00 50장 · G17 150장을 `assert` 로 확인 후 `group_role_map(version)` + `BLOCK_RULES[version]` 대로 배정. 블록 규칙이 묶음 장수를 빈틈없이 덮는지도 `assert`. 모르는 version 이면 `ValueError`. `split`, `dataset_version` 열 추가 |
 | `generate_manifests(df)` | `manifests/split_manifest.csv` + 역할별 CSV 4개 (UTF-8 BOM) |
-| `generate_dataset_summary(df, dataset_version)` | `reports/dataset_summary.csv`: `dataset_version, role, image_count, purpose` (`ROLE_PURPOSES`) |
+| `generate_dataset_summary(df, dataset_version)` | `reports/01_data/dataset_summary.csv`: `dataset_version, role, image_count, purpose` (`ROLE_PURPOSES`) |
 | `label_fix_dir(dataset_version)` | 그 버전의 라벨 수정본 폴더 (`LABEL_FIX_DIRS` 에 없으면 None). 필요한데 비어 있으면 `FileNotFoundError` — `03` 이 Manifest 를 쓰기 전, `build_physical_dataset` 이 폴더를 지우기 전에 부른다 |
 | `build_physical_dataset(df, clean=True)` | `data/yolo/images|labels/{train,val,test}/`, `data/bridge_holdout/images|labels/` 에 복사 (이미 있는 파일은 건너뜀). 소스는 `_build_file_index` 로 한 번에 찾는다 |
 | `generate_dataset_yaml()` | `configs/dataset.yaml` — `path: data/yolo`, train/val/test, Class 이름은 `CLASS_NAMES` 에서 생성 |

@@ -1,6 +1,6 @@
 # `subject8/scripts/06_train_baseline.py`
 
-> 공식 Baseline 학습. 확정된 Dataset Version `kimchi_v4` 의 Train 전체(526장)로 YOLO11n 을 학습하고, Weight 를 `models/baseline/baseline_best.pt` 로 보관하고 `reports/baseline_training_condition.md` 를 남긴다 (산출물 2).
+> 공식 Baseline 학습. 확정된 Dataset Version `kimchi_v4` 의 Train 전체(526장)로 YOLO11n 을 학습하고, Weight 를 `models/baseline/baseline_best.pt` 로 보관하고 `reports/02_baseline/baseline_training_condition.md` 를 남긴다 (산출물 2).
 
 [← 코드 문서 목차](../README.md) · [코드 보기](../../scripts/06_train_baseline.py)
 
@@ -13,7 +13,7 @@ python scripts/06_train_baseline.py
 
 | 입력 | 출력 |
 |---|---|
-| `configs/dataset.yaml`, `data/yolo/{images,labels}/{train,val}`, `manifests/train.csv`·`val.csv` | `runs/baseline_v4/` (results.csv, args.yaml, weights …), `models/baseline/baseline_best.pt`, `reports/baseline_training_condition.md` |
+| `configs/dataset.yaml`, `data/yolo/{images,labels}/{train,val}`, `manifests/train.csv`·`val.csv` | `runs/baseline_v4/` (results.csv, args.yaml, weights …), `models/baseline/baseline_best.pt`, `reports/02_baseline/baseline_training_condition.md` |
 
 ## 주요 구성요소
 
@@ -34,7 +34,7 @@ python scripts/06_train_baseline.py
 
 ## 이력
 
-kimchi_v1 의 첫 Baseline(`baseline_v1`, 574장 · 640)은 `runs/baseline_v1/`, `models/baseline/baseline_v1_best.pt`, `reports/history/baseline_v1_training_condition.md` 로 보관한다. 그 실패 분석(`reports/failure_hypothesis.md`)으로 Dataset 을 v2~v4 로 고쳤고, 가이드 11.5·20.5("Baseline 과 Improved 비교기준도 같은 Version 으로") 에 따라 v4 에서 Baseline 을 다시 학습했다 (2026-10-14).
+kimchi_v1 의 첫 Baseline(`baseline_v1`, 574장 · 640)은 `runs/baseline_v1/`, `models/baseline/baseline_v1_best.pt`, `reports/history/baseline_v1_training_condition.md` 로 보관한다. 그 실패 분석(`reports/03_failure_analysis/failure_hypothesis.md`)으로 Dataset 을 v2~v4 로 고쳤고, 가이드 11.5·20.5("Baseline 과 Improved 비교기준도 같은 Version 으로") 에 따라 v4 에서 Baseline 을 다시 학습했다 (2026-10-14).
 
 ## 의존성
 

@@ -47,5 +47,5 @@
 - Frozen Test(test.csv)와 Bridge Holdout 은 학습·검증에 사용하지 않았다. 학습 전 data/yolo/train·val 이 manifest 와 정확히 같은지 확인했다.
 - 이 Weight 는 kimchi_v4 확정 Train 전체로 학습한 공식 기준 모델이다. 개선 실험(exp001 = imgsz 1280)은 같은 Version·같은 Val 에서 비교한다.
 - 이력: kimchi_v1 첫 Baseline(`baseline_v1`)의 실패 분석으로 Dataset 을 v2~v4 로 고쳤고, 가이드 11.5·20.5 에 따라 같은 Version 에서 Baseline 을 다시 학습했다.
-- Validation 공식 평가와 `reports/baseline_metrics.csv` 는 `scripts/07_evaluate_baseline.py` 로 작성한다.
+- Validation 공식 평가와 `reports/02_baseline/baseline_metrics.csv` 는 `scripts/07_evaluate_baseline.py` 로 작성한다.
 - 참고 — best.pt 가 저장된 epoch 50 의 학습 중 Validation: P 0.836 · R 0.674 · mAP50 0.764 · mAP50-95 0.534

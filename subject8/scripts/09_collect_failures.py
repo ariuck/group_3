@@ -3,13 +3,13 @@
     python scripts/09_collect_failures.py
 
 결과:
-    reports/failure_analysis.csv        실패 1건 = 1줄 (산출물 3)
-    reports/failure/failure_summary.csv         실패 유형 × Class 개수
-    reports/failure/failure_recall_by_size.csv  Class × 박스 크기별 Recall
-    reports/failure/failure_box_size_shift.csv  Class 별 정답 박스 크기 Train vs Val
+    reports/03_failure_analysis/failure_analysis.csv        실패 1건 = 1줄 (산출물 3)
+    reports/03_failure_analysis/failure_summary.csv         실패 유형 × Class 개수
+    reports/03_failure_analysis/failure_recall_by_size.csv  Class × 박스 크기별 Recall
+    reports/03_failure_analysis/failure_box_size_shift.csv  Class 별 정답 박스 크기 Train vs Val
     demo/failure_analysis/*.jpg         대표 실패 사진 모음 (회사 사진 → Git 제외)
 
-원인 판단과 다음 실험은 reports/failure_hypothesis.md 에 사람이 정리한다.
+원인 판단과 다음 실험은 reports/03_failure_analysis/failure_hypothesis.md 에 사람이 정리한다.
 """
 import argparse
 import csv
@@ -30,7 +30,7 @@ from src.train_detector import rel  # noqa: E402
 
 YOLO_DIR = PROJECT_ROOT / "data" / "yolo"
 REPORTS = PROJECT_ROOT / "reports"
-FAILURE_DIR = REPORTS / "failure"      # 요약·크기별 Recall·박스 크기 비교 (failure_analysis.csv 는 reports/ 바로 아래)
+FAILURE_DIR = REPORTS / "03_failure_analysis"      # 실패 사례 표 · 요약 · 크기별 Recall · 박스 크기 비교
 DEMO = PROJECT_ROOT / "demo" / "failure_analysis"
 SCENE = {"김치+대상 객체": "kimchi_with_target", "대상 객체 단독": "object_only", "판단 어려움": "other_review", "정상 김치": "normal_kimchi"}
 
@@ -67,7 +67,7 @@ def main():
 
     p = args.prefix
     outputs = {
-        REPORTS / f"{p}_analysis.csv": failures,
+        FAILURE_DIR / f"{p}_analysis.csv": failures,
         FAILURE_DIR / f"{p}_summary.csv": summarize(failures),
         FAILURE_DIR / f"{p}_recall_by_size.csv": recall_by_size(gt_rows, names),
         FAILURE_DIR / f"{p}_box_size_shift.csv": box_size_shift(YOLO_DIR / "labels" / "train", YOLO_DIR / "labels" / "val", names),

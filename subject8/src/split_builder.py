@@ -153,9 +153,9 @@ class SplitBuilder:
         return role_paths
 
     def generate_dataset_summary(self, df: pd.DataFrame, dataset_version: str = DEFAULT_DATASET_VERSION) -> Path:
-        """reports/dataset_summary.csv 생성 (산출물 1 표준 양식)"""
-        self.reports_dir.mkdir(parents=True, exist_ok=True)
-        summary_path = self.reports_dir / "dataset_summary.csv"
+        """reports/01_data/dataset_summary.csv 생성 (산출물 1 표준 양식)"""
+        (self.reports_dir / "01_data").mkdir(parents=True, exist_ok=True)
+        summary_path = self.reports_dir / "01_data" / "dataset_summary.csv"
 
         rows = []
         for role, purpose in ROLE_PURPOSES.items():

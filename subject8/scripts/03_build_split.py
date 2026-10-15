@@ -51,9 +51,9 @@ def main():
     yaml_path = builder.generate_dataset_yaml()
     print(f" - configs/dataset.yaml generated -> {yaml_path}")
 
-    # 6. reports/dataset_summary.csv 생성 (산출물 1 표준 양식)
+    # 6. reports/01_data/dataset_summary.csv 생성 (산출물 1 표준 양식)
     summary_path = builder.generate_dataset_summary(df, dataset_version=args.version)
-    print(f" - reports/dataset_summary.csv generated -> {summary_path}")
+    print(f" - reports/01_data/dataset_summary.csv generated -> {summary_path}")
 
     # 7. 분할 요약 통계 출력
     print("\n-----------------------------------------------------------------")
