@@ -18,7 +18,8 @@
 | `check_training(result)` | `{항목: (통과, 설명)}` — best.pt·last.pt·results.csv 생성, 모든 epoch 에 mAP50 기록, Loss NaN/inf 없음 |
 | `best_epoch_metrics(results_csv)` | mAP50-95 가 가장 높은 epoch(= best.pt)의 학습 중 Validation P·R·mAP50·mAP50-95. **참고용**, 공식 평가는 5일차 |
 | `copy_weight(src, dest)` | `runs/.../best.pt` → `models/baseline/baseline_best.pt` 처럼 역할이 보이는 이름으로 복사. 이미 있으면 덮어쓰지 않고 멈춤 |
-| `write_condition_report(path, title, condition, result, checks, notes)` | 학습 조건 · 실행 환경(GPU 최대 메모리, 버전, 시간) · 점검 결과 Markdown |
+| `write_condition_report(path, title, condition, result, checks, notes)` | 학습 조건 · 실행 환경(PC 이름·OS·CPU·RAM·GPU 와 드라이버·GPU 최대 메모리·Python/Ultralytics/PyTorch 버전·시간) · 점검 결과 Markdown |
+| `machine_info()` | 학습한 PC 정보 `host, os, cpu, ram, driver, python` (`/etc/os-release`, `/proc/cpuinfo`, `/proc/meminfo`, `nvidia-smi`). 못 읽으면 `-`. 팀원이 각자 PC 에서 실험해도 어느 PC 결과인지 구분하기 위함 |
 | `rel(path)` | 기록용 상대경로 (현재 폴더 = 프로젝트 루트 기준). 다른 PC 에서도 같은 기록이 되도록 |
 | `sha256_short(path)` | manifest·Weight 지문 12자리 (어떤 파일로 학습했는지 확인용) |
 | `pick_device()`, `versions()` | GPU 선택, Ultralytics·PyTorch·CUDA 버전 |

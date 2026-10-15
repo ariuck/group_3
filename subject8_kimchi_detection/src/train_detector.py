@@ -5,7 +5,10 @@
 import csv
 import hashlib
 import math
+import platform
 import shutil
+import socket
+import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
@@ -159,18 +162,50 @@ def versions() -> Dict[str, str]:
             "cuda": torch.version.cuda or "-"}
 
 
+def machine_info() -> Dict[str, str]:
+    """학습한 PC 정보 — 팀원이 각자 PC 에서 실험해도 어느 PC 결과인지 구분할 수 있게. 못 읽는 값은 '-'"""
+    def read_first(path, key):
+        try:
+            for line in Path(path).read_text(encoding="utf-8").splitlines():
+                if line.startswith(key):
+                    return line.split(":", 1)[1].strip() if ":" in line else line.split("=", 1)[1].strip().strip('"')
+        except OSError:
+            pass
+        return "-"
+
+    mem_kb = read_first("/proc/meminfo", "MemTotal").split()[0]
+    try:
+        driver = subprocess.run(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
+                                capture_output=True, text=True, timeout=10).stdout.strip().splitlines()[0]
+    except (OSError, subprocess.SubprocessError, IndexError):
+        driver = "-"
+    return {
+        "host": socket.gethostname(),
+        "os": f"{read_first('/etc/os-release', 'PRETTY_NAME=')} (kernel {platform.release()})",
+        "cpu": read_first("/proc/cpuinfo", "model name") if Path("/proc/cpuinfo").exists() else (platform.processor() or "-"),
+        "ram": f"{int(mem_kb) / 1024 ** 2:.0f} GB" if mem_kb.isdigit() else "-",
+        "driver": driver,
+        "python": platform.python_version(),
+    }
+
+
 def write_condition_report(path: Path, title: str, condition: Dict, result: Dict, checks: Dict,
                            notes: Optional[list] = None) -> Path:
     """학습 조건·환경·점검 결과를 Markdown 으로 남긴다 (baseline_training_condition.md, 실험 기록 등)."""
     v = versions()
+    m = machine_info()
     peak = f"{torch.cuda.max_memory_allocated() / 1024 ** 3:.1f} GB" if torch.cuda.is_available() else "-"
     lines = [f"# {title}", "",
              f"> 자동 생성: `{Path(__file__).name}` · {result['end']:%Y-%m-%d %H:%M}", "",
              "## 학습 조건", "", "| 항목 | 값 |", "|---|---|"]
     lines += [f"| {k} | {val} |" for k, val in condition.items()]
     lines += ["", "## 실행 환경", "", "| 항목 | 값 |", "|---|---|",
-              f"| GPU | {result['gpu']} (device {result['device']}) |",
+              f"| PC (host) | {m['host']} |",
+              f"| OS | {m['os']} |",
+              f"| CPU / RAM | {m['cpu']} / {m['ram']} |",
+              f"| GPU | {result['gpu']} (device {result['device']}, 드라이버 {m['driver']}) |",
               f"| GPU 최대 사용 메모리 | {peak} |",
+              f"| Python | {m['python']} |",
               f"| Ultralytics | {v['ultralytics']} |",
               f"| PyTorch / CUDA | {v['torch']} / {v['cuda']} |",
               f"| 학습 시작 | {result['start']:%Y-%m-%d %H:%M:%S} |",
