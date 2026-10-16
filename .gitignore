@@ -23,6 +23,7 @@ venv/
 .vscode/
 __pycache__/
 *.pyc
+CLAUDE.local.md
 
 # 제출용 Manifest(영문 칸 이름) 사본: 실제 사진 파일명이 들어 있어 Git 에 올리지 않는다
 07_Dataset_Manifest/
