@@ -20,7 +20,7 @@ def main():
     print(" [Subject 08] Day 2/3: Build Dataset Split (Plan B)")
     print("=" * 65)
 
-    builder = SplitBuilder(project_root=PROJECT_ROOT)
+    builder = SplitBuilder(project_root=PROJECT_ROOT, dataset_version=args.version)   # kimchi_v5~ 는 data/yolo_v5 등 따로
     fix_dir = builder.label_fix_dir(args.version)   # kimchi_v3 인데 수정본이 없으면 Manifest 를 덮어쓰기 전에 멈춘다
     if fix_dir is not None:
         print(f" Label fixes: {len(list(fix_dir.glob('*.txt')))} TXT from {fix_dir.relative_to(PROJECT_ROOT)}")
@@ -49,11 +49,11 @@ def main():
 
     # 5. configs/dataset.yaml 생성
     yaml_path = builder.generate_dataset_yaml()
-    print(f" - configs/dataset.yaml generated -> {yaml_path}")
+    print(f" - dataset yaml generated -> {yaml_path}")
 
     # 6. reports/01_data/dataset_summary.csv 생성 (산출물 1 표준 양식)
     summary_path = builder.generate_dataset_summary(df, dataset_version=args.version)
-    print(f" - reports/01_data/dataset_summary.csv generated -> {summary_path}")
+    print(f" - dataset summary generated -> {summary_path}")
 
     # 7. 분할 요약 통계 출력
     print("\n-----------------------------------------------------------------")
@@ -64,7 +64,7 @@ def main():
 
     # 8. 물리 파일 복사 (옵션)
     if args.copy_files:
-        print("\n Copying physical files into data/yolo and data/bridge_holdout...")
+        print(f"\n Copying physical files into {builder.yolo_dir.name} and {builder.bridge_dir.name}...")
         builder.build_physical_dataset(df, clean=True)
         print(" Physical dataset creation complete!")
     else:

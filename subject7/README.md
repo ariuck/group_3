@@ -100,10 +100,10 @@ subject7/                     저장소 group_3/ 안의 교과 7 폴더 (아래 
 ├── configs/
 │   └── classes.yaml              Class 0~6 설정
 │
-├── data/                         Git 에 올리지 않음
-│   ├── raw/                      회사 제공 원본 (읽기 전용)
-│   ├── work/                     작업 중 데이터
-│   └── final/                    최종 QA 완료 데이터
+├── data/                         사진은 Git 에 올리지 않음
+│   ├── raw/                      회사 제공 원본 (읽기 전용, Git 제외)
+│   ├── work/                     작업 중 데이터 (Git 제외 — restore_from_final 로 되살림)
+│   └── final/                    최종 QA 완료 데이터 (라벨 TXT·검수표.csv·classes.txt 만 Git)
 │
 ├── docs/
 │   ├── README.md                 문서 목차
@@ -382,7 +382,8 @@ data/final/
 - 사진은 RAW 의 복사본, 라벨은 `data/work` 의 검수한 라벨입니다. 수량·짝·폴더 구조 캡처는 [reports/final_evidence.md](reports/final_evidence.md), 자동 계산한 숫자는 `python tools/final_evidence.py` 로 볼 수 있습니다.
 - 만드는 방법: `python tools/build_final.py` (확인만) → `python tools/build_final.py --apply` (만들기). 이미 있으면 `--overwrite` (옛것은 `data/backup` 으로 옮김). 다른 구조는 `--layout flat`(한 폴더) · `--layout nested`(데이터셋별 폴더).
 - 아래 조건 중 하나라도 어긋나면 만들지 않습니다: 모든 사진이 검수표에 있고 상태가 `검수 완료`·`수정 완료`, 검수자 칸이 채워져 있고 작성자와 다름, 짝이 맞고 Validation 치명적 오류 0건. (`검수 전`·`수정 필요`·`제외` 사진은 최종본에 넣지 않습니다.)
-- FINAL 데이터는 회사 데이터라 Git 에 올리지 않습니다. (`data/` 는 `.gitignore`)
+- FINAL 의 **사진은 Git 에 올리지 않고**, 라벨 TXT 900개·`검수표.csv`·`classes.txt` 만 올립니다. (`data/` 는 `.gitignore`, `data/final` 의 이 세 가지만 예외)
+- 다른 PC 에서는 회사 원본을 `data/raw/` 에 그대로 넣고 `python tools/restore_from_final.py --apply` 를 실행하면 `data/work`·`manifests/dataset_manifest.csv`·`data/final/images` 가 되살아납니다 ([문서](docs/tools/restore_from_final.md)). 교과 8 은 이 라벨과 RAW 사진을 직접 읽습니다.
 
 FINAL 데이터는 교과 8 Object Detection 학습에 사용합니다.
 

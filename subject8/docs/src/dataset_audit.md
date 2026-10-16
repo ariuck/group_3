@@ -16,7 +16,7 @@
 |---|---|
 | `CLASS_NAMES`, `SCENE_TYPES`, `NORMAL_SCENE` | [`src/constants`](constants.md) 에서 가져온다 (이 모듈 이름으로도 가져갈 수 있게 남겨 둠) |
 | `BOX_EDGE_TOLERANCE` | 사진 밖 BBox 로 볼 최소 초과량 `1e-6` (소수점 오차 허용) |
-| `DatasetAuditor(data_root, report_dir)` | `data_root/images`, `data_root/labels`, `data_root/검수표.csv` 를 읽음. 보고서 폴더 생성 |
+| `DatasetAuditor(data_root, report_dir, images_dir=None)` | `data_root/labels`, `data_root/검수표.csv` 와 사진 `images_dir` (기본 `data_root/images`) 를 읽음. 보고서 폴더 생성 |
 | `.validate_yolo_row(row, line_no, file_stem)` (staticmethod) | 한 줄 검사 → `(이슈 dict 목록, Class ID 또는 None)`. Class 집계도 이 결과를 써서 줄을 한 번만 파싱한다 |
 | `.run_audit()` | 전체 검사 + CSV 3개 저장 + 결과 dict 반환 |
 

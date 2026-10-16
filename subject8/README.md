@@ -30,9 +30,9 @@ Dataset Audit → Split → Smoke Test → Baseline → Validation 평가
 
 | 항목 | 내용 |
 |---|---|
-| 교과 7 FINAL 원본 | 저장소 루트 `data/final/` (이 폴더 기준 `../data/final/`) |
-| 교과 8 사용 위치 | `data/subject7_final/` — FINAL 을 그대로 복사해 사용, 직접 수정하지 않음 |
-| 검수 기록 | `data/subject7_final/검수표.csv` (900행) |
+| 교과 7 FINAL 라벨 | `../subject7/data/final/labels/` (Git) — 복사하지 않고 직접 읽음, 직접 수정하지 않음 (고친 라벨은 `data/label_fixes/`) |
+| 사진 | `../subject7/data/raw/` 의 회사 원본 (각 PC) — 파일명으로 찾음 |
+| 검수 기록 | `../subject7/data/final/검수표.csv` (900행, Git) |
 | QA 결과 | [QA Summary](../subject7/reports/qa_summary.md) — FAIL 0 · REVIEW 0 · **교과 8 사용 가능** |
 | 인계 문서 | [교과 8 Handoff](../subject7/docs/project/handoff/subject08_handoff.md) |
 
@@ -131,8 +131,8 @@ python scripts/01_check_environment.py
 
 | 올림 ✅ | 올리지 않음 ❌ |
 |---|---|
-| 교과 7 FINAL 라벨 `data/subject7_final/labels/**/*.txt` (900개), `검수표.csv`, `classes.txt` | **김치·이물 사진** (`*.jpg` 등, 어느 폴더든) |
-| 라벨 수정본 `data/label_fixes/kimchi_v3/*.txt` (kimchi_v3·v4 재현에 필요) | `data/yolo/`, `data/bridge_holdout/`, `data/smoke/` — 03·05 가 다시 만듦 |
+| 교과 7 FINAL 라벨 `subject7/data/final/labels/**/*.txt` (900개), `검수표.csv`, `classes.txt` | **김치·이물 사진** (`*.jpg` 등, 어느 폴더든) · `subject7/data/raw`·`work` |
+| 라벨 수정본 `data/label_fixes/kimchi_v3`·`kimchi_v5/*.txt` (v3~v5 재현에 필요) | `data/yolo*/`, `data/bridge_holdout*/`, `data/smoke/` — 03·05 가 다시 만듦 |
 | 모델 Weight `models/**/*.pt` (실험마다 best 1개, 약 5MB) | `runs/*/weights/` (models/ 와 중복), `yolo11n.pt` (자동 다운로드) |
 | `runs/<실행>/results.csv`·`args.yaml` | `runs/*/*.png` 등 Ultralytics 원본 그래프 (실행당 약 1.8MB) · `runs/eval`·`runs/predict` (사진 섞임) |
 | 그래프 `reports/figures/` (실행별 학습 곡선은 `plot_runs.py` 로 생성, 약 0.1MB) | `demo/` 의 사진 모음 |
@@ -145,18 +145,22 @@ git clone https://github.com/ariuck/group_3.git ~/group_3
 cd ~/group_3/subject8
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
-# 사진만 따로 복사 (USB 등 — 외부 클라우드·메신저 금지). 라벨·검수표는 이미 Git 에 있다
-#   원본 PC 의 subject8/data/subject7_final/images/ 를 같은 위치로
-cp -r <USB>/images data/subject7_final/images
+# 회사 원본(사진 + 원본 라벨) 폴더를 그대로 subject7/data/raw 에 복사 (USB 등 — 외부 클라우드·메신저 금지)
+#   subject7/data/raw/이물검출_학습데이터1/images/train/*.jpg …, 이물검출_학습데이터2/…
+cp -r <USB>/이물검출_학습데이터1 <USB>/이물검출_학습데이터2 ../subject7/data/raw/
 
-.venv/bin/python scripts/02_audit_subject7_final.py          # JPG 900 / TXT 900 / 이슈 0 이면 정상
-.venv/bin/python scripts/03_build_split.py --copy-files      # kimchi_v4 학습 폴더 생성 (manifest 는 바뀌지 않아야 함)
-git status                                                    # 아무것도 바뀌지 않았으면 같은 데이터·같은 분할
+# 교과 7: Git 의 최종 라벨·검수표로 work · 검수표 · final 사진(하드 링크) 되살리기
+(cd ../subject7 && ../subject8/.venv/bin/python tools/restore_from_final.py --apply)   # "다시 만들어도 같음" 이면 정상
+
+.venv/bin/python scripts/02_audit_subject7_final.py                         # JPG 900 / TXT 900 / 이슈 0 이면 정상
+.venv/bin/python scripts/03_build_split.py --copy-files                     # kimchi_v4 학습 폴더
+.venv/bin/python scripts/03_build_split.py --version kimchi_v5 --copy-files # kimchi_v5 학습 폴더
+git status                                                                   # 아무것도 바뀌지 않았으면 같은 데이터·같은 분할
 ```
 
 - VSCode 는 이 폴더를 직접 엽니다 (`code ~/group_3/subject8`). `.vscode/` 설정이 Git 에 있어 `.venv` 인터프리터·실행 메뉴(F5)가 바로 잡힙니다.
 - 모델이 Git 에 있으므로 학습 없이 바로 평가·예측할 수 있습니다 (`07`, `08`, `09`).
-- 사진 폴더는 평평한 구조(`images/`)와 교과 7 원본 구조(`images/train`, `images/validation`)를 모두 읽습니다.
+- 교과 8 은 사진을 `subject7/data/raw` 아래에서 파일명으로 찾으므로 하위 폴더 구조는 상관없습니다. 교과 8 만 쓸 거라면 `restore_from_final.py` 는 건너뛰어도 됩니다.
 
 **그래프 정책 (실험이 수십 개가 되어도 저장소가 가볍게)**
 
@@ -378,11 +382,10 @@ TBD (9일차) — `docs/handoff_subject14.md`
 subject8/
 ├── .vscode/                        # 팀 공통 VSCode 설정 (인터프리터 · F5 실행 메뉴)
 ├── configs/dataset.yaml            # YOLO 학습용 Dataset 설정 (산출물 1)
-├── data/                           # 사진(*.jpg)은 Git 제외, 라벨 TXT·검수표는 Git 에 있음
-│   ├── subject7_final/             # 교과 7 FINAL: labels/ · 검수표.csv (Git) + images/ (각 PC 에 복사)
-│   ├── label_fixes/kimchi_v3/      # kimchi_v3~ 라벨 수정본 TXT (Git)
-│   ├── yolo/                       # 03 --copy-files 로 만든 train / val / test (Git 제외)
-│   └── bridge_holdout/             # 03 --copy-files 로 만든 교과 14 보존용 (Git 제외)
+├── data/                           # 사진(*.jpg)은 Git 제외. 교과 7 입력은 ../subject7/data/final(라벨) · raw(사진)
+│   ├── label_fixes/kimchi_v3·v5/   # 라벨 수정본 TXT (Git)
+│   ├── yolo/ · yolo_v5/            # 03 --copy-files 로 만든 train / val / test (Git 제외)
+│   └── bridge_holdout/ · _v5/      # 03 --copy-files 로 만든 교과 14 보존용 (Git 제외)
 ├── docs/
 │   ├── split_policy.md             # Split 정책서 (산출물 1)
 │   └── process/                    # 과정 정리 (이해·포트폴리오용)

@@ -15,15 +15,18 @@
 demo/**/*.png
 
 # ── data/: 사진은 막히고, 라벨 TXT·검수표만 올라간다 ──
-#   올라감: data/subject7_final/labels/**/*.txt, 검수표.csv, classes.txt  (교과 7 FINAL 입력 그대로)
-#           data/label_fixes/**/*.txt                                    (kimchi_v3~ 라벨 수정본)
-#   다른 PC 는 사진(images/) 만 따로 복사하면 된다 → README "다른 PC 에서 시작하기"
+#   올라감: data/label_fixes/**/*.txt  (kimchi_v3~ 라벨 수정본)
+#   교과 7 FINAL 라벨·검수표는 subject7/data/final 에 (Git), 사진은 subject7/data/raw 에서 읽는다
+#   다른 PC 는 회사 원본을 subject7/data/raw 에 넣으면 된다 → README "다른 PC 에서 시작하기"
 #   다시 만들 수 있는 폴더: yolo·bridge_holdout 은 03_build_split.py --copy-files, smoke 는 05_smoke_train.py
 data/yolo/
 data/bridge_holdout/
+#   kimchi_v5 는 03_build_split.py --version kimchi_v5 --copy-files
+data/yolo_v5/
+data/bridge_holdout_v5/
 data/smoke/
-#   검수표.csv 와 같은 내용의 교과 7 제출용 엑셀
-data/subject7_final/dataset_manifest.xlsx
+#   예전 사본 폴더 (지금은 쓰지 않음 — 남아 있는 PC 의 사진·엑셀이 올라가지 않게)
+data/subject7_final/
 #   Ultralytics 라벨 캐시
 *.cache
 

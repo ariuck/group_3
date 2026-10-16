@@ -5,11 +5,13 @@
 ```text
 reports/
 ├── 01_data/                  2~3일차  Dataset 수량 · 점검 · 라벨 수정 기록
-│   └── label_fixes_kimchi_v3/    Class 5(갈변) 재검수와 라벨 수정 내역
+│   ├── label_fixes_kimchi_v3/    Class 5(갈변) 재검수와 라벨 수정 내역
+│   └── label_fixes_kimchi_v5/    v5 에서 지운 박스 3개 (이물 없음)
 ├── 02_baseline/              4~5일차  Baseline 학습 조건 · Validation 성능
 ├── 03_failure_analysis/      6일차    실패 사례 표 · 원인 가설
 ├── 04_improvement/           7일차    설계 · 실험 기록 · 비교 분석 · exp001~003 조건
 ├── 05_acceptance/            9일차    Acceptance Test 결과
+├── 06_kimchi_v5/             재분할   kimchi_v5(C안) 학습 조건 — baseline_v5 · exp001_v5 · exp002_v5
 ├── history/                  지난 Dataset Version(v1~v3) · Smoke Test — 현재 기준 아님
 └── figures/
     ├── baseline/             Baseline 학습 곡선 · Confusion Matrix · PR 곡선
@@ -31,6 +33,7 @@ reports/
 | 파일 | 내용 |
 |---|---|
 | `dataset_summary.csv` | `kimchi_v4` 의 Train / Val / Test / Bridge Holdout 장수 (3일차) |
+| `dataset_summary_kimchi_v5.csv` | `kimchi_v5`(C안) 장수 — 558 / 104 / 82 / 156 |
 | `audit_summary.csv`, `audit_class_scene.csv` | 전체 수량 · Class × 장면 (2일차 Data Audit) |
 | `audit_issue.csv` | 발견된 오류 (비어 있음 = 오류 없음) |
 | `capture_group_summary.csv`, `leakage_check.csv` | 촬영 묶음별 장수·시간·장면 · Split 간 누수 점검 |

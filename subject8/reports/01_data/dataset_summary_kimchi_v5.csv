@@ -1,0 +1,5 @@
+dataset_version,role,image_count,purpose
+kimchi_v5,train,558,model_training
+kimchi_v5,val,104,model_validation
+kimchi_v5,test,82,final_evaluation
+kimchi_v5,bridge_holdout,156,subject14_bridge

@@ -1,6 +1,6 @@
 # `subject8/scripts/04_import_label_fixes.py`
 
-> 라벨링 프로그램(저장소 루트 `main.py`)에서 고친 TXT 를 `kimchi_v3` 라벨 수정본으로 가져온다. 교과 7 최종본(`data/subject7_final`)은 건드리지 않고, **바뀐 사진의 TXT 만** `data/label_fixes/kimchi_v3/` 에 둔다.
+> 라벨링 프로그램(저장소 루트 `main.py`)에서 고친 TXT 를 `kimchi_v3` 라벨 수정본으로 가져온다. 교과 7 최종본(`subject7/data/final`)은 건드리지 않고, **바뀐 사진의 TXT 만** `data/label_fixes/kimchi_v3/` 에 둔다.
 
 [← 코드 문서 목차](../README.md) · [코드 보기](../../scripts/04_import_label_fixes.py)
 
@@ -15,7 +15,7 @@ python scripts/03_build_split.py --version kimchi_v3 --copy-files
 
 | 입력 | 출력 |
 |---|---|
-| `--src` (기본 `group_3/subject7/data/work/_RAW밖/`), `data/subject7_final/labels/`, `reports/01_data/label_fixes_kimchi_v3/class5_relabel_worklist.csv` | `data/label_fixes/kimchi_v3/*.txt`, `reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` |
+| `--src` (기본 `group_3/subject7/data/work/_RAW밖/`), `subject7/data/final/labels/`, `reports/01_data/label_fixes_kimchi_v3/class5_relabel_worklist.csv` | `data/label_fixes/kimchi_v3/*.txt`, `reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` |
 
 ## 주요 구성요소
 

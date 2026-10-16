@@ -15,14 +15,16 @@
 |---|---|
 | `CLASS_NAMES` | `{0: leaf_paper, 1: plastic_stone_metal, 2: branch, 3: insect, 4: rubber_glove_unused, 5: disease_browning, 6: green_onion_pepper}` — Class 4 미사용이지만 번호 유지 |
 | `SCENE_TYPES`, `NORMAL_SCENE` | 검수표 `이미지 유형` → 영문 scene_type. `정상 김치` 는 빈 TXT 대조에 쓴다 |
+| `SUBJECT7_FINAL_DIR`, `SUBJECT7_RAW_DIR` | 교과 7 입력 위치 (subject8 기준) `../subject7/data/final` (라벨·검수표, Git) · `../subject7/data/raw` (사진, 각 PC) |
 | `CAPTURE_GROUP_INTERVAL_SECONDS` | `300` — 촬영 간격이 이보다 길면 다음 묶음 |
 | `DEFAULT_DATASET_VERSION` | `kimchi_v4` — `03_build_split.py` 기본값 |
-| `DATASET_VERSIONS` | `kimchi_v1` ~ `kimchi_v4` |
+| `DATASET_VERSIONS` | `kimchi_v1` ~ `kimchi_v5` |
+| `SEPARATE_DIR_VERSIONS` | 공용 폴더 대신 따로 만드는 Version → 이름 끝. `kimchi_v5` → `data/yolo_v5`, `manifests/kimchi_v5/`, `configs/dataset_v5.yaml` |
 | `GROUP_ROLE_MAP` | 묶음 통째 배정 (kimchi_v1 기준). 블록 분할 묶음에는 쓰지 않는다 |
-| `GROUP_ROLE_OVERRIDES` | Version 별로 바뀌는 묶음 (v2~v4: `G05 → val`) |
+| `GROUP_ROLE_OVERRIDES` | Version 별로 바뀌는 묶음 (v2~v4: `G05 → val`; v5 C안: Val G05·G13, Test G07·G14, Bridge G10·G11·G12, 나머지 Train) |
 | `group_role_map(version)` | `GROUP_ROLE_MAP` + 그 Version 의 `GROUP_ROLE_OVERRIDES` |
-| `BLOCK_RULES` | `{version: {묶음: [(시작, 끝(미포함), 역할), ...]}}` — 묶음 안을 시간순으로 나누는 예외 (G00 · G12 · G09). 표는 [`split_builder`](split_builder.md) |
-| `LABEL_FIX_DIRS` | Version 별 라벨 수정본 폴더 (v3·v4 → `data/label_fixes/kimchi_v3`) |
+| `BLOCK_RULES` | `{version: {묶음: [(시작, 끝(미포함), 역할), ...]}}` — 묶음 안을 시간순으로 나누는 예외 (G00 · G12 · G09; v5 는 G00 만). 표는 [`split_builder`](split_builder.md) |
+| `LABEL_FIX_DIRS` | Version 별 라벨 수정본 폴더 (v3·v4 → `data/label_fixes/kimchi_v3`, v5 → `data/label_fixes/kimchi_v5` = v3 + 박스 3개 삭제) |
 | `ROLES`, `ROLE_PURPOSES` | 역할 순서 `train, val, test, bridge_holdout` 와 `dataset_summary.csv` 의 `purpose` |
 
 ## 의존성

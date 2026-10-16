@@ -120,6 +120,7 @@ tools/   import_labels · pack_results · merge_manifests · share_server   ← 
 | [`merge_manifests.py`](tools/merge_manifests.md) | 팀원 검수표 합치기 |
 | [`share_server.py`](tools/share_server.md) | 같은 네트워크 임시 공유 서버 + 단계별 가이드 화면 |
 | [`build_final.py`](tools/build_final.md) | 검수 완료본을 `data/final` 로 |
+| [`restore_from_final.py`](tools/restore_from_final.md) | 다른 PC: Git 의 최종 라벨·검수표 + `data/raw` 사진으로 work·검수표·final 되살리기 |
 | [`export_manifest_xlsx.py`](tools/export_manifest_xlsx.md) | 검수표 CSV → 제출용 xlsx |
 | [`final_evidence.py`](tools/final_evidence.md) | 최종본 증빙 숫자 |
 | [`qa_summary.py`](tools/qa_summary.md) | `reports/qa_summary.md` 만들기 |

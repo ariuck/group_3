@@ -13,7 +13,7 @@ python scripts/02_audit_subject7_final.py
 
 | 입력 | 출력 |
 |---|---|
-| `data/subject7_final/` (`images/`, `labels/`, `검수표.csv`) — 교과 7 [`build_final`](../../../subject7/docs/tools/build_final.md) 결과 | `reports/01_data/audit_issue.csv`, `reports/01_data/audit_summary.csv`, `reports/01_data/audit_class_scene.csv`, `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv` |
+| `subject7/data/final/` (`labels/`, `검수표.csv`) — 교과 7 [`build_final`](../../../subject7/docs/tools/build_final.md) 결과 + 사진 `subject7/data/raw/` | `reports/01_data/audit_issue.csv`, `reports/01_data/audit_summary.csv`, `reports/01_data/audit_class_scene.csv`, `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv` |
 
 콘솔 출력:
 
@@ -45,5 +45,5 @@ python scripts/02_audit_subject7_final.py
 ## 주의사항
 
 - `sys.path` 에 subject8 폴더를 추가해 `from src.dataset_audit import ...` 로 가져온다. 저장소 루트의 `src/`(교과 7 라벨링 프로그램)와 **패키지 이름이 같으므로**, 저장소 루트를 `sys.path` 앞쪽에 두고 실행하면(예: 루트에서 `python -m ...`) 엉뚱한 `src` 를 찾는다. 이 스크립트는 `python scripts/02_...py` 형태로 실행한다.
-- `data/subject7_final/` 은 회사 데이터라 Git 에 없다. 교과 7 최종본을 이 위치에 복사해 두어야 한다.
+- 라벨·검수표는 Git 의 `subject7/data/final/` 에 있고, 사진은 Git 에 없으므로 회사 원본을 `subject7/data/raw/` 에 넣어 두어야 한다 (하위 폴더 구조 무관, 파일명으로 찾음).
 - 실행할 때마다 `reports/` 의 CSV 5개를 덮어쓴다. 데이터가 같으면 내용도 같다.
