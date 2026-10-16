@@ -131,12 +131,12 @@ def check_dataset():
         ("runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음" if not suspicious and guard
          else f"의심: {suspicious} · 보호 코드 {guard}") + " (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)")
 
-    # 학습에 쓴 Manifest 가 기록과 같은지
-    doc = (R / "04_improvement" / "exp001_training_condition.md").read_text(encoding="utf-8")
+    # 학습에 쓴 Manifest 가 기록과 같은지 (공식 Baseline 학습 기록 기준 — 학습 당시 경로가 manifests/<Version>/ 일 수 있다)
+    doc = (R / "02_baseline" / "baseline_training_condition.md").read_text(encoding="utf-8")
     ok = True
     parts = []
     for fn in ("train", "val"):
-        m = re.search(rf"manifests/{fn}\.csv` .*?sha256 ([0-9a-f]{{12}})", doc)
+        m = re.search(rf"manifests/(?:\w+/)?{fn}\.csv` .*?sha256 ([0-9a-f]{{12}})", doc)
         cur = sha12(M / f"{fn}.csv")
         parts.append(f"{fn} {cur}{'=' if m and m.group(1) == cur else '≠'}{m.group(1) if m else '?'}")
         ok &= bool(m and m.group(1) == cur)
@@ -146,16 +146,25 @@ def check_dataset():
 # ── Model ─────────────────────────────────────────────────────
 def check_model():
     A = "Model"
-    weights = [("baseline", "models/baseline/baseline_best.pt", "02_baseline/baseline_training_condition.md"),
-               ("exp001", "models/improved/exp001_best.pt", "04_improvement/exp001_training_condition.md"),
-               ("exp002", "models/improved/exp002_best.pt", "04_improvement/exp002_training_condition.md"),
-               ("exp003", "models/improved/exp003_best.pt", "04_improvement/exp003_training_condition.md")]
+    # 공식 Version 의 보관 Weight 전부 (models/baseline · improved, 이름 = 실행 이름) + 공식 Baseline 복사본
+    sys.path.insert(0, str(PROJECT_ROOT))
+    from src import registry
+    official_run = registry.OFFICIAL["baseline"]
+    weights = [("baseline_best.pt (= " + official_run + ")", "models/baseline/baseline_best.pt", "02_baseline/baseline_training_condition.md")]
+    for p in sorted([*(PROJECT_ROOT / "models" / "baseline").glob("*.pt"), *(PROJECT_ROOT / "models" / "improved").glob("*.pt")]):
+        if p.name == "baseline_best.pt":
+            continue
+        docs = [R / "02_baseline" / "baseline_training_condition.md"] if p.stem == official_run else sorted(R.rglob(f"{p.stem}_training_condition.md"))
+        weights.append((p.stem, p.relative_to(PROJECT_ROOT).as_posix(), docs[0].relative_to(R).as_posix() if docs else None))
     for name, rel, doc in weights:
         p = PROJECT_ROOT / rel
         if not p.is_file():
             add(A, f"{name} Weight 가 있다", "FAIL", f"{rel} 없음")
             continue
-        m = re.search(r"_best\.pt` \(sha256 ([0-9a-f]{12})\)", (R / doc).read_text(encoding="utf-8"))   # Manifest 해시가 아니라 Weight 해시
+        if doc is None:
+            add(A, f"{name} Weight 가 있고 기록(해시)과 같다", "FAIL", f"{rel} · 학습 조건 기록 없음")
+            continue
+        m = re.search(r"\.pt` \(sha256 ([0-9a-f]{12})\)", (R / doc).read_text(encoding="utf-8"))   # Manifest 해시가 아니라 Weight 해시
         cur = sha12(p)
         add(A, f"{name} Weight 가 있고 기록(해시)과 같다", "PASS" if m and m.group(1) == cur else "FAIL",
             f"{rel} · {cur}{'' if m and m.group(1) == cur else ' ≠ 기록 ' + (m.group(1) if m else '없음')}")

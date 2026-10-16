@@ -1,0 +1,13 @@
+# kimchi_v5 2×2 조각 (scripts/14_train_tiles_v5.py) — train·val 만
+path: data/yolo_v5_tiles
+train: images/train
+val: images/val
+
+names:
+  0: leaf_paper
+  1: plastic_stone_metal
+  2: branch
+  3: insect
+  4: rubber_glove_unused
+  5: disease_browning
+  6: green_onion_pepper

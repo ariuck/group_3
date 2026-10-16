@@ -26,6 +26,7 @@ docs/
 | [`scripts/07_evaluate_baseline.py`](scripts/07_evaluate_baseline.md) | Baseline Validation 평가 → `baseline_metrics.csv`·Class 별 성능·그래프 |
 | [`scripts/08_predict_images.py`](scripts/08_predict_images.md) | 사진 예측 + 정답 비교 이미지 · TP/FP/FN 표 |
 | [`scripts/11_train_v5.py`](scripts/11_train_v5.md) | `kimchi_v5`(C안) 학습: baseline_v5 (640) · exp001_v5 (1280) · exp002_v5 (1920) |
+| [`scripts/14_train_tiles_v5.py`](scripts/14_train_tiles_v5.md) | 개선 실험 exp004_v5 타일링 (2×2 조각 학습 → 조각 예측 합쳐 원본 Val 채점) |
 | [`scripts/plot_v5_vs_v4.py`](scripts/plot_v5_vs_v4.md) | `kimchi_v4` → `v5` 달라진 점 그림·CSV (누수 · Class 박스 · Val 점수) |
 | [`scripts/make_split_worksheet.py`](scripts/make_split_worksheet.md) | 수동 분할 준비: 담당자별 작업 시트(CSV) 6개 · 촬영 순서 사진판(JPG) |
 | [`scripts/plot_runs.py`](scripts/plot_runs.md) | 모든 실행의 학습 곡선 · Version 별 비교 그래프 · `runs_summary.csv` (results.csv 만으로) |
@@ -42,4 +43,6 @@ docs/
 | [`src/leakage_check.py`](src/leakage_check.md) | 사진 지문(dHash)으로 촬영 묶음 누수 확인 |
 | [`src/smoke_dataset.py`](src/smoke_dataset.md) | Smoke Test 용 작은 Dataset 만들기 |
 | [`src/split_builder.py`](src/split_builder.md) | `SplitBuilder` — 촬영 묶음 단위 분할 |
+| [`src/registry.py`](src/registry.md) | 모델 등록부: 실행 이름 → Weight 위치 · Version · imgsz · 타일링, 공식 Baseline/Final 지정 |
+| [`src/tiling.py`](src/tiling.md) | 타일링: 조각 만들기 · 조각 예측 합치기 · 원본 사진 단위 채점 |
 | [`src/train_detector.py`](src/train_detector.md) | YOLO 학습 공통 함수 · 학습 점검 · 조건 기록 |

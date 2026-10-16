@@ -33,11 +33,11 @@ SUBJECT7_RAW_DIR = "../subject7/data/raw"
 CAPTURE_GROUP_INTERVAL_SECONDS = 300
 
 # 현재 공식 Dataset Version (03_build_split.py 기본값)
-DEFAULT_DATASET_VERSION = "kimchi_v4"
+# 공식 Version = 가이드 이름 폴더(data/yolo · data/bridge_holdout · manifests/*.csv · configs/dataset.yaml)를 쓰는 Version.
+# 다른 Version 은 꼬리표를 붙인 폴더 (data/yolo_v4 · manifests/kimchi_v4/ · configs/dataset_v4.yaml) — src/split_builder.py
+# kimchi_v5 로 바꾼 이유: v4 는 Val 132장 중 83장이 Train 과 같은 촬영 묶음 (docs/project/kimchi_v5_split.md)
+DEFAULT_DATASET_VERSION = "kimchi_v5"
 DATASET_VERSIONS: List[str] = ["kimchi_v1", "kimchi_v2", "kimchi_v3", "kimchi_v4", "kimchi_v5"]
-# 기존 공용 폴더(data/yolo, manifests/, configs/dataset.yaml) 대신 따로 만드는 Version → 폴더 이름 끝
-# kimchi_v5: data/yolo_v5 · data/bridge_holdout_v5 · manifests/kimchi_v5/ · configs/dataset_v5.yaml (v4 폴더는 그대로)
-SEPARATE_DIR_VERSIONS: Dict[str, str] = {"kimchi_v5": "v5"}
 
 # 방안 B 묶음 통째 배정 맵 (kimchi_v1 기준). 블록 분할 묶음(BLOCK_RULES)은 여기 값을 쓰지 않는다
 GROUP_ROLE_MAP: Dict[str, str] = {

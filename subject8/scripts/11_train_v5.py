@@ -1,13 +1,17 @@
-"""kimchi_v5 (C안 재분할) 학습 — 06 Baseline 조건 + 10 의 해상도 실험(exp001·exp002)을 v5 에서 다시 한다.
+"""공식 Version kimchi_v5 (C안 재분할) 학습 — 06 Baseline 조건 + 한 변수 개선 실험을 v5 에서 한다.
 
-    python scripts/03_build_split.py --version kimchi_v5 --copy-files   # 먼저 data/yolo_v5 만들기 (data/yolo 는 그대로)
-    python scripts/11_train_v5.py                  # baseline → exp001 → exp002 차례로
-    python scripts/11_train_v5.py --run exp001     # 하나만
+    python scripts/00_setup.py                       # 먼저 data/yolo (v5) 준비
+    python scripts/11_train_v5.py --run exp001       # 하나만 (all = 차례로 전부, 이미 Weight 가 있으면 멈춤)
+    python scripts/11_train_v5.py --run exp005 --report-only   # 학습은 끝났는데 조건 기록만 다시
 
-  baseline : imgsz 640              → runs/baseline_v5/,           models/baseline/baseline_v5_best.pt
-  exp001   : imgsz 1280             → runs/exp001_v5_imgsz1280/,   models/improved/exp001_v5_best.pt
-  exp002   : imgsz 1920 · batch 6   → runs/exp002_v5_imgsz1920/,   models/improved/exp002_v5_best.pt
-  조건 기록: reports/06_kimchi_v5/<실행>_training_condition.md
+  baseline : imgsz 640                         → runs/baseline_v5/
+  exp001   : imgsz 1280                        → runs/exp001_v5_imgsz1280/
+  exp002   : imgsz 1920 · batch 6              → runs/exp002_v5_imgsz1920/
+  exp003   : exp002 + epochs 100               → runs/exp003_v5_imgsz1920_epoch100/
+  exp005   : exp002 + 증강 (flipud · hsv_v)    → runs/exp005_v5_imgsz1920_aug/
+  (exp004 타일링은 14_train_tiles_v5.py)
+  Weight → models/baseline · improved/<실행>.pt (src/registry.py)
+  조건 기록 → reports/02_baseline/baseline_training_condition.md (baseline), reports/04_improvement/<실행>_training_condition.md
 
 조건은 06(BASELINE)·10(EXPERIMENTS) 에서 그대로 가져온다. v4 와는 Val 이 달라 점수를 직접 비교하지 않는다.
 분할 기준: docs/project/kimchi_v5_split.md
@@ -21,8 +25,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-os.chdir(PROJECT_ROOT)  # dataset_v5.yaml 의 path: data/yolo_v5 는 이 폴더 기준
+os.chdir(PROJECT_ROOT)  # dataset.yaml 의 path: data/yolo 는 이 폴더 기준
 
+from src import registry  # noqa: E402
 from src.split_builder import SplitBuilder  # noqa: E402
 from src.train_detector import (  # noqa: E402
     best_epoch_metrics, check_training, copy_weight, rel, sha256_short, train_detector, write_condition_report,
@@ -40,35 +45,67 @@ paths = SplitBuilder(PROJECT_ROOT, DATASET_VERSION)
 tb.DATA_YAML, tb.MANIFEST_DIR, tb.YOLO_DIR = paths.dataset_yaml, paths.manifest_dir, paths.yolo_dir
 
 RUNS = {
-    "baseline": {"change": {}, "run_name": "baseline_v5", "weight": "baseline/baseline_v5_best.pt",
-                 "title": "kimchi_v5 Baseline"},
+    "baseline": {"change": {}, "run_name": "baseline_v5", "title": "kimchi_v5 Baseline"},
     "exp001": {"change": ex.EXPERIMENTS["exp001"]["change"], "run_name": "exp001_v5_imgsz1280",
-               "weight": "improved/exp001_v5_best.pt", "title": "kimchi_v5 개선 실험 exp001", "compare": "baseline_v5 (imgsz 640)"},
+               "title": "kimchi_v5 개선 실험 exp001", "compare": "baseline_v5 (imgsz 640)"},
     "exp002": {"change": ex.EXPERIMENTS["exp002"]["change"], "run_name": "exp002_v5_imgsz1920",
-               "weight": "improved/exp002_v5_best.pt", "title": "kimchi_v5 개선 실험 exp002", "compare": "exp001_v5 (imgsz 1280)",
+               "title": "kimchi_v5 개선 실험 exp002", "compare": "exp001_v5 (imgsz 1280)",
                "note": ex.EXPERIMENTS["exp002"]["note"]},
+    "exp003": {"change": ex.EXPERIMENTS["exp003"]["change"], "run_name": "exp003_v5_imgsz1920_epoch100",
+               "title": "kimchi_v5 개선 실험 exp003", "compare": "exp002_v5 (epochs 50)",
+               "note": ex.EXPERIMENTS["exp003"]["note"]},
+    # 바꾸는 변수 하나 = 증강 설정 (가이드 참고자료 "Augmentation: 기본 → 밝기/Scale 등 강화")
+    # 근거: v5 Val 은 Train 이 못 본 촬영 묶음(다른 날·다른 조명) — exp002_v5 는 Train loss 가 계속 내려가는데 Val dfl_loss 는 30 epoch 뒤 멈춤(과적합 신호)
+    #   flipud 0 → 0.5 : 위에서 내려다본 사진이라 위아래 뒤집어도 같은 장면 (이물 방향은 원래 제각각)
+    #   hsv_v 0.4 → 0.6: 날짜마다 다른 밝기
+    "exp005": {"change": {**ex.EXPERIMENTS["exp002"]["change"], "flipud": 0.5, "hsv_v": 0.6},
+               "run_name": "exp005_v5_imgsz1920_aug",
+               "title": "kimchi_v5 개선 실험 exp005", "compare": "exp002_v5 (기본 증강)",
+               "augmentation": "기본 + 상하반전 flipud 0.5 (기본 0) · 밝기 hsv_v 0.6 (기본 0.4)",
+               "note": "exp002_v5 와 다른 변수는 증강 설정 하나 (flipud 0 → 0.5, hsv_v 0.4 → 0.6). 이미지 파일은 만들지 않고 학습 중에만 변형한다. Val 은 원본."},
 }
-REPORT_DIR = PROJECT_ROOT / "reports" / "06_kimchi_v5"
+REPORT_DIR = PROJECT_ROOT / "reports" / "04_improvement"
+BASELINE_REPORT = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"   # 가이드 이름 (산출물 2)
+# 06 BASELINE 에 없는 증강 값의 Ultralytics 8.4 기본값 (조건 기록에 "기본 → 바꾼 값" 으로 적는다)
+ULTRALYTICS_DEFAULTS = {"flipud": 0.0, "fliplr": 0.5, "hsv_h": 0.015, "hsv_s": 0.7, "hsv_v": 0.4, "degrees": 0.0,
+                        "translate": 0.1, "scale": 0.5, "mosaic": 1.0, "mixup": 0.0}
 
 
-def train_one(key, counts):
+def finished_result(run_name):
+    """이미 끝난 실행의 결과 dict (조건 기록만 다시 쓸 때) — 시작 = args.yaml, 종료 = results.csv 수정 시각"""
+    import torch
+    from datetime import datetime
+    d = PROJECT_ROOT / "runs" / run_name
+    start = datetime.fromtimestamp((d / "args.yaml").stat().st_mtime)
+    end = datetime.fromtimestamp((d / "results.csv").stat().st_mtime)
+    return {"save_dir": d, "best": d / "weights" / "best.pt", "last": d / "weights" / "last.pt",
+            "results_csv": d / "results.csv", "start": start, "end": end, "seconds": round((end - start).total_seconds()),
+            "optimizer": tb.BASELINE["optimizer"], "lr0": tb.BASELINE["lr0"], "device": 0,
+            "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"}
+
+
+def train_one(key, counts, report_only=False):
     spec = RUNS[key]
     cond = dict(tb.BASELINE, **spec["change"])
     run_name = spec["run_name"]
-    weight = PROJECT_ROOT / "models" / spec["weight"]
-    report = REPORT_DIR / f"{run_name}_training_condition.md"
-    if weight.exists():
+    weight = registry.weight_path(run_name)
+    report = BASELINE_REPORT if key == "baseline" else REPORT_DIR / f"{run_name}_training_condition.md"
+    if weight.exists() and not report_only:
         raise FileExistsError(f"이미 보관된 Weight 가 있습니다: {weight} (덮어쓰지 않음)")
     print("=" * 65)
-    print(f" [Subject 08] {run_name} (Dataset {DATASET_VERSION})")
+    print(f" [Subject 08] {run_name} (Dataset {DATASET_VERSION})" + (" — 조건 기록만" if report_only else ""))
     print("=" * 65)
     print(" 조건: " + ", ".join(f"{k}={v}" for k, v in cond.items()))
 
-    result = train_detector(data_yaml=str(paths.dataset_yaml), project=str(PROJECT_ROOT / "runs"), name=run_name, **cond)
+    if report_only:
+        result = finished_result(run_name)
+    else:
+        result = train_detector(data_yaml=str(paths.dataset_yaml), project=str(PROJECT_ROOT / "runs"), name=run_name, **cond)
     checks = check_training(result)
     ok = all(passed for passed, _ in checks.values())
     if ok:
-        copy_weight(result["best"], weight)
+        if not weight.exists():
+            copy_weight(result["best"], weight)
         checks["Weight 별도 보관"] = (weight.is_file(), f"`{rel(weight)}` (sha256 {sha256_short(weight)})")
 
     ref = best_epoch_metrics(result["results_csv"])
@@ -78,7 +115,8 @@ def train_one(key, counts):
         "기준: `docs/project/kimchi_v5_split.md`. v4 와는 Val 이 달라 점수를 직접 비교하지 않는다.",
     ]
     if spec["change"]:
-        notes.append("Baseline(06) 조건에서 " + ", ".join(f"{k} {tb.BASELINE[k]} → {v}" for k, v in spec["change"].items())
+        notes.append("Baseline(06) 조건에서 " + ", ".join(f"{k} {tb.BASELINE.get(k, ULTRALYTICS_DEFAULTS.get(k))} → {v}"
+                                                         for k, v in spec["change"].items())
                      + f" 으로 바꿨다. 비교 대상: {spec['compare']}.")
     if spec.get("note"):
         notes.append(spec["note"])
@@ -101,7 +139,7 @@ def train_one(key, counts):
             "Seed": f"{cond['seed']} (deterministic=True)",
             "Optimizer": cond["optimizer"],
             "Learning Rate (lr0)": cond["lr0"],
-            "Augmentation": "Ultralytics 기본값 (mosaic, 좌우반전 0.5, HSV 등)",
+            "Augmentation": spec.get("augmentation", "Ultralytics 기본값 (mosaic, 좌우반전 0.5, HSV 등)"),
         },
         result,
         checks,
@@ -116,8 +154,9 @@ def train_one(key, counts):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001 · exp002)")
+    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~005)")
     ap.add_argument("--run", default="all", choices=["all", *RUNS])
+    ap.add_argument("--report-only", action="store_true", help="학습은 끝났는데 조건 기록이 없을 때 기록만 다시 쓴다")
     args = ap.parse_args()
     dataset_version, counts = tb.precheck()
     if dataset_version != DATASET_VERSION:
@@ -125,7 +164,7 @@ def main():
                            f"  python scripts/03_build_split.py --version {DATASET_VERSION} --copy-files")
     print(f" Dataset {dataset_version}: train {counts['train']}장 / val {counts['val']}장 (manifest 와 폴더 일치)")
     for key in (RUNS if args.run == "all" else [args.run]):
-        if not train_one(key, counts):
+        if not train_one(key, counts, args.report_only):
             sys.exit(1)
 
 

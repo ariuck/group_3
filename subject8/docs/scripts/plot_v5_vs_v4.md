@@ -13,7 +13,7 @@ python scripts/plot_v5_vs_v4.py
 
 | 입력 | 출력 |
 |---|---|
-| `manifests/split_manifest.csv` (v4), `manifests/kimchi_v5/split_manifest.csv`, 라벨 수정본 v3·v5 + `subject7/data/final/labels`, `reports/04_improvement/runs_summary.csv` | `reports/figures/comparison/v5_vs_v4.png`, `reports/06_kimchi_v5/v5_vs_v4.csv` |
+| `manifests/kimchi_v4/split_manifest.csv`, `manifests/split_manifest.csv` (v5, 공식), 라벨 수정본 v3·v5 + `subject7/data/final/labels`, `reports/runs_summary.csv` | `reports/figures/comparison/v5_vs_v4.png`, `reports/01_data/v5_vs_v4.csv` |
 
 그림 4칸: ① 평가 사진 중 Train 과 같은 촬영 묶음 출신 비율 ② 평가 역할의 가장 적은 Class 박스 수 (기준 15) ③ Val Class 별 박스 수 ④ 학습 중 best Val mAP50-95 (640·1280·1920).
 

@@ -2,7 +2,7 @@
 
     python scripts/plot_v5_vs_v4.py
 
-결과: reports/figures/comparison/v5_vs_v4.png, reports/06_kimchi_v5/v5_vs_v4.csv
+결과: reports/figures/comparison/v5_vs_v4.png, reports/01_data/v5_vs_v4.csv
   ① 평가 사진 중 Train 과 같은 촬영 묶음 출신 (누수) ② 평가 역할의 Class 별 최소 박스 수
   ③ Val Class 별 박스 수 ④ 학습 중 best Val mAP50-95 (Val 이 달라 직접 비교 아님 — 그림에 표시)
 """
@@ -19,7 +19,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 from src.split_builder import SplitBuilder  # noqa: E402
 
-VERSIONS = {"kimchi_v4": PROJECT_ROOT / "manifests", "kimchi_v5": PROJECT_ROOT / "manifests" / "kimchi_v5"}
+VERSIONS = {v: SplitBuilder(PROJECT_ROOT, v).manifest_dir for v in ("kimchi_v4", "kimchi_v5")}
 COLORS = {"kimchi_v4": "#2a78d6", "kimchi_v5": "#eb6834"}   # 범주색 1·2번 (dataviz 기본 팔레트)
 TEXT, MUTED = "#0b0b0b", "#52514e"
 EVAL = ["val", "test", "bridge_holdout"]
@@ -27,7 +27,7 @@ ROLE_KO = {"val": "Val", "test": "Test", "bridge_holdout": "Bridge"}
 CLASSES = [0, 1, 2, 3, 5, 6]
 CLASS_KO = {0: "c0 잎·종이", 1: "c1 플라스틱·돌", 2: "c2 가지", 3: "c3 벌레", 5: "c5 갈변", 6: "c6 파·고추"}
 OUT_PNG = PROJECT_ROOT / "reports" / "figures" / "comparison" / "v5_vs_v4.png"
-OUT_CSV = PROJECT_ROOT / "reports" / "06_kimchi_v5" / "v5_vs_v4.csv"
+OUT_CSV = PROJECT_ROOT / "reports" / "01_data" / "v5_vs_v4.csv"
 RUNS = {"kimchi_v4": ["baseline_v4", "exp001_v4_imgsz1280", "exp002_v4_imgsz1920"],
         "kimchi_v5": ["baseline_v5", "exp001_v5_imgsz1280", "exp002_v5_imgsz1920"]}
 
@@ -52,7 +52,7 @@ def stats(version, manifest_dir):
 
 
 def best_map():
-    rows = {r["run"]: r for r in csv.DictReader((PROJECT_ROOT / "reports" / "04_improvement" / "runs_summary.csv").open(encoding="utf-8-sig"))}
+    rows = {r["run"]: r for r in csv.DictReader((PROJECT_ROOT / "reports" / "runs_summary.csv").open(encoding="utf-8-sig"))}
     return {v: [float(rows[n]["map50_95"]) for n in names] for v, names in RUNS.items()}
 
 

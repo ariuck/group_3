@@ -1,13 +1,15 @@
-"""개선 분석 — Baseline 과 exp001~003 을 같은 Dataset Version(kimchi_v4)·같은 Validation 에서 비교한다.
+"""개선 분석 (kimchi_v4 기록) — Baseline 과 exp001~003 을 같은 Dataset Version(kimchi_v4)·같은 Validation 에서 비교한다.
 
     python scripts/plot_improvement.py
 
+kimchi_v4 는 지난 Version 이라 입력·출력이 모두 reports/history/kimchi_v4/ 에 있다 (공식 Version 은 kimchi_v5).
+
 입력 (모두 Git 에 있는 기록. 사진·모델·GPU 없이 다시 만들 수 있다)
     runs/<실행>/results.csv                 epoch 별 Validation 지표
-    reports/02_baseline/baseline_training_condition.md, reports/04_improvement/exp00N_training_condition.md    학습 시간 · GPU 메모리
+    reports/history/kimchi_v4/<실행>_training_condition.md    학습 시간 · GPU 메모리
 출력
-    reports/04_improvement/improvement_summary.csv                       비교 표 (reports/04_improvement/baseline_vs_improved.md 의 숫자 근거)
-    reports/figures/comparison/improvement_summary.svg    2×2 그림 (표준 라이브러리만 사용 — matplotlib 불필요)
+    reports/history/kimchi_v4/improvement_summary.csv          비교 표 (같은 폴더 baseline_vs_improved.md 의 숫자 근거)
+    reports/history/kimchi_v4/figures/improvement_summary.svg  2×2 그림 (표준 라이브러리만 사용 — matplotlib 불필요)
 
 숫자는 학습 중 Validation 지표다. best epoch 는 Validation 으로 고른 값이라 약간 낙관적이므로,
 마지막 10 epoch 평균(흔들림 확인용)을 같이 낸다. Frozen Test 는 쓰지 않는다.
@@ -22,16 +24,16 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RUNS = PROJECT_ROOT / "runs"
-REPORTS = PROJECT_ROOT / "reports"
-OUT_CSV = REPORTS / "04_improvement" / "improvement_summary.csv"
-OUT_SVG = REPORTS / "figures" / "comparison" / "improvement_summary.svg"
+REPORTS = PROJECT_ROOT / "reports" / "history" / "kimchi_v4"
+OUT_CSV = REPORTS / "improvement_summary.csv"
+OUT_SVG = REPORTS / "figures" / "improvement_summary.svg"
 
 # (실행 이름, 짧은 이름, 학습 조건 문서, 색, 이 단계에서 바뀐 것)
 STEPS = [
-    ("baseline_v4", "Baseline", "02_baseline/baseline_training_condition.md", "#7f7f7f", "imgsz 640 (기준)"),
-    ("exp001_v4_imgsz1280", "exp001", "04_improvement/exp001_training_condition.md", "#0072B2", "imgsz 640 → 1280"),
-    ("exp002_v4_imgsz1920", "exp002", "04_improvement/exp002_training_condition.md", "#E69F00", "imgsz 1280 → 1920 (batch 16 → 6)"),
-    ("exp003_v4_imgsz1920_epoch100", "exp003", "04_improvement/exp003_training_condition.md", "#009E73", "epochs 50 → 100"),
+    ("baseline_v4", "Baseline", "baseline_v4_training_condition.md", "#7f7f7f", "imgsz 640 (기준)"),
+    ("exp001_v4_imgsz1280", "exp001", "exp001_v4_imgsz1280_training_condition.md", "#0072B2", "imgsz 640 → 1280"),
+    ("exp002_v4_imgsz1920", "exp002", "exp002_v4_imgsz1920_training_condition.md", "#E69F00", "imgsz 1280 → 1920 (batch 16 → 6)"),
+    ("exp003_v4_imgsz1920_epoch100", "exp003", "exp003_v4_imgsz1920_epoch100_training_condition.md", "#009E73", "epochs 50 → 100"),
 ]
 MAP = "metrics/mAP50-95(B)"
 FONT = "Noto Sans CJK KR, Malgun Gothic, Apple SD Gothic Neo, sans-serif"
@@ -258,7 +260,7 @@ def draw(data):
         if s["gpu_gb"] is not None:
             svg.text(d.px + i * gw + gw / 2, d.py + d.ph + 34, f'GPU {s["gpu_gb"]:.1f}GB', size=11, anchor="middle", fill="#555")
 
-    svg.text(30, 835, "만든 곳: scripts/plot_improvement.py · 숫자: reports/04_improvement/improvement_summary.csv", size=11, fill="#777")
+    svg.text(30, 835, "만든 곳: scripts/plot_improvement.py · 숫자: reports/history/kimchi_v4/improvement_summary.csv", size=11, fill="#777")
     svg.save(OUT_SVG)
 
 

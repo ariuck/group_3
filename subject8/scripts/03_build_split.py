@@ -20,7 +20,7 @@ def main():
     print(" [Subject 08] Day 2/3: Build Dataset Split (Plan B)")
     print("=" * 65)
 
-    builder = SplitBuilder(project_root=PROJECT_ROOT, dataset_version=args.version)   # kimchi_v5~ 는 data/yolo_v5 등 따로
+    builder = SplitBuilder(project_root=PROJECT_ROOT, dataset_version=args.version)   # 공식이 아닌 Version 은 data/yolo_v4 등 꼬리표 폴더
     fix_dir = builder.label_fix_dir(args.version)   # kimchi_v3 인데 수정본이 없으면 Manifest 를 덮어쓰기 전에 멈춘다
     if fix_dir is not None:
         print(f" Label fixes: {len(list(fix_dir.glob('*.txt')))} TXT from {fix_dir.relative_to(PROJECT_ROOT)}")

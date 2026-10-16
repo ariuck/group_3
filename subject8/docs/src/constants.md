@@ -17,9 +17,8 @@
 | `SCENE_TYPES`, `NORMAL_SCENE` | 검수표 `이미지 유형` → 영문 scene_type. `정상 김치` 는 빈 TXT 대조에 쓴다 |
 | `SUBJECT7_FINAL_DIR`, `SUBJECT7_RAW_DIR` | 교과 7 입력 위치 (subject8 기준) `../subject7/data/final` (라벨·검수표, Git) · `../subject7/data/raw` (사진, 각 PC) |
 | `CAPTURE_GROUP_INTERVAL_SECONDS` | `300` — 촬영 간격이 이보다 길면 다음 묶음 |
-| `DEFAULT_DATASET_VERSION` | `kimchi_v4` — `03_build_split.py` 기본값 |
+| `DEFAULT_DATASET_VERSION` | **공식 Version** `kimchi_v5` — 가이드 이름 폴더(`data/yolo` · `manifests/*.csv` · `configs/dataset.yaml`)를 쓰고, 03·06 의 기본값. 다른 Version 은 꼬리표 폴더 (`data/yolo_v4` · `manifests/kimchi_v4/` …, [`split_builder`](split_builder.md)). v4 → v5 로 바꾼 이유: v4 Val 132장 중 83장이 Train 과 같은 촬영 묶음 |
 | `DATASET_VERSIONS` | `kimchi_v1` ~ `kimchi_v5` |
-| `SEPARATE_DIR_VERSIONS` | 공용 폴더 대신 따로 만드는 Version → 이름 끝. `kimchi_v5` → `data/yolo_v5`, `manifests/kimchi_v5/`, `configs/dataset_v5.yaml` |
 | `GROUP_ROLE_MAP` | 묶음 통째 배정 (kimchi_v1 기준). 블록 분할 묶음에는 쓰지 않는다 |
 | `GROUP_ROLE_OVERRIDES` | Version 별로 바뀌는 묶음 (v2~v4: `G05 → val`; v5 C안: Val G05·G13, Test G07·G14, Bridge G10·G11·G12, 나머지 Train) |
 | `group_role_map(version)` | `GROUP_ROLE_MAP` + 그 Version 의 `GROUP_ROLE_OVERRIDES` |

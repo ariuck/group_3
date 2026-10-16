@@ -18,7 +18,6 @@ from src.constants import (
     LABEL_FIX_DIRS,
     ROLE_PURPOSES,
     ROLES,
-    SEPARATE_DIR_VERSIONS,
     SUBJECT7_FINAL_DIR,
     SUBJECT7_RAW_DIR,
     group_role_map,
@@ -29,7 +28,8 @@ class SplitBuilder:
     """데이터셋 분할, 매니페스트 생성 및 물리 디렉토리 배치를 담당하는 빌더 클래스"""
 
     def __init__(self, project_root: Path, dataset_version: Optional[str] = None):
-        """dataset_version 이 SEPARATE_DIR_VERSIONS 에 있으면 (kimchi_v5~) 결과 폴더를 따로 쓴다 — 기존 data/yolo 는 그대로"""
+        """공식 Version(DEFAULT_DATASET_VERSION, 생략 시)은 가이드 이름 폴더, 다른 Version 은 꼬리표 폴더
+        (data/yolo_v4 · data/bridge_holdout_v4 · manifests/kimchi_v4/ · configs/dataset_v4.yaml · reports/history/kimchi_v4/dataset_summary.csv)"""
         self.project_root = Path(project_root)
         # 교과 7 FINAL: 라벨·검수표는 subject7/data/final, 사진은 RAW 에서 파일명으로 찾는다 (하위 폴더 무관)
         self.data_final_dir = (self.project_root / SUBJECT7_FINAL_DIR).resolve()
@@ -37,7 +37,8 @@ class SplitBuilder:
         self.images_dir = (self.project_root / SUBJECT7_RAW_DIR).resolve()
         self.labels_dir = self.data_final_dir / "labels"
 
-        tag = SEPARATE_DIR_VERSIONS.get(dataset_version or "")
+        official = dataset_version in (None, DEFAULT_DATASET_VERSION)
+        tag = None if official else dataset_version.replace("kimchi_", "")
         sfx = f"_{tag}" if tag else ""
         self.manifest_dir = self.project_root / "manifests" / (dataset_version if tag else "")
         self.yolo_dir = self.project_root / "data" / f"yolo{sfx}"
@@ -45,7 +46,8 @@ class SplitBuilder:
         self.configs_dir = self.project_root / "configs"
         self.dataset_yaml = self.configs_dir / f"dataset{sfx}.yaml"
         self.reports_dir = self.project_root / "reports"
-        self.summary_csv = self.reports_dir / "01_data" / (f"dataset_summary_{dataset_version}.csv" if tag else "dataset_summary.csv")
+        self.summary_csv = (self.reports_dir / "history" / dataset_version / "dataset_summary.csv" if tag
+                            else self.reports_dir / "01_data" / "dataset_summary.csv")
 
     @staticmethod
     def _build_file_index(base_dir: Path, pattern: str = "*") -> Dict[str, Path]:
@@ -163,7 +165,7 @@ class SplitBuilder:
         return role_paths
 
     def generate_dataset_summary(self, df: pd.DataFrame, dataset_version: str = DEFAULT_DATASET_VERSION) -> Path:
-        """reports/01_data/dataset_summary.csv 생성 (산출물 1 표준 양식, 따로 쓰는 Version 은 dataset_summary_<version>.csv)"""
+        """reports/01_data/dataset_summary.csv 생성 (산출물 1 표준 양식, 공식이 아닌 Version 은 reports/history/<Version>/)"""
         summary_path = self.summary_csv
         summary_path.parent.mkdir(parents=True, exist_ok=True)
 

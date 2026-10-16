@@ -1,14 +1,15 @@
-"""개선 실험 — 06 Baseline 조건에서 변수 하나씩 바꾼다 (가이드 20장 한 변수 실험).
+"""개선 실험 (지난 Version v1~v4 재현용) — 06 Baseline 조건에서 변수 하나씩 바꾼다 (가이드 20장 한 변수 실험).
+공식 Version(kimchi_v5)의 실험은 11_train_v5.py. 실험별 바꾸는 값(EXPERIMENTS)은 11 도 여기서 가져간다.
 
-    python scripts/10_train_v2.py               # exp001: imgsz 640 → 1280 (Baseline 대비)
-    python scripts/10_train_v2.py --exp exp002  # exp002: imgsz 1280 → 1920 (exp001 대비, batch 6 — 아래)
-    python scripts/10_train_v2.py --exp exp003  # exp003: epochs 50 → 100 (exp002 대비)
+    python scripts/10_train_v2.py                                  # kimchi_v4 exp001: imgsz 640 → 1280
+    python scripts/10_train_v2.py --exp exp002                     # kimchi_v4 exp002: imgsz 1280 → 1920 (batch 6 — 아래)
+    python scripts/10_train_v2.py --exp exp003                     # kimchi_v4 exp003: epochs 50 → 100
+    python scripts/10_train_v2.py --version kimchi_v2              # 이력 (exp001 만)
 
-  kimchi_v4 (공식) : exp001 → runs/exp001_v4_imgsz1280/, models/improved/exp001_best.pt, reports/04_improvement/exp001_training_condition.md
-                     exp002 → runs/exp002_v4_imgsz1920/, models/improved/exp002_best.pt, reports/04_improvement/exp002_training_condition.md
-                     exp003 → runs/exp003_v4_imgsz1920_epoch100/, models/improved/exp003_best.pt, reports/04_improvement/exp003_training_condition.md
-                     Baseline 은 06 의 baseline_v4 (같은 Version·같은 Val)
-  kimchi_v1~v3 (이력, exp001 만): pilot_v1_imgsz1280 (예비 실험), history_v2/v3_imgsz1280 (데이터 개선 과정)
+  kimchi_v4 : exp001_v4_imgsz1280 · exp002_v4_imgsz1920 · exp003_v4_imgsz1920_epoch100 (Baseline = baseline_v4)
+  kimchi_v1~v3 (exp001 만): pilot_v1_imgsz1280 (예비 실험, Weight 보관 안 함), history_v2/v3_imgsz1280 (데이터 개선 과정)
+  Weight → models/history/<Version>/<실행>.pt (src/registry.py), 조건 기록 → reports/history/<Version>/<실행>_training_condition.md
+  (실행 전 python scripts/03_build_split.py --version <Version> --copy-files 로 그 Version 폴더를 만든다)
 
 근거 (6일차 H4): 원본 4848×2704 를 640 으로 줄이면 박스 한 변 중앙값이 18~40px 이고,
 leaf_paper·plastic·disease_browning 은 15~19% 가 16px 미만이 된다. 예비 실험(kimchi_v1)에서 mAP50-95 0.351 → 0.519.
@@ -24,6 +25,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 os.chdir(PROJECT_ROOT)  # dataset.yaml 의 path: data/yolo 는 이 폴더 기준
 
+from src import registry  # noqa: E402
+from src.split_builder import SplitBuilder  # noqa: E402
 from src.train_detector import (  # noqa: E402
     best_epoch_metrics, check_training, copy_weight, rel, sha256_short, train_detector, write_condition_report,
 )
@@ -50,8 +53,7 @@ EXPERIMENTS = {
 }
 RUN_NAMES = {"kimchi_v1": "pilot_v1_imgsz1280", "kimchi_v2": "history_v2_imgsz1280", "kimchi_v3": "history_v3_imgsz1280",
              "kimchi_v4": "exp001_v4_imgsz1280"}
-# Weight·기록 파일 이름 (kimchi_v1 예비 실험은 보관하지 않음)
-SAVE_NAMES = {"kimchi_v2": "history_v2_imgsz1280", "kimchi_v3": "history_v3_imgsz1280", "kimchi_v4": "exp001"}
+NOT_KEPT = {"pilot_v1_imgsz1280"}     # 예비 실험 — Weight·조건 기록을 남기지 않음
 SPLIT_NOTES = {
     "kimchi_v2": "kimchi_v2 Split(G00 파/고추 구간 분할, G12 가운데 배치 Train, G05 Val)",
     "kimchi_v3": "kimchi_v3 (kimchi_v2 Split + Class 5 기준 개정 라벨: 점을 묶은 BBox·초록 잎맥·흐린 부분 제외)",
@@ -62,24 +64,25 @@ SPLIT_NOTES = {
 def main():
     ap = argparse.ArgumentParser(description="해상도 개선 실험 (06 Baseline 조건에서 imgsz 변경)")
     ap.add_argument("--exp", default="exp001", choices=sorted(EXPERIMENTS))
+    ap.add_argument("--version", default="kimchi_v4", choices=sorted(RUN_NAMES), help="지난 Version (공식 v5 는 11_train_v5.py)")
     args = ap.parse_args()
     exp = EXPERIMENTS[args.exp]
     CONDITION = dict(tb.BASELINE, **exp["change"])
+    paths = SplitBuilder(PROJECT_ROOT, args.version)
+    tb.DATA_YAML, tb.MANIFEST_DIR, tb.YOLO_DIR = paths.dataset_yaml, paths.manifest_dir, paths.yolo_dir
 
     dataset_version, counts = tb.precheck()
-    if dataset_version not in RUN_NAMES:
-        raise RuntimeError(f"모르는 Dataset Version: {dataset_version} (가능: {sorted(RUN_NAMES)})")
+    if dataset_version != args.version:
+        raise RuntimeError(f"{rel(paths.yolo_dir)} 가 {dataset_version} 입니다 (--version {args.version}).")
     if args.exp != "exp001" and dataset_version != "kimchi_v4":
         raise RuntimeError(f"{args.exp} 는 kimchi_v4 에서만 실행합니다 (지금 {dataset_version}).")
     if args.exp == "exp001":
         run_name = RUN_NAMES[dataset_version]
-        save = SAVE_NAMES.get(dataset_version, run_name)
     else:
         run_name = exp.get("run_name", f"{args.exp}_v4_imgsz{CONDITION['imgsz']}")
-        save = args.exp
-    keep_record = args.exp != "exp001" or dataset_version in SAVE_NAMES   # Weight 보관·조건 기록을 남기는 실행인가
-    WEIGHT_DEST = PROJECT_ROOT / "models" / "improved" / f"{save}_best.pt"
-    REPORT = PROJECT_ROOT / "reports" / "04_improvement" / f"{save}_training_condition.md"
+    keep_record = run_name not in NOT_KEPT   # Weight 보관·조건 기록을 남기는 실행인가
+    WEIGHT_DEST = registry.weight_path(run_name)
+    REPORT = PROJECT_ROOT / "reports" / "history" / dataset_version / f"{run_name}_training_condition.md"
 
     print("=" * 65)
     print(f" [Subject 08] {run_name} (imgsz {CONDITION['imgsz']}, Dataset {dataset_version}, 비교 대상 {exp['compare']})")
@@ -99,7 +102,7 @@ def main():
             copy_weight(result["best"], WEIGHT_DEST)
             checks["Weight 별도 보관"] = (WEIGHT_DEST.is_file(), f"`{rel(WEIGHT_DEST)}` (sha256 {sha256_short(WEIGHT_DEST)})")
         notes = [
-            "Frozen Test(test.csv)와 Bridge Holdout 은 학습·검증에 사용하지 않았다. 학습 전 data/yolo/train·val 이 manifest 와 정확히 같은지 확인했다.",
+            f"Frozen Test(test.csv)와 Bridge Holdout 은 학습·검증에 사용하지 않았다. 학습 전 `{rel(paths.yolo_dir)}/train·val` 이 manifest 와 정확히 같은지 확인했다.",
             f"{SPLIT_NOTES[dataset_version]}로 학습했다. Baseline(06) 조건에서 "
             + ", ".join(f"{k} {tb.BASELINE[k]} → {v}" for k, v in exp["change"].items())
             + f" 으로 바꿨다. 비교 대상: {exp['compare']}. "
@@ -115,13 +118,13 @@ def main():
                          f"P {ref['precision']:.3f} · R {ref['recall']:.3f} · mAP50 {ref['map50']:.3f} · mAP50-95 {ref['map50_95']:.3f}")
         write_condition_report(
             REPORT,
-            f"{'데이터 개선 이력' if save.startswith('history') else '개선 실험 ' + save} 학습 조건 (`{run_name}`)",
+            f"{'데이터 개선 이력' if run_name.startswith('history') else '개선 실험 ' + args.exp} 학습 조건 (`{run_name}`)",
             {
                 "Model": f"YOLO11n (`{CONDITION['model_name']}`, COCO 사전학습 · pretrained=True)",
                 "Dataset Version": f"`{dataset_version}`",
-                "Train / Val Manifest": f"`manifests/train.csv` {counts['train']}장 (sha256 {sha256_short(tb.MANIFEST_DIR / 'train.csv')}) / "
-                                        f"`manifests/val.csv` {counts['val']}장 (sha256 {sha256_short(tb.MANIFEST_DIR / 'val.csv')})",
-                "Data 설정": "`configs/dataset.yaml` (Class ID 0~6, Class 4 미사용)",
+                "Train / Val Manifest": f"`{rel(paths.manifest_dir)}/train.csv` {counts['train']}장 (sha256 {sha256_short(tb.MANIFEST_DIR / 'train.csv')}) / "
+                                        f"`{rel(paths.manifest_dir)}/val.csv` {counts['val']}장 (sha256 {sha256_short(tb.MANIFEST_DIR / 'val.csv')})",
+                "Data 설정": f"`{rel(paths.dataset_yaml)}` (Class ID 0~6, Class 4 미사용)",
                 "Epoch": CONDITION["epochs"],
                 "Batch": CONDITION["batch"],
                 "Image Size": CONDITION["imgsz"],

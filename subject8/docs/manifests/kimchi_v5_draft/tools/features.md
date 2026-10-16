@@ -35,5 +35,5 @@ python $T/groups.py $W; python $T/seq.py $W; python $T/sheet.py $W   # 확인용
 
 ## 주의사항
 
-- kimchi_v5 C안을 고를 때 쓴 **분석 기록**이다. 결과는 [`kimchi_v5_split`](../../../project/kimchi_v5_split.md), 실제 분할은 `src/constants.py` 와 `manifests/kimchi_v5/` 에 있다.
-- `data/yolo` (v4) 가 있어야 돌아간다. 다른 분석 스크립트(`crops`·`batches`·`split_v5*` 등)는 이 `features.pkl` 이 있는 폴더를 인자로 받는다.
+- kimchi_v5 C안을 고를 때 쓴 **분석 기록**이다. 결과는 [`kimchi_v5_split`](../../../project/kimchi_v5_split.md), 실제 분할은 `src/constants.py` 와 `manifests/` (공식 Version) 에 있다.
+- `data/yolo` · `data/bridge_holdout` 와 `manifests/split_manifest.csv` 를 읽는다 (분석 당시는 v4, 지금은 공식 v5 폴더 — 사진은 같고 라벨은 박스 3개 차이). 다른 분석 스크립트(`crops`·`batches`·`split_v5*` 등)는 이 `features.pkl` 이 있는 폴더를 인자로 받는다.

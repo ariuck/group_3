@@ -24,6 +24,8 @@ data/bridge_holdout/
 #   kimchi_v5 는 03_build_split.py --version kimchi_v5 --copy-files
 data/yolo_v5/
 data/bridge_holdout_v5/
+#   타일링 조각 (14_train_tiles_v5.py 가 만듦)
+data/yolo_v5_tiles/
 data/smoke/
 #   예전 사본 폴더 (지금은 쓰지 않음 — 남아 있는 PC 의 사진·엑셀이 올라가지 않게)
 data/subject7_final/
@@ -44,6 +46,10 @@ runs/*
 runs/*/*
 !runs/*/results.csv
 !runs/*/args.yaml
+#   그래프도 올린다 (실행당 약 1.6MB): Confusion Matrix · PR/P/R/F1 곡선 · results.png · labels.jpg(박스 분포 그림, 사진 아님)
+#   train_batch*.jpg · val_batch*.jpg 는 김치 사진이 들어 있어 계속 제외 (*.jpg 규칙)
+!runs/*/*.png
+!runs/*/labels.jpg
 runs/eval/
 runs/predict/
 

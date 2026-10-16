@@ -238,7 +238,7 @@ G09 시간순 75장
 2. **Q. Val과 Test의 클래스 비율이 조금 다른 이유는 무엇인가요?**
    - **답변**: "묶음 단위(회차 단위)로 분할했기 때문에 회차별 이물 집중도에 따라 비율 차이가 발생합니다. 따라서 모델 비교 시 mAP 단일 점수뿐만 아니라 클래스별 mAP 및 Recall 지표를 반드시 교차 검증합니다."
 3. **Q. Split 을 동결했다가 왜 바꿨나요?**
-   - **답변**: "Baseline 실패 분석에서 Val 의 마른 잎·반점 갈변과 고추가 Train 에 거의 없다는 것을 확인했습니다 (`reports/03_failure_analysis/failure_hypothesis.md` H1·H2). Frozen Test 는 아직 모델로 평가하지 않은 상태에서 Dataset Version 을 `kimchi_v2` 로 올리고 Baseline 을 다시 학습합니다. `kimchi_v1` 은 `--version kimchi_v1` 로 그대로 재현됩니다."
+   - **답변**: "Baseline 실패 분석에서 Val 의 마른 잎·반점 갈변과 고추가 Train 에 거의 없다는 것을 확인했습니다 (`reports/history/kimchi_v1/03_failure_analysis/failure_hypothesis.md` H1·H2). Frozen Test 는 아직 모델로 평가하지 않은 상태에서 Dataset Version 을 `kimchi_v2` 로 올리고 Baseline 을 다시 학습합니다. `kimchi_v1` 은 `--version kimchi_v1` 로 그대로 재현됩니다."
 4. **Q. G12 를 Train/Val 로 나누면 누수가 아닌가요?**
    - **답변**: "같은 날·같은 장소에서 같은 실물 잎을 다시 배치해 찍었을 가능성은 있습니다. 그래서 사진 단위가 아니라 배치(25장) 단위로 자르고, 경계는 촬영 간격·배치 변경 지점에 맞췄습니다. 그래도 Val 점수가 다소 낙관적일 수 있어, 마지막 판단은 G12 가 없는 Frozen Test 로 합니다."
 

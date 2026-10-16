@@ -1,6 +1,6 @@
 # `subject8/scripts/plot_improvement.py`
 
-> Baseline 과 개선 실험(exp001~003)을 같은 Dataset Version·같은 Validation 에서 비교하는 표와 그림을 만든다. `results.csv` 와 학습 조건 문서만 읽으므로 사진·모델·GPU 가 없어도, 어느 PC 에서나 다시 만들 수 있다.
+> **kimchi_v4 기록용** — Baseline 과 개선 실험(exp001~003)을 같은 Dataset Version(kimchi_v4)·같은 Validation 에서 비교하는 표와 그림을 만든다. `results.csv` 와 학습 조건 문서만 읽으므로 사진·모델·GPU 가 없어도, 어느 PC 에서나 다시 만들 수 있다. v4 는 지난 Version 이라 입출력이 모두 `reports/history/kimchi_v4/` 에 있다.
 
 [← 코드 문서 목차](../README.md) · [코드 보기](../../scripts/plot_improvement.py)
 
@@ -13,9 +13,9 @@ python scripts/plot_improvement.py
 
 | 입력 | 출력 (Git 에 올림) |
 |---|---|
-| `runs/<실행>/results.csv`, `reports/02_baseline/baseline_training_condition.md`, `reports/04_improvement/exp00N_training_condition.md` (학습 시간·GPU 메모리) | `reports/04_improvement/improvement_summary.csv`, `reports/figures/comparison/improvement_summary.svg` |
+| `runs/<실행>/results.csv`, `reports/history/kimchi_v4/<실행>_training_condition.md` (학습 시간·GPU 메모리) | `reports/history/kimchi_v4/improvement_summary.csv`, `reports/history/kimchi_v4/figures/improvement_summary.svg` |
 
-비교하는 실행은 코드 위쪽 `STEPS` 에 있다 (`baseline_v4`, `exp001_v4_imgsz1280`, `exp002_v4_imgsz1920`, `exp003_v4_imgsz1920_epoch100`). 새 실험(exp004 …)을 더하려면 `STEPS` 에 한 줄을 추가한다.
+비교하는 실행은 코드 위쪽 `STEPS` 에 있다 (`baseline_v4`, `exp001_v4_imgsz1280`, `exp002_v4_imgsz1920`, `exp003_v4_imgsz1920_epoch100`).
 
 ## 주요 구성요소
 
@@ -23,13 +23,13 @@ python scripts/plot_improvement.py
 |---|---|
 | `summarize(run, doc)` | best epoch(mAP50-95 최대)의 P·R·F1·mAP, 마지막 10 epoch 평균·표준편차, Val cls loss 최저 epoch, 마지막 Val/Train cls loss 비, 학습 시간·GPU 메모리 |
 | `build()` | 네 실행을 요약하고 Baseline 대비·직전 단계 대비 변화량을 계산 |
-| `write_csv(data)` | `improvement_summary.csv` (`reports/04_improvement/baseline_vs_improved.md` 의 숫자 근거) |
+| `write_csv(data)` | `improvement_summary.csv` (같은 폴더 `baseline_vs_improved.md` 의 숫자 근거) |
 | `draw(data)` | 2×2 SVG: A. mAP50-95(best · 마지막10 평균), B. Precision·Recall·F1, C. epoch 별 Val mAP50-95 곡선, D. 학습 시간과 상승폭 |
 
 ## 의존성
 
 - **사용하는 것**: 표준 라이브러리만 (`matplotlib` 불필요 — SVG 를 직접 쓴다)
-- **사용하는 곳**: [`reports/04_improvement/baseline_vs_improved.md`](../../reports/04_improvement/baseline_vs_improved.md)
+- **사용하는 곳**: [`reports/history/kimchi_v4/baseline_vs_improved.md`](../../reports/history/kimchi_v4/baseline_vs_improved.md)
 
 ## 주의사항
 

@@ -1,6 +1,7 @@
-"""Baseline Validation 평가 — baseline_best.pt (baseline_v4, kimchi_v4) 를 Validation 132장에서 평가한다 (가이드 18.1).
+"""Baseline Validation 평가 — 공식 Baseline(models/baseline/baseline_best.pt)을 그 Dataset Version 의 Validation 에서 평가한다 (가이드 18.1).
 
-이력: kimchi_v1 첫 Baseline 의 평가 결과는 reports/history/baseline_v1_metrics.csv · baseline_v1_class_metrics.csv.
+어느 실행이 공식 Baseline 인지는 src/registry.py 의 OFFICIAL["baseline"] (지금 baseline_v5 · kimchi_v5).
+imgsz · batch 는 그 실행의 runs/<실행>/args.yaml 에서 읽는다. 지난 Version 결과는 reports/history/<Version>/.
 
     python scripts/07_evaluate_baseline.py
 
@@ -19,33 +20,28 @@ import shutil
 import sys
 from pathlib import Path
 
-import yaml
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 os.chdir(PROJECT_ROOT)
 
+from src import registry  # noqa: E402
 from src.evaluate_detector import evaluate_detector  # noqa: E402
+from src.split_builder import SplitBuilder  # noqa: E402
 from src.train_detector import rel  # noqa: E402
 
-MODEL_VERSION = "baseline_v4"
-WEIGHT = PROJECT_ROOT / "models" / "baseline" / "baseline_best.pt"
-TRAIN_RUN = PROJECT_ROOT / "runs" / MODEL_VERSION
-DATA_YAML = PROJECT_ROOT / "configs" / "dataset.yaml"
+WEIGHT, MODEL_VERSION = registry.resolve("baseline")       # (models/baseline/baseline_best.pt, 실행 이름)
+DATASET_VERSION = registry.run_version(MODEL_VERSION)
+TRAIN_RUN = registry.RUNS / MODEL_VERSION
+DATA_YAML = SplitBuilder(PROJECT_ROOT, DATASET_VERSION).dataset_yaml
 REPORTS = PROJECT_ROOT / "reports"
 FIGURES = REPORTS / "figures" / "baseline"
 BASE_DIR = REPORTS / "02_baseline"
 
 
-def dataset_version():
-    with (PROJECT_ROOT / "manifests" / "val.csv").open(encoding="utf-8-sig") as f:
-        return next(csv.DictReader(f))["dataset_version"]
-
-
 def main():
     # 학습할 때 쓴 조건을 그대로 읽어 같은 imgsz 로 평가한다
-    args = yaml.safe_load((TRAIN_RUN / "args.yaml").read_text(encoding="utf-8"))
+    args = registry.run_args(MODEL_VERSION)
 
     print("=" * 65)
     print(f" [Subject 08] Baseline Validation ({MODEL_VERSION} · {rel(WEIGHT)})")
@@ -59,7 +55,7 @@ def main():
         w = csv.writer(f)
         w.writerow(["model_version", "dataset_version", "split", "imgsz", "batch", "epochs", "seed",
                     "images", "instances", "precision", "recall", "map50", "map50_95"])
-        w.writerow([MODEL_VERSION, dataset_version(), "val", args["imgsz"], args["batch"], args["epochs"], args["seed"],
+        w.writerow([MODEL_VERSION, DATASET_VERSION, "val", args["imgsz"], args["batch"], args["epochs"], args["seed"],
                     res["images"], res["instances"], res["precision"], res["recall"], res["map50"], res["map50_95"]])
 
     class_csv = BASE_DIR / "baseline_class_metrics.csv"

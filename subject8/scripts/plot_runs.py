@@ -6,13 +6,13 @@
 결과 (Git 에 올림):
     reports/figures/runs/<실행>.png                       실행별 학습 곡선 (Loss 3종 · P/R · mAP50 · mAP50-95, best epoch 표시)
     reports/figures/comparison/runs_comparison_<Dataset Version>.png  같은 Version 실행끼리 Val mAP50-95 비교 (Val 이 같아야 비교가 공정)
-    reports/04_improvement/runs_summary.csv                               실행별 Dataset Version · 조건(args.yaml) · best epoch 지표
+    reports/runs_summary.csv                               실행별 Dataset Version · 조건(args.yaml) · best epoch 지표
+    models/README.md                                      모델 목록 — Version · 공식 여부 · Weight · 조건 · 점수 · 조건 기록 · 그래프 링크
 
 Dataset Version 은 실행 이름의 `_v<N>` 으로 정한다 (예: exp001_v4_imgsz1280 → kimchi_v4). smoke_* 는 비교에서 뺀다.
-새 실행도 이름에 `_v<N>` 을 넣는다.
+새 실행도 이름에 `_v<N>` 을 넣는다. 타일링 실행(`tile2x2`)의 학습 중 Val 은 조각 단위라 Version 비교 그래프에서 뺀다.
 
-Ultralytics 원본 그래프(실행당 약 1.8MB)는 Git 에 올리지 않고, 이 그림(실행당 약 0.1MB)으로 대신한다.
-핵심 모델의 Confusion Matrix·PR 곡선은 07_evaluate_baseline.py 처럼 reports/figures/baseline/ 에 따로 둔다.
+Ultralytics 원본 그래프(Confusion Matrix · PR 곡선 등)는 runs/<실행>/*.png 로 함께 Git 에 올린다 (사진이 든 *_batch*.jpg 는 제외).
 """
 import argparse
 import csv
@@ -28,10 +28,15 @@ import matplotlib.pyplot as plt  # noqa: E402
 import yaml  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+from src import registry  # noqa: E402
+from src.constants import DEFAULT_DATASET_VERSION  # noqa: E402
+
 RUNS = PROJECT_ROOT / "runs"
+MODELS_README = PROJECT_ROOT / "models" / "README.md"
 FIG_DIR = PROJECT_ROOT / "reports" / "figures" / "runs"
 COMPARE_DIR = PROJECT_ROOT / "reports" / "figures" / "comparison"
-SUMMARY_CSV = PROJECT_ROOT / "reports" / "04_improvement" / "runs_summary.csv"
+SUMMARY_CSV = PROJECT_ROOT / "reports" / "runs_summary.csv"      # 모든 Version 의 실행 (Version 무관이라 단계 폴더 밖)
 SKIP = {"eval", "predict"}
 PNG_META = {"Software": None}  # 다시 그려도 내용이 같으면 파일이 바뀌지 않게
 VERSION_RE = re.compile(r"(?:^|_)v(\d+)(?:_|$)")
@@ -116,6 +121,55 @@ def plot_comparison(version: str, data, out: Path):
     plt.close(fig)
 
 
+def condition_doc(run: str):
+    """이 실행의 학습 조건 기록 (공식 Baseline 은 가이드 이름 baseline_training_condition.md)"""
+    if run == registry.OFFICIAL["baseline"]:
+        p = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"
+        if p.is_file():
+            return p
+    found = sorted((PROJECT_ROOT / "reports").rglob(f"{run}_training_condition.md"))
+    return found[0] if found else None
+
+
+def write_models_readme(summary):
+    """models/README.md — 공식 Version 먼저, 그다음 지난 Version (새 것부터)"""
+    def link(p: Path, text: str) -> str:
+        return f"[{text}]({Path('..') / p.relative_to(PROJECT_ROOT)})".replace("\\", "/")
+
+    official = {run: alias for alias, run in registry.OFFICIAL.items() if run}
+    versions = sorted({s["dataset_version"] for s in summary if s["dataset_version"].startswith("kimchi")},
+                      key=lambda v: (v != DEFAULT_DATASET_VERSION, -int(v.split("_v")[1])))
+    lines = ["# 모델 목록", "",
+             "> `python scripts/plot_runs.py` 가 만드는 표입니다 (직접 고치지 않음). 점수는 **학습 중 best epoch 의 Validation** — "
+             "같은 Dataset Version 끼리만 비교합니다 (Version 마다 Validation 이 다름).", "",
+             f"- 공식 Dataset Version: **`{DEFAULT_DATASET_VERSION}`** (`src/constants.py` 의 `DEFAULT_DATASET_VERSION`)",
+             *[f"- `{registry.ALIASES[a].relative_to(PROJECT_ROOT / 'models').as_posix()}` = **`{r}`** 의 복사본"
+               + ("" if registry.ALIASES[a].is_file() else " (아직 없음)") for a, r in registry.OFFICIAL.items() if r],
+             "- 파일 이름 = `runs/` 폴더 이름. 공식 Version 은 `baseline/` · `improved/`, 지난 Version 은 `history/<Version>/`",
+             "- 사용: `python scripts/08_predict_images.py --model <실행>` · `09_collect_failures.py --model <실행>` (imgsz · 데이터는 자동)", ""]
+    for v in versions:
+        lines += [f"## {v}" + (" (공식)" if v == DEFAULT_DATASET_VERSION else ""), "",
+                  "| 실행 | 공식 | Weight | imgsz | epoch | batch | best ep | Val P | Val R | mAP50 | mAP50-95 | 조건 기록 | 그래프 |",
+                  "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        for s in [s for s in summary if s["dataset_version"] == v]:
+            run = s["run"]
+            try:
+                w = registry.find_weight(run)
+                weight = link(w, w.relative_to(PROJECT_ROOT / "models").as_posix())
+            except FileNotFoundError:
+                weight = "보관 안 함"
+            doc = condition_doc(run)
+            figs = [link(FIG_DIR / f"{run}.png", "학습 곡선")] + \
+                   [link(RUNS / run / f, t) for f, t in (("confusion_matrix.png", "Confusion"), ("BoxPR_curve.png", "PR"))
+                    if (RUNS / run / f).is_file()]
+            note = " (조각 Val)" if registry.run_tiles(run) else ""
+            lines.append(f"| `{run}` | {official.get(run, '')} | {weight} | {s['imgsz']} | {s['epochs']} | {s['batch']} | "
+                         f"{s['best_epoch']} | {s['precision']:.3f} | {s['recall']:.3f} | {s['map50']:.3f} | "
+                         f"{s['map50_95']:.3f}{note} | {link(doc, '기록') if doc else ''} | {' · '.join(figs)} |")
+        lines.append("")
+    MODELS_README.write_text("\n".join(lines), encoding="utf-8")
+
+
 def main():
     ap = argparse.ArgumentParser(description="runs/*/results.csv 로 학습 그래프·비교표 만들기")
     ap.add_argument("--runs", nargs="*", help="실행 이름 (생략하면 results.csv 가 있는 전부)")
@@ -143,7 +197,7 @@ def main():
         plot_run(name, rows, a, FIG_DIR / f"{name}.png")
         b = best_row(rows)
         version = dataset_version(name)
-        if version != "smoke":
+        if version != "smoke" and not registry.run_tiles(name):     # 조각 Val 은 다른 실행과 비교하지 않는다
             by_version[version].append((name, rows, a))
         summary.append({
             "run": name, "dataset_version": version,
@@ -166,8 +220,10 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(summary[0]))
         w.writeheader()
         w.writerows(summary)
+    write_models_readme(summary)
 
-    print(f"\n 저장: reports/figures/runs/ ({len(data)}장), reports/figures/comparison/ ({', '.join(compare_files)}), reports/04_improvement/runs_summary.csv")
+    print(f"\n 저장: reports/figures/runs/ ({len(data)}장), reports/figures/comparison/ ({', '.join(compare_files)}), "
+          f"reports/runs_summary.csv, models/README.md")
     print(" 비교 그래프는 같은 Dataset Version(같은 Validation)끼리만 묶었다.")
     print(" (참고) 학습 중 Validation 지표이며, 공식 평가는 07_evaluate_baseline.py 등으로 따로 한다.")
 

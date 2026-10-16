@@ -1,30 +1,31 @@
 # reports 안내
 
-파일 이름은 가이드와 같은 영어 이름 그대로이고, **단계(일차)별 폴더만 추가**했다.
+파일 이름은 가이드와 같은 영어 이름 그대로이고, **단계(일차)별 폴더만 추가**했다. 단계 폴더(01~05)는 **공식 Dataset Version `kimchi_v5`** 의 결과이고, 지난 Version 은 `history/<Version>/` 에 같은 이름 규칙으로 둔다.
 
 ```text
 reports/
-├── 01_data/                  2~3일차  Dataset 수량 · 점검 · 라벨 수정 기록
+├── 01_data/                  2~3일차  Dataset 수량 · 점검 · 라벨 수정 기록 · v4→v5 비교
 │   ├── label_fixes_kimchi_v3/    Class 5(갈변) 재검수와 라벨 수정 내역
 │   └── label_fixes_kimchi_v5/    v5 에서 지운 박스 3개 (이물 없음)
-├── 02_baseline/              4~5일차  Baseline 학습 조건 · Validation 성능
-├── 03_failure_analysis/      6일차    실패 사례 표 · 원인 가설
-├── 04_improvement/           7일차    설계 · 실험 기록 · 비교 분석 · exp001~003 조건
-├── 05_acceptance/            9일차    Acceptance Test 결과
-├── 06_kimchi_v5/             재분할   kimchi_v5(C안) 학습 조건 — baseline_v5 · exp001_v5 · exp002_v5
-├── history/                  지난 Dataset Version(v1~v3) · Smoke Test — 현재 기준 아님
+├── 02_baseline/              4~5일차  공식 Baseline(baseline_v5) 학습 조건 · Validation 성능
+├── 03_failure_analysis/      6일차    실패 사례 표 (baseline_v5) — 원인 가설 문서는 v5 기준으로 다시 작성 예정
+├── 04_improvement/           7일차    v5 실험 기록 · 실험별 학습 조건 · 타일링 채점
+├── 05_acceptance/            9일차    Acceptance Test (작성 중 — 담당 5번)
+├── runs_summary.csv          모든 Version 의 모든 학습 실행 요약 (scripts/plot_runs.py 가 생성)
+├── history/                  지난 Dataset Version — 현재 기준 아님, 지우지 않고 남긴 기록
+│   ├── kimchi_v1/ · kimchi_v2/ · kimchi_v3/ · kimchi_v4/
+│   └── smoke_test.md
 └── figures/
-    ├── baseline/             Baseline 학습 곡선 · Confusion Matrix · PR 곡선
-    ├── runs/                 실행마다의 학습 곡선 (baseline_v4, exp001~003 …)
-    ├── comparison/           Version 별 실행 비교 · 개선 분석 요약 그림
-    └── history/              첫 Baseline(kimchi_v1) 그래프
+    ├── baseline/             공식 Baseline 학습 곡선 · Confusion Matrix · PR 곡선 (07 이 생성)
+    ├── runs/                 실행마다의 학습 곡선 (모든 Version)
+    └── comparison/           Version 별 실행 비교 · v4→v5 비교
 ```
 
-> **먼저 볼 파일 4개**
-> 1. [`04_improvement/baseline_vs_improved.md`](04_improvement/baseline_vs_improved.md) — 개선 결과 분석 (그림 포함)
-> 2. [`04_improvement/runs_summary.csv`](04_improvement/runs_summary.csv) — 모든 학습 실행의 조건·성능을 한 표로 (자동 생성)
-> 3. [`04_improvement/experiment_log.csv`](04_improvement/experiment_log.csv) — 실험별 변경 변수·이유·판정
-> 4. [`04_improvement/improvement_experiment.md`](04_improvement/improvement_experiment.md) — exp001 이 무엇을 왜 바꿨는지
+> **먼저 볼 파일**
+> 1. [`../models/README.md`](../models/README.md) — 모든 모델의 Version · 점수 · 조건 기록 · 그래프 링크 (자동 생성)
+> 2. [`04_improvement/experiment_log.csv`](04_improvement/experiment_log.csv) — v5 실험별 변경 변수 · 이유 · 판정
+> 3. [`figures/comparison/runs_comparison_kimchi_v5.png`](figures/comparison/runs_comparison_kimchi_v5.png) — v5 실험 비교 그림
+> 4. [`figures/comparison/v5_vs_v4.png`](figures/comparison/v5_vs_v4.png) — v4 → v5 에서 달라진 점 (누수 · Class 박스 · 점수)
 
 ## 폴더별 파일
 
@@ -32,68 +33,67 @@ reports/
 
 | 파일 | 내용 |
 |---|---|
-| `dataset_summary.csv` | `kimchi_v4` 의 Train / Val / Test / Bridge Holdout 장수 (3일차) |
-| `dataset_summary_kimchi_v5.csv` | `kimchi_v5`(C안) 장수 — 558 / 104 / 82 / 156 |
-| `audit_summary.csv`, `audit_class_scene.csv` | 전체 수량 · Class × 장면 (2일차 Data Audit) |
+| `dataset_summary.csv` | `kimchi_v5` 의 Train / Val / Test / Bridge Holdout 장수 — 558 / 104 / 82 / 156 (산출물 1) |
+| `v5_vs_v4.csv` | v4 → v5 비교 숫자 (평가 사진의 같은 묶음 출신 수, 역할 × Class 박스, Val 점수) — `scripts/plot_v5_vs_v4.py` |
+| `audit_summary.csv`, `audit_class_scene.csv` | 전체 수량 · Class × 장면 (2일차 Data Audit, Version 무관) |
 | `audit_issue.csv` | 발견된 오류 (비어 있음 = 오류 없음) |
-| `capture_group_summary.csv`, `leakage_check.csv` | 촬영 묶음별 장수·시간·장면 · Split 간 누수 점검 |
-| `label_fixes_kimchi_v3/class5_review.csv`, `class5_relabel_worklist.csv` | 갈변 재검수 표 · 사람 확인 작업표 |
-| `label_fixes_kimchi_v3/label_changes_kimchi_v3.csv` | v3 에서 Class 5 라벨을 고친 내역 (파일별) |
+| `capture_group_summary.csv`, `leakage_check.csv` | 촬영 묶음별 장수·시간·장면 · 사진 지문 누수 점검 |
+| `label_fixes_kimchi_v3/` | 갈변 재검수 표 · 사람 확인 작업표 · v3 라벨 수정 내역 |
+| `label_fixes_kimchi_v5/label_changes_kimchi_v5.csv` | v5 에서 지운 박스 3개 |
 
 ### 02_baseline (4~5일차)
 
 | 파일 | 내용 |
 |---|---|
-| `baseline_training_condition.md` | 공식 Baseline `baseline_v4` 학습 조건 |
-| `baseline_metrics.csv`, `baseline_class_metrics.csv` | Validation 성능 · Class별 성능 |
+| `baseline_training_condition.md` | 공식 Baseline `baseline_v5` 학습 조건 (산출물 2) |
+| `baseline_metrics.csv`, `baseline_class_metrics.csv` | Validation 104장 성능 · Class 별 성능 (`scripts/07_evaluate_baseline.py`) |
 
 ### 03_failure_analysis (6일차)
 
 | 파일 | 내용 |
 |---|---|
-| **`failure_hypothesis.md`** | 실패 원인 가설 H1~H5 (읽을 문서) |
-| `failure_analysis.csv` | 정답·오검출 하나하나의 결과 (가장 큰 파일) |
+| `failure_analysis.csv` | 정답·오검출 하나하나의 결과 (산출물 3, `scripts/09_collect_failures.py`) |
 | `failure_summary.csv` | 실패 유형 × Class 별 건수 |
-| `failure_recall_by_size.csv` | 박스 크기별 Recall (H4 근거) |
-| `failure_box_size_shift.csv` | Train vs Val 박스 크기 차이 (H1 근거) |
+| `failure_recall_by_size.csv` | 박스 크기별 Recall |
+| `failure_box_size_shift.csv` | Train vs Val 박스 크기 차이 |
+| `failure_hypothesis.md` | **v5 기준 작성 예정** — kimchi_v1 때의 가설은 `history/kimchi_v1/03_failure_analysis/` |
 
 ### 04_improvement (7일차)
 
 | 파일 | 내용 |
 |---|---|
-| **`improvement_experiment.md`** | exp001 설계: 변경 변수 · 유지 조건 · 확인 지표 |
-| **`experiment_log.csv`** | 전체 실험 기록 (실패·이력 포함) |
-| **`baseline_vs_improved.md`** | Baseline 과 exp001~003 비교 · Class별 · 비용 · Final Model 후보 제안 |
-| `improvement_summary.csv` | 위 분석의 숫자 (`scripts/plot_improvement.py` 가 생성) |
-| `exp001_training_condition.md` | imgsz 640 → 1280 |
-| `exp002_training_condition.md` | imgsz 1280 → 1920 (batch 16 → 6 동반) |
-| `exp003_training_condition.md` | epochs 50 → 100 |
-| `runs_summary.csv` | 전 실행 요약 (`scripts/plot_runs.py` 가 생성) |
+| **`experiment_log.csv`** | v5 실험 기록 · 판정 (산출물 5) |
+| `<실행>_training_condition.md` | exp001_v5 (1280) · exp002_v5 (1920) · exp003_v5 (epoch 100) · exp004_v5 (타일링) · exp005_v5 (증강) 학습 조건 |
+| `tiling_eval.csv` | 타일링 비교 — 원본 Val 104장을 같은 코드로 채점 (exp002_v5 원본 vs exp004_v5 조각 합침) |
+| `improvement_experiment.md` · `baseline_vs_improved.md` | **v5 기준 작성 예정** — v4 판은 `history/kimchi_v4/` |
 
 ### 05_acceptance (9일차)
 
 | 파일 | 내용 |
 |---|---|
-| `acceptance_test.md` | Acceptance Test 결과 (작성 중 — 7일차 자동 점검 기준) |
+| `acceptance_test.md` | Acceptance Test 결과 (작성 중 — 7일차 자동 점검 기준, 담당 5번) |
 | `acceptance_check.csv` | 자동 점검 원본 (`scripts/qa_acceptance_check.py`) |
 
-### history
+### history (지난 Version)
 
-`baseline_v1_*` (kimchi_v1 첫 Baseline — 6일차 실패분석의 대상), `history_v2_*`·`history_v3_*` (kimchi_v2·v3 학습 조건), `smoke_test.md`.
-Dataset Version 마다 Val 구성이 달라 **`v4` 점수와 비교하지 않는다.** 지우지 않고 남긴 기록이다.
+| 폴더 | 내용 |
+|---|---|
+| `kimchi_v1/` | 첫 Baseline `baseline_v1` 조건·성능·그래프, 그 실패 분석 `03_failure_analysis/` (H1~H5 — v2~v4 로 Dataset 을 고친 근거) |
+| `kimchi_v2/` · `kimchi_v3/` | 데이터 개선 과정 1280 학습 조건 |
+| `kimchi_v4/` | `baseline_v4` · exp001~003 조건·성능, v4 개선 분석 `baseline_vs_improved.md` · `improvement_experiment.md` · `experiment_log.csv`, 그래프 `figures/` |
+| `smoke_test.md` | Smoke Test 점검 |
 
-## 학습 실행 한눈에 (`04_improvement/runs_summary.csv` 요약)
+Dataset Version 마다 Val 구성이 달라 **v5 점수와 직접 비교하지 않는다.**
 
-| 실행 | Dataset | imgsz | epochs | mAP50-95 | 학습 곡선 |
-|---|---|---:|---:|---:|---|
-| `baseline_v4` (공식 Baseline) | v4 | 640 | 50 | 0.534 | `figures/runs/baseline_v4.png` |
-| `exp001_v4_imgsz1280` | v4 | 1280 | 50 | 0.708 | `figures/runs/exp001_v4_imgsz1280.png` |
-| `exp002_v4_imgsz1920` | v4 | 1920 | 50 | 0.758 | `figures/runs/exp002_v4_imgsz1920.png` |
-| `exp003_v4_imgsz1920_epoch100` (Val 최고) | v4 | 1920 | 100 | 0.774 | `figures/runs/exp003_v4_imgsz1920_epoch100.png` |
+## 학습 실행 한눈에 (kimchi_v5, `runs_summary.csv` · `04_improvement/experiment_log.csv`)
 
-Weight 는 `models/baseline/`, `models/improved/` 에 있다.
+| 실행 | imgsz | epochs | 바꾼 것 | Val mAP50-95 | 판정 |
+|---|---:|---:|---|---:|---|
+| `baseline_v5` (공식 Baseline) | 640 | 50 | — | 0.470 | 기준 |
+| `exp001_v5_imgsz1280` | 1280 | 50 | imgsz | 0.646 | 채택 |
+| `exp002_v5_imgsz1920` | 1920 | 50 | imgsz (batch 6) | **0.704** | 채택 |
+| `exp003_v5_imgsz1920_epoch100` | 1920 | 100 | epochs | 0.701 | 기각 |
+| `exp004_v5_tile2x2` | 1920 | 50 | 2×2 타일링 | 0.698* (원본 단위, exp002 = 0.680*) | 보류 |
+| `exp005_v5_imgsz1920_aug` | 1920 | 50 | 증강 | 0.684 | 기각 |
 
-## 7일차 Daily Gate 에서 아직 없는 것
-
-- exp001 Confusion Matrix (`figures/baseline/` 에는 Baseline 것만 있다 — 사진이 있는 PC 에서 필요). 학습 곡선은 `figures/runs/exp001_v4_imgsz1280.png` 로 이미 있으나 가이드가 정한 이름(`exp001_results.png`)과 다르다.
-- 개선 모델의 크기별 Recall·CLASS_ERROR 재집계 (사진이 있는 PC 에서 `09_collect_failures.py`, 명령은 `04_improvement/baseline_vs_improved.md` 5장)
+\* `src/tiling.py` 로 원본 사진 단위 채점. 학습 곡선은 `figures/runs/<실행>.png`, Confusion Matrix · PR 곡선은 `../runs/<실행>/`, Weight 는 [`../models/README.md`](../models/README.md).

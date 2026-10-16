@@ -140,6 +140,6 @@ C안 박스 수 (c0/c1/c2/c3/c5/c6, 재계산으로 확인):
 
 - [ ] 분할안 확정 (C안 추천, G00 처리 방식 포함)
 - [ ] 배치 기록 검수: 사람 1명이 `manual_split/worksheet_A~F.csv` 의 AI 판정(`review_ok`, `review_note`) 확인
-- [ ] `data/yolo_v5` 에 복사로 구성 (기존 `data/yolo` 유지), `split_policy.md` 에 kimchi\_v5 추가
+- [x] 공식 Version 으로 전환 (2026-10-16): `data/yolo` · `manifests/*.csv` · `configs/dataset.yaml` = kimchi\_v5, v4 는 `data/yolo_v4` · `manifests/kimchi_v4/` (`python scripts/00_setup.py`)
 - [ ] baseline\_v5 학습: YOLO11n · 50 epoch · 640 / 1280 / 1920
 - [ ] v4 실험과 같은 방식으로 비교표 작성 (v4와는 Val이 달라 직접 비교하지 않음). 보고서에 위 한계 함께 기록
