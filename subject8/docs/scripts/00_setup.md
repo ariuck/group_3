@@ -16,7 +16,7 @@ python3 scripts/00_setup.py --rebuild   # 학습 폴더를 지우고 다시 복�
 
 | 단계 | 하는 일 | 이미 되어 있으면 |
 |---|---|---|
-| 1 | `.venv` 없으면 만들고 `requirements.txt` 설치 → 이후 `.venv` Python 으로 다시 실행 | 건너뜀 |
+| 1 | Python 3.14 인지 확인 (아니면 설치 방법을 알려 주고 멈춤). `.venv` 가 없거나 설치가 끝나지 않았으면(`.venv/.requirements_installed` 에 `requirements.txt` 해시가 없음) 설치 → 이후 `.venv` Python 으로 다시 실행 | 건너뜀 |
 | 2 | `subject7/data/raw` 사진 900장 확인 | 모자라면 넣을 위치를 알려 주고 멈춤 |
 | 3 | [`subject7 tools/restore_from_final.py`](../../../subject7/docs/tools/restore_from_final.md) `--apply` — work · 검수표 · final 사진 | 같은 파일은 건너뜀, 다른 파일은 덮어쓰지 않고 멈춤 |
 | 4 | [`02_audit_subject7_final`](02_audit_subject7_final.md) | 매번 (몇 초) |
@@ -27,7 +27,9 @@ python3 scripts/00_setup.py --rebuild   # 학습 폴더를 지우고 다시 복�
 
 | 이름 | 설명 |
 |---|---|
-| `ensure_venv()` | `.venv` 준비 후 `os.execv` 로 자신을 `.venv` Python 으로 다시 실행 |
+| `check_python(version, where)` | Python 3.14 가 아니면 deadsnakes 설치 방법을 알려 주고 멈춤 (`REQUIRED_PYTHON`) |
+| `install_done()` | `INSTALL_MARKER`(`.venv/.requirements_installed`)에 지금 `requirements.txt` 해시가 있는가 — 설치가 중간에 실패한 `.venv` 를 걸러 냄 |
+| `ensure_venv()` | `.venv` 준비(필요하면 설치 후 표시 기록) 후 `os.execv` 로 자신을 `.venv` Python 으로 다시 실행 |
 | `check_raw()` | RAW 사진 수 확인 (`EXPECTED_IMAGES = 900`) |
 | `dataset_matches(version)` | 학습 폴더의 사진(크기)·라벨(내용)이 manifest·라벨 수정본과 같고, manifest 에 없는 파일이 없는가 |
 | `main()` | 위 단계 실행. 실패하면 그 명령을 보여 주고 멈춤 |

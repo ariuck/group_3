@@ -160,7 +160,7 @@ def main():
         print("   ⚠ Git 에 있는 것과 다른 파일:\n" + "\n".join("     " + x for x in out.splitlines()))
         sys.exit(1)
     print("   manifest · 점검 보고서 · 교과 7 최종본이 Git 과 같음 → 같은 데이터 · 같은 분할 ✓")
-    print("\n준비 끝. 학습: python scripts/06_train_baseline.py (v4) · python scripts/11_train_v5.py (v5)")
+    print("\n준비 끝. 학습: python scripts/11_train_v5.py --run <실험> (공식 kimchi_v5) · 모델 목록: models/README.md")
 
 
 if __name__ == "__main__":
