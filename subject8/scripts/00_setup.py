@@ -7,7 +7,8 @@
     subject7/data/raw/이물검출_학습데이터1/images/train/*.jpg …, 이물검출_학습데이터2/…
 
 단계 (이미 된 것은 건너뛴다 — 여러 번 실행해도 결과가 같다)
-  1. subject8/.venv 가 없으면 만들고 requirements.txt 설치, 이후 단계는 .venv 의 Python 으로 다시 실행
+  1. Python 3.14 인지 확인. subject8/.venv 가 없거나 설치가 끝나지 않았으면 requirements.txt 설치,
+     이후 단계는 .venv 의 Python 으로 다시 실행
   2. subject7/data/raw 에 사진 900장이 있는지 확인 (없으면 넣을 위치를 알려 주고 멈춤)
   3. subject7: tools/restore_from_final.py --apply — work · 검수표 · final 사진 (같은 파일은 건너뜀, 다른 파일은 덮어쓰지 않고 멈춤)
   4. scripts/02_audit_subject7_final.py — 900장 · 이슈 0 확인
@@ -16,6 +17,7 @@
 """
 import argparse
 import filecmp
+import hashlib
 import os
 import subprocess
 import sys
@@ -25,6 +27,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SUBJECT7 = PROJECT_ROOT.parent / "subject7"
 VENV_PY = PROJECT_ROOT / ".venv" / "bin" / "python"
+REQUIREMENTS = PROJECT_ROOT / "requirements.txt"
+INSTALL_MARKER = PROJECT_ROOT / ".venv" / ".requirements_installed"   # 설치 성공 표시 (requirements.txt 해시)
+REQUIRED_PYTHON = (3, 14)
 VERSIONS = ["kimchi_v4", "kimchi_v5"]
 EXPECTED_IMAGES = 900
 
@@ -39,18 +44,49 @@ def run(cmd, cwd=PROJECT_ROOT):
         sys.exit(f"\n실패: {' '.join(str(c) for c in cmd)}")
 
 
+def check_python(version, where):
+    """requirements.txt 는 Python 3.14 기준 (pandas 3.x·numpy 2.5 는 낮은 버전에 설치 안 됨)"""
+    if tuple(version[:2]) != REQUIRED_PYTHON:
+        need = ".".join(map(str, REQUIRED_PYTHON))
+        sys.exit(f"   {where} Python 이 {version[0]}.{version[1]} 입니다 (필요 {need}).\n"
+                 f"   Ubuntu 에서 설치: sudo add-apt-repository ppa:deadsnakes/ppa && "
+                 f"sudo apt install python{need} python{need}-venv\n"
+                 f"   그다음: python{need} scripts/00_setup.py")
+
+
+def requirements_hash():
+    return hashlib.sha256(REQUIREMENTS.read_bytes()).hexdigest()
+
+
+def install_done():
+    """pip install 이 끝까지 성공했는가 — .venv 폴더만 있고 설치가 중간에 실패한 경우를 걸러 낸다"""
+    return INSTALL_MARKER.is_file() and INSTALL_MARKER.read_text().strip() == requirements_hash()
+
+
 def ensure_venv():
-    """1. .venv 준비 후 그 Python 으로 이 스크립트를 다시 실행 (이미 .venv 안이면 통과)"""
-    if Path(sys.prefix).resolve() == (PROJECT_ROOT / ".venv").resolve():
+    """1. .venv 준비 후 그 Python 으로 이 스크립트를 다시 실행 (이미 .venv 안이면 설치 확인만)"""
+    in_venv = Path(sys.prefix).resolve() == (PROJECT_ROOT / ".venv").resolve()
+    check_python(sys.version_info, "지금 실행한")
+    if in_venv and install_done():
         return
     step(1, "가상환경 subject8/.venv")
     if not VENV_PY.exists():
         print("   없음 → 만들고 requirements.txt 설치 (처음 한 번, 몇 분 걸림)")
         venv.create(PROJECT_ROOT / ".venv", with_pip=True)
-        run([VENV_PY, "-m", "pip", "install", "-r", PROJECT_ROOT / "requirements.txt"])
     else:
-        print("   있음 → 건너뜀")
-    os.execv(str(VENV_PY), [str(VENV_PY), __file__, *sys.argv[1:]])
+        out = subprocess.run([str(VENV_PY), "-c", "import sys; print(*sys.version_info[:2])"],
+                             capture_output=True, text=True).stdout.split()
+        if tuple(map(int, out)) != REQUIRED_PYTHON:
+            sys.exit(f"   .venv 의 Python 이 {'.'.join(out)} 입니다. "
+                     f"{PROJECT_ROOT / '.venv'} 를 지우고 다시 실행하세요.")
+    if install_done():
+        print("   있음 · 설치 완료 → 건너뜀", flush=True)   # execv 전에 출력을 비워야 안 사라짐
+    else:
+        print("   requirements.txt 설치가 끝나지 않았거나 바뀜 → 설치 (이미 있는 패키지는 건너뜀)")
+        run([VENV_PY, "-m", "pip", "install", "-r", REQUIREMENTS])
+        INSTALL_MARKER.write_text(requirements_hash())   # 설치가 성공했을 때만 표시
+    if not in_venv:
+        os.execv(str(VENV_PY), [str(VENV_PY), __file__, *sys.argv[1:]])
 
 
 def check_raw():
