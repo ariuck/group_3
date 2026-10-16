@@ -18,14 +18,10 @@ demo/**/*.png
 #   올라감: data/label_fixes/**/*.txt  (kimchi_v3~ 라벨 수정본)
 #   교과 7 FINAL 라벨·검수표는 subject7/data/final 에 (Git), 사진은 subject7/data/raw 에서 읽는다
 #   다른 PC 는 회사 원본을 subject7/data/raw 에 넣으면 된다 → README "다른 PC 에서 시작하기"
-#   다시 만들 수 있는 폴더: yolo·bridge_holdout 은 03_build_split.py --copy-files, smoke 는 05_smoke_train.py
-data/yolo/
-data/bridge_holdout/
-#   kimchi_v5 는 03_build_split.py --version kimchi_v5 --copy-files
-data/yolo_v5/
-data/bridge_holdout_v5/
-#   타일링 조각 (14_train_tiles_v5.py 가 만듦)
-data/yolo_v5_tiles/
+#   다시 만들 수 있는 폴더 (00_setup.py · 03_build_split.py --copy-files · 14 · 05):
+#   공식 Version data/yolo · data/bridge_holdout, 지난 Version data/yolo_v4 · data/bridge_holdout_v4 …, 타일 data/yolo_v5_tiles
+data/yolo*/
+data/bridge_holdout*/
 data/smoke/
 #   예전 사본 폴더 (지금은 쓰지 않음 — 남아 있는 PC 의 사진·엑셀이 올라가지 않게)
 data/subject7_final/
