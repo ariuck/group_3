@@ -1,0 +1,37 @@
+﻿area,item,status,detail
+Dataset,교과 7 출처(source_dataset·original_split·scene_type)를 추적할 수 있다,PASS,"900장 모두 출처 데이터셋, 원래 split, 이미지 유형 기록"
+Dataset,Dataset Version 을 확인할 수 있다,PASS,manifest {'kimchi_v4': 900} · dataset_summary ['kimchi_v4']
+Dataset,Train/Validation/Frozen Test/Bridge Holdout Manifest 가 있고 합이 900장,PASS,"{'train': 526, 'val': 132, 'test': 84, 'bridge_holdout': 158} 합 900 · split_manifest 900"
+Dataset,dataset_summary.csv 가 Manifest 와 같다,PASS,"summary {'train': 526, 'val': 132, 'test': 84, 'bridge_holdout': 158}"
+Dataset,역할(Train/Val/Test/Bridge) 사이에 같은 이미지가 없다,PASS,겹침 0장
+Dataset,같은 촬영 묶음이 여러 역할에 섞이지 않았다 (또는 예외가 문서화됨),MANUAL,"섞인 묶음 ['G00', 'G09', 'G12'] — docs/project/split_policy.md 의 분할 예외로 문서화되어 있는지 사람이 확인"
+Dataset,Split 정책이 문서로 확정(FROZEN)되어 있다,PASS,docs/project/split_policy.md
+Dataset,Class ID 0~6 을 그대로 쓴다,PASS,"dataset.yaml names [0, 1, 2, 3, 4, 5, 6]"
+Dataset,Bridge Holdout 이 dataset.yaml 에 포함되지 않는다,PASS,configs/dataset.yaml
+Dataset,Frozen Test 가 Final Model 선택 전에 사용되지 않았다,PASS,"runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음 (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)"
+Dataset,학습에 쓴 Train/Val Manifest 가 지금 Manifest 와 같다 (해시),PASS,train 169e6cfcb1f7=169e6cfcb1f7 · val 20c40a376464=20c40a376464
+Model,baseline Weight 가 있고 기록(해시)과 같다,PASS,models/baseline/baseline_best.pt · e732b7d16153
+Model,exp001 Weight 가 있고 기록(해시)과 같다,PASS,models/improved/exp001_best.pt · a9348f85fd70
+Model,exp002 Weight 가 있고 기록(해시)과 같다,PASS,models/improved/exp002_best.pt · 4f2f8d8457a7
+Model,exp003 Weight 가 있고 기록(해시)과 같다,PASS,models/improved/exp003_best.pt · 017e3ec793ca
+Model,Baseline 학습조건이 기록되어 있다,PASS,reports/02_baseline/baseline_training_condition.md
+Model,final_best.pt 가 있다,TODO,models/final/final_best.pt — 8일차 Final Model 확정 후
+Model,Final Model 을 선택한 이유가 기록되어 있다,TODO,reports/final_model_selection.md — 8일차
+Evaluation,Baseline Validation 의 Precision·Recall·mAP50·mAP50-95 가 있다,PASS,precision 0.835 · recall 0.675 · map50 0.764 · map50_95 0.538
+Evaluation,Class 별 성능이 있다,PASS,7개 Class 행
+Evaluation,Failure Analysis 표가 있다,PASS,reports/03_failure_analysis/failure_analysis.csv
+Evaluation,실패 원인 가설 문서가 있다,PASS,reports/03_failure_analysis/failure_hypothesis.md
+Evaluation,Baseline vs Improved 비교 결과가 있다,PASS,reports/04_improvement/baseline_vs_improved.md
+Evaluation,experiment_log.csv 에 권장 필드 15개가 있다,PASS,9개 실행
+Evaluation,Frozen Test 결과가 있다,TODO,reports/final_metrics.csv — 8일차 Final Model 확정 후 한 번만 평가
+Inference · Auto Label,이미지 Detection 이 실행되고 BBox·Class·Confidence 가 표시된다,MANUAL,사진·GPU 가 있는 PC 에서 `python scripts/08_predict_images.py` 실행 후 비교 이미지 확인
+Inference · Auto Label,새 이미지에서 YOLO TXT 후보가 저장된다,TODO,src/auto_labeler.py · scripts/12_auto_label.py 아직 없음 (8일차)
+Inference · Auto Label,후보 TXT 를 교과 7 라벨링 도구에서 열고 수정·삭제·추가·승인·저장할 수 있다,MANUAL,`cd subject7 && python main.py` 로 후보 TXT 를 열어 확인 (Auto Label 구현 후)
+Inference · Auto Label,시연 백업자료: 예측 이미지,TODO,demo/prediction_images — 0개
+Inference · Auto Label,시연 백업자료: Auto Label 후보,TODO,demo/auto_label/candidate_labels — 0개
+Inference · Auto Label,시연 백업자료: 검수 완료 라벨,TODO,demo/auto_label/reviewed_labels — 0개
+환경 · 코드 · 보안,src/·scripts/ 의 모든 Python 파일이 문법 오류 없이 컴파일된다,PASS,전부 정상
+환경 · 코드 · 보안,학습·추론에 필요한 패키지가 이 PC 에 설치되어 있다,FAIL,"없음: ultralytics, torch, cv2 — `pip install -r requirements.txt`"
+환경 · 코드 · 보안,회사 사진이 Git 에 추적되지 않는다,PASS,사진 0장
+환경 · 코드 · 보안,Weight(.pt) 는 models/ 안의 것만 추적된다,PASS,models/ 밖 .pt 0개
+환경 · 코드 · 보안,다른 팀원이 README 만 보고 처음부터 재실행할 수 있다,MANUAL,README 6장 순서대로 다른 PC 에서 실행하고 막힌 곳을 기록 (가이드 22.6)

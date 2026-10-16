@@ -1,0 +1,13 @@
+run,dataset_version,model,imgsz,epochs,batch,optimizer,lr0,seed,epochs_done,best_epoch,precision,recall,map50,map50_95
+baseline_v1,kimchi_v1,yolo11n.pt,640,50,16,AdamW,0.001,42,50,45,0.4283,0.4789,0.4907,0.3473
+baseline_v4,kimchi_v4,yolo11n.pt,640,50,16,AdamW,0.001,42,50,50,0.8365,0.6745,0.7636,0.5344
+baseline_v5,kimchi_v5,yolo11n.pt,640,50,16,AdamW,0.001,42,50,44,0.8882,0.589,0.6875,0.4695
+exp001_v4_imgsz1280,kimchi_v4,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,39,0.9386,0.782,0.884,0.7075
+exp001_v5_imgsz1280,kimchi_v5,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,45,0.9567,0.7241,0.7773,0.6461
+exp002_v4_imgsz1920,kimchi_v4,yolo11n.pt,1920,50,6,AdamW,0.001,42,50,50,0.9438,0.8162,0.891,0.7575
+exp002_v5_imgsz1920,kimchi_v5,yolo11n.pt,1920,50,6,AdamW,0.001,42,50,47,0.8564,0.7656,0.8092,0.7041
+exp003_v4_imgsz1920_epoch100,kimchi_v4,yolo11n.pt,1920,100,6,AdamW,0.001,42,100,77,0.9293,0.8158,0.9132,0.7742
+history_v2_imgsz1280,kimchi_v2,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,47,0.6975,0.6716,0.7083,0.5753
+history_v3_imgsz1280,kimchi_v3,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,40,0.6827,0.6666,0.701,0.5754
+pilot_v1_imgsz1280,kimchi_v1,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,40,0.6895,0.549,0.6351,0.519
+smoke_v1,smoke,yolo11n.pt,640,3,16,AdamW,0.001,42,3,1,0.0011,0.0556,0.0009,0.0004

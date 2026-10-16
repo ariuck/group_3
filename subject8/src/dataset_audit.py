@@ -23,9 +23,10 @@ BOX_EDGE_TOLERANCE = 1e-6
 class DatasetAuditor:
     """교과 7 FINAL 데이터셋의 무결성 및 통계를 전수 감사하는 클래스"""
 
-    def __init__(self, data_root: Path, report_dir: Path):
+    def __init__(self, data_root: Path, report_dir: Path, images_dir: Optional[Path] = None):
+        """data_root: labels/ · 검수표.csv 가 있는 폴더. images_dir 를 주면 사진은 거기서 찾는다 (기본 data_root/images)"""
         self.data_root = Path(data_root)
-        self.images_dir = self.data_root / 'images'
+        self.images_dir = Path(images_dir) if images_dir else self.data_root / 'images'
         self.labels_dir = self.data_root / 'labels'
         self.meta_csv = self.data_root / '검수표.csv'
         self.report_dir = Path(report_dir)

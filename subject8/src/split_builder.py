@@ -18,6 +18,9 @@ from src.constants import (
     LABEL_FIX_DIRS,
     ROLE_PURPOSES,
     ROLES,
+    SEPARATE_DIR_VERSIONS,
+    SUBJECT7_FINAL_DIR,
+    SUBJECT7_RAW_DIR,
     group_role_map,
 )
 
@@ -25,18 +28,24 @@ from src.constants import (
 class SplitBuilder:
     """데이터셋 분할, 매니페스트 생성 및 물리 디렉토리 배치를 담당하는 빌더 클래스"""
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path, dataset_version: Optional[str] = None):
+        """dataset_version 이 SEPARATE_DIR_VERSIONS 에 있으면 (kimchi_v5~) 결과 폴더를 따로 쓴다 — 기존 data/yolo 는 그대로"""
         self.project_root = Path(project_root)
-        self.data_final_dir = self.project_root / "data" / "subject7_final"
+        # 교과 7 FINAL: 라벨·검수표는 subject7/data/final, 사진은 RAW 에서 파일명으로 찾는다 (하위 폴더 무관)
+        self.data_final_dir = (self.project_root / SUBJECT7_FINAL_DIR).resolve()
         self.meta_csv = self.data_final_dir / "검수표.csv"
-        self.images_dir = self.data_final_dir / "images"
+        self.images_dir = (self.project_root / SUBJECT7_RAW_DIR).resolve()
         self.labels_dir = self.data_final_dir / "labels"
 
-        self.manifest_dir = self.project_root / "manifests"
-        self.yolo_dir = self.project_root / "data" / "yolo"
-        self.bridge_dir = self.project_root / "data" / "bridge_holdout"
+        tag = SEPARATE_DIR_VERSIONS.get(dataset_version or "")
+        sfx = f"_{tag}" if tag else ""
+        self.manifest_dir = self.project_root / "manifests" / (dataset_version if tag else "")
+        self.yolo_dir = self.project_root / "data" / f"yolo{sfx}"
+        self.bridge_dir = self.project_root / "data" / f"bridge_holdout{sfx}"
         self.configs_dir = self.project_root / "configs"
+        self.dataset_yaml = self.configs_dir / f"dataset{sfx}.yaml"
         self.reports_dir = self.project_root / "reports"
+        self.summary_csv = self.reports_dir / "01_data" / (f"dataset_summary_{dataset_version}.csv" if tag else "dataset_summary.csv")
 
     @staticmethod
     def _build_file_index(base_dir: Path, pattern: str = "*") -> Dict[str, Path]:
@@ -86,6 +95,7 @@ class SplitBuilder:
         kimchi_v1: G00 만 블록 (Train 26, Val 8, Test 8, Bridge 8)
         kimchi_v2/v3: G00 을 파/파+고추 구간별로 블록, G12 가운데 25장을 Train, G05 를 Val
         kimchi_v4: v3 + G09 마지막 배치(25장)를 Val
+        kimchi_v5: C안 — 묶음 통째 배정, G00 만 블록 (Train 558 / Val 104 / Test 82 / Bridge 156)
         """
         if dataset_version not in BLOCK_RULES:
             raise ValueError(f"알 수 없는 dataset_version: {dataset_version} (가능: {sorted(BLOCK_RULES)})")
@@ -153,9 +163,9 @@ class SplitBuilder:
         return role_paths
 
     def generate_dataset_summary(self, df: pd.DataFrame, dataset_version: str = DEFAULT_DATASET_VERSION) -> Path:
-        """reports/dataset_summary.csv 생성 (산출물 1 표준 양식)"""
-        self.reports_dir.mkdir(parents=True, exist_ok=True)
-        summary_path = self.reports_dir / "dataset_summary.csv"
+        """reports/01_data/dataset_summary.csv 생성 (산출물 1 표준 양식, 따로 쓰는 Version 은 dataset_summary_<version>.csv)"""
+        summary_path = self.summary_csv
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
 
         rows = []
         for role, purpose in ROLE_PURPOSES.items():
@@ -204,7 +214,7 @@ class SplitBuilder:
         (self.bridge_dir / "labels").mkdir(parents=True, exist_ok=True)
 
         # 소스 디렉토리 1회 인덱싱 (O(1) 빠른 매핑)
-        img_index = self._build_file_index(self.images_dir, "*")
+        img_index = self._build_file_index(self.images_dir, "*.jpg")
         lbl_index = self._build_file_index(self.labels_dir, "*.txt")
 
         for _, row in df.iterrows():
@@ -229,13 +239,13 @@ class SplitBuilder:
                 shutil.copy2(src_lbl, dst_lbl)
 
     def generate_dataset_yaml(self) -> Path:
-        """configs/dataset.yaml 생성 (CLASS_NAMES 로부터 동적 생성)"""
+        """configs/dataset.yaml (따로 쓰는 Version 은 dataset_v<N>.yaml) 생성 (CLASS_NAMES 로부터 동적 생성)"""
         self.configs_dir.mkdir(parents=True, exist_ok=True)
-        yaml_path = self.configs_dir / "dataset.yaml"
+        yaml_path = self.dataset_yaml
 
         class_lines = "\n".join(f"  {cid}: {name}" for cid, name in CLASS_NAMES.items())
         content = f"""# Subject 8: 조각김치 이물검출 YOLO11 Dataset 설정
-path: data/yolo
+path: {self.yolo_dir.relative_to(self.project_root).as_posix()}
 train: images/train
 val: images/val
 test: images/test

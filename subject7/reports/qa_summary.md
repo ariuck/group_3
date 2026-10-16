@@ -104,7 +104,7 @@ Class 를 바꾼 BBox:
 - 검수자가 사진을 보고 확인한 결과이며, 검수자 칸이 채워진 사진은 900장입니다. 검수자별 현황은 위 2장 표와 같습니다.
 - 검수표의 세부 확인 칸은 `위치 맞음` {'(비어 있음)': 900} · `Class 맞음` {'(비어 있음)': 900} · `누락 객체 여부` {'(비어 있음)': 900} 입니다. 이 칸들은 따로 적지 않고 위 검수 상태(검수 완료·수정 완료)로 사람의 확인을 갈음했습니다.
 
-## 7. 완료 기준 점검 ([Project Baseline](../docs/standards/project_baseline.md) §5)
+## 7. 완료 기준 점검 ([Project Baseline](../docs/project/standards/project_baseline.md) §5)
 
 | 기준 | 결과 |
 |---|---|
@@ -118,7 +118,7 @@ Class 를 바꾼 BBox:
 ## 8. 검수 기간과 REVIEW 판단 기준
 
 - 검수일: 2026-10-07 (검수표 `검수일` 칸 기준)
-- REVIEW 는 팀장(PM)과 해당 검수자가 판단하는 것으로 정했고([Project Baseline](../docs/standards/project_baseline.md) §5), 최종 미처리 REVIEW 는 0건입니다.
-- REVIEW 이력이 있던 2장은 지혜성 · 김석범 두 사람이 확인했습니다. ([이슈 기록](../docs/records/이슈기록.md))
+- REVIEW 는 팀장(PM)과 해당 검수자가 판단하는 것으로 정했고([Project Baseline](../docs/project/standards/project_baseline.md) §5), 최종 미처리 REVIEW 는 0건입니다.
+- REVIEW 이력이 있던 2장은 지혜성 · 김석범 두 사람이 확인했습니다. ([이슈 기록](../docs/project/records/이슈기록.md))
   - 180번: 잎사귀로 보기에는 너무 작아 갈변(Class 5)으로 라벨링 (Class 5 BBox 1개)
   - 601번: REVIEW 로 잘못 표시된 것을 바로잡아 검수 완료로 정리 (라벨 변경 없음)

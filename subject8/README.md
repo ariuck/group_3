@@ -30,11 +30,11 @@ Dataset Audit → Split → Smoke Test → Baseline → Validation 평가
 
 | 항목 | 내용 |
 |---|---|
-| 교과 7 FINAL 원본 | 저장소 루트 `data/final/` (이 폴더 기준 `../data/final/`) |
-| 교과 8 사용 위치 | `data/subject7_final/` — FINAL 을 그대로 복사해 사용, 직접 수정하지 않음 |
-| 검수 기록 | `data/subject7_final/검수표.csv` (900행) |
+| 교과 7 FINAL 라벨 | `../subject7/data/final/labels/` (Git) — 복사하지 않고 직접 읽음, 직접 수정하지 않음 (고친 라벨은 `data/label_fixes/`) |
+| 사진 | `../subject7/data/raw/` 의 회사 원본 (각 PC) — 파일명으로 찾음 |
+| 검수 기록 | `../subject7/data/final/검수표.csv` (900행, Git) |
 | QA 결과 | [QA Summary](../subject7/reports/qa_summary.md) — FAIL 0 · REVIEW 0 · **교과 8 사용 가능** |
-| 인계 문서 | [교과 8 Handoff](../subject7/docs/handoff/subject08_handoff.md) |
+| 인계 문서 | [교과 8 Handoff](../subject7/docs/project/handoff/subject08_handoff.md) |
 
 교과 8 에서 지키는 것:
 
@@ -63,7 +63,7 @@ data/final/
 | 이물검출_학습데이터2 | validation | 180 |
 | **합계** | | **900** |
 
-Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/audit/audit_summary.csv`, `reports/audit/audit_issue.csv`):
+Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/01_data/audit_summary.csv`, `reports/01_data/audit_issue.csv`):
 
 | 확인 항목 | 결과 |
 |---|---|
@@ -96,7 +96,7 @@ Data Audit 결과 (`scripts/02_audit_subject7_final.py` → `reports/audit/audit
 | 6 | 파·고추 | green_onion_pepper | 255 | 54 | O |
 
 - Class 4 는 사용하지 않지만 번호를 당기지 않습니다. Instance 0건이므로 Class 별 성능은 `미사용 Class / Instance 0건` 으로 기록합니다.
-- Class 6 은 사진 54장으로 가장 적고, 그중 50장이 한 촬영 묶음(G00)에 있습니다. → [Split 정책](docs/split_policy.md) 5장
+- Class 6 은 사진 54장으로 가장 적고, 그중 50장이 한 촬영 묶음(G00)에 있습니다. → [Split 정책](docs/project/split_policy.md) 5장
 
 ## 5. 실행환경
 
@@ -131,8 +131,8 @@ python scripts/01_check_environment.py
 
 | 올림 ✅ | 올리지 않음 ❌ |
 |---|---|
-| 교과 7 FINAL 라벨 `data/subject7_final/labels/**/*.txt` (900개), `검수표.csv`, `classes.txt` | **김치·이물 사진** (`*.jpg` 등, 어느 폴더든) |
-| 라벨 수정본 `data/label_fixes/kimchi_v3/*.txt` (kimchi_v3·v4 재현에 필요) | `data/yolo/`, `data/bridge_holdout/`, `data/smoke/` — 03·05 가 다시 만듦 |
+| 교과 7 FINAL 라벨 `subject7/data/final/labels/**/*.txt` (900개), `검수표.csv`, `classes.txt` | **김치·이물 사진** (`*.jpg` 등, 어느 폴더든) · `subject7/data/raw`·`work` |
+| 라벨 수정본 `data/label_fixes/kimchi_v3`·`kimchi_v5/*.txt` (v3~v5 재현에 필요) | `data/yolo*/`, `data/bridge_holdout*/`, `data/smoke/` — 03·05 가 다시 만듦 |
 | 모델 Weight `models/**/*.pt` (실험마다 best 1개, 약 5MB) | `runs/*/weights/` (models/ 와 중복), `yolo11n.pt` (자동 다운로드) |
 | `runs/<실행>/results.csv`·`args.yaml` | `runs/*/*.png` 등 Ultralytics 원본 그래프 (실행당 약 1.8MB) · `runs/eval`·`runs/predict` (사진 섞임) |
 | 그래프 `reports/figures/` (실행별 학습 곡선은 `plot_runs.py` 로 생성, 약 0.1MB) | `demo/` 의 사진 모음 |
@@ -141,28 +141,28 @@ python scripts/01_check_environment.py
 **다른 PC 에서 처음 받을 때**
 
 ```bash
-git clone https://github.com/ariuck/group_3.git ~/group_3
+git clone https://github.com/ariuck/group_3.git ~/group_3     # 이미 받았으면 git pull
 cd ~/group_3/subject8
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
-# 사진만 따로 복사 (USB 등 — 외부 클라우드·메신저 금지). 라벨·검수표는 이미 Git 에 있다
-#   원본 PC 의 subject8/data/subject7_final/images/ 를 같은 위치로
-cp -r <USB>/images data/subject7_final/images
+# 회사 원본(사진 + 원본 라벨) 폴더를 그대로 subject7/data/raw 에 복사 (USB 등 — 외부 클라우드·메신저 금지)
+#   subject7/data/raw/이물검출_학습데이터1/images/train/*.jpg …, 이물검출_학습데이터2/…
+cp -r <USB>/이물검출_학습데이터1 <USB>/이물검출_학습데이터2 ../subject7/data/raw/
 
-.venv/bin/python scripts/02_audit_subject7_final.py          # JPG 900 / TXT 900 / 이슈 0 이면 정상
-.venv/bin/python scripts/03_build_split.py --copy-files      # kimchi_v4 학습 폴더 생성 (manifest 는 바뀌지 않아야 함)
-git status                                                    # 아무것도 바뀌지 않았으면 같은 데이터·같은 분할
+# 올인원: .venv → 교과 7 복원(work·검수표·final) → 점검 → kimchi_v4·v5 학습 폴더 → Git 과 같은지 확인
+python3 scripts/00_setup.py      # 이미 준비된 PC 에서 다시 실행해도 된다 (된 단계는 건너뜀, 약 7초)
 ```
+
+마지막에 `같은 데이터 · 같은 분할 ✓` 이 나오면 끝입니다. 단계별 설명: [`docs/scripts/00_setup.md`](docs/scripts/00_setup.md)
 
 - VSCode 는 이 폴더를 직접 엽니다 (`code ~/group_3/subject8`). `.vscode/` 설정이 Git 에 있어 `.venv` 인터프리터·실행 메뉴(F5)가 바로 잡힙니다.
 - 모델이 Git 에 있으므로 학습 없이 바로 평가·예측할 수 있습니다 (`07`, `08`, `09`).
-- 사진 폴더는 평평한 구조(`images/`)와 교과 7 원본 구조(`images/train`, `images/validation`)를 모두 읽습니다.
+- 교과 8 은 사진을 `subject7/data/raw` 아래에서 파일명으로 찾으므로 하위 폴더 구조는 상관없습니다. 교과 8 만 쓸 거라면 `restore_from_final.py` 는 건너뛰어도 됩니다.
 
 **그래프 정책 (실험이 수십 개가 되어도 저장소가 가볍게)**
 
 | 그래프 | 어디에 | 크기 |
 |---|---|---|
-| 모든 실행의 학습 곡선 · 같은 Dataset Version 끼리 비교 | `python scripts/plot_runs.py` → `reports/figures/runs/<실행>.png`, `reports/figures/comparison/runs_comparison_<Version>.png`, `reports/runs_summary.csv` | 실행당 약 0.1MB |
+| 모든 실행의 학습 곡선 · 같은 Dataset Version 끼리 비교 | `python scripts/plot_runs.py` → `reports/figures/runs/<실행>.png`, `reports/figures/comparison/runs_comparison_<Version>.png`, `reports/04_improvement/runs_summary.csv` | 실행당 약 0.1MB |
 | 핵심 모델(Baseline·Final·발표에 쓸 실험)의 Confusion Matrix · PR 곡선 | `07_evaluate_baseline.py` 처럼 `reports/figures/` 에 복사 | 모델당 약 1MB |
 | 그 밖의 Ultralytics 원본 그래프 | `runs/` 에만 (Git 제외). 필요하면 Git 의 모델로 다시 평가해 만든다 | — |
 
@@ -177,7 +177,7 @@ python scripts/02_audit_subject7_final.py
 - 이미지-라벨 1:1 매칭, YOLO 좌표(0~1)·사진 밖 BBox, Class 범위(0~6), 이름 중복, 검수표 대조 전수 검사
 - 이미지별 BBox 수, Class × 장면 분포 (가이드 15.1·15.2)
 - 촬영 묶음(5분 간격) × 사진 지문(dHash)으로 Data Leakage 확인 (가이드 15.3)
-- 산출물: `reports/audit/audit_summary.csv`, `reports/audit/audit_issue.csv`, `reports/audit/audit_class_scene.csv`, `reports/audit/leakage_check.csv`, `reports/audit/capture_group_summary.csv`
+- 산출물: `reports/01_data/audit_summary.csv`, `reports/01_data/audit_issue.csv`, `reports/01_data/audit_class_scene.csv`, `reports/01_data/leakage_check.csv`, `reports/01_data/capture_group_summary.csv`
 
 ### 6.4 3일차 — Dataset Split & Freeze
 
@@ -207,13 +207,13 @@ python scripts/06_train_baseline.py
 
 - 조건은 스크립트 맨 위 `BASELINE` 한 곳에서만 정합니다 (YOLO11n · epoch 50 · imgsz 640 · batch 16 · seed 42 · AdamW · lr0 0.001).
 - `data/yolo` 가 `kimchi_v4` 이고 train·val 이 manifest 와 정확히 같아야 시작합니다.
-- 결과: `runs/baseline_v4/`, `models/baseline/baseline_best.pt`, `reports/baseline_training_condition.md`
+- 결과: `runs/baseline_v4/`, `models/baseline/baseline_best.pt`, `reports/02_baseline/baseline_training_condition.md`
 - 이력: kimchi_v1 첫 Baseline 은 `runs/baseline_v1/`, `models/baseline/baseline_v1_best.pt`, `reports/baseline_v1_*` (실패 분석의 근거)
 
 ### 6.7 5일차 — Validation 평가 · 이미지 Detection
 
 ```bash
-# Validation 132장 공식 평가 → reports/baseline_metrics.csv, Class 별 성능, 그래프
+# Validation 132장 공식 평가 → reports/02_baseline/baseline_metrics.csv, Class 별 성능, 그래프
 python scripts/07_evaluate_baseline.py
 
 # 사진마다 예측을 정답과 나란히 그려 보기 → runs/predict/baseline_val_images/compare/
@@ -229,8 +229,8 @@ python scripts/08_predict_images.py --conf 0.5 --limit 10   # 기준을 바꿔 �
 python scripts/09_collect_failures.py
 ```
 
-- 결과: `reports/failure_analysis.csv` 외 요약 3개, `demo/failure_analysis/*.jpg`(대표 실패 사진, Git 제외)
-- 원인 가설과 다음 실험: [`reports/failure_hypothesis.md`](reports/failure_hypothesis.md)
+- 결과: `reports/03_failure_analysis/failure_analysis.csv` 외 요약 3개, `demo/failure_analysis/*.jpg`(대표 실패 사진, Git 제외)
+- 원인 가설과 다음 실험: [`reports/03_failure_analysis/failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md)
 
 ### 6.9 해상도 개선 실험 — exp001 (640 → 1280) · exp002 (1280 → 1920)
 
@@ -239,13 +239,13 @@ python scripts/10_train_v2.py               # exp001
 python scripts/10_train_v2.py --exp exp002  # exp002 (batch 6 — 1920 메모리 한계, gradient 누적으로 갱신당 사진 수는 거의 같음)
 ```
 
-- 공식 exp001 (`kimchi_v4`): Baseline(`baseline_v4`) 조건에서 imgsz 만 640 → 1280 → `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/exp001_training_condition.md`
+- 공식 exp001 (`kimchi_v4`): Baseline(`baseline_v4`) 조건에서 imgsz 만 640 → 1280 → `runs/exp001_v4_imgsz1280/`, `models/improved/exp001_best.pt`, `reports/04_improvement/exp001_training_condition.md`
 - 이력: 예비 실험 `runs/pilot_v1_imgsz1280/` (kimchi_v1, mAP50-95 0.351 → 0.519), 데이터 개선 과정 `runs/history_v2_imgsz1280/`·`history_v3_imgsz1280/` (Weight 는 `models/improved/history_*`)
 - RTX 3060 batch 16 기준 GPU 약 9.2GB, 약 10~13분
 
 ### 6.10 Class 5(갈변) 라벨 재검수 → `kimchi_v3`
 
-기준: [`docs/standards/class_guide.md`](../subject7/docs/standards/class_guide.md) Class 5 "검출 대상 범위" (2026-10-14 개정)
+기준: [`docs/project/standards/class_guide.md`](../subject7/docs/project/standards/class_guide.md) Class 5 "검출 대상 범위" (2026-10-14 개정)
 
 ```bash
 # 1) subject7/ 에서 라벨링 프로그램 실행 → [폴더 열기] 로 data/final 을 열고 작업 목록대로 고친 뒤 저장
@@ -261,15 +261,15 @@ cd ~/group_3/subject8
 .venv/bin/python scripts/10_train_v2.py
 ```
 
-- 작업 목록: `reports/class5/class5_relabel_worklist.csv` (화면 번호 = 검수표 No, 라벨 목록 No = 원본 TXT 줄 번호, 위치 좌표 포함). 박스별 측정값·1차 판정: `reports/class5/class5_review.csv`, 확대 사진: `demo/label_review/class5/` (Git 제외)
+- 작업 목록: `reports/01_data/label_fixes_kimchi_v3/class5_relabel_worklist.csv` (화면 번호 = 검수표 No, 라벨 목록 No = 원본 TXT 줄 번호, 위치 좌표 포함). 박스별 측정값·1차 판정: `reports/01_data/label_fixes_kimchi_v3/class5_review.csv`, 확대 사진: `demo/label_review/class5/` (Git 제외)
 - `data/final` 사진을 고치면 `data/work/_RAW밖/` 에만 저장되고 교과 7 작업본·검수표는 바뀌지 않습니다.
 
 ## 7. Dataset Split (`kimchi_v4` = `kimchi_v3` Class 5 개정 라벨 + G09 마지막 배치 Val, FROZEN)
 
 - **정책**: 방안 B — 촬영 간격 5분 초과로 나눈 18개 `capture_group` 을 묶음 단위로 배정 + 예외 3건: `G00` 을 파/파+고추 구간별 시간순 블록으로 분할, `G12` 가운데 배치 25장을 Train 으로 (마른 잎·반점 갈변이 Train 에 있도록), `G09` 마지막 배치 25장을 Val 로 (Val 갈변 8 → 75개). Val 이 한 회차에 몰리지 않게 `G05` 를 통째로 Val 로
-- 버전: `kimchi_v1`(2026-10-12) → `v2`(분할, H1·H2) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) — 이유는 [split_policy.md 7장](docs/split_policy.md). 버전마다 Val 이 달라 Validation 점수는 직접 비교하지 않습니다.
-- 상세 근거·유사도 검증·예외 사유: [docs/split_policy.md](docs/split_policy.md)
-- 과정 전체를 그림으로 정리한 문서: [docs/process/dataset_audit_and_split.md](docs/process/dataset_audit_and_split.md)
+- 버전: `kimchi_v1`(2026-10-12) → `v2`(분할, H1·H2) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) — 이유는 [split_policy.md 7장](docs/project/split_policy.md). 버전마다 Val 이 달라 Validation 점수는 직접 비교하지 않습니다.
+- 상세 근거·유사도 검증·예외 사유: [docs/split_policy.md](docs/project/split_policy.md)
+- 과정 전체를 그림으로 정리한 문서: [docs/project/process/dataset_audit_and_split.md](docs/project/process/dataset_audit_and_split.md)
 - Bridge Holdout 은 교과 8 학습·튜닝·모델 선택·Frozen Test 에 사용하지 않고 교과 14 용으로 보존합니다. `dataset.yaml` 에 넣지 않습니다.
 
 | 역할 | 장수 | C0 | C1 | C2 | C3 | C5 | C6 | 용도 |
@@ -282,13 +282,13 @@ cd ~/group_3/subject8
 
 *(숫자는 해당 Class BBox 가 1개 이상 있는 사진 수)*
 
-산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/split_policy.md`, `reports/dataset_summary.csv`
+산출물 1: `configs/dataset.yaml`, `manifests/split_manifest.csv`, `manifests/{train,val,test,bridge_holdout}.csv`, `docs/project/split_policy.md`, `reports/01_data/dataset_summary.csv`
 
 ## 8. Baseline (`baseline_v4` — kimchi_v4 · YOLO11n · imgsz 640)
 
 - Smoke Test: ✅ 통과 (2026-10-14, `reports/history/smoke_test.md` — batch 16 에서 GPU 2.1GB)
-- Baseline 학습: ✅ 완료 (2026-10-14, 50 epoch · 약 5분) — [`reports/baseline_training_condition.md`](reports/baseline_training_condition.md), `models/baseline/baseline_best.pt`, `runs/baseline_v4/results.csv`
-- Validation 평가 (2026-10-14, 132장 · 정답 BBox 696개) — [`reports/baseline_metrics.csv`](reports/baseline_metrics.csv), [`reports/baseline_class_metrics.csv`](reports/baseline_class_metrics.csv)
+- Baseline 학습: ✅ 완료 (2026-10-14, 50 epoch · 약 5분) — [`reports/02_baseline/baseline_training_condition.md`](reports/02_baseline/baseline_training_condition.md), `models/baseline/baseline_best.pt`, `runs/baseline_v4/results.csv`
+- Validation 평가 (2026-10-14, 132장 · 정답 BBox 696개) — [`reports/02_baseline/baseline_metrics.csv`](reports/02_baseline/baseline_metrics.csv), [`reports/02_baseline/baseline_class_metrics.csv`](reports/02_baseline/baseline_class_metrics.csv)
 
 | Precision | Recall | mAP50 | mAP50-95 |
 |---:|---:|---:|---:|
@@ -309,7 +309,7 @@ cd ~/group_3/subject8
 
 ## 9. Failure Analysis
 
-상세: [`reports/failure_hypothesis.md`](reports/failure_hypothesis.md) · 근거 표 `reports/failure_*.csv`
+상세: [`reports/03_failure_analysis/failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) · 근거 표 `reports/failure_*.csv`
 
 모델은 이물의 **위치는 대체로 찾지만 종류를 틀립니다** (정답 515개 중 TP 191 · CLASS_ERROR 171 · FN 153).
 
@@ -323,7 +323,7 @@ cd ~/group_3/subject8
 
 ## 10. Improvement — exp001: imgsz 640 → 1280 (H4)
 
-같은 `kimchi_v4` Val 132장, 나머지 조건 동일 (YOLO11n · epoch 50 · batch 16 · seed 42 · AdamW · lr0 0.001). 기록: [`reports/exp001_training_condition.md`](reports/exp001_training_condition.md), Weight `models/improved/exp001_best.pt`
+같은 `kimchi_v4` Val 132장, 나머지 조건 동일 (YOLO11n · epoch 50 · batch 16 · seed 42 · AdamW · lr0 0.001). 기록: [`reports/04_improvement/exp001_training_condition.md`](reports/04_improvement/exp001_training_condition.md), Weight `models/improved/exp001_best.pt`
 
 | | Precision | Recall | mAP50 | mAP50-95 |
 |---|---:|---:|---:|---:|
@@ -342,8 +342,9 @@ cd ~/group_3/subject8
 | 6 green_onion_pepper | 0.640 | 0.773 | 0.838 | +0.133 | +0.065 |
 
 - 갈변 (Val 75개, conf 0.25 · IoU 0.5): Baseline TP 60 · FN 15 · FP 5 → exp001 TP 63 · FN 12 · **FP 13** → exp002 TP 64 · FN 11 · FP 13 (놓침은 줄고 헛검출은 늘어남)
-- exp002: 기록 [`reports/exp002_training_condition.md`](reports/exp002_training_condition.md), Weight `models/improved/exp002_best.pt`. 학습 22분 (exp001 10분), batch 6 은 1920 메모리 한계 때문 (gradient 누적으로 갱신당 사진 수 64 → 66장)
+- exp002: 기록 [`reports/04_improvement/exp002_training_condition.md`](reports/04_improvement/exp002_training_condition.md), Weight `models/improved/exp002_best.pt`. 학습 22분 (exp001 10분), batch 6 은 1920 메모리 한계 때문 (gradient 누적으로 갱신당 사진 수 64 → 66장)
 - exp003 (exp002 대비 epochs 50 → 100, `runs/exp003_v4_imgsz1920_epoch100`, 43분): mAP50-95 **+0.018** (기준 +0.02 미만), 모든 Class 소폭 상승 (나뭇잎 +0.035 · 갈변 +0.025 · 나뭇가지 +0.020). Val cls_loss 최저 0.510 @ epoch 78 (exp002 0.520 @ 48) 이후 0.532 로 다시 오름 → 78 epoch 이후 과적합 시작, best.pt 는 epoch 77. 놓친 박스 50 → 49 (갈변 11 → 8, 나뭇잎 7 → 9)
+- 분석: [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (4개 실행 비교·비용·Final Model 후보 제안), 그림 `reports/figures/comparison/improvement_summary.svg`
 - 이력: 예비 실험 `pilot_v1_imgsz1280` (kimchi_v1), 데이터 개선 과정 `history_v2/v3_imgsz1280` — Val 이 달라 직접 비교하지 않음
 
 ## 11. Final Model
@@ -377,11 +378,10 @@ TBD (9일차) — `docs/handoff_subject14.md`
 subject8/
 ├── .vscode/                        # 팀 공통 VSCode 설정 (인터프리터 · F5 실행 메뉴)
 ├── configs/dataset.yaml            # YOLO 학습용 Dataset 설정 (산출물 1)
-├── data/                           # 사진(*.jpg)은 Git 제외, 라벨 TXT·검수표는 Git 에 있음
-│   ├── subject7_final/             # 교과 7 FINAL: labels/ · 검수표.csv (Git) + images/ (각 PC 에 복사)
-│   ├── label_fixes/kimchi_v3/      # kimchi_v3~ 라벨 수정본 TXT (Git)
-│   ├── yolo/                       # 03 --copy-files 로 만든 train / val / test (Git 제외)
-│   └── bridge_holdout/             # 03 --copy-files 로 만든 교과 14 보존용 (Git 제외)
+├── data/                           # 사진(*.jpg)은 Git 제외. 교과 7 입력은 ../subject7/data/final(라벨) · raw(사진)
+│   ├── label_fixes/kimchi_v3·v5/   # 라벨 수정본 TXT (Git)
+│   ├── yolo/ · yolo_v5/            # 03 --copy-files 로 만든 train / val / test (Git 제외)
+│   └── bridge_holdout/ · _v5/      # 03 --copy-files 로 만든 교과 14 보존용 (Git 제외)
 ├── docs/
 │   ├── split_policy.md             # Split 정책서 (산출물 1)
 │   └── process/                    # 과정 정리 (이해·포트폴리오용)

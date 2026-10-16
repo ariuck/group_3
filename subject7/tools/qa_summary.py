@@ -23,7 +23,7 @@ from src.bbox import bbox_diff                              # noqa: E402
 from src.validation import validator                        # noqa: E402
 
 REPORT_PATH = settings.PROJECT_DIR / "reports" / "qa_summary.md"
-# REVIEW 이력이 있던 사진의 최종 판단 (사람이 확인한 결과, docs/records/이슈기록.md 와 같은 내용)
+# REVIEW 이력이 있던 사진의 최종 판단 (사람이 확인한 결과, docs/project/records/이슈기록.md 와 같은 내용)
 REVIEW_DECISIONS = [
     (180, "잎사귀로 보기에는 너무 작아 갈변(Class 5)으로 라벨링 (Class 5 BBox 1개)"),
     (601, "REVIEW 로 잘못 표시된 것을 바로잡아 검수 완료로 정리 (라벨 변경 없음)"),
@@ -189,7 +189,7 @@ def build_markdown(stats, validation=None, today=None):
     L += ["", f"- 검수자가 사진을 보고 확인한 결과이며, 검수자 칸이 채워진 사진은 {sum(1 for r in rows if r['검수자'])}장입니다. 검수자별 현황은 위 2장 표와 같습니다.",
           f"- 검수표의 세부 확인 칸은 `위치 맞음` {dict(human['위치 맞음'])} · `Class 맞음` {dict(human['Class 맞음'])} · `누락 객체 여부` {dict(human['누락 객체 여부'])} 입니다. "
           "이 칸들은 따로 적지 않고 위 검수 상태(검수 완료·수정 완료)로 사람의 확인을 갈음했습니다.", "",
-          "## 7. 완료 기준 점검 ([Project Baseline](../docs/standards/project_baseline.md) §5)", "",
+          "## 7. 완료 기준 점검 ([Project Baseline](../docs/project/standards/project_baseline.md) §5)", "",
           "| 기준 | 결과 |", "|---|---|",
           f"| 미처리 REVIEW 0건 | {'**통과**' if unresolved == 0 else '**미달**'} ({unresolved}건) |",
           f"| Validation 오류 0건 | {'**통과**' if sev['CRITICAL'] == 0 else '**미달**'} (CRITICAL {sev['CRITICAL']}) |",
@@ -199,8 +199,8 @@ def build_markdown(stats, validation=None, today=None):
           "| FINAL 데이터 정리 | `data/final/` ([README §14](../README.md)) |", "",
           "## 8. 검수 기간과 REVIEW 판단 기준", "",
           f"- 검수일: {dates} (검수표 `검수일` 칸 기준)",
-          f"- REVIEW 는 팀장(PM)과 해당 검수자가 판단하는 것으로 정했고([Project Baseline](../docs/standards/project_baseline.md) §5), 최종 미처리 REVIEW 는 {unresolved}건입니다.",
-          f"- REVIEW 이력이 있던 {len(REVIEW_DECISIONS)}장은 {REVIEW_CONFIRMERS} 두 사람이 확인했습니다. ([이슈 기록](../docs/records/이슈기록.md))"]
+          f"- REVIEW 는 팀장(PM)과 해당 검수자가 판단하는 것으로 정했고([Project Baseline](../docs/project/standards/project_baseline.md) §5), 최종 미처리 REVIEW 는 {unresolved}건입니다.",
+          f"- REVIEW 이력이 있던 {len(REVIEW_DECISIONS)}장은 {REVIEW_CONFIRMERS} 두 사람이 확인했습니다. ([이슈 기록](../docs/project/records/이슈기록.md))"]
     L += [f"  - {n}번: {text}" for n, text in REVIEW_DECISIONS]
     L += [""]
     return "\n".join(L)

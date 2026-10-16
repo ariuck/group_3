@@ -4,9 +4,9 @@
     python scripts/10_train_v2.py --exp exp002  # exp002: imgsz 1280 → 1920 (exp001 대비, batch 6 — 아래)
     python scripts/10_train_v2.py --exp exp003  # exp003: epochs 50 → 100 (exp002 대비)
 
-  kimchi_v4 (공식) : exp001 → runs/exp001_v4_imgsz1280/, models/improved/exp001_best.pt, reports/exp001_training_condition.md
-                     exp002 → runs/exp002_v4_imgsz1920/, models/improved/exp002_best.pt, reports/exp002_training_condition.md
-                     exp003 → runs/exp003_v4_imgsz1920_epoch100/, models/improved/exp003_best.pt, reports/exp003_training_condition.md
+  kimchi_v4 (공식) : exp001 → runs/exp001_v4_imgsz1280/, models/improved/exp001_best.pt, reports/04_improvement/exp001_training_condition.md
+                     exp002 → runs/exp002_v4_imgsz1920/, models/improved/exp002_best.pt, reports/04_improvement/exp002_training_condition.md
+                     exp003 → runs/exp003_v4_imgsz1920_epoch100/, models/improved/exp003_best.pt, reports/04_improvement/exp003_training_condition.md
                      Baseline 은 06 의 baseline_v4 (같은 Version·같은 Val)
   kimchi_v1~v3 (이력, exp001 만): pilot_v1_imgsz1280 (예비 실험), history_v2/v3_imgsz1280 (데이터 개선 과정)
 
@@ -79,7 +79,7 @@ def main():
         save = args.exp
     keep_record = args.exp != "exp001" or dataset_version in SAVE_NAMES   # Weight 보관·조건 기록을 남기는 실행인가
     WEIGHT_DEST = PROJECT_ROOT / "models" / "improved" / f"{save}_best.pt"
-    REPORT = PROJECT_ROOT / "reports" / f"{save}_training_condition.md"
+    REPORT = PROJECT_ROOT / "reports" / "04_improvement" / f"{save}_training_condition.md"
 
     print("=" * 65)
     print(f" [Subject 08] {run_name} (imgsz {CONDITION['imgsz']}, Dataset {dataset_version}, 비교 대상 {exp['compare']})")

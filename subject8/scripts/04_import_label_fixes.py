@@ -6,12 +6,12 @@
 흐름:
     group_3/subject7 라벨링 프로그램에서 data/final 폴더를 열어 고치고 저장
       → group_3/subject7/data/work/_RAW밖/<사진이름>.txt   (RAW 밖 폴더라 검수표에는 기록되지 않음)
-      → 이 스크립트가 원본(data/subject7_final/labels)과 비교해 바뀐 TXT 만 data/label_fixes/kimchi_v3/ 로 복사
+      → 이 스크립트가 원본(subject7/data/final/labels)과 비교해 바뀐 TXT 만 data/label_fixes/kimchi_v3/ 로 복사
       → python scripts/03_build_split.py --version kimchi_v3 --copy-files
 
 결과:
     data/label_fixes/kimchi_v3/*.txt          바뀐 사진의 TXT (data/ 는 Git 제외)
-    reports/class5/label_changes_kimchi_v3.csv       사진별 변경 기록 (지운 줄·추가된 줄 수, Class 별 BBox 수 변화)
+    reports/01_data/label_fixes_kimchi_v3/label_changes_kimchi_v3.csv       사진별 변경 기록 (지운 줄·추가된 줄 수, Class 별 BBox 수 변화)
 """
 import argparse
 import csv
@@ -22,11 +22,14 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FINAL_LABELS = PROJECT_ROOT / "data" / "subject7_final" / "labels"
+sys.path.insert(0, str(PROJECT_ROOT))
+from src.constants import SUBJECT7_FINAL_DIR  # noqa: E402
+
+FINAL_LABELS = (PROJECT_ROOT / SUBJECT7_FINAL_DIR / "labels").resolve()
 FIX_DIR = PROJECT_ROOT / "data" / "label_fixes" / "kimchi_v3"
 DEFAULT_SRC = PROJECT_ROOT.parent / "subject7" / "data" / "work" / "_RAW밖"
-WORKLIST = PROJECT_ROOT / "reports" / "class5" / "class5_relabel_worklist.csv"
-REPORT = PROJECT_ROOT / "reports" / "class5" / "label_changes_kimchi_v3.csv"
+WORKLIST = PROJECT_ROOT / "reports" / "01_data" / "label_fixes_kimchi_v3" / "class5_relabel_worklist.csv"
+REPORT = PROJECT_ROOT / "reports" / "01_data" / "label_fixes_kimchi_v3" / "label_changes_kimchi_v3.csv"
 
 
 def read_lines(path):

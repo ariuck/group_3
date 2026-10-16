@@ -1,0 +1,5 @@
+﻿run,change,epochs_done,best_epoch,precision,recall,f1,map50,map50_95,last10_mean_map50_95,last10_std_map50_95,d_map50_95_vs_baseline,d_map50_95_vs_prev,d_last10_vs_prev,train_minutes,extra_minutes_vs_prev,gpu_max_gb,val_cls_min_epoch,val_over_train_cls_loss
+baseline_v4,imgsz 640 (기준),50,50,0.8365,0.6745,0.7468,0.7636,0.5344,0.5277,0.0064,0.0000,,,4.6,,2.1,38,1.75
+exp001_v4_imgsz1280,imgsz 640 → 1280,50,39,0.9386,0.7820,0.8532,0.8840,0.7075,0.6795,0.0106,0.1730,0.1730,0.1518,10.3,5.7,8.4,40,1.92
+exp002_v4_imgsz1920,imgsz 1280 → 1920 (batch 16 → 6),50,50,0.9438,0.8162,0.8754,0.8910,0.7575,0.7429,0.0117,0.2230,0.0500,0.0634,22.2,12.0,7.6,48,1.63
+exp003_v4_imgsz1920_epoch100,epochs 50 → 100,100,77,0.9293,0.8158,0.8689,0.9132,0.7742,0.7529,0.0047,0.2397,0.0167,0.0101,43.2,21.0,7.6,78,2.04

@@ -20,16 +20,17 @@ def section(title):
 
 
 def main():
-    data_root = PROJECT_ROOT / "data" / "subject7_final"
-    report_dir = PROJECT_ROOT / "reports" / "audit"
+    builder = SplitBuilder(project_root=PROJECT_ROOT)   # 교과 7 FINAL 위치 (라벨: subject7/data/final, 사진: subject7/data/raw)
+    data_root = builder.data_final_dir
+    report_dir = PROJECT_ROOT / "reports" / "01_data"
 
     print("=" * 65)
     print(" [Subject 08] Day 2: Dataset Audit (Subject 7 FINAL 900 Images)")
     print("=" * 65)
-    print(f"Data Source: {data_root}")
+    print(f"Data Source: {data_root} (사진: {builder.images_dir})")
     print(f"Report Dir : {report_dir}")
 
-    auditor = DatasetAuditor(data_root=data_root, report_dir=report_dir)
+    auditor = DatasetAuditor(data_root=data_root, report_dir=report_dir, images_dir=builder.images_dir)
     res = auditor.run_audit()
 
     section("[1] Data Overview")
@@ -73,7 +74,6 @@ def main():
 
     # [7] Data Leakage — 촬영 묶음(5분 간격)과 사진 지문(dHash) 대조
     section("[7] Data Leakage Check (capture_group x dHash)")
-    builder = SplitBuilder(project_root=PROJECT_ROOT)
     df = builder.assign_capture_groups(pd.read_csv(builder.meta_csv, encoding="utf-8-sig"))
     leak = run_leakage_check(df, builder.images_dir, report_dir)
     print(f" - capture_group            : {leak['capture_groups']} 개 (촬영 간격 5분 초과에서 분리)")
