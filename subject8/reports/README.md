@@ -63,7 +63,7 @@ reports/
 | 파일 | 내용 |
 |---|---|
 | **`experiment_log.csv`** | v5 실험 기록 · 판정 (산출물 5) |
-| `<실행>_training_condition.md` | exp001_v5 (1280) · exp002_v5 (1920) · exp003_v5 (epoch 100) · exp004_v5 (타일링) · exp005_v5 (증강) 학습 조건 |
+| `<실행>_training_condition.md` | exp001_v5 (1280) · exp002_v5 (1920) · exp003_v5 (epoch 100) · exp004_v5 (타일링) · exp005_v5 (증강) · exp006_v5 (2560 + 증강) · exp007_v5 (11s + 증강) 학습 조건 |
 | `tiling_eval.csv` | 타일링 비교 — 원본 Val 104장을 같은 코드로 채점 (exp002_v5 원본 vs exp004_v5 조각 합침) |
 | `improvement_experiment.md` · `baseline_vs_improved.md` | **v5 기준 작성 예정** — v4 판은 `history/kimchi_v4/` |
 
@@ -95,5 +95,7 @@ Dataset Version 마다 Val 구성이 달라 **v5 점수와 직접 비교하지 �
 | `exp003_v5_imgsz1920_epoch100` | 1920 | 100 | epochs | 0.701 | 기각 |
 | `exp004_v5_tile2x2` | 1920 | 50 | 2×2 타일링 | 0.698* (원본 단위, exp002 = 0.680*) | 보류 |
 | `exp005_v5_imgsz1920_aug` | 1920 | 50 | 증강 | 0.684 | 기각 |
+| `exp006_v5_imgsz2560_aug` | 2560 | 50 | 증강 + 해상도 (두 변수) | 0.722 | 보류 (학습 5시간) |
+| `exp007_v5_s_imgsz1920_aug` | 1920 | 50 | 증강 + YOLO11s (두 변수) | **0.724** | 채택 후보 |
 
 \* `src/tiling.py` 로 원본 사진 단위 채점. 학습 곡선은 `figures/runs/<실행>.png`, Confusion Matrix · PR 곡선은 `../runs/<실행>/`, Weight 는 [`../models/README.md`](../models/README.md).

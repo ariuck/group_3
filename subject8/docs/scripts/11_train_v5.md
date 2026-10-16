@@ -20,6 +20,10 @@ python scripts/11_train_v5.py --run exp005 --report-only     # 학습은 끝났�
 | `exp002` | imgsz 1920 · batch 6 | `exp002_v5_imgsz1920` | 0.704 |
 | `exp003` | exp002 + epochs 100 | `exp003_v5_imgsz1920_epoch100` | 0.701 |
 | `exp005` | exp002 + 증강 (상하반전 flipud 0.5 · 밝기 hsv_v 0.6) | `exp005_v5_imgsz1920_aug` | 0.684 |
+| `exp006` | exp005 + imgsz 2560 (batch 3) — exp002 대비 두 변수 | `exp006_v5_imgsz2560_aug` | 0.722 (학습 5시간) |
+| `exp007` | exp005 + YOLO11s (batch 3) — exp002 대비 두 변수 | `exp007_v5_s_imgsz1920_aug` | **0.724** (학습 43분) |
+
+exp006·exp007 은 사용자 결정으로 두 변수를 함께 바꿨다. exp005(증강)와는 한 변수만 달라 해상도 효과(+0.038)·모델 크기 효과(+0.040)를 따로 읽는다. RTX 3060 12GB 측정: 11n·2560·batch 3 = 10.8GB, 11s·1920·batch 3 = 9.0GB, 11s·2560 은 batch 2 도 13.6GB 로 넘쳐 제외.
 
 - Weight: `models/baseline/` · `models/improved/<실행>.pt` ([`registry.weight_path`](../src/registry.md))
 - 조건 기록: `baseline` → `reports/02_baseline/baseline_training_condition.md` (가이드 이름), 그 밖 → `reports/04_improvement/<실행>_training_condition.md`

@@ -63,6 +63,20 @@ RUNS = {
                "title": "kimchi_v5 개선 실험 exp005", "compare": "exp002_v5 (기본 증강)",
                "augmentation": "기본 + 상하반전 flipud 0.5 (기본 0) · 밝기 hsv_v 0.6 (기본 0.4)",
                "note": "exp002_v5 와 다른 변수는 증강 설정 하나 (flipud 0 → 0.5, hsv_v 0.4 → 0.6). 이미지 파일은 만들지 않고 학습 중에만 변형한다. Val 은 원본."},
+    # 두 변수 동시 변경 실험 (사용자 결정 2026-10-16) — exp002 대비 2개, exp005(증강) 대비는 1개라 각 효과를 따로 읽는다.
+    # RTX 3060 12GB 측정: 11n·2560·batch 3 = 10.8GB, 11s·1920·batch 3 = 9.0GB (11s·2560 은 batch 2 도 13.6GB 로 넘쳐 제외)
+    "exp006": {"change": {"imgsz": 2560, "batch": 3, "flipud": 0.5, "hsv_v": 0.6},
+               "run_name": "exp006_v5_imgsz2560_aug", "title": "kimchi_v5 개선 실험 exp006",
+               "compare": "exp005_v5 (imgsz 1920 · 같은 증강) — exp002_v5 대비로는 해상도·증강 두 변수",
+               "augmentation": "기본 + 상하반전 flipud 0.5 (기본 0) · 밝기 hsv_v 0.6 (기본 0.4) — exp005 와 같음",
+               "note": "exp005_v5 와 다른 변수는 imgsz(1920 → 2560) 하나 (batch 6 → 3 은 GPU 메모리 때문, nbs=64 gradient 누적으로 갱신 1번당 사진 수는 거의 같음). "
+                       "exp002_v5 대비로는 해상도·증강 두 변수를 함께 바꾼 실험이다."},
+    "exp007": {"change": {"model_name": "yolo11s.pt", "imgsz": 1920, "batch": 3, "flipud": 0.5, "hsv_v": 0.6},
+               "run_name": "exp007_v5_s_imgsz1920_aug", "title": "kimchi_v5 개선 실험 exp007",
+               "compare": "exp005_v5 (YOLO11n · 같은 증강) — exp002_v5 대비로는 모델 크기·증강 두 변수",
+               "augmentation": "기본 + 상하반전 flipud 0.5 (기본 0) · 밝기 hsv_v 0.6 (기본 0.4) — exp005 와 같음",
+               "note": "exp005_v5 와 다른 변수는 모델 크기(YOLO11n → YOLO11s) 하나 (batch 6 → 3 은 GPU 메모리 때문). "
+                       "exp002_v5 대비로는 모델 크기·증강 두 변수를 함께 바꾼 실험이다."},
 }
 REPORT_DIR = PROJECT_ROOT / "reports" / "04_improvement"
 BASELINE_REPORT = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"   # 가이드 이름 (산출물 2)
@@ -128,7 +142,7 @@ def train_one(key, counts, report_only=False):
         report,
         f"{spec['title']} 학습 조건 (`{run_name}`)",
         {
-            "Model": f"YOLO11n (`{cond['model_name']}`, COCO 사전학습 · pretrained=True)",
+            "Model": f"YOLO{Path(cond['model_name']).stem[4:]} (`{cond['model_name']}`, COCO 사전학습 · pretrained=True)",
             "Dataset Version": f"`{DATASET_VERSION}`",
             "Train / Val Manifest": f"`{manifest}/train.csv` {counts['train']}장 (sha256 {sha256_short(paths.manifest_dir / 'train.csv')}) / "
                                     f"`{manifest}/val.csv` {counts['val']}장 (sha256 {sha256_short(paths.manifest_dir / 'val.csv')})",
