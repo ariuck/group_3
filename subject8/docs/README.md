@@ -32,6 +32,7 @@ docs/
 | [`scripts/plot_improvement.py`](scripts/plot_improvement.md) | 개선 분석: Baseline vs exp001~003 비교 표(`improvement_summary.csv`)·2×2 그림(SVG) — 사진·GPU 없이 재생성 |
 | [`scripts/09_collect_failures.py`](scripts/09_collect_failures.md) | 실패 사례 수집 → `failure_analysis.csv` · 요약 표 · 대표 사진 |
 | [`scripts/10_train_v2.py`](scripts/10_train_v2.md) | 개선 실험 exp001 — Baseline 조건에서 imgsz 640 → 1280 (공식: `kimchi_v4`) |
+| `manifests/kimchi_v5_draft/tools/*.py` (12개) | kimchi_v5 C안 결정 분석 기록: [features](manifests/kimchi_v5_draft/tools/features.md) → [crops](manifests/kimchi_v5_draft/tools/crops.md) → [match](manifests/kimchi_v5_draft/tools/match.md) → [anal_pairs](manifests/kimchi_v5_draft/tools/anal_pairs.md) · [batches](manifests/kimchi_v5_draft/tools/batches.md) · [groups](manifests/kimchi_v5_draft/tools/groups.md) · [seq](manifests/kimchi_v5_draft/tools/seq.md) · [sheet](manifests/kimchi_v5_draft/tools/sheet.md) · [search](manifests/kimchi_v5_draft/tools/search.md) → [split_v5](manifests/kimchi_v5_draft/tools/split_v5.md)·[b](manifests/kimchi_v5_draft/tools/split_v5b.md)·[c](manifests/kimchi_v5_draft/tools/split_v5c.md) |
 | [`src/constants.py`](src/constants.md) | Class·장면·묶음 기준·Version 별 분할 규칙·역할 상수 (SSOT) |
 | [`src/dataset_audit.py`](src/dataset_audit.md) | `DatasetAuditor` — 라벨 점검, 이미지별 BBox 수, Class×장면 |
 | [`src/evaluate_detector.py`](src/evaluate_detector.md) | Weight 평가 (전체·Class 별 P·R·mAP), Frozen Test 보호 |
