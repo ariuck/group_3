@@ -141,22 +141,18 @@ python scripts/01_check_environment.py
 **다른 PC 에서 처음 받을 때**
 
 ```bash
-git clone https://github.com/ariuck/group_3.git ~/group_3
+git clone https://github.com/ariuck/group_3.git ~/group_3     # 이미 받았으면 git pull
 cd ~/group_3/subject8
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 # 회사 원본(사진 + 원본 라벨) 폴더를 그대로 subject7/data/raw 에 복사 (USB 등 — 외부 클라우드·메신저 금지)
 #   subject7/data/raw/이물검출_학습데이터1/images/train/*.jpg …, 이물검출_학습데이터2/…
 cp -r <USB>/이물검출_학습데이터1 <USB>/이물검출_학습데이터2 ../subject7/data/raw/
 
-# 교과 7: Git 의 최종 라벨·검수표로 work · 검수표 · final 사진(하드 링크) 되살리기
-(cd ../subject7 && ../subject8/.venv/bin/python tools/restore_from_final.py --apply)   # "다시 만들어도 같음" 이면 정상
-
-.venv/bin/python scripts/02_audit_subject7_final.py                         # JPG 900 / TXT 900 / 이슈 0 이면 정상
-.venv/bin/python scripts/03_build_split.py --copy-files                     # kimchi_v4 학습 폴더
-.venv/bin/python scripts/03_build_split.py --version kimchi_v5 --copy-files # kimchi_v5 학습 폴더
-git status                                                                   # 아무것도 바뀌지 않았으면 같은 데이터·같은 분할
+# 올인원: .venv → 교과 7 복원(work·검수표·final) → 점검 → kimchi_v4·v5 학습 폴더 → Git 과 같은지 확인
+python3 scripts/00_setup.py      # 이미 준비된 PC 에서 다시 실행해도 된다 (된 단계는 건너뜀, 약 7초)
 ```
+
+마지막에 `같은 데이터 · 같은 분할 ✓` 이 나오면 끝입니다. 단계별 설명: [`docs/scripts/00_setup.md`](docs/scripts/00_setup.md)
 
 - VSCode 는 이 폴더를 직접 엽니다 (`code ~/group_3/subject8`). `.vscode/` 설정이 Git 에 있어 `.venv` 인터프리터·실행 메뉴(F5)가 바로 잡힙니다.
 - 모델이 Git 에 있으므로 학습 없이 바로 평가·예측할 수 있습니다 (`07`, `08`, `09`).

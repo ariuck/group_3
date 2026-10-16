@@ -16,6 +16,7 @@ docs/
 
 | 코드 | 한 줄 설명 |
 |---|---|
+| [`scripts/00_setup.py`](scripts/00_setup.md) | **올인원 준비** — 어느 PC 든 명령 하나로 .venv → 교과 7 복원 → 점검 → v4·v5 학습 폴더 (된 단계는 건너뜀) |
 | [`scripts/01_check_environment.py`](scripts/01_check_environment.md) | PyTorch·CUDA·YOLO11n 환경 점검 |
 | [`scripts/02_audit_subject7_final.py`](scripts/02_audit_subject7_final.md) | 교과 7 최종본 900장 점검 + Data Leakage 확인 |
 | [`scripts/03_build_split.py`](scripts/03_build_split.md) | 방안 B 분할 + Manifest·`dataset.yaml` |
