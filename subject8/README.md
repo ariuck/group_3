@@ -4,9 +4,9 @@
 교과 8 `[중간] Vision 기반 객체검출 모듈` 과제 저장소입니다.
 교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11n 을 파인튜닝하여 교과 14 로 연결합니다.
 
-> **진행 상태**: 7일차 — 공식 Dataset `kimchi_v5` (2026-10-16, v4 의 Val 누수를 없앤 재분할) · Baseline · 개선 실험 5개 완료, Final Model 선택 전
+> **진행 상태**: 7일차 — 공식 Dataset `kimchi_v5` (2026-10-16, v4 의 Val 누수를 없앤 재분할) · Baseline + 개선 실험 7개 완료 (현재 최고 exp007 11s·1920·증강 Val 0.724), 3대 분산 실험 진행 예정 · Final Model 선택 전
 >
-> **먼저 볼 곳**: [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/README.md`](reports/README.md) (보고서 안내)
+> **먼저 볼 곳**: [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (개선점·한계 — 발표용) · [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md) (인수인계 · 3대 분산 실험 계획) · [`reports/README.md`](reports/README.md)
 >
 > **데이터 성격**: AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터를 사용합니다.
 >
@@ -317,6 +317,8 @@ python scripts/plot_runs.py                         # 그래프 · runs_summary.
 
 \* 타일링은 학습 중 Val 이 조각 단위라, 조각 예측을 합쳐 원본 Val 104장을 같은 코드(`src/tiling.py`)로 채점한 값 — 같은 코드로 잰 exp002_v5 는 0.680. [`tiling_eval.csv`](reports/04_improvement/tiling_eval.csv)
 
+- 개선점·한계 정리 (발표용): [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md)
+- 다음 실험 (3대 분산 — 상우 exp008·013 · 동연 exp010 · 혜성 exp009·011·012): [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md)
 - 지난 Version(v4) 개선 분석: [`reports/history/kimchi_v4/baseline_vs_improved.md`](reports/history/kimchi_v4/baseline_vs_improved.md)
 
 ## 11. Final Model

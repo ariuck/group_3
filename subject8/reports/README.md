@@ -23,7 +23,7 @@ reports/
 
 > **먼저 볼 파일**
 > 1. [`../models/README.md`](../models/README.md) — 모든 모델의 Version · 점수 · 조건 기록 · 그래프 링크 (자동 생성)
-> 2. [`04_improvement/experiment_log.csv`](04_improvement/experiment_log.csv) — v5 실험별 변경 변수 · 이유 · 판정
+> 2. [`04_improvement/baseline_vs_improved.md`](04_improvement/baseline_vs_improved.md) — v5 개선점 · 한계점 (발표용), [`experiment_log.csv`](04_improvement/experiment_log.csv) — 실험별 판정
 > 3. [`figures/comparison/runs_comparison_kimchi_v5.png`](figures/comparison/runs_comparison_kimchi_v5.png) — v5 실험 비교 그림
 > 4. [`figures/comparison/v5_vs_v4.png`](figures/comparison/v5_vs_v4.png) — v4 → v5 에서 달라진 점 (누수 · Class 박스 · 점수)
 
@@ -65,7 +65,9 @@ reports/
 | **`experiment_log.csv`** | v5 실험 기록 · 판정 (산출물 5) |
 | `<실행>_training_condition.md` | exp001_v5 (1280) · exp002_v5 (1920) · exp003_v5 (epoch 100) · exp004_v5 (타일링) · exp005_v5 (증강) · exp006_v5 (2560 + 증강) · exp007_v5 (11s + 증강) 학습 조건 |
 | `tiling_eval.csv` | 타일링 비교 — 원본 Val 104장을 같은 코드로 채점 (exp002_v5 원본 vs exp004_v5 조각 합침) |
-| `improvement_experiment.md` · `baseline_vs_improved.md` | **v5 기준 작성 예정** — v4 판은 `history/kimchi_v4/` |
+| **`baseline_vs_improved.md`** | v5 실험 비교 · **개선점 · 한계점** (발표용) · Final 후보 (산출물 5) |
+| `improvement_experiment.md` | v5 기준 작성 예정 — v4 판은 `history/kimchi_v4/` |
+| `tiling_eval_exp010.csv` | (예정) exp010 11s 타일링 채점 |
 
 ### 05_acceptance (9일차)
 

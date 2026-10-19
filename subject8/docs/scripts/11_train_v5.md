@@ -23,6 +23,8 @@ python scripts/11_train_v5.py --run exp005 --report-only     # 학습은 끝났�
 | `exp006` | exp005 + imgsz 2560 (batch 3) — exp002 대비 두 변수 | `exp006_v5_imgsz2560_aug` | 0.722 (학습 5시간) |
 | `exp007` | exp005 + YOLO11s (batch 3) — exp002 대비 두 변수 | `exp007_v5_s_imgsz1920_aug` | **0.724** (학습 43분) |
 
+| `exp008` · `exp009` · `exp011` · `exp012` · `exp013` | exp007 기준 한 변수씩 — epoch 100 · YOLO11m (batch 2) · 증강 끄기 · imgsz 1280 · seed 7 | `exp008_v5_s_imgsz1920_aug_epoch100` 등 | 3대 분산 실험 예정 ([experiment_handoff](../project/experiment_handoff.md)) |
+
 exp006·exp007 은 사용자 결정으로 두 변수를 함께 바꿨다. exp005(증강)와는 한 변수만 달라 해상도 효과(+0.038)·모델 크기 효과(+0.040)를 따로 읽는다. RTX 3060 12GB 측정: 11n·2560·batch 3 = 10.8GB, 11s·1920·batch 3 = 9.0GB, 11s·2560 은 batch 2 도 13.6GB 로 넘쳐 제외.
 
 - Weight: `models/baseline/` · `models/improved/<실행>.pt` ([`registry.weight_path`](../src/registry.md))
@@ -33,7 +35,8 @@ exp006·exp007 은 사용자 결정으로 두 변수를 함께 바꿨다. exp005
 
 | 이름 | 설명 |
 |---|---|
-| `RUNS` | 실행별 바꾸는 값 (10 의 `EXPERIMENTS` 에서 가져옴 · exp005 는 여기서 정의), 실행 이름, 비교 대상, 메모 |
+| `RUNS` | 실행별 바꾸는 값 (10 의 `EXPERIMENTS` 에서 가져옴 · exp005~ 는 여기서 정의), 실행 이름, 비교 대상, 메모. 3대 분산 실험도 미리 등록해 각 PC 는 실행만 한다 |
+| `_EXP007`, `_AUG_TEXT` | exp007 조건 (11s · 1920 · batch 3 · 증강) — exp008~013 의 기준 |
 | `ULTRALYTICS_DEFAULTS` | 06 `BASELINE` 에 없는 증강 값의 기본값 — 조건 기록에 "기본 → 바꾼 값" 으로 적는다 |
 | `paths` | `SplitBuilder(PROJECT_ROOT, "kimchi_v5")` — 06 의 `DATA_YAML`·`MANIFEST_DIR`·`YOLO_DIR` 을 이 값으로 바꿔 `precheck()` 를 그대로 쓴다 |
 | `finished_result(run)` | 이미 끝난 실행의 결과 dict (`--report-only`) — 시작·종료 시각은 `args.yaml`·`results.csv` 파일 시각 |

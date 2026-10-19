@@ -44,6 +44,8 @@ paths = SplitBuilder(PROJECT_ROOT, DATASET_VERSION)
 # 06 의 precheck 가 v5 폴더를 보게 한다
 tb.DATA_YAML, tb.MANIFEST_DIR, tb.YOLO_DIR = paths.dataset_yaml, paths.manifest_dir, paths.yolo_dir
 
+_EXP007 = {"model_name": "yolo11s.pt", "imgsz": 1920, "batch": 3, "flipud": 0.5, "hsv_v": 0.6}   # exp007 조건 (v5 Val 최고 0.724)
+_AUG_TEXT = "기본 + 상하반전 flipud 0.5 (기본 0) · 밝기 hsv_v 0.6 (기본 0.4) — exp007 과 같음"
 RUNS = {
     "baseline": {"change": {}, "run_name": "baseline_v5", "title": "kimchi_v5 Baseline"},
     "exp001": {"change": ex.EXPERIMENTS["exp001"]["change"], "run_name": "exp001_v5_imgsz1280",
@@ -77,6 +79,22 @@ RUNS = {
                "augmentation": "기본 + 상하반전 flipud 0.5 (기본 0) · 밝기 hsv_v 0.6 (기본 0.4) — exp005 와 같음",
                "note": "exp005_v5 와 다른 변수는 모델 크기(YOLO11n → YOLO11s) 하나 (batch 6 → 3 은 GPU 메모리 때문). "
                        "exp002_v5 대비로는 모델 크기·증강 두 변수를 함께 바꾼 실험이다."},
+    # ── 3대 분산 실험 (docs/project/experiment_handoff.md) — 모두 exp007(11s · 1920 · 증강) 기준, 한 변수씩 ──
+    "exp008": {"change": {**_EXP007, "epochs": 100}, "run_name": "exp008_v5_s_imgsz1920_aug_epoch100",
+               "title": "kimchi_v5 개선 실험 exp008", "compare": "exp007_v5 (epochs 50)", "augmentation": _AUG_TEXT,
+               "note": "exp007_v5 와 다른 변수는 epochs(50 → 100) 하나. exp007 의 best epoch 가 마지막(50)이라 학습 부족 가능성 확인."},
+    "exp009": {"change": {**_EXP007, "model_name": "yolo11m.pt", "batch": 2}, "run_name": "exp009_v5_m_imgsz1920_aug",
+               "title": "kimchi_v5 개선 실험 exp009", "compare": "exp007_v5 (YOLO11s)", "augmentation": _AUG_TEXT,
+               "note": "exp007_v5 와 다른 변수는 모델 크기(YOLO11s → YOLO11m) 하나 (batch 3 → 2 는 GPU 메모리 — 12GB 에서 넘치면 batch 1 대신 GPU 큰 PC 에서)."},
+    "exp011": {"change": {k: v for k, v in _EXP007.items() if k not in ("flipud", "hsv_v")}, "run_name": "exp011_v5_s_imgsz1920",
+               "title": "kimchi_v5 개선 실험 exp011", "compare": "exp007_v5 (증강 있음)",
+               "note": "exp007_v5 와 다른 변수는 증강 하나 (flipud·hsv_v 를 기본값으로). 큰 모델에서 증강이 실제로 도움이 되는지 분리."},
+    "exp012": {"change": {**_EXP007, "imgsz": 1280, "batch": 6}, "run_name": "exp012_v5_s_imgsz1280_aug",
+               "title": "kimchi_v5 개선 실험 exp012", "compare": "exp007_v5 (imgsz 1920)", "augmentation": _AUG_TEXT,
+               "note": "exp007_v5 와 다른 변수는 imgsz(1920 → 1280) 하나 (batch 3 → 6). 예측 속도가 중요한 현장(교과 14)용 가벼운 후보."},
+    "exp013": {"change": {**_EXP007, "seed": 7}, "run_name": "exp013_v5_s_imgsz1920_aug_seed7",
+               "title": "kimchi_v5 반복 실험 exp013", "compare": "exp007_v5 (seed 42)", "augmentation": _AUG_TEXT,
+               "note": "exp007_v5 와 seed 만 다르다 (42 → 7). 같은 조건에서 점수가 얼마나 흔들리는지 재서, 실험 사이 0.02 차이가 의미 있는지 판단한다."},
 }
 REPORT_DIR = PROJECT_ROOT / "reports" / "04_improvement"
 BASELINE_REPORT = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"   # 가이드 이름 (산출물 2)

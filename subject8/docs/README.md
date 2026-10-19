@@ -7,7 +7,7 @@ docs/
 ```
 
 - **코드 파일이 궁금하면** 코드 경로 앞에 `docs/` 를 붙인다 → 아래 표
-- **`project/`**: [split_policy](project/split_policy.md) 분할 정책 · [manual_split_guide](project/manual_split_guide.md) 6명 수동 분할 가이드(`kimchi_v5`) · [kimchi_v5_split](project/kimchi_v5_split.md) kimchi_v5 분할 기준(C안) · [process/dataset_audit_and_split](project/process/dataset_audit_and_split.md) 데이터 점검·분할 과정 · [demo_procedure](project/demo_procedure.md) 시연 절차
+- **`project/`**: [split_policy](project/split_policy.md) 분할 정책 · [manual_split_guide](project/manual_split_guide.md) 6명 수동 분할 가이드(`kimchi_v5`) · [kimchi_v5_split](project/kimchi_v5_split.md) kimchi_v5 분할 기준(C안) · [experiment_handoff](project/experiment_handoff.md) 실험 인수인계·3대 분산 계획 · [process/dataset_audit_and_split](project/process/dataset_audit_and_split.md) 데이터 점검·분할 과정 · [demo_procedure](project/demo_procedure.md) 시연 절차
 - 결과·보고서는 문서가 아니라 [`reports/`](../reports/README.md) 에 단계별(01_data ~ 05_acceptance)로 있다.
 - 교과 7 문서는 [`subject7/docs/`](../../subject7/docs/README.md) 에 같은 규칙으로 있다 (기준서는 `subject7/docs/project/standards/`).
 - 대응 점검 (이 폴더 `subject8/` 에서): `python ../subject7/tools/check_docs.py .`
