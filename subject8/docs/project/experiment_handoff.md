@@ -148,7 +148,7 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 | 후보 | 조건 | seed 42 | seed 7 | seed 123 | 평균 (2026-10-19 현재) |
 |---|---|---|---|---|---|
 | **A** | 11s · 1920 · 증강 (= exp007) | exp007 0.724 ✅ | exp013 0.714 ✅ | exp014 0.707 ✅ | **0.715** (3개) |
-| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | exp015 0.726 ✅ | exp016 0.732 ✅ | **exp018** (3라운드 · 상우, 학습 중) | **0.729** (2개) |
+| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | exp015 0.726 ✅ | exp016 0.732 ✅ | exp018 0.746 ✅ | **0.735** (3개) |
 | **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | exp009 0.730 ✅ | ~~exp017~~ 중단 · 제외 | — | 0.730 (1개) |
 | (참고) | 11s · 1920 · 증강 끄기 | exp011 0.716 ✅ — exp007 대비 -0.008, 증강 유지 | | | |
 
@@ -173,9 +173,10 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 
 후보 A 는 seed 3개(exp007·013·014), B 는 2개라 평균 비교가 기울어 있다 → B 에 seed 123 을 더한다. 상우 · `feature/sonny`: `git merge origin/feat/hyesung` 후 `.venv/bin/python scripts/11_train_v5.py --run exp018` (실행 이름 `exp018_v5_s_imgsz2240_aug_seed123`, GPU 9.4GB).
 
-- **중간 판정 (2026-10-19):** B 평균 0.729 가 A 0.715 보다 0.014 높다 (0.01 기준 넘음).
+- **판정 (2026-10-19, exp018 까지):** B 평균 **0.735** 가 A 0.715 보다 **+0.020** → **다음 개선 실험의 기반 조건 = B (11s · 2240 · 증강 · batch 2)**.
+- **클래스별로 보면 약점은 갈변 하나다** (exp015·016·018 다시 채점): 갈변 mAP50-95 0.096 · 0.094 · 0.107, Recall 0.07~0.13 (15개 중 1~2개). 나머지 5개 클래스는 0.80~0.92. 갈변은 1920(exp007 0.108)·타일링(exp010 0.095)에서도 0.1 근처라 해상도·모델 크기로는 안 오른다. 원인은 데이터 차이: Train 갈변 209개 중 153개가 긴 변 200px 이상(잎 전체가 갈변), Val 갈변 15개는 중앙값 25px(작은 반점) — Train 에 100px 미만 갈변은 8개뿐. 전체 점수는 클래스 6개 평균이라 갈변이 약 0.12 를 깎는다 (갈변 0.1 → 0.3 이면 전체 약 +0.03).
 - **exp017(C seed 7)은 제외한다.** 이후영 PC 에서 19 epoch 검증 중 메모리 부족으로 강제 종료됐다. 18 epoch 까지의 값은 50 epoch 실행과 비교할 수 없어 쓰지 않는다. 다시 돌려도 C 평균이 B 보다 0.01 이상 높으려면 exp017 이 0.748 이상이어야 해서(같은 조건 seed 42 는 0.730) 결론이 바뀔 가능성이 낮다 → C 는 seed 1개로 판단: **B 와 같은 수준이라 더 가벼운 B**.
-- **exp018 이 나오면 정하는 것은 "다음 개선 실험의 기반 조건 = B" 까지다.** Final 모델 확정(아래 3~5)은 B 기반 개선 실험이 끝난 뒤에 한다 — Frozen Test 는 한 번만 보므로 먼저 쓰지 않는다.
+- **Final 모델 확정(아래 3~5)은 B 기반 개선 실험이 끝난 뒤에 한다** — Frozen Test 는 한 번만 보므로 먼저 쓰지 않는다.
 
 ### Final 확정 순서 (개선 실험이 모두 끝난 뒤)
 
@@ -186,3 +187,54 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 4. `reports/final_model_selection.md` 작성 (후보별 평균·흔들림, Class 별, 학습·예측 시간, 선택 이유, 원본 Weight·sha256)
 5. **그다음에만** Frozen Test 한 번: `python scripts/16_evaluate_final_test.py` → `reports/05_final/final_metrics.csv`
 6. 커밋 → main 병합 → 푸시
+
+## 9. 4라운드 — 밤샘 6대, 방향 6개 × seed 3개 (2026-10-19 저녁 → 10-20 아침)
+
+**목적: 최종 모델의 방향을 한 번에 확정한다.** 기반은 B(11s · 2240 · 증강 · batch 2, seed 3개 평균 **0.735**).
+약점은 갈변 하나(작은 반점, 8장 근거는 위 "클래스별로 보면" 참고)라 방향 6개 중 5개가 갈변을 겨눈다.
+각 방향을 B 와 **같은 seed 3개(42 · 7 · 123 = exp015 · 016 · 018)** 로 돌려 평균끼리 비교한다.
+
+| 방향 | 바꾸는 것 (B 대비) | 근거 | seed 42 · 7 · 123 | 담당 · 브랜치 |
+|---|---|---|---|---|
+| ① 반점 복제 | 100px 미만 갈변이 있는 Train 사진 8장 × 10 (목록만) | Train 에 반점 예시가 8개뿐 | exp019 · 020 · 021 | 혜성 · `feat/hyesung` |
+| ② 반점 합성 | 반점을 갈변 없는 Train 150장의 배추 위에 3개씩 붙인 사진 추가 | 복제는 같은 8장만 반복 → 새 배경·위치에서 반점을 보게 | exp022 · 023 · 024 | 동연 · `feature/ariuck` |
+| ③ 2560 | imgsz 2240 → 2560 (batch 1, 7.4GB) | 해상도 1280 0.680 → 1920 0.715 → 2240 0.735 로 아직 오름 | exp025 · 026 · 027 | 이후영 · `feature/huyoung` |
+| ④ scale 0.25 | 증강 scale 0.5 → 0.25 | 0.5배 축소 시 25px 반점이 입력에서 약 6px (검출 격자 8px 미만) | exp028 · 029 · 030 | 석범 · `feature/seokbeom` |
+| ⑤ 2560 + 복제 | ③ + ① | 두 효과가 더해지는지 (최종 후보) | exp031 · 032 · 033 | 동훈 · `feature/donghun` |
+| ⑥ 2560 + 합성 | ③ + ② | 두 효과가 더해지는지 (최종 후보) | exp034 · 035 · 036 | 상우 · `feature/sonny` |
+
+- ①②③ × {2240, 2560} 이 2×3 표가 되도록 짰다 (B 자체가 "2240 · 데이터 그대로" 칸). 아침에 방향별 평균을 이 표에 채우면 해상도·데이터 효과를 따로 읽을 수 있다.
+- 합성은 반점 약 300개(150장 × 최대 3개, 배추 위 자리가 없으면 건너뜀). 붙인 자리 가장자리가 보이는 경우가 있어 "네모 자국"을 배울 위험은 있다 — Val 갈변 Recall 로 확인한다.
+- 복제·합성 데이터는 학습 시작 때 `data/yolo_v5_r4/` 에 자동으로 만든다 (Git 제외, 같은 seed 라 어느 PC 에서나 같다). Val 104장은 그대로.
+- 걸리는 시간(RTX 3060): 2240 방향 1회 약 1시간 (합성은 약 1시간 15분), 2560 방향 1회 약 1시간 45분~2시간 (합성 포함, 스모크 1 epoch 2.5분 · GPU 7.5GB) → 가장 긴 PC 도 6시간 안팎이라 새벽 전에 끝난다.
+
+### 저녁에 (17:50 전) — 각 PC
+
+1. **Windows 절전 끄기**: 설정 → 시스템 → 전원 → 화면 끄기는 상관없고 **"절전 모드: 안 함"**. 디스코드·브라우저 영상 등 GPU 쓰는 프로그램 닫기 (`nvidia-smi` 로 학습 전 1GB 이하 확인).
+2. Ubuntu 창에서 (브랜치 이름만 자기 것으로):
+   ```bash
+   cd ~/group_3 && git fetch origin && git checkout <브랜치> && git merge --no-edit origin/main
+   ```
+3. 자기 실험 3개를 차례로 (앞 실험이 실패해도 다음으로 넘어감, 기록은 `~/r4_logs/`):
+   ```bash
+   mkdir -p ~/r4_logs && cd ~/group_3/subject8 && for r in expAAA expBBB expCCC; do .venv/bin/python scripts/11_train_v5.py --run $r 2>&1 | tee ~/r4_logs/$r.log; done
+   ```
+4. **Ubuntu 창은 닫지 말고** 그대로 두고 퇴근 (창을 닫으면 학습이 멈출 수 있다).
+
+### 아침에 (09:10) — 각 PC
+
+```bash
+cd ~/group_3/subject8 && for k in expAAA expBBB expCCC; do git add runs/${k}_v5_r4_* models/improved/${k}_v5_r4_*.pt reports/04_improvement/${k}_v5_r4_*_training_condition.md; done; git status --short
+```
+`git status` 에 `.jpg` 나 `weights/` 가 없으면 (labels.jpg 는 괜찮음):
+```bash
+git commit -m "feat(subject8): 4라운드 expAAA~CCC 결과" && git push origin <브랜치>
+```
+끝나지 않은 실험이 있으면 `tail -c 2000 ~/r4_logs/<실험>.log` 를 정리 담당에게 보낸다.
+
+### 아침 판정 → Final
+
+1. 6명 푸시 → main 에 합치기 → 방향별 seed 3개 평균 + **갈변 mAP50-95** (클래스별 다시 채점)
+2. B(0.735) 보다 평균 **+0.02 이상**인 방향 중 가장 높은 것. 차이가 0.01 안이면 더 단순한 쪽 (B → ①④ → ② → ③ → ⑤⑥ 순: 해상도 높을수록 느리고, 합성은 데이터 생성이 필요)
+3. +0.02 넘는 방향이 없으면 **B 그대로** (exp018 0.746 이 가장 높은 실행)
+4. 그다음 8장 "Final 확정 순서" 3~5 (final_best.pt · registry · final_model_selection.md · Frozen Test 1번)

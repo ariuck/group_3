@@ -113,6 +113,140 @@ RUNS = {
                "title": "kimchi_v5 반복 실험 exp018", "compare": "exp015_v5 · exp016_v5 (같은 조건 seed 42 · 7)", "augmentation": _AUG_TEXT,
                "note": "exp015 조건(11s · 2240 · batch 2)의 세 번째 seed (123). 후보 B 를 후보 A(exp007·013·014) 와 같은 seed 3개 평균으로 비교한다."},
 }
+
+
+# ── 4라운드 (밤샘 · 2026-10-19) — 기반 B(exp015 조건), 방향 6개 × seed 3개 (docs/project/experiment_handoff.md 9장) ──
+# 근거: 갈변 mAP50-95 0.1 (나머지 클래스 0.80~0.92). Train 갈변은 잎 전체(대부분 200px 이상), Val 갈변은 작은 반점(중앙값 25px)
+#   반점 복제 ×10 : 100px 미만 갈변이 있는 Train 사진 8장을 학습 목록에 10번씩 (사진 파일은 그대로, 목록만)
+#   반점 합성     : 그 반점들을 갈변 없는 Train 사진 150장의 배추 위에 3개씩 붙인 사진을 추가 (data/yolo_v5_r4/, Git 제외)
+#   2560 · batch 1: 해상도 1280 0.680 → 1920 0.715 → 2240 0.735 로 아직 오르는 중 (2560 · batch 2 는 12GB 초과, batch 1 은 7.4GB)
+#   scale 0.25    : 기본 scale 0.5 는 사진을 0.5배까지 줄여 25px 반점이 입력에서 약 6px (가장 작은 검출 격자 8px 보다 작음)
+_B = {**_EXP007, "imgsz": 2240, "batch": 2}
+_B2560 = {**_EXP007, "imgsz": 2560, "batch": 1}
+_R4_DIRECTIONS = [   # (태그, 설명, 학습 조건, 데이터 변경)
+    ("os10", "B + 반점 복제 ×10", _B, {"oversample": 10}),
+    ("cp", "B + 반점 합성", _B, {"synth": True}),
+    ("2560", "11s · 2560 · batch 1 (B 에서 해상도만)", _B2560, {}),
+    ("sc25", "B + scale 0.5 → 0.25", {**_B, "scale": 0.25}, {}),
+    ("2560_os10", "2560 + 반점 복제 ×10", _B2560, {"oversample": 10}),
+    ("2560_cp", "2560 + 반점 합성", _B2560, {"synth": True}),
+]
+_R4_SEEDS = [(42, "", "exp015_v5"), (7, "_seed7", "exp016_v5"), (123, "_seed123", "exp018_v5")]   # B 의 같은 seed 실행과 짝지어 비교
+for _i, (_tag, _desc, _cond, _data) in enumerate(_R4_DIRECTIONS):
+    for _j, (_seed, _suffix, _pair) in enumerate(_R4_SEEDS):
+        _key = f"exp{19 + _i * 3 + _j:03d}"
+        RUNS[_key] = {"change": {**_cond, "seed": _seed}, "data": _data, "run_name": f"{_key}_v5_r4_{_tag}{_suffix}",
+                      "title": f"kimchi_v5 4라운드 {_key} ({_desc})", "compare": f"{_pair} (B · 같은 seed {_seed}) · B seed 3개 평균 0.735",
+                      "augmentation": _AUG_TEXT + (" · scale 0.5 → 0.25" if "scale" in _cond else ""),
+                      "note": f"4라운드 방향 '{_desc}' 의 seed {_seed}. 갈변(작은 반점) 개선이 목적이라 클래스별 갈변 mAP 도 함께 본다."}
+
+R4_DIR = PROJECT_ROOT / "data" / "yolo_v5_r4"   # 생성 데이터 (data/yolo*/ 라 Git 제외 · 어느 PC 에서나 같은 결과로 다시 만든다)
+SPECK_MAX_PX = 100        # 이보다 작은 갈변 박스 = 반점
+SYNTH_IMAGES, SYNTH_PER_IMAGE, SYNTH_SEED = 150, 3, 0
+
+
+def _read_labels(label_path):
+    return [line.split() for line in label_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def speck_sources():
+    """Train 에서 긴 변 SPECK_MAX_PX 미만 갈변 박스 [(이미지, (cx, cy, w, h) px)]"""
+    from PIL import Image
+    out = []
+    for lp in sorted((paths.yolo_dir / "labels" / "train").glob("*.txt")):
+        img = paths.yolo_dir / "images" / "train" / f"{lp.stem}.jpg"
+        size = None
+        for r in _read_labels(lp):
+            if r[0] != "5":
+                continue
+            if size is None:
+                with Image.open(img) as im:
+                    size = im.size
+            W, H = size
+            cx, cy, w, h = float(r[1]) * W, float(r[2]) * H, float(r[3]) * W, float(r[4]) * H
+            if max(w, h) < SPECK_MAX_PX:
+                out.append((img, (cx, cy, w, h)))
+    return out
+
+
+def make_synth():
+    """반점 합성 사진을 R4_DIR/synth 에 만든다 (이미 있으면 그대로). 같은 seed · 같은 Train 이면 어느 PC 에서나 같다."""
+    import random
+    import numpy as np
+    from PIL import Image, ImageFilter
+    out_img, out_lbl = R4_DIR / "synth" / "images" / "train", R4_DIR / "synth" / "labels" / "train"
+    done = R4_DIR / "synth" / f"done_{SYNTH_IMAGES}x{SYNTH_PER_IMAGE}_seed{SYNTH_SEED}.txt"
+    if done.is_file():
+        return sorted(out_img.glob("*.jpg"))
+    out_img.mkdir(parents=True, exist_ok=True)
+    out_lbl.mkdir(parents=True, exist_ok=True)
+    rng = random.Random(SYNTH_SEED)
+    pad = 4
+    specks = []
+    for img, (cx, cy, w, h) in speck_sources():
+        with Image.open(img) as im:
+            specks.append(im.convert("RGB").crop((int(cx - w / 2) - pad, int(cy - h / 2) - pad, int(cx + w / 2) + pad, int(cy + h / 2) + pad)))
+    targets = [lp for lp in sorted((paths.yolo_dir / "labels" / "train").glob("*.txt")) if all(r[0] != "5" for r in _read_labels(lp))]
+    print(f" 반점 합성: 반점 {len(specks)}개 → 갈변 없는 Train {len(targets)}장 중 {SYNTH_IMAGES}장에 {SYNTH_PER_IMAGE}개씩")
+    pasted = 0
+    for lp in rng.sample(targets, SYNTH_IMAGES):
+        im = Image.open(paths.yolo_dir / "images" / "train" / f"{lp.stem}.jpg").convert("RGB")
+        W, H = im.size
+        sat = np.asarray(im.convert("HSV"))[..., 1]
+        rows = _read_labels(lp)
+        taken = [(float(r[1]) * W, float(r[2]) * H, float(r[3]) * W / 2 + 40, float(r[4]) * H / 2 + 40) for r in rows]   # 기존 박스 + 여유 40px
+        new = []
+        for _ in range(SYNTH_PER_IMAGE):
+            sp = rng.choice(specks)
+            if rng.random() < 0.5:
+                sp = sp.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+            sp = sp.rotate(90 * rng.randrange(4), expand=True)
+            s = rng.uniform(0.8, 1.25)
+            sp = sp.resize((max(2 * pad + 4, round(sp.width * s)), max(2 * pad + 4, round(sp.height * s))))
+            for _try in range(200):
+                x, y = rng.randint(int(W * 0.05), int(W * 0.95) - sp.width), rng.randint(int(H * 0.05), int(H * 0.95) - sp.height)
+                mx, my = x + sp.width / 2, y + sp.height / 2
+                if sat[max(0, int(my) - 60):int(my) + 60, max(0, int(mx) - 60):int(mx) + 60].mean() < 60:   # 배추 위만 (배경 S 약 25, 배추 70 이상)
+                    continue
+                if any(abs(mx - tx) < tw + sp.width / 2 and abs(my - ty) < th + sp.height / 2 for tx, ty, tw, th in taken):
+                    continue
+                mask = Image.new("L", sp.size, 0)
+                mask.paste(255, (pad // 2, pad // 2, sp.width - pad // 2, sp.height - pad // 2))
+                im.paste(sp, (x, y), mask.filter(ImageFilter.GaussianBlur(pad / 2)))
+                bw, bh = sp.width - 2 * pad, sp.height - 2 * pad
+                new.append(f"5 {mx / W:.6f} {my / H:.6f} {bw / W:.6f} {bh / H:.6f}")
+                taken.append((mx, my, sp.width / 2 + 40, sp.height / 2 + 40))
+                pasted += 1
+                break
+        im.save(out_img / f"{lp.stem}_r4sp.jpg", quality=95)
+        (out_lbl / f"{lp.stem}_r4sp.txt").write_text("\n".join([" ".join(r) for r in rows] + new) + "\n", encoding="utf-8")
+    done.write_text(f"pasted {pasted}\n", encoding="utf-8")
+    print(f" 반점 합성 완료: 사진 {SYNTH_IMAGES}장 · 반점 {pasted}개 → {rel(out_img)}")
+    return sorted(out_img.glob("*.jpg"))
+
+
+def r4_data_yaml(run_name, data):
+    """4라운드 데이터 변경(복제 · 합성)이 있으면 학습 목록 txt 와 yaml 을 R4_DIR 에 만들어 경로를 돌려준다. Val 은 그대로."""
+    import yaml
+    if not data:
+        return paths.dataset_yaml
+    R4_DIR.mkdir(parents=True, exist_ok=True)
+    files = [str(p.resolve()) for p in sorted((paths.yolo_dir / "images" / "train").glob("*.jpg"))]
+    if data.get("oversample"):
+        speck_imgs = sorted({str(img.resolve()) for img, _ in speck_sources()})
+        files += speck_imgs * (data["oversample"] - 1)
+        print(f" 반점 복제: 사진 {len(speck_imgs)}장 × {data['oversample']} → 학습 목록 {len(files)}줄")
+    if data.get("synth"):
+        files += [str(p.resolve()) for p in make_synth()]
+        print(f" 반점 합성 추가 → 학습 목록 {len(files)}줄")
+    lst = R4_DIR / f"train_{run_name}.txt"
+    lst.write_text("\n".join(files) + "\n", encoding="utf-8")
+    cfg = yaml.safe_load(paths.dataset_yaml.read_text(encoding="utf-8"))
+    cfg.update({"path": str(paths.yolo_dir.resolve()), "train": str(lst.resolve()), "val": "images/val"})
+    cfg.pop("test", None)
+    out = R4_DIR / f"{run_name}.yaml"
+    out.write_text(yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return out
 REPORT_DIR = PROJECT_ROOT / "reports" / "04_improvement"
 BASELINE_REPORT = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"   # 가이드 이름 (산출물 2)
 # 06 BASELINE 에 없는 증강 값의 Ultralytics 8.4 기본값 (조건 기록에 "기본 → 바꾼 값" 으로 적는다)
@@ -149,7 +283,7 @@ def train_one(key, counts, report_only=False):
     if report_only:
         result = finished_result(run_name)
     else:
-        result = train_detector(data_yaml=str(paths.dataset_yaml), project=str(PROJECT_ROOT / "runs"), name=run_name, **cond)
+        result = train_detector(data_yaml=str(r4_data_yaml(run_name, spec.get("data"))), project=str(PROJECT_ROOT / "runs"), name=run_name, **cond)
     checks = check_training(result)
     ok = all(passed for passed, _ in checks.values())
     if ok:
@@ -169,6 +303,11 @@ def train_one(key, counts, report_only=False):
                      + f" 으로 바꿨다. 비교 대상: {spec['compare']}.")
     if spec.get("note"):
         notes.append(spec["note"])
+    if spec.get("data", {}).get("oversample"):
+        notes.append(f"학습 목록만 바꿨다: 긴 변 {SPECK_MAX_PX}px 미만 갈변이 있는 Train 사진을 {spec['data']['oversample']}번씩 넣음 (사진 파일·라벨은 그대로, Val 그대로).")
+    if spec.get("data", {}).get("synth"):
+        notes.append(f"반점 합성 사진 {SYNTH_IMAGES}장을 Train 에 추가: 긴 변 {SPECK_MAX_PX}px 미만 갈변 반점을 갈변 없는 Train 사진의 배추 위에 "
+                     f"{SYNTH_PER_IMAGE}개씩 붙임 (seed {SYNTH_SEED}, `{rel(R4_DIR)}/synth`, Git 제외). Val 은 원본 그대로.")
     if ref:
         notes.append(f"참고 — best.pt 가 저장된 epoch {ref['epoch']} 의 학습 중 Validation: "
                      f"P {ref['precision']:.3f} · R {ref['recall']:.3f} · mAP50 {ref['map50']:.3f} · mAP50-95 {ref['map50_95']:.3f}")
@@ -203,7 +342,7 @@ def train_one(key, counts, report_only=False):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~005)")
+    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~036)")
     ap.add_argument("--run", default="all", choices=["all", *RUNS])
     ap.add_argument("--report-only", action="store_true", help="학습은 끝났는데 조건 기록이 없을 때 기록만 다시 쓴다")
     args = ap.parse_args()
