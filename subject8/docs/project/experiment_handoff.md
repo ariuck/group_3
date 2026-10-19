@@ -145,23 +145,23 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 
 남은 질문은 "11s·1920(지금 최고)보다 **해상도를 더**(2240) 또는 **모델을 더**(11m) 키우면 나아지나" 하나다. seed 흔들림이 ±0.01 이라 후보마다 seed 2개 이상을 돌려 **평균**으로 비교한다.
 
-| 후보 | 조건 | seed 42 | seed 7 | seed 123 |
-|---|---|---|---|---|
-| **A** | 11s · 1920 · 증강 (= exp007) | exp007 0.724 ✅ | exp013 0.714 ✅ | **exp014** |
-| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | **exp015** | **exp016** | **exp018** (3라운드 · 상우) |
-| **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | **exp009** | **exp017** | — |
-| (참고) | 11s · 1920 · 증강 끄기 | **exp011** — 증강 효과 분리 (발표용 근거) | | |
+| 후보 | 조건 | seed 42 | seed 7 | seed 123 | 평균 (2026-10-19 현재) |
+|---|---|---|---|---|---|
+| **A** | 11s · 1920 · 증강 (= exp007) | exp007 0.724 ✅ | exp013 0.714 ✅ | exp014 0.707 ✅ | **0.715** (3개) |
+| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | exp015 0.726 ✅ | exp016 0.732 ✅ | **exp018** (3라운드 · 상우, 학습 중) | **0.729** (2개) |
+| **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | exp009 0.730 ✅ | **exp017** (대기) | — | 0.730 (1개) |
+| (참고) | 11s · 1920 · 증강 끄기 | exp011 0.716 ✅ — exp007 대비 -0.008, 증강 유지 | | | |
 
 ### 6명 배정 (각 PC 실험 1개 — 약 1~1.5시간, 모두 RTX 3060)
 
 | 담당 · 브랜치 | 실험 | 명령 (`cd ~/group_3/subject8` 에서) | 상태 |
 |---|---|---|---|
-| 혜성 · `feat/hyesung` | exp009 (후보 C seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp009` | 다시 돌리는 중 |
-| 상우 · `feature/sonny` | exp011 (증강 끄기) | `.venv/bin/python scripts/11_train_v5.py --run exp011` | 다시 돌리는 중 |
-| 동연 · `feature/ariuck` (정리 담당) | exp015 (후보 B seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp015` | 새로 |
-| **동훈** · `feature/donghun` | exp016 (후보 B seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp016` | 진행 중 (석범 몫과 바뀜 — 그대로 진행) |
+| 혜성 · `feat/hyesung` | exp009 (후보 C seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp009` | 완료 0.730 |
+| 상우 · `feature/sonny` | exp011 (증강 끄기) | `.venv/bin/python scripts/11_train_v5.py --run exp011` | 완료 0.716 |
+| 동연 · `feature/ariuck` (정리 담당) | exp015 (후보 B seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp015` | 완료 0.726 |
+| **동훈** · `feature/donghun` | exp016 (후보 B seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp016` | 완료 0.732 (석범 몫과 바뀜, 커밋 제목의 0.xxx 는 입력 실수) |
 | 팀원 5 · `feature/huyoung` | exp017 (후보 C seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp017` | 새로 |
-| **석범** · `feature/seokbeom` | exp014 (후보 A seed 123) | `.venv/bin/python scripts/11_train_v5.py --run exp014` | 진행 중 (동훈 몫과 바뀜 — 그대로 진행) |
+| **석범** · `feature/seokbeom` | exp014 (후보 A seed 123) | `.venv/bin/python scripts/11_train_v5.py --run exp014` | 완료 0.707 (동훈 몫과 바뀜) |
 
 - 동훈·석범은 실험을 서로 바꿔 돌렸다 (입력 실수). 결과는 누가 돌려도 같으므로(exp010·010b 재현성) 그대로 끝내고, **커밋할 때 실제로 돌린 실험 이름(R)을 쓰고 자기 브랜치로 푸시**한다. 팀원 5 의 브랜치는 GitHub 이름으로 짐작한 것 — 사람에 맞게 바꿔도 된다. 새 브랜치면 `git checkout -b <이름> origin/main`.
 - 학습은 Ubuntu(WSL) 터미널에서 **창에서 바로** 돌리는 것을 권한다 (진행 표시줄이 실시간으로 보임). `nohup … &` 로 돌렸다면 `tail -f` 는 진행 표시줄이 줄을 바꾸지 않아 멈춘 것처럼 보이니, 확인은 `pgrep -af 11_train_v5; nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv; tr '\r' '\n' < train_exp0NN.log | grep '/50 ' | tail -1` 로 한다.
@@ -173,10 +173,12 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 
 후보 A 는 seed 3개(exp007·013·014), B 는 2개라 평균 비교가 기울어 있다 → B 에 seed 123 을 더한다. 상우 · `feature/sonny`: `git merge origin/feat/hyesung` 후 `.venv/bin/python scripts/11_train_v5.py --run exp018` (실행 이름 `exp018_v5_s_imgsz2240_aug_seed123`, GPU 9.4GB).
 
+- **중간 판정 (exp017·018 전, 2026-10-19):** B 평균 0.729 가 A 0.715 보다 0.014 높다 (0.01 기준 넘음). C 는 seed 1개(0.730)로 B 와 같은 수준 → B·C 차이가 0.01 안이면 더 가벼운 B. exp017·018 이 나오면 확정한다.
+
 ### 오늘 Final 확정 순서 (정리 담당 동연)
 
 1. 6명 푸시 → `feature/ariuck` 에 합치기 → `python scripts/plot_runs.py`
-2. **후보별 seed 평균** (A: exp007·013·014 / B: exp015·016 / C: exp009·017) 을 비교
+2. **후보별 seed 평균** (A: exp007·013·014 / B: exp015·016·018 / C: exp009·017) 을 비교
    - 가장 높은 후보를 고르되, **평균 차이가 0.01 안이면 더 가볍고 빠른 쪽**(A → B → C 순)을 고른다 (흔들림 안의 차이라서)
 3. 고른 후보 안에서 Val mAP50-95 가 가장 높은 실행을 Final 로 → `models/final/final_best.pt` 복사 · `src/registry.py` 의 `OFFICIAL["final"]` 에 실행 이름
 4. `reports/final_model_selection.md` 작성 (후보별 평균·흔들림, Class 별, 학습·예측 시간, 선택 이유, 원본 Weight·sha256)
