@@ -188,53 +188,56 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 5. **그다음에만** Frozen Test 한 번: `python scripts/16_evaluate_final_test.py` → `reports/05_final/final_metrics.csv`
 6. 커밋 → main 병합 → 푸시
 
-## 9. 4라운드 — 밤샘 6대, 방향 6개 × seed 3개 (2026-10-19 저녁 → 10-20 아침)
+## 9. 4라운드 — 밤샘 6대, 방향 6개 × seed 5개 (2026-10-19 저녁 → 10-20 아침)
 
-**목적: 최종 모델의 방향을 한 번에 확정한다.** 기반은 B(11s · 2240 · 증강 · batch 2, seed 3개 평균 **0.735**).
-약점은 갈변 하나(작은 반점, 8장 근거는 위 "클래스별로 보면" 참고)라 방향 6개 중 5개가 갈변을 겨눈다.
-각 방향을 B 와 **같은 seed 3개(42 · 7 · 123 = exp015 · 016 · 018)** 로 돌려 평균끼리 비교한다.
+**목적: 최종 모델의 방향을 한 번에 확정한다.** 기반은 B(11s · 2240 · 증강 · batch 2).
+B 의 seed 3개가 0.726 · 0.732 · 0.746 으로 **0.02 흔들려 채택 기준(+0.02)과 같다** → seed 1개 비교는 운에 좌우된다.
+그래서 방향마다 **seed 5개(42 · 7 · 123 · 1 · 2)** 를 돌리고, B 도 seed 2개를 더해(exp049 · 050) **평균끼리** 비교한다 (seed 5개끼리면 약 0.013 차이까지 구분).
+약점은 갈변 하나(작은 반점 — 위 "클래스별로 보면" 참고)라 방향 6개 중 5개가 갈변을 겨눈다.
 
-| 방향 | 바꾸는 것 (B 대비) | 근거 | seed 42 · 7 · 123 | 담당 · 브랜치 |
+| 방향 | 바꾸는 것 (B 대비) | 근거 | seed 42 · 7 · 123 / 1 · 2 | 담당 · 브랜치 |
 |---|---|---|---|---|
-| ① 반점 복제 | 100px 미만 갈변이 있는 Train 사진 8장 × 10 (목록만) | Train 에 반점 예시가 8개뿐 | exp019 · 020 · 021 | 혜성 · `feat/hyesung` |
-| ② 반점 합성 | 반점을 갈변 없는 Train 150장의 배추 위에 3개씩 붙인 사진 추가 | 복제는 같은 8장만 반복 → 새 배경·위치에서 반점을 보게 | exp022 · 023 · 024 | 동연 · `feature/ariuck` |
-| ③ 2560 | imgsz 2240 → 2560 (batch 1, 7.4GB) | 해상도 1280 0.680 → 1920 0.715 → 2240 0.735 로 아직 오름 | exp025 · 026 · 027 | 이후영 · `feature/huyoung` |
-| ④ scale 0.25 | 증강 scale 0.5 → 0.25 | 0.5배 축소 시 25px 반점이 입력에서 약 6px (검출 격자 8px 미만) | exp028 · 029 · 030 | 석범 · `feature/seokbeom` |
-| ⑤ 2560 + 복제 | ③ + ① | 두 효과가 더해지는지 (최종 후보) | exp031 · 032 · 033 | 동훈 · `feature/donghun` |
-| ⑥ 2560 + 합성 | ③ + ② | 두 효과가 더해지는지 (최종 후보) | exp034 · 035 · 036 | 상우 · `feature/sonny` |
+| ① 반점 복제 | 100px 미만 갈변이 있는 Train 사진 8장 × 10 (목록만) | Train 에 반점 예시가 8개뿐 | exp019 · 020 · 021 / 037 · 038 | 혜성 · `feat/hyesung` (+ B seed 1 · 2: exp049 · 050) |
+| ② 반점 합성 | 반점을 갈변 없는 Train 150장의 배추 위에 붙인 사진 추가 (약 300개) | 복제는 같은 8장만 반복 → 새 배경·위치에서 반점을 보게 | exp022 · 023 · 024 / 039 · 040 | 동연 · `feature/ariuck` |
+| ③ 2560 | imgsz 2240 → 2560 (batch 1, 7.4GB) | 해상도 1280 0.680 → 1920 0.715 → 2240 0.735 로 아직 오름 | exp025 · 026 · 027 / 041 · 042 | 이후영 · `feature/huyoung` |
+| ④ 반점 복원 + 복제 | kimchi_v3 개정 때 지운 Train 반점 13개(12장)를 되살리고 반점 사진 19장 × 10 | 개정 때 반점이 Train 20 → 8 · Val 41 → 15 · **Test 14 → 14 (안 지움)** — 구간마다 기준이 달라졌다. 지운 게 손해였는지 ①과 비교해 숫자로 답한다 | exp028 · 029 · 030 / 043 · 044 | 석범 · `feature/seokbeom` |
+| ⑤ 2560 + 복제 | ③ + ① | 두 효과가 더해지는지 (최종 후보) | exp031 · 032 · 033 / 045 · 046 | 동훈 · `feature/donghun` |
+| ⑥ 2560 + 합성 | ③ + ② | 두 효과가 더해지는지 (최종 후보) | exp034 · 035 · 036 / 047 · 048 | 상우 · `feature/sonny` |
 
-- ①②③ × {2240, 2560} 이 2×3 표가 되도록 짰다 (B 자체가 "2240 · 데이터 그대로" 칸). 아침에 방향별 평균을 이 표에 채우면 해상도·데이터 효과를 따로 읽을 수 있다.
-- 합성은 반점 약 300개(150장 × 최대 3개, 배추 위 자리가 없으면 건너뜀). 붙인 자리 가장자리가 보이는 경우가 있어 "네모 자국"을 배울 위험은 있다 — Val 갈변 Recall 로 확인한다.
-- 복제·합성 데이터는 학습 시작 때 `data/yolo_v5_r4/` 에 자동으로 만든다 (Git 제외, 같은 seed 라 어느 PC 에서나 같다). Val 104장은 그대로.
-- 걸리는 시간(RTX 3060): 2240 방향 1회 약 1시간 (합성은 약 1시간 15분), 2560 방향 1회 약 1시간 45분~2시간 (합성 포함, 스모크 1 epoch 2.5분 · GPU 7.5GB) → 가장 긴 PC 도 6시간 안팎이라 새벽 전에 끝난다.
+- **공식 kimchi_v5 는 바꾸지 않는다.** 복제 · 합성 · 복원은 그 실험의 학습 목록에만 쓰고, 학습 시작 때 `data/yolo_v5_r4/` 에 자동으로 만든다 (Git 제외, 같은 seed 라 어느 PC 에서나 같다). Val 104장 · Test 는 그대로라 baseline_v5 부터 모든 결과와 그대로 비교된다. ④ 가 Final 이 되면 학습 데이터를 "kimchi_v5 + Train 반점 13개 복원 (Val · Test 의 반점 기준에 맞춤)" 으로 적는다.
+- 합성은 붙인 자리 가장자리가 보이는 경우가 있어 "네모 자국"을 배울 위험이 있다 — Val 갈변 Recall 로 확인한다.
+- 걸리는 시간(RTX 3060): 2240 방향 1회 약 1시간 (합성은 약 1시간 15분), 2560 방향 1회 약 1시간 45분~2시간 (스모크: 2560+합성 1 epoch 2.5분 · GPU 7.5GB). 가장 긴 PC(⑥ 5회)도 약 11시간 → 새벽에 끝난다. seed 42 · 7 · 123 을 먼저 돌려 늦어져도 3개 세트는 완성된다.
+- **스모크 테스트는 "에러 없이 돈다"만 확인한 것이다** (1 epoch). 효과는 아침 결과로만 판단한다.
 
 ### 저녁에 (17:50 전) — 각 PC
 
-1. **Windows 절전 끄기**: 설정 → 시스템 → 전원 → 화면 끄기는 상관없고 **"절전 모드: 안 함"**. 디스코드·브라우저 영상 등 GPU 쓰는 프로그램 닫기 (`nvidia-smi` 로 학습 전 1GB 이하 확인).
+1. **Windows 절전 끄기**: 설정 → 시스템 → 전원 → **"절전 모드: 안 함"**. 디스코드 · 브라우저 영상 등 GPU 쓰는 프로그램 닫기 (`nvidia-smi` 로 학습 전 1GB 이하 확인).
 2. Ubuntu 창에서 (브랜치 이름만 자기 것으로):
    ```bash
    cd ~/group_3 && git fetch origin && git checkout <브랜치> && git merge --no-edit origin/main
    ```
-3. 자기 실험 3개를 차례로 (앞 실험이 실패해도 다음으로 넘어감, 기록은 `~/r4_logs/`):
+3. 자기 실험을 차례로 (앞 실험이 실패해도 다음으로 넘어감, 기록은 `~/r4_logs/`). `<실험들>` 에 위 표의 번호를 순서대로:
    ```bash
-   mkdir -p ~/r4_logs && cd ~/group_3/subject8 && for r in expAAA expBBB expCCC; do .venv/bin/python scripts/11_train_v5.py --run $r 2>&1 | tee ~/r4_logs/$r.log; done
+   mkdir -p ~/r4_logs && cd ~/group_3/subject8 && for r in <실험들>; do .venv/bin/python scripts/11_train_v5.py --run $r 2>&1 | tee ~/r4_logs/$r.log; done
    ```
 4. **Ubuntu 창은 닫지 말고** 그대로 두고 퇴근 (창을 닫으면 학습이 멈출 수 있다).
 
 ### 아침에 (09:10) — 각 PC
 
+자기 실험 번호로 결과만 담는다:
 ```bash
-cd ~/group_3/subject8 && for k in expAAA expBBB expCCC; do git add runs/${k}_v5_r4_* models/improved/${k}_v5_r4_*.pt reports/04_improvement/${k}_v5_r4_*_training_condition.md; done; git status --short
+cd ~/group_3/subject8 && for k in <실험들>; do git add runs/${k}_* models/improved/${k}_*.pt reports/04_improvement/${k}_*_training_condition.md; done; git status --short
 ```
-`git status` 에 `.jpg` 나 `weights/` 가 없으면 (labels.jpg 는 괜찮음):
+`git status` 에 `.jpg`(labels.jpg 제외) 나 `weights/` 가 없으면:
 ```bash
-git commit -m "feat(subject8): 4라운드 expAAA~CCC 결과" && git push origin <브랜치>
+git commit -m "feat(subject8): 4라운드 결과 (<실험들>)" && git push origin <브랜치>
 ```
 끝나지 않은 실험이 있으면 `tail -c 2000 ~/r4_logs/<실험>.log` 를 정리 담당에게 보낸다.
 
 ### 아침 판정 → Final
 
-1. 6명 푸시 → main 에 합치기 → 방향별 seed 3개 평균 + **갈변 mAP50-95** (클래스별 다시 채점)
-2. B(0.735) 보다 평균 **+0.02 이상**인 방향 중 가장 높은 것. 차이가 0.01 안이면 더 단순한 쪽 (B → ①④ → ② → ③ → ⑤⑥ 순: 해상도 높을수록 느리고, 합성은 데이터 생성이 필요)
-3. +0.02 넘는 방향이 없으면 **B 그대로** (exp018 0.746 이 가장 높은 실행)
-4. 그다음 8장 "Final 확정 순서" 3~5 (final_best.pt · registry · final_model_selection.md · Frozen Test 1번)
+1. 6명 푸시 → main 에 합치기 → 방향별 seed 5개 평균 + **갈변 mAP50-95** (클래스별 다시 채점) + 보조로 마지막 5 epoch 평균 (운 좋은 epoch 하나에 덜 흔들림)
+2. B(seed 5개 평균) 보다 **+0.02 이상**인 방향 중 가장 높은 것. 차이가 0.01 안이면 더 단순한 쪽 (B → ① → ④ → ② → ③ → ⑤⑥ 순: 해상도 높을수록 느리고, 합성은 데이터 생성이 필요)
+3. +0.02 넘는 방향이 없으면 **B 그대로**
+4. 실험이 많을수록 Val 최고점은 운으로 부풀므로, Final 의 성능은 **Frozen Test 점수로만** 말한다 → 8장 "Final 확정 순서" 3~5 (final_best.pt · registry · final_model_selection.md · Frozen Test 1번)
+5. (학습 없이, 몇 분) B 모델을 학습보다 큰 해상도(2560 · 2880)로 예측해 Val 비교 — 참고용

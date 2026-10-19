@@ -120,29 +120,37 @@ RUNS = {
 #   반점 복제 ×10 : 100px 미만 갈변이 있는 Train 사진 8장을 학습 목록에 10번씩 (사진 파일은 그대로, 목록만)
 #   반점 합성     : 그 반점들을 갈변 없는 Train 사진 150장의 배추 위에 3개씩 붙인 사진을 추가 (data/yolo_v5_r4/, Git 제외)
 #   2560 · batch 1: 해상도 1280 0.680 → 1920 0.715 → 2240 0.735 로 아직 오르는 중 (2560 · batch 2 는 12GB 초과, batch 1 은 7.4GB)
-#   scale 0.25    : 기본 scale 0.5 는 사진을 0.5배까지 줄여 25px 반점이 입력에서 약 6px (가장 작은 검출 격자 8px 보다 작음)
+#   반점 복원     : kimchi_v3 라벨 개정 때 Train 반점 20 → 8 (Val 41 → 15, Test 14 → 14 그대로) — 지운 Train 반점을 되살려 Val·Test 기준에 맞춤.
+#                   공식 kimchi_v5 라벨은 그대로 두고 이 실험의 학습 목록에만 쓴다 (data/yolo_v5_r4/restore, Git 제외)
 _B = {**_EXP007, "imgsz": 2240, "batch": 2}
 _B2560 = {**_EXP007, "imgsz": 2560, "batch": 1}
 _R4_DIRECTIONS = [   # (태그, 설명, 학습 조건, 데이터 변경)
     ("os10", "B + 반점 복제 ×10", _B, {"oversample": 10}),
     ("cp", "B + 반점 합성", _B, {"synth": True}),
     ("2560", "11s · 2560 · batch 1 (B 에서 해상도만)", _B2560, {}),
-    ("sc25", "B + scale 0.5 → 0.25", {**_B, "scale": 0.25}, {}),
+    ("rs_os10", "B + Train 반점 복원 + 복제 ×10", _B, {"restore": True, "oversample": 10}),
     ("2560_os10", "2560 + 반점 복제 ×10", _B2560, {"oversample": 10}),
     ("2560_cp", "2560 + 반점 합성", _B2560, {"synth": True}),
 ]
-_R4_SEEDS = [(42, "", "exp015_v5"), (7, "_seed7", "exp016_v5"), (123, "_seed123", "exp018_v5")]   # B 의 같은 seed 실행과 짝지어 비교
+# B 의 같은 seed 실행과 짝지어 비교. seed 5개 평균으로 판정 (B 의 seed 3개가 0.726~0.746 로 0.02 흔들림 = 채택 기준과 같음)
+_R4_SEEDS = [(42, "", "exp015_v5"), (7, "_seed7", "exp016_v5"), (123, "_seed123", "exp018_v5"), (1, "_seed1", "exp049_v5"), (2, "_seed2", "exp050_v5")]
 for _i, (_tag, _desc, _cond, _data) in enumerate(_R4_DIRECTIONS):
     for _j, (_seed, _suffix, _pair) in enumerate(_R4_SEEDS):
-        _key = f"exp{19 + _i * 3 + _j:03d}"
+        _key = f"exp{19 + _i * 3 + _j:03d}" if _j < 3 else f"exp{37 + _i * 2 + _j - 3:03d}"   # seed 1·2 는 exp037~048
         RUNS[_key] = {"change": {**_cond, "seed": _seed}, "data": _data, "run_name": f"{_key}_v5_r4_{_tag}{_suffix}",
                       "title": f"kimchi_v5 4라운드 {_key} ({_desc})", "compare": f"{_pair} (B · 같은 seed {_seed}) · B seed 3개 평균 0.735",
-                      "augmentation": _AUG_TEXT + (" · scale 0.5 → 0.25" if "scale" in _cond else ""),
+                      "augmentation": _AUG_TEXT,
                       "note": f"4라운드 방향 '{_desc}' 의 seed {_seed}. 갈변(작은 반점) 개선이 목적이라 클래스별 갈변 mAP 도 함께 본다."}
+
+for _key, _seed in (("exp049", 1), ("exp050", 2)):   # B 자체도 seed 5개로 (exp015·016·018 + 2개)
+    RUNS[_key] = {"change": {**_B, "seed": _seed}, "run_name": f"{_key}_v5_s_imgsz2240_aug_seed{_seed}",
+                  "title": f"kimchi_v5 반복 실험 {_key}", "compare": "exp015_v5 · exp016_v5 · exp018_v5 (같은 조건 seed 42 · 7 · 123)", "augmentation": _AUG_TEXT,
+                  "note": f"B(11s · 2240 · batch 2) 의 seed {_seed}. 4라운드 방향들과 seed 5개 평균으로 비교하기 위한 기준."}
 
 R4_DIR = PROJECT_ROOT / "data" / "yolo_v5_r4"   # 생성 데이터 (data/yolo*/ 라 Git 제외 · 어느 PC 에서나 같은 결과로 다시 만든다)
 SPECK_MAX_PX = 100        # 이보다 작은 갈변 박스 = 반점
 SYNTH_IMAGES, SYNTH_PER_IMAGE, SYNTH_SEED = 150, 3, 0
+S7_FINAL_LABELS = PROJECT_ROOT.parent / "subject7" / "data" / "final" / "labels"   # 교과 7 최종 라벨 (kimchi_v3 개정 전)
 
 
 def _read_labels(label_path):
@@ -225,17 +233,60 @@ def make_synth():
     return sorted(out_img.glob("*.jpg"))
 
 
+def restore_specks():
+    """교과 7 최종 라벨에는 있었는데 kimchi_v3 개정 때 지운 Train 반점(긴 변 SPECK_MAX_PX 미만 갈변)을 되살린 라벨을
+    R4_DIR/restore 에 만든다 (사진은 원본 심볼릭 링크). 반환 {stem: 학습 목록에 쓸 사진 경로}"""
+    from PIL import Image
+    final = {lp.stem: lp for lp in S7_FINAL_LABELS.rglob("*.txt") if lp.name != "classes.txt"}
+    out_img, out_lbl = R4_DIR / "restore" / "images" / "train", R4_DIR / "restore" / "labels" / "train"
+    out_img.mkdir(parents=True, exist_ok=True)
+    out_lbl.mkdir(parents=True, exist_ok=True)
+    restored, n = {}, 0
+    for lp in sorted((paths.yolo_dir / "labels" / "train").glob("*.txt")):
+        if lp.stem not in final:
+            continue
+        rows = _read_labels(lp)
+        img = paths.yolo_dir / "images" / "train" / f"{lp.stem}.jpg"
+        cur = [(float(r[1]), float(r[2])) for r in rows if r[0] == "5"]
+        add, size = [], None
+        for r in _read_labels(final[lp.stem]):
+            if len(r) != 5 or r[0] != "5":
+                continue
+            cx, cy, w, h = map(float, r[1:5])
+            if any(abs(cx - a) < 0.002 and abs(cy - b) < 0.002 for a, b in cur):   # 지금도 있는 박스
+                continue
+            if size is None:
+                with Image.open(img) as im:
+                    size = im.size
+            if max(w * size[0], h * size[1]) < SPECK_MAX_PX:
+                add.append(r)
+        if add:
+            link = out_img / f"{lp.stem}.jpg"
+            if not link.exists():
+                link.symlink_to(img.resolve())
+            (out_lbl / f"{lp.stem}.txt").write_text("\n".join(" ".join(r) for r in rows + add) + "\n", encoding="utf-8")
+            restored[lp.stem] = os.path.abspath(link)
+            n += len(add)
+    print(f" 반점 복원: Train {len(restored)}장에 반점 {n}개 (kimchi_v3 개정 때 지운 것)")
+    return restored
+
+
 def r4_data_yaml(run_name, data):
     """4라운드 데이터 변경(복제 · 합성)이 있으면 학습 목록 txt 와 yaml 을 R4_DIR 에 만들어 경로를 돌려준다. Val 은 그대로."""
     import yaml
     if not data:
         return paths.dataset_yaml
     R4_DIR.mkdir(parents=True, exist_ok=True)
-    files = [str(p.resolve()) for p in sorted((paths.yolo_dir / "images" / "train").glob("*.jpg"))]
+    train = {p.stem: os.path.abspath(p) for p in sorted((paths.yolo_dir / "images" / "train").glob("*.jpg"))}
+    speck_stems = {img.stem for img, _ in speck_sources()}
+    if data.get("restore"):
+        restored = restore_specks()
+        train.update(restored)   # 복원한 사진은 restore 폴더 경로로 (라벨을 그 옆에서 읽음)
+        speck_stems |= set(restored)
+    files = list(train.values())
     if data.get("oversample"):
-        speck_imgs = sorted({str(img.resolve()) for img, _ in speck_sources()})
-        files += speck_imgs * (data["oversample"] - 1)
-        print(f" 반점 복제: 사진 {len(speck_imgs)}장 × {data['oversample']} → 학습 목록 {len(files)}줄")
+        files += [train[st] for st in sorted(speck_stems)] * (data["oversample"] - 1)
+        print(f" 반점 복제: 사진 {len(speck_stems)}장 × {data['oversample']} → 학습 목록 {len(files)}줄")
     if data.get("synth"):
         files += [str(p.resolve()) for p in make_synth()]
         print(f" 반점 합성 추가 → 학습 목록 {len(files)}줄")
@@ -303,6 +354,9 @@ def train_one(key, counts, report_only=False):
                      + f" 으로 바꿨다. 비교 대상: {spec['compare']}.")
     if spec.get("note"):
         notes.append(spec["note"])
+    if spec.get("data", {}).get("restore"):
+        notes.append("Train 반점 복원: 교과 7 최종 라벨에는 있었는데 kimchi_v3 개정 때 지운 Train 갈변 반점(긴 변 100px 미만)을 이 실험의 학습 라벨에만 되살렸다 "
+                     f"(`{rel(R4_DIR)}/restore`, Git 제외). 공식 kimchi_v5 라벨 · Val · Test 는 그대로.")
     if spec.get("data", {}).get("oversample"):
         notes.append(f"학습 목록만 바꿨다: 긴 변 {SPECK_MAX_PX}px 미만 갈변이 있는 Train 사진을 {spec['data']['oversample']}번씩 넣음 (사진 파일·라벨은 그대로, Val 그대로).")
     if spec.get("data", {}).get("synth"):
@@ -342,7 +396,7 @@ def train_one(key, counts, report_only=False):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~036)")
+    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~050)")
     ap.add_argument("--run", default="all", choices=["all", *RUNS])
     ap.add_argument("--report-only", action="store_true", help="학습은 끝났는데 조건 기록이 없을 때 기록만 다시 쓴다")
     args = ap.parse_args()
