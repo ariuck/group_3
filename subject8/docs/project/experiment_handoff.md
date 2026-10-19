@@ -149,7 +149,7 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 |---|---|---|---|---|---|
 | **A** | 11s · 1920 · 증강 (= exp007) | exp007 0.724 ✅ | exp013 0.714 ✅ | exp014 0.707 ✅ | **0.715** (3개) |
 | **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | exp015 0.726 ✅ | exp016 0.732 ✅ | **exp018** (3라운드 · 상우, 학습 중) | **0.729** (2개) |
-| **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | exp009 0.730 ✅ | **exp017** (대기) | — | 0.730 (1개) |
+| **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | exp009 0.730 ✅ | ~~exp017~~ 중단 · 제외 | — | 0.730 (1개) |
 | (참고) | 11s · 1920 · 증강 끄기 | exp011 0.716 ✅ — exp007 대비 -0.008, 증강 유지 | | | |
 
 ### 6명 배정 (각 PC 실험 1개 — 약 1~1.5시간, 모두 RTX 3060)
@@ -160,7 +160,7 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 | 상우 · `feature/sonny` | exp011 (증강 끄기) | `.venv/bin/python scripts/11_train_v5.py --run exp011` | 완료 0.716 |
 | 동연 · `feature/ariuck` (정리 담당) | exp015 (후보 B seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp015` | 완료 0.726 |
 | **동훈** · `feature/donghun` | exp016 (후보 B seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp016` | 완료 0.732 (석범 몫과 바뀜, 커밋 제목의 0.xxx 는 입력 실수) |
-| 팀원 5 · `feature/huyoung` | exp017 (후보 C seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp017` | 새로 |
+| 이후영 · `feature/huyoung` | exp017 (후보 C seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp017` | **중단 · 제외** — 19 epoch 검증 중 메모리 부족으로 강제 종료(`Killed`, GPU 9.95GB) |
 | **석범** · `feature/seokbeom` | exp014 (후보 A seed 123) | `.venv/bin/python scripts/11_train_v5.py --run exp014` | 완료 0.707 (동훈 몫과 바뀜) |
 
 - 동훈·석범은 실험을 서로 바꿔 돌렸다 (입력 실수). 결과는 누가 돌려도 같으므로(exp010·010b 재현성) 그대로 끝내고, **커밋할 때 실제로 돌린 실험 이름(R)을 쓰고 자기 브랜치로 푸시**한다. 팀원 5 의 브랜치는 GitHub 이름으로 짐작한 것 — 사람에 맞게 바꿔도 된다. 새 브랜치면 `git checkout -b <이름> origin/main`.
@@ -173,12 +173,14 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 
 후보 A 는 seed 3개(exp007·013·014), B 는 2개라 평균 비교가 기울어 있다 → B 에 seed 123 을 더한다. 상우 · `feature/sonny`: `git merge origin/feat/hyesung` 후 `.venv/bin/python scripts/11_train_v5.py --run exp018` (실행 이름 `exp018_v5_s_imgsz2240_aug_seed123`, GPU 9.4GB).
 
-- **중간 판정 (exp017·018 전, 2026-10-19):** B 평균 0.729 가 A 0.715 보다 0.014 높다 (0.01 기준 넘음). C 는 seed 1개(0.730)로 B 와 같은 수준 → B·C 차이가 0.01 안이면 더 가벼운 B. exp017·018 이 나오면 확정한다.
+- **중간 판정 (2026-10-19):** B 평균 0.729 가 A 0.715 보다 0.014 높다 (0.01 기준 넘음).
+- **exp017(C seed 7)은 제외한다.** 이후영 PC 에서 19 epoch 검증 중 메모리 부족으로 강제 종료됐다. 18 epoch 까지의 값은 50 epoch 실행과 비교할 수 없어 쓰지 않는다. 다시 돌려도 C 평균이 B 보다 0.01 이상 높으려면 exp017 이 0.748 이상이어야 해서(같은 조건 seed 42 는 0.730) 결론이 바뀔 가능성이 낮다 → C 는 seed 1개로 판단: **B 와 같은 수준이라 더 가벼운 B**.
+- **exp018 이 나오면 정하는 것은 "다음 개선 실험의 기반 조건 = B" 까지다.** Final 모델 확정(아래 3~5)은 B 기반 개선 실험이 끝난 뒤에 한다 — Frozen Test 는 한 번만 보므로 먼저 쓰지 않는다.
 
-### 오늘 Final 확정 순서 (정리 담당 동연)
+### Final 확정 순서 (개선 실험이 모두 끝난 뒤)
 
 1. 6명 푸시 → `feature/ariuck` 에 합치기 → `python scripts/plot_runs.py`
-2. **후보별 seed 평균** (A: exp007·013·014 / B: exp015·016·018 / C: exp009·017) 을 비교
+2. **후보별 seed 평균** + B 기반 개선 실험(채택 기준 +0.02, seed 2개 이상) (A: exp007·013·014 / B: exp015·016·018 / C: exp009 — exp017 제외) 을 비교
    - 가장 높은 후보를 고르되, **평균 차이가 0.01 안이면 더 가볍고 빠른 쪽**(A → B → C 순)을 고른다 (흔들림 안의 차이라서)
 3. 고른 후보 안에서 Val mAP50-95 가 가장 높은 실행을 Final 로 → `models/final/final_best.pt` 복사 · `src/registry.py` 의 `OFFICIAL["final"]` 에 실행 이름
 4. `reports/final_model_selection.md` 작성 (후보별 평균·흔들림, Class 별, 학습·예측 시간, 선택 이유, 원본 Weight·sha256)
