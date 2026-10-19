@@ -12,6 +12,11 @@ exp004_v5_tile2x2,kimchi_v5,yolo11n.pt,1920,50,6,AdamW,0.001,42,50,42,0.896,0.79
 exp005_v5_imgsz1920_aug,kimchi_v5,yolo11n.pt,1920,50,6,AdamW,0.001,42,50,50,0.8413,0.7598,0.8001,0.6839
 exp006_v5_imgsz2560_aug,kimchi_v5,yolo11n.pt,2560,50,3,AdamW,0.001,42,50,49,0.8716,0.814,0.8317,0.7217
 exp007_v5_s_imgsz1920_aug,kimchi_v5,yolo11s.pt,1920,50,3,AdamW,0.001,42,50,50,0.9556,0.7937,0.824,0.7237
+exp008_v5_s_imgsz1920_aug_epoch100,kimchi_v5,yolo11s.pt,1920,100,3,AdamW,0.001,42,100,87,0.9521,0.7955,0.8276,0.7267
+exp010_v5_s_tile2x2_aug,kimchi_v5,yolo11s.pt,1920,50,3,AdamW,0.001,42,50,49,0.8973,0.763,0.8136,0.712
+exp010b_v5_s_tile2x2_aug,kimchi_v5,yolo11s.pt,1920,50,3,AdamW,0.001,42,50,49,0.8973,0.763,0.8136,0.712
+exp012_v5_s_imgsz1280_aug,kimchi_v5,yolo11s.pt,1280,50,6,AdamW,0.001,42,50,35,0.7479,0.741,0.7849,0.6803
+exp013_v5_s_imgsz1920_aug_seed7,kimchi_v5,yolo11s.pt,1920,50,3,AdamW,0.001,7,50,47,0.8267,0.8083,0.8166,0.7139
 history_v2_imgsz1280,kimchi_v2,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,47,0.6975,0.6716,0.7083,0.5753
 history_v3_imgsz1280,kimchi_v3,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,40,0.6827,0.6666,0.701,0.5754
 pilot_v1_imgsz1280,kimchi_v1,yolo11n.pt,1280,50,16,AdamW,0.001,42,50,40,0.6895,0.549,0.6351,0.519
