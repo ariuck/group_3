@@ -318,7 +318,7 @@ python scripts/plot_runs.py                         # 그래프 · runs_summary.
 \* 타일링은 학습 중 Val 이 조각 단위라, 조각 예측을 합쳐 원본 Val 104장을 같은 코드(`src/tiling.py`)로 채점한 값 — 같은 코드로 잰 exp002_v5 는 0.680. [`tiling_eval.csv`](reports/04_improvement/tiling_eval.csv)
 
 - 개선점·한계 정리 (발표용): [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md)
-- 다음 실험 (3대 분산 — 상우 exp008·013 · 동연 exp010 · 혜성 exp009·011·012): [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md)
+- 다음 실험 (3대 분산 — 상우 `feature/sonny` exp008·013·012 · 동연 `feature/ariuck` exp010 · 혜성 `feat/hyesung` exp009·011): [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md)
 - 지난 Version(v4) 개선 분석: [`reports/history/kimchi_v4/baseline_vs_improved.md`](reports/history/kimchi_v4/baseline_vs_improved.md)
 
 ## 11. Final Model
