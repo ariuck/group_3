@@ -127,3 +127,53 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 - 학습이 끝났는데 조건 기록에서 오류가 나면 학습을 다시 하지 말고 `python scripts/11_train_v5.py --run <실험> --report-only`.
 - 실행 폴더·Weight 가 이미 있으면 스크립트가 멈춘다 (덮어쓰지 않음). 실패한 실행을 다시 하려면 `runs/<실행>/` 만 지운다 (`results.csv` 가 없을 때만).
 - 갈변(작은 점)은 Train 에 4개뿐이라 이번 실험들로도 크게 좋아지기 어렵다 — 한계로 기록돼 있다 ([`baseline_vs_improved.md`](../../reports/04_improvement/baseline_vs_improved.md) 3장).
+
+## 8. 2라운드 — 6명 동시, 오늘 Final Model 확정 (2026-10-19)
+
+### 1라운드 결과 (같은 Val 104장, mAP50-95)
+
+| 실험 | 결과 | 알게 된 것 |
+|---|---|---|
+| exp008 (exp007 + epoch 100) | 0.727 | +0.003 — 학습량을 늘려도 거의 안 오름 (시간 2배) |
+| **exp013 (exp007 과 seed 만 다름)** | 0.714 | **seed 만 바꿔도 ±0.01 흔들림** → 0.01 안쪽 차이는 의미 없음 · 후보는 seed 2개 이상 평균으로 비교 |
+| exp012 (해상도 1280) | 0.680 | -0.044 — 11s 에서도 해상도가 중요 |
+| exp010 (11s + 타일링) | 0.723 (원본 단위, exp007 0.729) | 효과 없음 — 11s 는 원본 1920 만으로 충분 |
+| exp010b (exp010 을 혜성 PC 에서 다시) | 0.723 | **다른 PC 에서 소수 4자리까지 같음 — 재현성 확인** |
+| 추론 옵션 (exp007·exp008, `15_eval_inference_options.py`) | TTA 0.716 · agnostic_nms 0.715 (기본 0.731) | 둘 다 손해 → **Final 은 기본 추론 설정** |
+
+### 2라운드 설계 — Final 후보 3개 × seed 2~3개
+
+남은 질문은 "11s·1920(지금 최고)보다 **해상도를 더**(2240) 또는 **모델을 더**(11m) 키우면 나아지나" 하나다. seed 흔들림이 ±0.01 이라 후보마다 seed 2개 이상을 돌려 **평균**으로 비교한다.
+
+| 후보 | 조건 | seed 42 | seed 7 | seed 123 |
+|---|---|---|---|---|
+| **A** | 11s · 1920 · 증강 (= exp007) | exp007 0.724 ✅ | exp013 0.714 ✅ | **exp014** |
+| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | **exp015** | **exp016** | — |
+| **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | **exp009** | **exp017** | — |
+| (참고) | 11s · 1920 · 증강 끄기 | **exp011** — 증강 효과 분리 (발표용 근거) | | |
+
+### 6명 배정 (각 PC 실험 1개 — 약 1~1.5시간, 모두 RTX 3060)
+
+| 담당 · 브랜치 | 실험 | 명령 (`cd ~/group_3/subject8` 에서) | 상태 |
+|---|---|---|---|
+| 혜성 · `feat/hyesung` | exp009 (후보 C seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp009` | 다시 돌리는 중 |
+| 상우 · `feature/sonny` | exp011 (증강 끄기) | `.venv/bin/python scripts/11_train_v5.py --run exp011` | 다시 돌리는 중 |
+| 동연 · `feature/ariuck` (정리 담당) | exp015 (후보 B seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp015` | 새로 |
+| 팀원 4 · `feature/seokbeom` | exp016 (후보 B seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp016` | 새로 |
+| 팀원 5 · `feature/huyoung` | exp017 (후보 C seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp017` | 새로 |
+| 팀원 6 · `feature/donghun` | exp014 (후보 A seed 123) | `.venv/bin/python scripts/11_train_v5.py --run exp014` | 새로 |
+
+- 팀원 4~6 의 브랜치는 GitHub 에 있는 이름으로 짐작해 적은 것 — 사람에 맞게 바꿔도 된다. 새 브랜치면 `git checkout -b <이름> origin/main`.
+- **새로 시작하는 4명은 먼저 최신 main 을 받는다** (exp014~017 조건이 main 에 있음): `cd ~/group_3 && git fetch origin && git checkout <브랜치> && git merge origin/main` → `cd subject8 && python3 scripts/00_setup.py` → 위 명령.
+- 혜성·상우는 이미 돌리고 있는 exp009·exp011 을 그대로 끝낸다 (조건은 1라운드 때 등록된 것과 같음).
+- 끝나면 3·4장 방법대로 **자기 실험 이름이 들어간 파일만** 커밋·푸시 (`runs/<실행>/`, `models/improved/<실행>.pt`, `reports/04_improvement/<실행>_training_condition.md`). 실행 이름: `exp014_v5_s_imgsz1920_aug_seed123` · `exp015_v5_s_imgsz2240_aug` · `exp016_v5_s_imgsz2240_aug_seed7` · `exp017_v5_m_imgsz1920_aug_seed7` · `exp009_v5_m_imgsz1920_aug` · `exp011_v5_s_imgsz1920`
+
+### 오늘 Final 확정 순서 (정리 담당 동연)
+
+1. 6명 푸시 → `feature/ariuck` 에 합치기 → `python scripts/plot_runs.py`
+2. **후보별 seed 평균** (A: exp007·013·014 / B: exp015·016 / C: exp009·017) 을 비교
+   - 가장 높은 후보를 고르되, **평균 차이가 0.01 안이면 더 가볍고 빠른 쪽**(A → B → C 순)을 고른다 (흔들림 안의 차이라서)
+3. 고른 후보 안에서 Val mAP50-95 가 가장 높은 실행을 Final 로 → `models/final/final_best.pt` 복사 · `src/registry.py` 의 `OFFICIAL["final"]` 에 실행 이름
+4. `reports/final_model_selection.md` 작성 (후보별 평균·흔들림, Class 별, 학습·예측 시간, 선택 이유, 원본 Weight·sha256)
+5. **그다음에만** Frozen Test 한 번: `python scripts/16_evaluate_final_test.py` → `reports/05_final/final_metrics.csv`
+6. 커밋 → main 병합 → 푸시

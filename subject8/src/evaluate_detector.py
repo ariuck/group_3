@@ -19,8 +19,9 @@ def count_split_images(data_yaml, split: str) -> int:
 
 
 def evaluate_detector(model_path, data_yaml, split: str, imgsz: int, batch: int = 16,
-                      project="runs", name="eval", allow_test: bool = False) -> Dict:
-    """model.val() 로 평가 → 전체·Class별 지표 dict. 그래프(PR 곡선, Confusion Matrix)는 project/name 에 저장"""
+                      project="runs", name="eval", allow_test: bool = False, **val_kwargs) -> Dict:
+    """model.val() 로 평가 → 전체·Class별 지표 dict. 그래프(PR 곡선, Confusion Matrix)는 project/name 에 저장.
+    val_kwargs 는 model.val() 에 그대로 넘긴다 (예: augment=True 로 TTA, agnostic_nms=True)"""
     if split == "test" and not allow_test:
         raise PermissionError("Frozen Test 는 Final Model 확정 후 8일차에만 평가합니다 (allow_test=True 필요).")
     if split not in ("train", "val", "test"):
@@ -30,7 +31,7 @@ def evaluate_detector(model_path, data_yaml, split: str, imgsz: int, batch: int 
 
     model = YOLO(str(model_path))
     m = model.val(data=str(data_yaml), split=split, imgsz=imgsz, batch=batch,
-                  plots=True, project=str(project), name=name, exist_ok=True, verbose=False)
+                  plots=True, project=str(project), name=name, exist_ok=True, verbose=False, **val_kwargs)
 
     names = m.names
     per_class = []

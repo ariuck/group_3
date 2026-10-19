@@ -95,6 +95,20 @@ RUNS = {
     "exp013": {"change": {**_EXP007, "seed": 7}, "run_name": "exp013_v5_s_imgsz1920_aug_seed7",
                "title": "kimchi_v5 반복 실험 exp013", "compare": "exp007_v5 (seed 42)", "augmentation": _AUG_TEXT,
                "note": "exp007_v5 와 seed 만 다르다 (42 → 7). 같은 조건에서 점수가 얼마나 흔들리는지 재서, 실험 사이 0.02 차이가 의미 있는지 판단한다."},
+    # ── 2라운드 (Final 후보 3개 × seed 2개 — docs/project/experiment_handoff.md 8장) ──
+    # exp013 결과 seed 만 바꿔도 ±0.01 흔들림 → 후보마다 seed 2개 이상 평균으로 비교한다
+    "exp014": {"change": {**_EXP007, "seed": 123}, "run_name": "exp014_v5_s_imgsz1920_aug_seed123",
+               "title": "kimchi_v5 반복 실험 exp014", "compare": "exp007_v5 · exp013_v5 (같은 조건 seed 42 · 7)", "augmentation": _AUG_TEXT,
+               "note": "exp007 조건의 세 번째 seed (123). 후보 A(11s · 1920) 의 seed 평균·흔들림을 잰다."},
+    "exp015": {"change": {**_EXP007, "imgsz": 2240, "batch": 2}, "run_name": "exp015_v5_s_imgsz2240_aug",
+               "title": "kimchi_v5 개선 실험 exp015", "compare": "exp007_v5 (imgsz 1920)", "augmentation": _AUG_TEXT,
+               "note": "exp007_v5 와 다른 변수는 imgsz(1920 → 2240) 하나 (batch 3 → 2, GPU 9.4GB 측정). 11n 에서 해상도 효과가 컸고(+0.038), 11s·2560 은 메모리 초과라 2240."},
+    "exp016": {"change": {**_EXP007, "imgsz": 2240, "batch": 2, "seed": 7}, "run_name": "exp016_v5_s_imgsz2240_aug_seed7",
+               "title": "kimchi_v5 반복 실험 exp016", "compare": "exp015_v5 (seed 42)", "augmentation": _AUG_TEXT,
+               "note": "exp015 조건의 두 번째 seed (7). 후보 B(11s · 2240) 의 seed 평균."},
+    "exp017": {"change": {**_EXP007, "model_name": "yolo11m.pt", "batch": 2, "seed": 7}, "run_name": "exp017_v5_m_imgsz1920_aug_seed7",
+               "title": "kimchi_v5 반복 실험 exp017", "compare": "exp009_v5 (seed 42)", "augmentation": _AUG_TEXT,
+               "note": "exp009 조건(YOLO11m · 1920 · batch 2, GPU 9.8GB 측정)의 두 번째 seed (7). 후보 C(11m · 1920) 의 seed 평균."},
 }
 REPORT_DIR = PROJECT_ROOT / "reports" / "04_improvement"
 BASELINE_REPORT = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"   # 가이드 이름 (산출물 2)

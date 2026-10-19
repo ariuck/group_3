@@ -27,6 +27,8 @@ docs/
 | [`scripts/08_predict_images.py`](scripts/08_predict_images.md) | 사진 예측 + 정답 비교 이미지 · TP/FP/FN 표 |
 | [`scripts/11_train_v5.py`](scripts/11_train_v5.md) | `kimchi_v5`(C안) 학습: baseline_v5 (640) · exp001_v5 (1280) · exp002_v5 (1920) |
 | [`scripts/14_train_tiles_v5.py`](scripts/14_train_tiles_v5.md) | 개선 실험 exp004_v5 타일링 (2×2 조각 학습 → 조각 예측 합쳐 원본 Val 채점) |
+| [`scripts/15_eval_inference_options.py`](scripts/15_eval_inference_options.md) | 추론 설정 비교 (TTA · agnostic NMS) — 재학습 없이 Validation |
+| [`scripts/16_evaluate_final_test.py`](scripts/16_evaluate_final_test.md) | Final Model Frozen Test 평가 (한 번만, Final 확정·선택 기록 후) |
 | [`scripts/plot_v5_vs_v4.py`](scripts/plot_v5_vs_v4.md) | `kimchi_v4` → `v5` 달라진 점 그림·CSV (누수 · Class 박스 · Val 점수) |
 | [`scripts/make_split_worksheet.py`](scripts/make_split_worksheet.md) | 수동 분할 준비: 담당자별 작업 시트(CSV) 6개 · 촬영 순서 사진판(JPG) |
 | [`scripts/plot_runs.py`](scripts/plot_runs.md) | 모든 실행의 학습 곡선 · Version 별 비교 그래프 · `runs_summary.csv` (results.csv 만으로) |
