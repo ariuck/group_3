@@ -148,7 +148,7 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 | 후보 | 조건 | seed 42 | seed 7 | seed 123 |
 |---|---|---|---|---|
 | **A** | 11s · 1920 · 증강 (= exp007) | exp007 0.724 ✅ | exp013 0.714 ✅ | **exp014** |
-| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | **exp015** | **exp016** | — |
+| **B** | 11s · **2240** · 증강 · batch 2 (9.4GB) | **exp015** | **exp016** | **exp018** (3라운드 · 상우) |
 | **C** | **11m** · 1920 · 증강 · batch 2 (9.8GB) | **exp009** | **exp017** | — |
 | (참고) | 11s · 1920 · 증강 끄기 | **exp011** — 증강 효과 분리 (발표용 근거) | | |
 
@@ -168,6 +168,10 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 - **새로 시작하는 4명은 먼저 최신 main 을 받는다** (exp014~017 조건이 main 에 있음): `cd ~/group_3 && git fetch origin && git checkout <브랜치> && git merge origin/main` → `cd subject8 && python3 scripts/00_setup.py` → 위 명령.
 - 혜성·상우는 이미 돌리고 있는 exp009·exp011 을 그대로 끝낸다 (조건은 1라운드 때 등록된 것과 같음).
 - 끝나면 3·4장 방법대로 **자기 실험 이름이 들어간 파일만** 커밋·푸시 (`runs/<실행>/`, `models/improved/<실행>.pt`, `reports/04_improvement/<실행>_training_condition.md`). 실행 이름: `exp014_v5_s_imgsz1920_aug_seed123` · `exp015_v5_s_imgsz2240_aug` · `exp016_v5_s_imgsz2240_aug_seed7` · `exp017_v5_m_imgsz1920_aug_seed7` · `exp009_v5_m_imgsz1920_aug` · `exp011_v5_s_imgsz1920`
+
+### 3라운드 — exp018 (후보 B seed 123)
+
+후보 A 는 seed 3개(exp007·013·014), B 는 2개라 평균 비교가 기울어 있다 → B 에 seed 123 을 더한다. 상우 · `feature/sonny`: `git merge origin/feat/hyesung` 후 `.venv/bin/python scripts/11_train_v5.py --run exp018` (실행 이름 `exp018_v5_s_imgsz2240_aug_seed123`, GPU 9.4GB).
 
 ### 오늘 Final 확정 순서 (정리 담당 동연)
 

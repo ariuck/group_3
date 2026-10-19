@@ -109,6 +109,9 @@ RUNS = {
     "exp017": {"change": {**_EXP007, "model_name": "yolo11m.pt", "batch": 2, "seed": 7}, "run_name": "exp017_v5_m_imgsz1920_aug_seed7",
                "title": "kimchi_v5 반복 실험 exp017", "compare": "exp009_v5 (seed 42)", "augmentation": _AUG_TEXT,
                "note": "exp009 조건(YOLO11m · 1920 · batch 2, GPU 9.8GB 측정)의 두 번째 seed (7). 후보 C(11m · 1920) 의 seed 평균."},
+    "exp018": {"change": {**_EXP007, "imgsz": 2240, "batch": 2, "seed": 123}, "run_name": "exp018_v5_s_imgsz2240_aug_seed123",
+               "title": "kimchi_v5 반복 실험 exp018", "compare": "exp015_v5 · exp016_v5 (같은 조건 seed 42 · 7)", "augmentation": _AUG_TEXT,
+               "note": "exp015 조건(11s · 2240 · batch 2)의 세 번째 seed (123). 후보 B 를 후보 A(exp007·013·014) 와 같은 seed 3개 평균으로 비교한다."},
 }
 REPORT_DIR = PROJECT_ROOT / "reports" / "04_improvement"
 BASELINE_REPORT = PROJECT_ROOT / "reports" / "02_baseline" / "baseline_training_condition.md"   # 가이드 이름 (산출물 2)
