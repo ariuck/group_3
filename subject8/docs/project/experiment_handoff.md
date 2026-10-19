@@ -159,11 +159,12 @@ cd .. && git add -A subject8 && git commit -m "…" && git fetch . feature/ariuc
 | 혜성 · `feat/hyesung` | exp009 (후보 C seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp009` | 다시 돌리는 중 |
 | 상우 · `feature/sonny` | exp011 (증강 끄기) | `.venv/bin/python scripts/11_train_v5.py --run exp011` | 다시 돌리는 중 |
 | 동연 · `feature/ariuck` (정리 담당) | exp015 (후보 B seed 42) | `.venv/bin/python scripts/11_train_v5.py --run exp015` | 새로 |
-| 팀원 4 · `feature/seokbeom` | exp016 (후보 B seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp016` | 새로 |
+| **동훈** · `feature/donghun` | exp016 (후보 B seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp016` | 진행 중 (석범 몫과 바뀜 — 그대로 진행) |
 | 팀원 5 · `feature/huyoung` | exp017 (후보 C seed 7) | `.venv/bin/python scripts/11_train_v5.py --run exp017` | 새로 |
-| 팀원 6 · `feature/donghun` | exp014 (후보 A seed 123) | `.venv/bin/python scripts/11_train_v5.py --run exp014` | 새로 |
+| **석범** · `feature/seokbeom` | exp014 (후보 A seed 123) | `.venv/bin/python scripts/11_train_v5.py --run exp014` | 진행 중 (동훈 몫과 바뀜 — 그대로 진행) |
 
-- 팀원 4~6 의 브랜치는 GitHub 에 있는 이름으로 짐작해 적은 것 — 사람에 맞게 바꿔도 된다. 새 브랜치면 `git checkout -b <이름> origin/main`.
+- 동훈·석범은 실험을 서로 바꿔 돌렸다 (입력 실수). 결과는 누가 돌려도 같으므로(exp010·010b 재현성) 그대로 끝내고, **커밋할 때 실제로 돌린 실험 이름(R)을 쓰고 자기 브랜치로 푸시**한다. 팀원 5 의 브랜치는 GitHub 이름으로 짐작한 것 — 사람에 맞게 바꿔도 된다. 새 브랜치면 `git checkout -b <이름> origin/main`.
+- 학습은 Ubuntu(WSL) 터미널에서 **창에서 바로** 돌리는 것을 권한다 (진행 표시줄이 실시간으로 보임). `nohup … &` 로 돌렸다면 `tail -f` 는 진행 표시줄이 줄을 바꾸지 않아 멈춘 것처럼 보이니, 확인은 `pgrep -af 11_train_v5; nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv; tr '\r' '\n' < train_exp0NN.log | grep '/50 ' | tail -1` 로 한다.
 - **새로 시작하는 4명은 먼저 최신 main 을 받는다** (exp014~017 조건이 main 에 있음): `cd ~/group_3 && git fetch origin && git checkout <브랜치> && git merge origin/main` → `cd subject8 && python3 scripts/00_setup.py` → 위 명령.
 - 혜성·상우는 이미 돌리고 있는 exp009·exp011 을 그대로 끝낸다 (조건은 1라운드 때 등록된 것과 같음).
 - 끝나면 3·4장 방법대로 **자기 실험 이름이 들어간 파일만** 커밋·푸시 (`runs/<실행>/`, `models/improved/<실행>.pt`, `reports/04_improvement/<실행>_training_condition.md`). 실행 이름: `exp014_v5_s_imgsz1920_aug_seed123` · `exp015_v5_s_imgsz2240_aug` · `exp016_v5_s_imgsz2240_aug_seed7` · `exp017_v5_m_imgsz1920_aug_seed7` · `exp009_v5_m_imgsz1920_aug` · `exp011_v5_s_imgsz1920`
