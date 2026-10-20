@@ -18,13 +18,13 @@
 
 | | PASS | FAIL | TODO | MANUAL |
 |---|---:|---:|---:|---:|
-| 자동 점검 (2026-10-20, Bridge 미사용 점검 추가 후 재실행) | 80 | **0** | 4 | 4 |
+| 자동 점검 (2026-10-20 오후, exp026 · 027 · 063 Weight 추가 후 재실행) | 83 | **0** | 4 | 4 |
 | 사람이 확인해 PASS 로 바꾼 것 | +2 | | | −2 |
-| **최종** | **82** | **0** | **4** | **2** |
+| **최종** | **85** | **0** | **4** | **2** |
 
 - **PASS**: 확인 완료 · **FAIL**: 고쳐야 함 · **TODO**: 아직 만들어지지 않은 산출물 · **MANUAL**: 사람이 직접 확인해야 함
 - 이전판 FAIL(F-1, 학습·추론 패키지)은 사진·GPU PC 에서 다시 시험해 **해결**됐다 (아래 FAIL 기록).
-- 자동 점검 80 중 Model 의 Weight 해시 일치가 50개다 (Baseline · exp001~050).
+- 자동 점검 83 중 Model 의 Weight 해시 일치가 53개다 (Baseline · exp001~050 · exp063 — 10-20 오후 exp026 · 027 · 063 추가).
 
 ## 1. Dataset
 
@@ -47,7 +47,7 @@
 
 | 항목 | 결과 | 근거 |
 |---|:---:|---|
-| Baseline · exp001~050 Weight 가 있고 기록과 같다 | PASS | `models/` 의 SHA-256 앞 12자리가 각 `*_training_condition.md` 와 일치 (50개 모두) |
+| Baseline · exp001~050 · exp063 Weight 가 있고 기록과 같다 | PASS | `models/` 의 SHA-256 앞 12자리가 각 `*_training_condition.md` 와 일치 (53개 모두) |
 | Baseline 학습조건이 기록되어 있다 | PASS | `reports/02_baseline/baseline_training_condition.md` |
 | `final_best.pt` 가 있다 | PASS | `models/final/final_best.pt` |
 | Final Model 선택 이유가 기록되어 있다 | PASS | `reports/final_model_selection.md` (후보 A·B·C seed 평균, 4라운드 6방향) |
@@ -62,7 +62,7 @@
 | Failure Analysis 표 | PASS | `03_failure_analysis/failure_analysis.csv` 외 3개 |
 | 실패 원인 가설 문서 | PASS | `03_failure_analysis/failure_hypothesis.md` — v5 기준 H1~H5 와 이후 검증 (2026-10-20 작성). 사진을 봐야 아는 부분(FP_BACKGROUND 24건에 빠진 라벨이 있는지 등)은 문서 안에 「사람 확인 필요」로 남아 있다 |
 | 개선 실험 설계 문서 | PASS | `04_improvement/improvement_experiment.md` |
-| 실험 기록 완전성 | PASS (보완함) | `experiment_log.csv` 에 exp009 · 011 · 014~050 행이 빠져 있었다 (13행). 자동 점검은 열 이름만 봐서 통과했었다. 2026-10-20 에 39행을 덧붙여 **52행**. 점수 없는 실행 3개(exp017 중단 · 026 · 027 결과 없음)는 이유를 적고 점수 칸을 비웠다 |
+| 실험 기록 완전성 | PASS (보완함) | `experiment_log.csv` 에 exp009 · 011 · 014~050 행이 빠져 있었다 (13행). 자동 점검은 열 이름만 봐서 통과했었다. 2026-10-20 에 39행을 덧붙여 52행, 같은 날 오후 exp063 을 더해 **53행**. 점수 없는 실행은 exp017(중단) 하나 — exp026 · 027 은 재학습 결과로 채웠다 |
 | Baseline vs Improved 비교 | PASS | `04_improvement/baseline_vs_improved.md` |
 | 실험 기록 | PASS | `experiment_log.csv` (권장 필드 15개) |
 | Frozen Test 결과 (Final 1개 · 한 번 · 82장) | PASS | `05_final/final_metrics.csv` — 1행, `exp050`, 82장 · 432박스, **mAP50-95 0.639** · mAP50 0.726 · P 0.868 · R 0.744 |
