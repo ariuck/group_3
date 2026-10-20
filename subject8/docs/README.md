@@ -29,6 +29,8 @@ docs/
 | [`scripts/14_train_tiles_v5.py`](scripts/14_train_tiles_v5.md) | 개선 실험 exp004_v5 타일링 (2×2 조각 학습 → 조각 예측 합쳐 원본 Val 채점) |
 | [`scripts/15_eval_inference_options.py`](scripts/15_eval_inference_options.md) | 추론 설정 비교 (TTA · agnostic NMS) — 재학습 없이 Validation |
 | [`scripts/16_evaluate_final_test.py`](scripts/16_evaluate_final_test.md) | Final Model Frozen Test 평가 (한 번만, Final 확정·선택 기록 후) |
+| [`app/server.py`](app/server.md) | **시연 프로그램** (FastAPI + 브라우저 화면) — ①~⑥ 시연 순서 버튼 · 예측 · 정답 비교 · 확신도 기준 · Val 일괄 채점 · 발표 15번에서 연결 |
+| [`app/report.py`](app/report.md) | 시연 **보고서** HTML (요약 · 기준별 그래프 · Class 별 · 본 사진 · 틀린 박스) — 미리보기 · 저장 · 인쇄(PDF) |
 | [`scripts/17_evaluate_bridge.py`](scripts/17_evaluate_bridge.md) | **교과 14 용** Bridge Holdout 156장 첫 평가 (`--subject14` 확인 필요 · 교과 8 에서는 실행하지 않음 · `--dry-run` 은 개수만 확인) |
 | [`scripts/plot_v5_vs_v4.py`](scripts/plot_v5_vs_v4.md) | `kimchi_v4` → `v5` 달라진 점 그림·CSV (누수 · Class 박스 · Val 점수) |
 | [`scripts/make_split_worksheet.py`](scripts/make_split_worksheet.md) | 수동 분할 준비: 담당자별 작업 시트(CSV) 6개 · 촬영 순서 사진판(JPG) |

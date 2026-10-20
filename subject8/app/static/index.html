@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이물검출 시연</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Crect x='8' y='8' width='16' height='16' rx='2' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css?v=20261020f">
+</head>
+<body>
+<!-- 아이콘 모음 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><rect x="4" y="5" width="9" height="8" rx="1"/><rect x="11" y="11" width="9" height="8" rx="1"/></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/><path d="m5.5 12 1.5 1.5 2.5-3M15 10l4 4m0-4-4 4"/></symbol>
+  <symbol id="i-slider" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="m15 17.5 2 2 4-4"/></symbol>
+  <symbol id="i-report" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M10 6 4 12l6 6M4 12h16"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-full" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12m0 0-4-4m4 4 4-4M4 20h16"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4 10-10"/></symbol>
+</svg>
+
+<header class="appbar">
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 32 32"><rect x="8" y="8" width="16" height="16" rx="2"/><circle cx="24" cy="8" r="4"/></svg></div>
+    <div class="brand-tx">
+      <div class="title">조각김치 이물검출 <span>Final Model 시연</span></div>
+      <div class="sub" id="modelLine">모델 정보를 불러오는 중…</div>
+    </div>
+  </div>
+  <div class="metrics" id="metricChips"></div>
+  <div class="bar-right">
+    <span class="status" id="status"><i></i><b>연결 중</b></span>
+    <button class="btn ghost" id="btnHelp" title="모든 기능 설명 (H)"><svg><use href="#i-help"/></svg>사용 방법</button>
+    <button class="btn ghost" id="btnInfo" title="모델 · 성능 · 한계 (I)"><svg><use href="#i-info"/></svg>모델 정보</button>
+    <button class="btn outline" id="btnReport" title="결과 보고서 (R)"><svg><use href="#i-report"/></svg>보고서 만들기</button>
+    <button class="btn primary" id="btnBack" title="발표자료로 돌아가기 (Backspace)"><svg><use href="#i-back"/></svg>발표로</button>
+  </div>
+</header>
+
+<!-- 시연 순서 = 기능 버튼 -->
+<nav class="flow" id="flow" aria-label="시연 순서">
+  <button class="step" data-step="pick"><span class="num">1</span><svg><use href="#i-photo"/></svg><span class="tx"><b>사진 고르기</b><small>왼쪽 목록에서 고르면 바로 예측</small></span><span class="chk"><svg><use href="#i-check"/></svg></span></button>
+  <button class="step" data-step="pred"><span class="num">2</span><svg><use href="#i-box"/></svg><span class="tx"><b>예측 보기</b><small>모델이 찾은 이물 박스</small></span><span class="chk"><svg><use href="#i-check"/></svg></span></button>
+  <button class="step" data-step="cmp"><span class="num">3</span><svg><use href="#i-compare"/></svg><span class="tx"><b>정답과 비교</b><small>맞힘 · 틀림 · 놓침 표시</small></span><span class="chk"><svg><use href="#i-check"/></svg></span></button>
+  <button class="step" data-step="conf"><span class="num">4</span><svg><use href="#i-slider"/></svg><span class="tx"><b>기준 바꿔 보기</b><small>확신도 0.25 ↔ 0.50</small></span><span class="chk"><svg><use href="#i-check"/></svg></span></button>
+  <button class="step" data-step="all"><span class="num">5</span><svg><use href="#i-grid"/></svg><span class="tx"><b>전체 채점</b><small>Validation 104장 한 번에</small></span><span class="chk"><svg><use href="#i-check"/></svg></span></button>
+  <button class="step" data-step="report"><span class="num">6</span><svg><use href="#i-report"/></svg><span class="tx"><b>보고서 만들기</b><small>결과를 HTML · PDF 로</small></span><span class="chk"><svg><use href="#i-check"/></svg></span></button>
+</nav>
+
+<main class="layout">
+  <!-- 왼쪽: 사진 목록 -->
+  <aside class="side">
+    <div class="side-h">
+      <h3>사진 목록</h3>
+      <div class="seg small" id="listSeg">
+        <button data-list="all" class="on">전체 <span id="cAll">–</span></button>
+        <button data-list="err">틀린 사진 <span id="cErr">0</span></button>
+        <button data-list="new">안 본 사진 <span id="cNew">–</span></button>
+        <button data-list="up">올린 사진 <span id="cUp">0</span></button>
+      </div>
+    </div>
+    <div class="filters" id="filters">
+      <div class="frow"><span class="flabel">촬영 묶음</span><div class="chips" id="groupChips"></div></div>
+      <div class="frow"><span class="flabel">포함 Class</span><div class="chips" id="classChips"></div></div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <label class="upload" id="drop" title="사진을 끌어다 놓거나 눌러서 고르기">
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <svg><use href="#i-upload"/></svg>
+      <span><b>새 사진 올리기</b><small>끌어다 놓기 · Frozen Test · Bridge 사진은 거절</small></span>
+    </label>
+  </aside>
+
+  <!-- 가운데: 사진 -->
+  <section class="viewer" id="viewer">
+    <div class="toolbar">
+      <div class="tgroup">
+        <span class="tlabel">보기</span>
+        <div class="seg" id="modeSeg">
+          <button data-mode="pred" class="on" title="모델 예측만 (1)"><svg><use href="#i-box"/></svg>예측</button>
+          <button data-mode="gt" title="사람이 그린 정답만 (2)"><svg><use href="#i-tag"/></svg>정답</button>
+          <button data-mode="cmp" title="예측과 정답을 맞춰 판정 (3)"><svg><use href="#i-compare"/></svg>비교</button>
+        </div>
+        <button class="tbtn" id="btnLabels" title="박스 이름표 켜기 · 끄기 (L)"><svg><use href="#i-tag"/></svg><span class="t">이름표</span></button>
+      </div>
+      <div class="tgroup">
+        <button class="tbtn" id="btnPrev" title="이전 사진 (←)"><svg><use href="#i-left"/></svg><span class="t">이전</span></button>
+        <span class="pos" id="pos">–</span>
+        <button class="tbtn" id="btnNext" title="다음 사진 (→)"><span class="t">다음</span><svg><use href="#i-right"/></svg></button>
+        <button class="tbtn warn" id="btnNextErr" title="틀린 것이 있는 다음 사진 (E)"><svg><use href="#i-alert"/></svg>다음 오류</button>
+      </div>
+      <div class="tgroup">
+        <button class="tbtn icon" id="btnZoomOut" title="축소 (-)"><svg><use href="#i-minus"/></svg></button>
+        <span class="zoom" id="zoomLabel">–</span>
+        <button class="tbtn icon" id="btnZoomIn" title="확대 (+) · 마우스 휠"><svg><use href="#i-plus"/></svg></button>
+        <button class="tbtn" id="btnFit" title="화면에 맞춤 (0) · 더블클릭"><svg><use href="#i-fit"/></svg><span class="t">맞춤</span></button>
+        <button class="tbtn icon" id="btnFull" title="사진 영역 전체화면 (F)"><svg><use href="#i-full"/></svg></button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="canvas"></canvas>
+      <div class="empty" id="empty">
+        <div class="empty-card">
+          <div class="empty-ic"><svg><use href="#i-photo"/></svg></div>
+          <h2>시연을 시작하세요</h2>
+          <p>위의 <b>①~⑥ 버튼</b>을 차례로 누르면 시연 순서대로 진행됩니다.</p>
+          <div class="empty-btns">
+            <button class="btn primary big" id="btnStart"><svg><use href="#i-play"/></svg>첫 사진 열기</button>
+            <button class="btn outline big" id="btnUpload2"><svg><use href="#i-upload"/></svg>새 사진 올리기</button>
+            <button class="btn ghost big" id="btnHelp2"><svg><use href="#i-help"/></svg>사용 방법</button>
+          </div>
+          <p class="keys"><kbd>←</kbd><kbd>→</kbd> 사진 · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 보기 · <kbd>E</kbd> 다음 오류 · 휠 확대 · 끌어서 이동</p>
+        </div>
+      </div>
+      <div class="scan" id="scan"><div class="beam"></div><div class="scan-label" id="scanLabel">예측 중…</div></div>
+      <div class="hud hud-counts" id="hudCounts"></div>
+      <div class="hud hud-meta" id="hudMeta"></div>
+      <div class="legend" id="legend"></div>
+      <div class="tip" id="tip"></div>
+    </div>
+  </section>
+
+  <!-- 오른쪽: 결과 -->
+  <aside class="panel">
+    <section class="card" id="confCard">
+      <div class="card-h"><h3><svg><use href="#i-slider"/></svg>확신도 기준</h3><span class="conf-val" id="confVal">0.25</span></div>
+      <input type="range" id="conf" min="0.05" max="0.95" step="0.01" value="0.25" aria-label="확신도 기준">
+      <div class="scale"><span>0.05 · 많이 찾음</span><span>0.95 · 확실한 것만</span></div>
+      <div class="presets"><button data-c="0.10">0.10</button><button data-c="0.25" class="on">0.25 <small>평가 기준</small></button><button data-c="0.50">0.50</button><button data-c="0.75">0.75</button></div>
+      <p class="help">모델이 "이물이다"라고 확신하는 정도가 이 값 이상인 박스만 씁니다. <b>낮추면</b> 놓침↓ 오검출↑, <b>높이면</b> 반대.</p>
+    </section>
+
+    <section class="card" id="resultCard">
+      <div class="card-h"><h3><svg><use href="#i-compare"/></svg>이 사진 결과</h3><span class="ms" id="ms"></span></div>
+      <div id="stats"><p class="help">사진을 고르면 결과가 여기에 나옵니다.</p></div>
+      <table class="cls" id="clsTable"></table>
+    </section>
+
+    <section class="card" id="detCard">
+      <div class="card-h"><h3><svg><use href="#i-box"/></svg>검출 목록 <small id="detCount"></small></h3>
+        <button class="btn small outline" id="btnTxt" title="이 사진의 예측을 YOLO 라벨 파일로 (S)"><svg><use href="#i-download"/></svg>라벨 후보 저장</button></div>
+      <ul class="dets" id="dets"></ul>
+      <p class="help">줄을 누르면 그 박스로 확대합니다. <b>라벨 후보</b>는 Auto Label 후보 — 교과 7 라벨링 도구에서 사람이 확인한 뒤에만 정답입니다.</p>
+    </section>
+
+    <section class="card" id="sumCard">
+      <div class="card-h"><h3><svg><use href="#i-grid"/></svg>Validation 전체 채점</h3></div>
+      <button class="btn primary wide" id="btnAll"><svg><use href="#i-play"/></svg>104장 한 번에 채점하기</button>
+      <div class="progress" id="prog"><i></i><span></span></div>
+      <div id="summary"><p class="help">모든 Validation 사진을 같은 기준으로 예측해 합칩니다 (약 15초). 끝나면 기준별 그래프와 <b>보고서</b>를 만들 수 있습니다.</p></div>
+    </section>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden><div class="modal-box" id="modalBox"><button class="x" id="modalX" aria-label="닫기">×</button><div id="modalBody"></div></div></div>
+<div class="toasts" id="toasts"></div>
+<script src="app.js?v=20261020f"></script>
+</body>
+</html>

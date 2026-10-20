@@ -9,3 +9,6 @@ PyYAML==6.0.3
 matplotlib==3.11.2
 opencv-python==5.0.0.93
 numpy==2.5.4
+# 시연 프로그램 (app/server.py) — 2026-10-20 추가
+fastapi==0.150.0
+uvicorn[standard]==0.54.0

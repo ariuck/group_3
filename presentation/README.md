@@ -10,6 +10,12 @@
 - 사진이 보이게 하려면 원본 PC 에서 USB 로 `private/photos/` 를 받아 **각자 이 폴더 안에** 넣습니다 (`presentation/private/photos/`). Git 이 무시하므로 커밋되지 않습니다. 절대 `git add -f` 하지 않기. 옛 위치 `subject8/presentation/private/` 에 사진을 넣어 둔 PC 는 **`presentation/private/` 로 옮기세요** (옛 폴더는 이 이동 뒤에 비어서 남습니다).
 - 아래 "숫자 → 근거 대조표"의 파일 이름(`final_model_selection.md`, `experiment_log.csv` 등)은 **`subject8/` 안의 파일**입니다.
 
+## 시연 ② 프로그램과 연결 (15번 슬라이드)
+- 15번의 **시연 프로그램 열기** 버튼은 `http://127.0.0.1:8010/` (Final Model 시연 프로그램, `subject8/app/server.py`, FastAPI)로 넘어갑니다. 버튼 아래 **백업 1·2·3** 링크는 그 사진을 바로 엽니다.
+- 발표 전에 서버를 켭니다: `cd ~/group_3/subject8 && .venv/bin/python app/server.py` → 시연 화면 오른쪽 위 **● 준비 완료** 확인.
+- **발표자료도 서버 주소로 여는 것을 권장**: `http://127.0.0.1:8010/presentation/index.html` — 그러면 시연 화면의 **← 발표로**(Backspace)가 15번으로 바로 돌아옵니다. 파일(더블클릭)로 열었다면 브라우저 뒤로 가기로 돌아옵니다.
+- 서버가 안 뜨면 15번의 백업 사진 · 영상으로 진행합니다 (노트의 "백업 전환 조건").
+
 ## 함께 수정하기 (Git)
 
 ```bash
