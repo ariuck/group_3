@@ -271,6 +271,133 @@ def restore_specks():
     return restored
 
 
+# ── 5라운드 (2026-10-20): Final(exp050) 확정 뒤 갈변 진단 — Final 을 바꾸지 않는다 (Frozen Test 를 이미 봄) ──
+# 진단 결과: 복제 모델(exp019)은 Train 반점 8개를 conf 0.35~0.95 로 모두 찾는데 Val 반점은 15개 중 2개 (외움).
+#            Val 반점 20~31px 13개 중 9~10개는 conf 0.001 에서도 예측 박스가 아예 없다 (후보조차 안 나옴).
+#   P2 검출층 : stride 8 격자에서 반점(입력 약 12px)은 1~2칸 → stride 4 층을 더해 후보가 나오게 (configs/yolo11s-p2.yaml)
+#               batch 2 는 13.1GB 라 batch 1 (6.7GB). nbs 64 누적이라 실제 갱신 단위는 batch 2 와 같다
+#   변형 합성 : 반점을 "다른 개체"로 — 원본 반점 8개 + 중간 갈변(100~200px)을 반점 크기로 줄인 것을 원천으로,
+#               하나씩 회전 · 찌그러뜨림 · 색 · 번짐을 바꾸고 반점 픽셀만(둘레보다 어두운 곳) 붙인다 (data/yolo_v5_r4/synth2, Git 제외)
+P2_CFG = PROJECT_ROOT / "configs" / "yolo11s-p2.yaml"
+_P2 = {**_B, "model_name": str(P2_CFG), "transfer": "yolo11s.pt", "batch": 1}
+_R5_DIRECTIONS = [   # (태그, 설명, 학습 조건, 데이터 변경)
+    ("p2", "B + P2 검출층 (batch 1)", _P2, {}),
+    ("cp2", "B + 변형 반점 합성", _B, {"synth2": True}),
+    ("p2_cp2", "P2 + 변형 반점 합성", _P2, {"synth2": True}),
+]
+for _i, (_tag, _desc, _cond, _data) in enumerate(_R5_DIRECTIONS):
+    for _j, (_seed, _suffix, _pair) in enumerate(_R4_SEEDS):
+        _key = f"exp{51 + _i * 5 + _j:03d}"   # exp051~065
+        RUNS[_key] = {"change": {**_cond, "seed": _seed}, "data": _data, "run_name": f"{_key}_v5_r5_{_tag}{_suffix}",
+                      "title": f"kimchi_v5 5라운드 {_key} ({_desc})", "compare": f"{_pair} (B · 같은 seed {_seed}) · B seed 5개 평균 0.739 · 갈변 0.108",
+                      "augmentation": _AUG_TEXT,
+                      "note": f"5라운드(갈변 진단) '{_desc}' 의 seed {_seed}. Final(exp050) 확정 뒤의 진단 실험이라 Final 을 바꾸지 않는다. 클래스별 갈변 mAP 로 본다."}
+
+SYNTH2_IMAGES, SYNTH2_PER_IMAGE, SYNTH2_SEED = 150, 3, 0
+SYNTH2_SRC_MAX_PX = 200            # 원천: 이보다 작은 Train 갈변 (반점 8개 + 중간 갈변)
+SYNTH2_SIZE_PX = (18, 45)          # 붙일 때 긴 변 (원본 px) — Val · Test 반점 20~31px 근처
+
+
+def make_synth2():
+    """변형 반점 합성 사진을 R4_DIR/synth2 에 만든다 (이미 있으면 그대로). 같은 seed · 같은 Train 이면 어느 PC 에서나 같다."""
+    import random
+    import cv2
+    import numpy as np
+    from PIL import Image
+    out_img, out_lbl = R4_DIR / "synth2" / "images" / "train", R4_DIR / "synth2" / "labels" / "train"
+    done = R4_DIR / "synth2" / f"done_{SYNTH2_IMAGES}x{SYNTH2_PER_IMAGE}_seed{SYNTH2_SEED}.txt"
+    if done.is_file():
+        return sorted(out_img.glob("*.jpg"))
+    out_img.mkdir(parents=True, exist_ok=True)
+    out_lbl.mkdir(parents=True, exist_ok=True)
+    rng = random.Random(SYNTH2_SEED)
+    nrng = np.random.default_rng(SYNTH2_SEED)
+    srcs = []   # (RGB 패치 ndarray, 원래 긴 변 px) — 박스보다 25% 넓게 잘라 둘레 배추를 함께
+    for lp in sorted((paths.yolo_dir / "labels" / "train").glob("*.txt")):
+        rows = [r for r in _read_labels(lp) if r[0] == "5"]
+        if not rows:
+            continue
+        im = np.asarray(Image.open(paths.yolo_dir / "images" / "train" / f"{lp.stem}.jpg").convert("RGB"))
+        H, W = im.shape[:2]
+        for r in rows:
+            cx, cy, w, h = float(r[1]) * W, float(r[2]) * H, float(r[3]) * W, float(r[4]) * H
+            if max(w, h) >= SYNTH2_SRC_MAX_PX:
+                continue
+            x0, y0 = int(max(0, cx - w * 0.625)), int(max(0, cy - h * 0.625))
+            x1, y1 = int(min(W, cx + w * 0.625)), int(min(H, cy + h * 0.625))
+            srcs.append((im[y0:y1, x0:x1].copy(), max(w, h)))
+    targets = [lp for lp in sorted((paths.yolo_dir / "labels" / "train").glob("*.txt")) if all(r[0] != "5" for r in _read_labels(lp))]
+    print(f" 변형 합성: 원천 갈변 {len(srcs)}개 (긴 변 {SYNTH2_SRC_MAX_PX}px 미만) → 갈변 없는 Train {len(targets)}장 중 {SYNTH2_IMAGES}장에 {SYNTH2_PER_IMAGE}개씩")
+
+    def variant(patch):
+        """반점 하나를 다른 개체처럼: 크기 · 찌그러뜨림 · 회전 · 색 · 번짐. 반환 (RGB, alpha 0~1, 박스 w, h)"""
+        ph, pw = patch.shape[:2]
+        target = rng.uniform(*SYNTH2_SIZE_PX) * 1.25                      # 둘레 포함 크기
+        s = target / max(ph, pw)
+        sx, sy = s * rng.uniform(0.75, 1.3), s * rng.uniform(0.75, 1.3)   # 가로세로 따로 → 모양 변형
+        p = cv2.resize(patch, (max(6, round(pw * sx)), max(6, round(ph * sy))), interpolation=cv2.INTER_AREA)
+        ph, pw = p.shape[:2]
+        ang, shear = rng.uniform(0, 360), rng.uniform(-0.25, 0.25)
+        M = cv2.getRotationMatrix2D((pw / 2, ph / 2), ang, 1.0)
+        M[0, 1] += shear
+        cos, sin = abs(M[0, 0]), abs(M[0, 1])
+        nw, nh = int(ph * sin + pw * cos) + 2, int(ph * cos + pw * sin) + 2
+        M[0, 2] += nw / 2 - pw / 2
+        M[1, 2] += nh / 2 - ph / 2
+        p = cv2.warpAffine(p, M, (nw, nh), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        # 반점 픽셀만 붙인다 (네모 · 원판 자국 방지): 패치 둘레(배추) 밝기보다 어두운 픽셀 = 반점, 경계는 살짝만 부드럽게
+        L = cv2.cvtColor(p, cv2.COLOR_RGB2LAB)[..., 0].astype(np.float32)
+        ring = np.concatenate([L[:2].ravel(), L[-2:].ravel(), L[:, :2].ravel(), L[:, -2:].ravel()])
+        a = np.clip((np.median(ring) - L - 10) / 25, 0, 1)
+        core = np.zeros((nh, nw), np.float32)
+        cv2.ellipse(core, (nw // 2, nh // 2), (max(2, int(nw * 0.45)), max(2, int(nh * 0.45))), 0, 0, 360, 1.0, -1)
+        a = cv2.GaussianBlur(a * core, (0, 0), 0.6)
+        hsv = cv2.cvtColor(p, cv2.COLOR_RGB2HSV).astype(np.float32)
+        hsv[..., 0] = (hsv[..., 0] + rng.uniform(-4, 4)) % 180             # 갈색 범위 안에서 색조
+        hsv[..., 1] *= rng.uniform(0.8, 1.3)
+        hsv[..., 2] *= rng.uniform(0.7, 1.05)                              # 진하게 쪽으로 (Val 반점은 진한 갈색)
+        p = cv2.cvtColor(np.clip(hsv, 0, 255).astype(np.uint8), cv2.COLOR_HSV2RGB)
+        if rng.random() < 0.25:
+            p = cv2.GaussianBlur(p, (0, 0), rng.uniform(0.3, 0.7))         # 가끔 초점 흐림
+        ys, xs = np.where(a > 0.3)
+        if len(xs) < 6:
+            return None   # 둘레보다 어두운 픽셀이 거의 없음 → 다른 원천으로
+        cx, cy = (xs.max() + xs.min()) / 2, (ys.max() + ys.min()) / 2
+        return p, a, float(xs.max() - xs.min() + 3), float(ys.max() - ys.min() + 3), cx, cy
+
+    pasted = 0
+    for lp in rng.sample(targets, SYNTH2_IMAGES):
+        im = np.asarray(Image.open(paths.yolo_dir / "images" / "train" / f"{lp.stem}.jpg").convert("RGB")).astype(np.float32)
+        H, W = im.shape[:2]
+        sat = cv2.cvtColor(im.astype(np.uint8), cv2.COLOR_RGB2HSV)[..., 1]
+        rows = _read_labels(lp)
+        taken = [(float(r[1]) * W, float(r[2]) * H, float(r[3]) * W / 2 + 40, float(r[4]) * H / 2 + 40) for r in rows]
+        new = []
+        for _ in range(SYNTH2_PER_IMAGE):
+            v = None
+            while v is None:
+                v = variant(srcs[int(nrng.integers(len(srcs)))][0])
+            p, a, bw, bh, ox, oy = v
+            ph, pw = p.shape[:2]
+            for _try in range(200):
+                x, y = rng.randint(int(W * 0.05), int(W * 0.95) - pw), rng.randint(int(H * 0.05), int(H * 0.95) - ph)
+                mx, my = x + pw / 2, y + ph / 2
+                if sat[max(0, int(my) - 60):int(my) + 60, max(0, int(mx) - 60):int(mx) + 60].mean() < 60:   # 배추 위만
+                    continue
+                if any(abs(mx - tx) < tw + pw / 2 and abs(my - ty) < th + ph / 2 for tx, ty, tw, th in taken):
+                    continue
+                im[y:y + ph, x:x + pw] = im[y:y + ph, x:x + pw] * (1 - a[..., None]) + p.astype(np.float32) * a[..., None]
+                new.append(f"5 {(x + ox) / W:.6f} {(y + oy) / H:.6f} {bw / W:.6f} {bh / H:.6f}")   # 박스 = 실제로 붙은 반점 픽셀
+                taken.append((mx, my, pw / 2 + 40, ph / 2 + 40))
+                pasted += 1
+                break
+        Image.fromarray(np.clip(im, 0, 255).astype(np.uint8)).save(out_img / f"{lp.stem}_r5sp.jpg", quality=95)
+        (out_lbl / f"{lp.stem}_r5sp.txt").write_text("\n".join([" ".join(r) for r in rows] + new) + "\n", encoding="utf-8")
+    done.write_text(f"sources {len(srcs)} pasted {pasted}\n", encoding="utf-8")
+    print(f" 변형 합성 완료: 사진 {SYNTH2_IMAGES}장 · 반점 {pasted}개 → {rel(out_img)}")
+    return sorted(out_img.glob("*.jpg"))
+
+
 def r4_data_yaml(run_name, data):
     """4라운드 데이터 변경(복제 · 합성)이 있으면 학습 목록 txt 와 yaml 을 R4_DIR 에 만들어 경로를 돌려준다. Val 은 그대로."""
     import yaml
@@ -290,6 +417,9 @@ def r4_data_yaml(run_name, data):
     if data.get("synth"):
         files += [str(p.resolve()) for p in make_synth()]
         print(f" 반점 합성 추가 → 학습 목록 {len(files)}줄")
+    if data.get("synth2"):
+        files += [str(p.resolve()) for p in make_synth2()]
+        print(f" 변형 반점 합성 추가 → 학습 목록 {len(files)}줄")
     lst = R4_DIR / f"train_{run_name}.txt"
     lst.write_text("\n".join(files) + "\n", encoding="utf-8")
     cfg = yaml.safe_load(paths.dataset_yaml.read_text(encoding="utf-8"))
@@ -362,6 +492,13 @@ def train_one(key, counts, report_only=False):
     if spec.get("data", {}).get("synth"):
         notes.append(f"반점 합성 사진 {SYNTH_IMAGES}장을 Train 에 추가: 긴 변 {SPECK_MAX_PX}px 미만 갈변 반점을 갈변 없는 Train 사진의 배추 위에 "
                      f"{SYNTH_PER_IMAGE}개씩 붙임 (seed {SYNTH_SEED}, `{rel(R4_DIR)}/synth`, Git 제외). Val 은 원본 그대로.")
+    if spec.get("data", {}).get("synth2"):
+        notes.append(f"변형 반점 합성 사진 {SYNTH2_IMAGES}장을 Train 에 추가: 긴 변 {SYNTH2_SRC_MAX_PX}px 미만 Train 갈변(반점 + 중간 갈변)을 "
+                     f"긴 변 {SYNTH2_SIZE_PX[0]}~{SYNTH2_SIZE_PX[1]}px 로 줄여, 하나씩 회전 · 찌그러뜨림 · 색 · 번짐을 바꾸고 반점 픽셀(둘레보다 어두운 곳)만 "
+                     f"갈변 없는 Train 사진의 배추 위에 {SYNTH2_PER_IMAGE}개씩 붙임 (seed {SYNTH2_SEED}, `{rel(R4_DIR)}/synth2`, Git 제외). Val 은 원본 그대로.")
+    if cond.get("transfer"):
+        notes.append(f"모델 구조: `{rel(Path(cond['model_name']))}` (YOLO11s + P2 검출층). COCO `{cond['transfer']}` 에서 이름 · 모양이 같은 층만 이어받음 "
+                     "(backbone 전체 + head 앞부분, P2 갈래와 Detect 는 새로 학습).")
     if ref:
         notes.append(f"참고 — best.pt 가 저장된 epoch {ref['epoch']} 의 학습 중 Validation: "
                      f"P {ref['precision']:.3f} · R {ref['recall']:.3f} · mAP50 {ref['map50']:.3f} · mAP50-95 {ref['map50_95']:.3f}")
@@ -370,7 +507,8 @@ def train_one(key, counts, report_only=False):
         report,
         f"{spec['title']} 학습 조건 (`{run_name}`)",
         {
-            "Model": f"YOLO{Path(cond['model_name']).stem[4:]} (`{cond['model_name']}`, COCO 사전학습 · pretrained=True)",
+            "Model": (f"YOLO{Path(cond['model_name']).stem[4:]} (`{rel(Path(cond['model_name']))}`, COCO `{cond['transfer']}` 에서 맞는 층만 이어받음)"
+                      if cond.get("transfer") else f"YOLO{Path(cond['model_name']).stem[4:]} (`{cond['model_name']}`, COCO 사전학습 · pretrained=True)"),
             "Dataset Version": f"`{DATASET_VERSION}`",
             "Train / Val Manifest": f"`{manifest}/train.csv` {counts['train']}장 (sha256 {sha256_short(paths.manifest_dir / 'train.csv')}) / "
                                     f"`{manifest}/val.csv` {counts['val']}장 (sha256 {sha256_short(paths.manifest_dir / 'val.csv')})",
@@ -396,7 +534,7 @@ def train_one(key, counts, report_only=False):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~050)")
+    ap = argparse.ArgumentParser(description="kimchi_v5 학습 (baseline · exp001~065)")
     ap.add_argument("--run", default="all", choices=["all", *RUNS])
     ap.add_argument("--report-only", action="store_true", help="학습은 끝났는데 조건 기록이 없을 때 기록만 다시 쓴다")
     args = ap.parse_args()

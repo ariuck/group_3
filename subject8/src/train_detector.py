@@ -62,7 +62,10 @@ def train_detector(
     start = datetime.now()
     t0 = time.time()
 
+    transfer = extra.pop("transfer", None)   # 구조(yaml)를 바꾼 모델: 이 Weight 에서 이름 · 모양이 같은 층만 이어받는다
     model = YOLO(model_name)
+    if transfer:
+        model.load(transfer)
     model.train(
         data=data_yaml,
         epochs=epochs,
