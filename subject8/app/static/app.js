@@ -12,7 +12,7 @@ const S = {
   cur: null, res: null, done: new Map(), viewed: [],
   img: null, imgId: null, view: { s: 1, x: 0, y: 0 }, fitScale: 1,
   mode: "pred", labels: true, conf: 0.25, hidden: new Set(),
-  hover: -1, prefetching: false, allRunning: false, summaryOn: false, sweep: null,
+  hover: -1, allRunning: false, summaryOn: false, sweep: null,
   steps: new Set(),
 };
 
@@ -175,7 +175,6 @@ async function predict(id) {
     if (S.cur === id) setResult(r);
   } catch (e) { if (S.cur === id) toast(esc(e.message), true); }
   finally { if (S.cur === id) scanning(false); }
-  prefetchNext();
 }
 const rejudge = debounce(async () => {
   if (S.cur && S.res) {
@@ -190,14 +189,6 @@ function setResult(r) {
   if (S.mode === "pred") markStep("pred");
   if (S.mode === "cmp" && r.counts) markStep("cmp");
   renderGallery(); renderPanel(); draw(); renderSteps();
-}
-async function prefetchNext() {
-  if (S.prefetching || S.allRunning) return;
-  const list = visibleList(), i = list.findIndex((x) => x.id === S.cur), nxt = list[i + 1];
-  if (!nxt || S.done.has(nxt.id) || nxt.source === "upload") return;
-  S.prefetching = true;
-  try { const r = await api(`/api/images/${encodeURIComponent(nxt.id)}/predict?conf=${S.conf}`, { method: "POST" }); S.done.set(r.id, doneOf(r)); renderGallery(); } catch (e) { /* 무시 */ }
-  S.prefetching = false;
 }
 function scanning(on) {
   $("#scan").classList.toggle("on", on);
