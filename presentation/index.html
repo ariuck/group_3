@@ -658,15 +658,16 @@ svg text{font-family:var(--font)}
       <figure class="slot" style="width:440px" data-type="video" data-src="private/photos/s15_backup.mp4" data-alt="시연 ② 백업 영상" data-caption="백업 영상 · 시연 ② 화면 녹화"></figure>
     </div>
   </div>
-  <footer><div class="fn">Validation 사진으로 시연 (Frozen Test·Bridge는 스크립트가 막음) · 명령: <code>.venv/bin/python scripts/08_predict_images.py --model final --limit 3</code> (imgsz는 학습 때 값 2240 자동) · 예측 시간은 사진 1장, RTX 3060 기준 (소스 1.2, 3.13)</div></footer>
+  <footer><div class="fn">Validation 사진으로 시연 (Frozen Test·Bridge는 스크립트가 막음) · 명령: <code>08_predict_images.py --model final --source ~/g3_demo_val3/images/val</code> (백업과 같은 Val 3장 · 약 4초 · imgsz 2240 자동) · 예측 시간은 사진 1장, RTX 3060 기준 (소스 1.2, 3.13)</div></footer>
   <aside class="notes">
     <div class="script"><p>지금 보여 드리는 모델이 Final Model, exp050입니다.</p>
     <p>kimchi_v5의 Validation 사진으로 하고, 해상도 2240, confidence 0.25입니다. 사진 한 장 예측에 약 37밀리초가 걸립니다. 왼쪽이 정답, 오른쪽이 모델 예측입니다.</p>
     <p>작은 이물까지 찾도록 해상도를 키운 것이 개선의 핵심이었고, 보시는 것처럼 놓친 것과 틀린 것도 있습니다.</p></div>
     <div class="demo-steps"><b>시연 ② 순서 (1분 25초)</b><ol>
-      <li>발표 직전에 같은 명령을 한 번 미리 실행해 모델 로드를 끝내 둔다 (첫 실행은 느림)</li>
-      <li>터미널: <code>cd ~/group_3/subject8</code> → <code>.venv/bin/python scripts/08_predict_images.py --model final --limit 3</code></li>
-      <li>결과 폴더 <code>runs/predict/&lt;이름&gt;/compare/*.jpg</code> 를 열어 3장 차례로 보여 주기 (이름은 실행 화면에 표시됨)</li>
+      <li>발표 직전에 같은 명령을 한 번 미리 실행해 둔다 (첫 실행 약 6초, 그다음 약 4초)</li>
+      <li>터미널: <code>cd ~/group_3/subject8</code> → <code>.venv/bin/python scripts/08_predict_images.py --model final --source ~/g3_demo_val3/images/val --name demo_live &amp;&amp; explorer.exe "$(wslpath -w runs/predict/demo_live/compare)"</code></li>
+      <li>탐색기에 결과 3장이 열린다 (<code>runs/predict/demo_live/compare/</code>) — 사진 보기로 차례로 넘기기. 터미널 요약: 정답 19 · 맞힘 15 · 놓침 4(갈변 3 · 나뭇가지 1) · 오탐 1</li>
+      <li><code>~/g3_demo_val3/</code> 는 이 발표 PC 에만 있는 링크 폴더(백업 1~3과 같은 Val 사진 + 정답 라벨). <code>--limit 3</code> 은 앞의 G00(파·고추만) 3장이 나와서 쓰지 않는다</li>
       <li>각 장에서 찾은 것 1개 + 놓치거나 틀린 것 1개를 짚기</li></ol>
       <b>백업 사진 3장</b> (10-20 Final로 생성, 10-19 exp007 백업과 같은 Val 사진 — G00 예외 묶음 아님, <code>--source</code>로 지정): 백업 1 <code>250424_143312128093</code> · 백업 2 <code>250411_095845387065</code> · 백업 3 <code>250424_143017228317</code>. exp007 대비: 백업 1만 오탐 1 → 0, 백업 2·3은 같은 결과 (백업 2는 둘 다 갈변 2개 중 1개를 찾음, Final conf 0.61). 세 장 모두 갈변을 하나씩 놓침 → 14번 한계와 연결해서 말하기.<br>
       <b>주의</b>: 시연 PC에서 학습이 돌고 있으면 GPU 메모리가 넘친다 → 시연 전에 학습을 끝내거나 다른 PC 사용.<br>
