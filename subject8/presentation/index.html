@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3조 조각김치 이물검출</title>
+<!--
+  group_3 발표자료 (교과 7 + 교과 8) — 단일 파일, 외부 요청 0개
+  - 사진은 내장하지 않는다: private/photos/<슬롯이름> 을 참조만 하고, 없으면 회색 자리 박스
+  - 숫자는 01_source_facts.md (2026-10-20 개정, Final = exp050 · Frozen Test 0.639) 와 저장소 reports/ 의 값만 사용
+  - 조작: ← → Space PgUp/PgDn · F 전체화면 · S 노트 · O 목록 · B 검은 화면 · Home/End · #n · #a1~#a9
+  - 2026-10-19 판은 backup/index_2026-10-19.html
+-->
+<style>
+:root{
+  --bg:#ffffff; --page:#e9ebef; --ink:#1d2433; --muted:#4b5565; --faint:#6b7280;
+  --line:#d7dbe2; --soft:#f4f5f8; --soft2:#eceef3;
+  --accent:#4338ca; --accent-soft:#eef0fd; --accent-ink:#312e81;
+  --c0:#2e7d32; --c1:#c62828; --c2:#1565c0; --c3:#7b1fa2; --c4:#757575; --c5:#e8710a; --c6:#00897b;
+  --c5ink:#a14b00;
+  --done-bg:#e3f3e7; --done:#1b6b34;
+  --prog-bg:#e2eefc; --prog:#0b4f9c;
+  --plan-bg:#eceef1; --plan:#46505c;
+  --tbd-bg:#fff2cc; --tbd:#7a4b00;
+  --warn-bg:#fdecea; --warn:#9b1c1c;
+  --font:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","Segoe UI",sans-serif;
+  --mono:Consolas,"D2Coding","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--page);color:var(--ink);font-family:var(--font);overflow:hidden}
+body{-webkit-font-smoothing:antialiased}
+:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
+
+/* ---------- 무대 (1920×1080 고정, 창에 맞춰 축소) ---------- */
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1920px;height:1080px;position:relative;flex:none;transform-origin:center center;background:var(--bg);box-shadow:0 10px 40px rgba(20,24,40,.18)}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:64px 96px 0;background:var(--bg);overflow:hidden}
+.slide.active{display:flex}
+.slide header{flex:none;margin-bottom:28px}
+.kicker{font-size:24px;font-weight:700;color:var(--accent);letter-spacing:.02em;margin-bottom:10px;display:flex;gap:14px;align-items:center}
+.kicker .sep{color:var(--line)}
+.slide h1{font-size:54px;line-height:1.22;margin:0;font-weight:800;letter-spacing:-.01em}
+.slide h1 .sub{display:block;font-size:30px;font-weight:600;color:var(--muted);margin-top:10px}
+.body{flex:1;min-height:0;font-size:28px;line-height:1.45;position:relative}
+.slide>footer{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;padding:14px 0 22px;margin-top:18px;border-top:2px solid var(--soft2);min-height:78px}
+.fn{font-size:20px;line-height:1.45;color:var(--muted);max-width:1380px}
+.fn b{color:var(--ink)}
+.who{font-size:19px;color:var(--faint);text-align:right;white-space:nowrap;line-height:1.5}
+.who b{color:var(--ink);font-weight:700}
+.who .num{display:block;font-variant-numeric:tabular-nums}
+.notes{display:none}
+
+/* ---------- 공통 요소 ---------- */
+.row{display:flex;gap:40px}
+.col{display:flex;flex-direction:column;gap:22px}
+.grow{flex:1;min-width:0}
+ul.pts{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:18px}
+ul.pts li{position:relative;padding-left:34px}
+ul.pts li::before{content:"";position:absolute;left:4px;top:.62em;width:14px;height:14px;border-radius:3px;background:var(--accent)}
+.card{background:var(--soft);border:2px solid var(--soft2);border-radius:18px;padding:24px 28px}
+.card h3{margin:0 0 8px;font-size:28px}
+.muted{color:var(--muted)}
+.small{font-size:22px;line-height:1.45}
+.xs{font-size:19px;line-height:1.4}
+.mono{font-family:var(--mono)}
+.tnum{font-variant-numeric:tabular-nums}
+.big{font-size:84px;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mid{font-size:52px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+.lab{font-size:22px;color:var(--muted);margin-top:8px;line-height:1.35}
+.accent{color:var(--accent)}
+.hl{background:var(--accent-soft);border-color:#d5d9fb}
+code,.code{font-family:var(--mono);font-size:.86em;background:var(--soft2);padding:.08em .35em;border-radius:6px}
+.cmd{font-family:var(--mono);font-size:22px;background:#1f2430;color:#f1f3f8;border-radius:12px;padding:14px 20px;white-space:pre-wrap;line-height:1.5}
+
+/* 상태 배지: 글자 + 색 (이모지 사용 안 함) */
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:.72em;font-weight:700;padding:.18em .7em;border-radius:999px;border:2px solid transparent;white-space:nowrap;vertical-align:middle;line-height:1.3}
+.badge::before{content:"";width:.55em;height:.55em;border-radius:50%;background:currentColor}
+.b-done{background:var(--done-bg);color:var(--done)}
+.b-prog{background:var(--prog-bg);color:var(--prog)}
+.b-plan{background:var(--plan-bg);color:var(--plan);border-style:dashed;border-color:#b8bec8}
+.b-tbd{background:var(--tbd-bg);color:var(--tbd)}
+.b-warn{background:var(--warn-bg);color:var(--warn)}
+.b-acc{background:var(--accent-soft);color:var(--accent-ink)}
+
+/* 표 */
+table.t{border-collapse:collapse;width:100%;font-size:24px;line-height:1.35}
+table.t th,table.t td{padding:11px 14px;border-bottom:2px solid var(--soft2);text-align:left;vertical-align:top}
+table.t th{font-size:20px;color:var(--muted);font-weight:700;background:var(--soft);border-bottom-color:var(--line)}
+table.t td.r,table.t th.r{text-align:right;font-variant-numeric:tabular-nums}
+table.t tr.em td{background:var(--accent-soft);font-weight:700}
+table.t.dense{font-size:20px}
+table.t.dense th{font-size:18px}
+table.t.dense th,table.t.dense td{padding:7px 10px}
+
+/* Class 칩 */
+.cls{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.cls i{width:18px;height:18px;border-radius:4px;display:inline-block;flex:none}
+.k0{background:var(--c0)}.k1{background:var(--c1)}.k2{background:var(--c2)}.k3{background:var(--c3)}.k4{background:var(--c4)}.k5{background:var(--c5)}.k6{background:var(--c6)}
+
+/* 파이프라인 */
+.pipe{display:flex;align-items:stretch;gap:0;flex-wrap:nowrap}
+.pipe .st{flex:1;position:relative;background:var(--soft);border:2px solid var(--soft2);padding:16px 14px 14px 30px;font-size:22px;line-height:1.3;clip-path:polygon(0 0,calc(100% - 22px) 0,100% 50%,calc(100% - 22px) 100%,0 100%,22px 50%);margin-right:-12px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.pipe .st:first-child{clip-path:polygon(0 0,calc(100% - 22px) 0,100% 50%,calc(100% - 22px) 100%,0 100%);padding-left:20px}
+.pipe .st b{font-size:22px}
+.pipe .st .badge{font-size:16px;align-self:flex-start}
+.pipe .st.done{background:var(--done-bg);border-color:var(--done-bg)}
+.pipe .st.prog{background:var(--prog-bg)}
+.pipe .st.plan{background:#f6f7f9}
+
+/* 사진 슬롯 */
+.slot{margin:0;display:flex;flex-direction:column;gap:8px;min-height:0}
+.slot .frame{flex:1;min-height:0;border-radius:14px;overflow:hidden;background:#11141b;display:flex;align-items:center;justify-content:center;position:relative}
+.slot img,.slot video{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.slot.ok .frame{cursor:zoom-in}
+.slot.missing .frame{background:repeating-linear-gradient(135deg,#f3f4f7 0 18px,#eceef2 18px 36px);border:3px dashed #a9b0bc;cursor:default}
+.slot .ph{color:#4b5565;font-size:22px;text-align:center;padding:18px;line-height:1.4;overflow-wrap:anywhere}
+.slot .ph b{display:block;color:#1d2433;font-size:24px;margin-bottom:6px}
+.slot .ph code{font-size:18px}
+.slot .frame{container-type:size}
+@container (max-width:320px){ .slot .ph{font-size:14px;padding:8px} .slot .ph b{font-size:15px} .slot .ph code{font-size:12px} }
+.row>table{align-self:flex-start}
+.slot figcaption{font-size:19px;color:var(--muted);line-height:1.35}
+.slot .tag{position:absolute;left:12px;top:12px;background:rgba(17,20,27,.78);color:#fff;font-size:17px;padding:4px 10px;border-radius:8px}
+
+/* 시연 배너 */
+.demo{border:3px solid var(--accent);border-radius:18px;background:var(--accent-soft);padding:20px 26px;display:flex;gap:26px;align-items:center}
+.demo .lbl{font-size:24px;font-weight:800;color:var(--accent-ink);white-space:nowrap}
+.demo .go{font-size:30px;font-weight:800}
+
+/* 차트 */
+svg text{font-family:var(--font)}
+.chart{width:100%;height:100%}
+
+/* ---------- UI (무대 밖) ---------- */
+#progress{position:fixed;left:0;bottom:0;height:5px;background:var(--accent);width:0;transition:width .25s;z-index:20}
+#counter{position:fixed;right:14px;bottom:10px;font-size:13px;color:#4b5565;background:rgba(255,255,255,.85);padding:2px 8px;border-radius:6px;z-index:20;font-variant-numeric:tabular-nums}
+#hint{position:fixed;left:14px;top:10px;font-size:13px;color:#4b5565;background:rgba(255,255,255,.85);padding:2px 8px;border-radius:6px;z-index:20;transition:opacity .6s}
+#black{position:fixed;inset:0;background:#000;z-index:60;display:none;align-items:center;justify-content:center;color:#3a3f4b;font-size:16px}
+#black.on{display:flex}
+#notesPanel{position:fixed;left:0;right:0;bottom:0;max-height:46vh;overflow:auto;background:#151925;color:#eef0f6;z-index:40;padding:16px 22px 22px;display:none;font-size:17px;line-height:1.55;border-top:3px solid var(--accent)}
+#notesPanel.on{display:block}
+#notesPanel .meta{display:flex;flex-wrap:wrap;gap:18px;align-items:center;font-size:15px;color:#b9bfd0;margin-bottom:8px}
+#notesPanel .meta b{color:#fff;font-size:17px}
+#notesPanel .script p{margin:.2em 0 .5em}
+#notesPanel .hand{color:#c7cdfb;border-left:3px solid #7c83f2;padding-left:10px;margin-top:6px}
+#notesPanel .demo-steps{background:#20263a;border-radius:8px;padding:8px 12px;margin:6px 0}
+#notesPanel .demo-steps ol{margin:.2em 0 .2em 1.2em;padding:0}
+#notesPanel code{background:#2a3150;color:#fff}
+#timer{font-variant-numeric:tabular-nums;color:#fff;font-weight:700}
+#overview{position:fixed;inset:0;background:rgba(18,21,30,.94);z-index:50;display:none;overflow:auto;padding:24px 28px 40px}
+#overview.on{display:block}
+#overview h2{color:#fff;font-size:18px;margin:10px 4px 12px;font-weight:700}
+#overview .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:16px}
+.thumb{background:none;border:3px solid transparent;border-radius:10px;padding:0;cursor:pointer;text-align:left;color:#dfe3ee;font:inherit}
+.thumb.cur{border-color:#8b91ff}
+.thumb .tv{width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:7px;background:#fff}
+.thumb .tv>.slide{display:flex;width:1920px;height:1080px;transform-origin:0 0;pointer-events:none}
+.thumb .cap{display:block;font-size:13px;padding:5px 3px 0;line-height:1.35}
+.thumb .cap b{color:#fff}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:70;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:zoom-out;padding:20px}
+#lightbox.on{display:flex}
+#lightbox img{max-width:96vw;max-height:88vh;object-fit:contain}
+#lightbox .lc{color:#e4e7ef;font-size:15px}
+
+/* ---------- 인쇄: 슬라이드당 1페이지 ---------- */
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{overflow:visible;height:auto;background:#fff}
+  #viewport{position:static;display:block}
+  #stage{transform:none!important;box-shadow:none;width:1920px;height:auto}
+  .slide{position:relative;display:flex!important;width:1920px;height:1080px;page-break-after:always;break-after:page}
+  .scroll{overflow:visible!important;max-height:none!important}
+  #progress,#counter,#hint,#notesPanel,#overview,#black,#lightbox{display:none!important}
+}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- ===================================================== 본편 ===================================================== -->
+
+<!-- 1 표지 -->
+<section class="slide" data-id="1" data-speaker="강동연" data-time="20" data-title="표지">
+  <div class="body" style="display:flex;flex-direction:column;justify-content:center;gap:44px">
+    <div>
+      <div class="kicker">AI Campus 3조 <span class="sep">|</span> 교과 7 라벨링·데이터 QA + 교과 8 YOLO 객체검출</div>
+      <h1 style="font-size:84px;line-height:1.12">조각김치 이물검출<span class="sub" style="font-size:44px;color:var(--ink);font-weight:700;margin-top:14px">데이터 품질에서 모델까지</span></h1>
+    </div>
+    <div class="pipe" style="max-width:1728px">
+      <div class="st done"><b>교과 7 · 데이터 품질</b><span class="small">RAW 900장 → 라벨링 도구 → 교차검수 → FINAL 900장</span><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>교과 8 · 모델</b><span class="small">Audit → Split → Baseline → 실패 분석 → 개선 실험 → Final → Frozen Test</span><span class="badge b-done">Final 확정</span></div>
+      <div class="st plan"><b>교과 14 · 제조 제품검사</b><span class="small">Bridge Holdout 인계</span><span class="badge b-plan">예정</span></div>
+    </div>
+    <div class="row" style="align-items:flex-end;justify-content:space-between">
+      <div style="font-size:34px;font-weight:700;letter-spacing:.04em">강동연 · 이후영 · 지혜성 · 김동훈 · 손상우 · 김석범</div>
+      <div class="small muted" style="text-align:right">발표 일시·장소 <span class="badge b-tbd">TBD</span><br>숫자 기준 시점 2026-10-20 (교과 8 · 8일차, Final 확정일)</div>
+    </div>
+  </div>
+  <footer><div class="fn">데이터: AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터 · 저장소 <code>github.com/ariuck/group_3</code></div></footer>
+  <aside class="notes">
+    <div class="script"><p>안녕하세요, 3조 발표를 시작하겠습니다. 저는 PM을 맡은 강동연입니다.</p>
+    <p>저희는 조각김치 사진에서 이물을 찾는 Vision AI 파이프라인을 만들었습니다. 교과 7에서는 라벨 품질을 사람이 끝까지 검증했고, 교과 8에서는 그 데이터로 YOLO11 모델을 학습하고 개선했습니다.</p>
+    <p>오늘 보여 드리는 숫자는 모두 Final Model을 확정한 10월 20일, 교과 8의 8일차 기준입니다.</p></div>
+    <div class="hand">(넘김) 먼저 왜 라벨 품질부터 시작했는지 말씀드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 2 문제 정의 -->
+<section class="slide" data-id="2" data-speaker="강동연" data-time="40" data-title="문제 정의">
+  <header><div class="kicker">문제 정의</div><h1>이물검출은 라벨 품질이 성능의 상한을 정한다</h1></header>
+  <div class="body row" style="gap:56px">
+    <div class="grow">
+      <table class="t" style="font-size:28px">
+        <thead><tr><th style="width:44%">라벨 문제</th><th>모델 평가에서 생기는 일</th></tr></thead>
+        <tbody>
+          <tr><td>이물이 있는데 BBox 없음</td><td>모델이 맞게 찾아도 <b>FP</b>로 계산</td></tr>
+          <tr><td>정상인데 BBox 있음</td><td>모델이 "없다"고 하면 <b>FN</b>으로 계산</td></tr>
+          <tr><td>BBox가 너무 크거나 작음</td><td>IoU가 낮아져 <b>mAP 하락</b></td></tr>
+          <tr><td>Class가 틀림</td><td><b>Class별 성능 왜곡</b></td></tr>
+        </tbody>
+      </table>
+      <ul class="pts" style="margin-top:34px">
+        <li>원본 라벨 <b class="tnum">4,399</b>박스를 팀 기준서로 <b>900장 전수 재검수</b>하는 것부터 시작했다</li>
+      </ul>
+    </div>
+    <div class="col" style="width:520px;justify-content:center;gap:14px">
+      <div class="card"><div class="small accent" style="font-weight:800">교과 7</div><b>데이터 품질</b><div class="small muted">라벨링 도구 · 교차검수 · QA</div></div>
+      <div style="text-align:center;font-size:30px;color:var(--faint)">↓</div>
+      <div class="card"><div class="small accent" style="font-weight:800">교과 8</div><b>모델과 정직한 평가</b><div class="small muted">YOLO11 학습 · 실패 분석 · 개선</div></div>
+      <div style="text-align:center;font-size:30px;color:var(--faint)">↓</div>
+      <div class="card" style="border-style:dashed"><div class="small accent" style="font-weight:800">교과 14 <span class="badge b-plan">예정</span></div><b>제조 제품검사</b><div class="small muted">Bridge Holdout 인계</div></div>
+    </div>
+  </div>
+  <footer><div class="fn">"Garbage In, Garbage Out" — 교과 8·14의 성능은 라벨 품질이 결정한다는 전제 (소스 2.1)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>이물검출에서 모델 점수는 정답 라벨과 비교해서 나옵니다.</p>
+    <p>그래서 라벨에 박스가 빠져 있으면 모델이 맞게 찾아도 오탐으로 계산되고, 박스가 너무 크거나 작으면 IoU가 낮아져 mAP가 떨어집니다. 라벨 품질이 곧 성능의 상한인 셈입니다.</p>
+    <p>그래서 저희는 받은 원본 라벨 4,399개를 팀 기준서로 900장 전부 다시 검수하는 것부터 시작했습니다.</p></div>
+    <div class="hand">(넘김) 어떤 데이터였는지는 이후영 님이 설명드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 3 데이터 -->
+<section class="slide" data-id="3" data-speaker="이후영" data-time="50" data-title="데이터 구성">
+  <header><div class="kicker">교과 7 <span class="sep">|</span> 믿을 수 있는 데이터 만들기</div><h1>4K 900장 · 6개 Class · BBox 4,561개</h1></header>
+  <div class="body row" style="gap:56px">
+    <div class="grow" id="chart-classes" aria-label="Class별 최종 BBox 수 막대그래프"></div>
+    <div class="col" style="width:600px">
+      <div class="card"><h3>사진 900장 <span class="muted small">4848×2704 JPG + YOLO TXT</span></h3>
+        <table class="t" style="font-size:23px"><tbody>
+          <tr><td>이물검출_학습데이터1 · train</td><td class="r">500</td></tr>
+          <tr><td>이물검출_학습데이터2 · train</td><td class="r">220</td></tr>
+          <tr><td>이물검출_학습데이터2 · validation</td><td class="r">180</td></tr>
+        </tbody></table>
+      </div>
+      <ul class="pts">
+        <li>갈변 <b class="tnum">313 → 416</b> (+103) — 가장 많이 보강</li>
+        <li>사진 유형: 김치+대상 749 · 대상 단독 150 · 판단 어려움 1</li>
+        <li><b>정상 김치(이물 없음) 0장</b> → 오탐 성능은 재기 어렵다</li>
+      </ul>
+    </div>
+  </div>
+  <footer><div class="fn">AI캠퍼스 교육용 100% 가상 생성 데이터 · Class 4 고무장갑은 0건(번호 유지, 사용 안 함) · 괄호는 원본 대비 증감 · 사진당 BBox 중앙값 5 (소스 2.2, 2.3)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>데이터는 4K 해상도 사진 900장과 같은 이름의 YOLO 라벨 900개입니다.</p>
+    <p>검출할 Class는 6종입니다. 플라스틱·돌·금속이 1,852개로 가장 많고, 파·고추가 255개로 가장 적습니다. 갈변은 원본 313개에서 416개로 가장 많이 보강되었습니다.</p>
+    <p>한 가지 짚어 둘 점은 이물이 없는 정상 김치 사진이 0장이라는 것입니다. 이 부분은 뒤의 한계 슬라이드에서 다시 말씀드리겠습니다.</p></div>
+    <div class="hand">(이어서) 이 900장을 검수한 도구를 보여 드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 4 라벨링 도구 (시연 ①) -->
+<section class="slide" data-id="4" data-speaker="이후영" data-time="50" data-title="라벨링 도구 · 시연 ①">
+  <header><div class="kicker">교과 7 <span class="sep">|</span> 라벨링 도구 (Tkinter, <code>subject7/main.py</code>)</div><h1>직접 만든 라벨링 도구로 한 장씩 검수했다</h1></header>
+  <div class="body row" style="gap:44px">
+    <figure class="slot grow" data-src="private/photos/s04_tool_real.jpg" data-fallback="assets/ui_main.png" data-fallback-caption="라벨링 도구 화면 · 가짜 샘플 사진 기준 (실제 사진 아님)" data-alt="라벨링 도구 실행 화면 (실제 4K 사진 위 BBox·검수 패널)" data-caption="라벨링 도구 실행 화면 · 실제 촬영본 · 로컬 전용"></figure>
+    <div class="col" style="width:720px;gap:16px">
+      <div class="card" style="padding:18px 24px"><b>① 열기</b> <span class="small muted">4K 사진 + 같은 이름 YOLO TXT 자동 로드, 폴더째 열기</span></div>
+      <div class="card" style="padding:18px 24px"><b>② 편집</b> <span class="small muted">추가·이동·8방향 크기·삭제·Class 변경, Undo/Redo, 휠 확대</span></div>
+      <div class="card" style="padding:18px 24px"><b>③ RAW와 비교</b> <span class="small muted"><span style="color:var(--c0);font-weight:700">추가</span> · <span style="color:var(--c5ink);font-weight:700">수정</span> · <span style="color:var(--c1);font-weight:700">삭제(점선)</span></span></div>
+      <div class="card" style="padding:18px 24px"><b>④ 한 키 검수</b> <span class="small muted"><code>Enter</code> 확인 완료 · <code>R</code> 수정 필요 · <code>N</code> 안 한 사진 → 검수표 19칸 자동 기록</span></div>
+      <div class="demo" style="margin-top:6px"><div class="lbl">시연 ① · 30초</div><div class="go">시연 화면으로 전환하세요</div></div>
+    </div>
+  </div>
+  <footer><div class="fn">좌표는 원본 픽셀로 기억하고 그릴 때만 배율 적용 — 900장 Round-trip 900/900 일치, 최대 오차 5e-11 (소스 2.4, 2.5) · 백업: <code>subject7/reports/evidence/program/04_시연영상.mp4</code></div></footer>
+  <aside class="notes">
+    <div class="script"><p>저희가 Tkinter로 직접 만든 라벨링 도구입니다. 4K 사진을 열면 같은 이름의 YOLO 라벨이 자동으로 올라오고, 박스를 고치면 원본과 비교해서 추가·수정·삭제를 색으로 보여 줍니다.</p>
+    <p>검수는 한 키로 합니다. Enter를 누르면 저장하고 다음 사진으로 가면서 검수표에 자동으로 기록됩니다. 직접 보여 드리겠습니다.</p></div>
+    <div class="demo-steps"><b>시연 ① 순서 (30초)</b><ol>
+      <li>발표 전 미리 실행해 둔 창으로 전환: <code>cd subject7 && python main.py</code></li>
+      <li>폴더 열기 → 사진 1장 표시</li>
+      <li>BBox 하나 수정 → <code>Enter</code> (저장 + 다음)</li>
+      <li>도구 ▸ QA 검증 → 결과 창</li></ol>
+      <b>백업 전환 조건</b>: 창이 10초 안에 뜨지 않거나 오류 창이 나오면 바로 백업 영상(<code>04_시연영상.mp4</code>)으로 전환 — "환경 문제라 녹화본으로 보여 드리겠습니다."</div>
+    <div class="hand">(넘김) 이 도구가 원본을 어떻게 지켰는지는 지혜성 님이 이어서 설명드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 5 생명주기 · 안전장치 -->
+<section class="slide" data-id="5" data-speaker="지혜성" data-time="50" data-title="데이터 생명주기 · 안전장치">
+  <header><div class="kicker">교과 7 <span class="sep">|</span> 데이터 생명주기</div><h1>원본은 건드릴 수 없고, 조건을 못 채우면 최종본은 만들어지지 않는다</h1></header>
+  <div class="body col" style="gap:34px">
+    <svg class="chart" viewBox="0 0 1728 330" style="height:330px" role="img" aria-label="RAW에서 WORK를 거쳐 FINAL로 가는 데이터 흐름">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4b5565"/></marker></defs>
+      <rect x="0" y="40" width="330" height="200" rx="18" fill="#f4f5f8" stroke="#1d2433" stroke-width="3"/>
+      <text x="165" y="100" text-anchor="middle" font-size="32" font-weight="800" fill="#1d2433">data/raw</text>
+      <text x="165" y="146" text-anchor="middle" font-size="24" fill="#4b5565">원본 900장</text>
+      <rect x="70" y="172" width="190" height="40" rx="20" fill="#fdecea"/><text x="165" y="200" text-anchor="middle" font-size="21" font-weight="700" fill="#9b1c1c">쓰기 차단 · 불변</text>
+      <line x1="336" y1="140" x2="428" y2="140" stroke="#4b5565" stroke-width="3" marker-end="url(#ar)"/>
+      <text x="382" y="122" text-anchor="middle" font-size="18" fill="#4b5565">읽기 전용</text>
+      <rect x="436" y="60" width="290" height="160" rx="18" fill="#eef0fd" stroke="#4338ca" stroke-width="3"/>
+      <text x="581" y="128" text-anchor="middle" font-size="30" font-weight="800" fill="#312e81">라벨링 도구</text>
+      <text x="581" y="170" text-anchor="middle" font-size="22" fill="#312e81">수정한 라벨만 저장</text>
+      <line x1="732" y1="140" x2="820" y2="140" stroke="#4b5565" stroke-width="3" marker-end="url(#ar)"/>
+      <rect x="828" y="40" width="330" height="200" rx="18" fill="#f4f5f8" stroke="#1d2433" stroke-width="3"/>
+      <text x="993" y="100" text-anchor="middle" font-size="32" font-weight="800" fill="#1d2433">data/work</text>
+      <text x="993" y="144" text-anchor="middle" font-size="22" fill="#4b5565">RAW와 같은 구조</text>
+      <text x="993" y="178" text-anchor="middle" font-size="22" fill="#4b5565">+ 검수표(manifest)</text>
+      <line x1="1164" y1="140" x2="1250" y2="140" stroke="#4b5565" stroke-width="3" marker-end="url(#ar)"/>
+      <rect x="1258" y="20" width="150" height="240" rx="18" fill="#fff2cc" stroke="#7a4b00" stroke-width="3" stroke-dasharray="10 7"/>
+      <text x="1333" y="118" text-anchor="middle" font-size="26" font-weight="800" fill="#7a4b00">빌드</text>
+      <text x="1333" y="152" text-anchor="middle" font-size="26" font-weight="800" fill="#7a4b00">조건</text>
+      <text x="1333" y="196" text-anchor="middle" font-size="17" fill="#7a4b00">build_final.py</text>
+      <line x1="1414" y1="140" x2="1470" y2="140" stroke="#4b5565" stroke-width="3" marker-end="url(#ar)"/>
+      <rect x="1478" y="40" width="250" height="200" rx="18" fill="#e3f3e7" stroke="#1b6b34" stroke-width="3"/>
+      <text x="1603" y="100" text-anchor="middle" font-size="32" font-weight="800" fill="#1b6b34">data/final</text>
+      <text x="1603" y="146" text-anchor="middle" font-size="24" fill="#1b6b34">QA 통과 900장</text>
+      <text x="1603" y="186" text-anchor="middle" font-size="22" fill="#1b6b34">→ 교과 8 인계</text>
+      <text x="1333" y="300" text-anchor="middle" font-size="22" font-weight="700" fill="#9b1c1c">하나라도 어기면 단 1장도 만들지 않음</text>
+    </svg>
+    <div class="row" style="gap:28px">
+      <div class="card grow"><div class="mid accent">①</div><b>900장 모두</b> 검수 완료 / 수정 완료</div>
+      <div class="card grow"><div class="mid accent">②</div><b>작성자 ≠ 검수자</b> (교차검수)</div>
+      <div class="card grow"><div class="mid accent">③</div>Validation <b>CRITICAL 0건</b></div>
+    </div>
+  </div>
+  <footer><div class="fn">Validation 9개 점검 항목: 짝 없음 · TXT 형식 · Class 범위 · Class 4 · 좌표 범위 · BBox 경계 밖 · 중복 BBox · 빈 TXT · 너무 작은 BBox (소스 2.4, 2.5)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>저는 QA와 Validation을 맡은 지혜성입니다.</p>
+    <p>데이터는 세 단계로 관리했습니다. 원본은 프로그램이 쓰기를 막아서 바뀌지 않고, 고친 라벨만 work 폴더에 저장됩니다.</p>
+    <p>최종본은 빌드 스크립트가 만드는데, 900장 모두 검수가 끝났는지, 작성자와 검수자가 다른지, Validation 치명 오류가 0건인지 세 가지 중 하나라도 어기면 단 한 장도 만들지 않습니다. 사람의 실수를 구조로 막은 것입니다.</p></div>
+    <div class="hand">(이어서) 그 결과를 숫자로 보여 드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 6 QA 결과 -->
+<section class="slide" data-id="6" data-speaker="지혜성" data-time="50" data-title="QA 결과">
+  <header><div class="kicker">교과 7 <span class="sep">|</span> QA 결과</div><h1>결과: 전수·교차검수 100%, 라벨 26% 수정, 잔여 이슈 0</h1></header>
+  <div class="body row" style="gap:44px">
+    <div class="grow" style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-content:start">
+      <div class="card"><div class="big">900<span style="font-size:44px">/900</span></div><div class="lab">전수 검수 (100%)</div></div>
+      <div class="card"><div class="big">100%</div><div class="lab">교차검수 · 작성자 ≠ 검수자<br>(일반 권장 표본검수 20~30%)</div></div>
+      <div class="card hl"><div class="big accent">235<span style="font-size:44px">장</span></div><div class="lab">라벨이 바뀐 사진 (26.1%)</div></div>
+      <div class="card"><div class="mid" style="font-size:42px;white-space:nowrap">4,399 → 4,561</div><div class="lab">BBox · 추가 166 · 수정 173 · 삭제 4</div></div>
+      <div class="card"><div class="mid">0 · 0 · 0</div><div class="lab">Validation CRITICAL · WARNING · INFO</div></div>
+      <div class="card"><div class="big">0<span style="font-size:44px">건</span></div><div class="lab">미처리 REVIEW</div></div>
+    </div>
+    <div class="col" style="width:480px">
+      <div class="small" style="font-weight:700">개발 중 이슈 28건 → 남은 이슈 0</div>
+      <div id="chart-issues" style="height:420px" aria-label="일차별 이슈 수 막대그래프"></div>
+      <div class="small muted">최종 판정 <span class="badge b-done">교과 8 사용 가능</span><br>FAIL 0 · REVIEW 0</div>
+    </div>
+  </div>
+  <footer><div class="fn">수정은 Class 번호를 그대로 두고 경계·누락 판단을 팀 기준서로 통일한 결과 · RAW 보존, Diff로 전부 비교 가능 · <b>검수자 간 일치도(IAA)는 측정하지 않음</b> (소스 2.6, 9.4)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>900장 전부를 검수했고, 작성자와 검수자가 다른 교차검수를 100% 적용했습니다.</p>
+    <p>그 과정에서 235장, 26.1%의 라벨이 바뀌었습니다. 박스는 4,399개에서 4,561개가 되었고, 추가 166개, 수정 173개, 삭제 4개입니다. Class 번호는 그대로 두고 경계와 누락 판단을 팀 기준서로 통일한 결과이며, 원본이 보존되어 있어 바뀐 내용을 전부 비교할 수 있습니다.</p>
+    <p>개발 중 이슈 28건은 모두 해결했고, 최종 판정은 교과 8 사용 가능입니다. 다만 검수자 간 일치도는 따로 재지 않았습니다.</p></div>
+    <div class="hand">(이어서) 이제 교과 8로 넘어가서, 지금 어디까지 왔는지 먼저 보여 드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 7 현재 위치 -->
+<section class="slide" data-id="7" data-speaker="지혜성" data-time="30" data-title="현재 위치">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> 모델과 정직한 평가</div><h1>지금 우리는 여기까지 와 있다</h1></header>
+  <div class="body col" style="gap:40px;justify-content:center">
+    <div class="pipe">
+      <div class="st done"><b>Dataset Audit</b><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>Split (v5)</b><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>Baseline</b><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>실패 분석</b><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>개선 실험 1~4라운드</b><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>Final Model</b><span class="small">exp050</span><span class="badge b-done">완료 · 10-20</span></div>
+    </div>
+    <div class="pipe">
+      <div class="st done"><b>Frozen Test 1회</b><span class="small">0.639</span><span class="badge b-done">완료 · 10-20</span></div>
+      <div class="st done"><b>Detection 시연</b><span class="badge b-done">가능</span></div>
+      <div class="st plan"><b>Auto Label</b><span class="badge b-plan">예정</span></div>
+      <div class="st plan"><b>Human Review</b><span class="badge b-plan">예정</span></div>
+      <div class="st plan"><b>교과 14 Handoff</b><span class="badge b-plan">예정 · 9일차</span></div>
+    </div>
+    <ul class="pts">
+      <li>교과 7: 2026-10-06 ~ 10-08 인계 완료 · 교과 8: 2026-10-12 ~ (10-20 Final 확정)</li>
+    </ul>
+  </div>
+  <footer><div class="fn">Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 의 seed 2개(exp026·027)는 재학습 중이나 결론에 영향 없음 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 (소스 1.1, 3.1)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>교과 8은 지금 이 단계에 와 있습니다.</p>
+    <p>데이터 점검부터 개선 실험 네 라운드까지 마쳤고, 오늘 아침 Final Model을 확정해 Frozen Test로 딱 한 번 평가했습니다. Auto Label과 사람 검토, 교과 14 인계 문서는 아직 남아 있어서 완료로 말씀드리지 않습니다.</p></div>
+    <div class="hand">(넘김) 첫 모델이 무엇을 놓쳤는지는 김동훈 님이 설명드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 8 Baseline · 실패 분석 -->
+<section class="slide" data-id="8" data-speaker="김동훈" data-time="65" data-title="Baseline · 실패 분석">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> Baseline (YOLO11n · 640)</div><h1>Baseline은 작은 이물을 놓친다 <span style="color:var(--c5ink)">(갈변 Recall 0)</span></h1></header>
+  <div class="body row" style="gap:40px">
+    <div class="col grow" style="gap:10px">
+      <div class="small" style="font-weight:700">물체 크기별 Recall — 작을수록 사라진다</div>
+      <div id="chart-size" style="flex:1;min-height:0" aria-label="크기별 Recall 막대그래프"></div>
+      <div class="card hl" style="padding:14px 22px" ><b>원인</b> 4848×2704를 640으로 줄이면 20~30px 갈변은 <b>3px 안팎</b> → 개선 방향 = <b>해상도</b></div>
+    </div>
+    <div class="col" style="width:640px;gap:16px">
+      <div class="row" style="gap:14px">
+        <div class="card grow" style="padding:14px 18px"><div class="mid" style="font-size:44px">0.888</div><div class="lab" style="margin-top:2px">Precision</div></div>
+        <div class="card grow" style="padding:14px 18px"><div class="mid" style="font-size:44px">0.589</div><div class="lab" style="margin-top:2px">Recall</div></div>
+        <div class="card grow hl" style="padding:14px 18px"><div class="mid accent" style="font-size:44px">0.470</div><div class="lab" style="margin-top:2px">mAP50-95</div></div>
+      </div>
+      <div class="small" style="font-weight:700">정답 541 중 TP 395 · 실패 233건</div>
+      <div id="chart-fail" style="height:220px" aria-label="실패 유형별 건수"></div>
+      <div class="row" style="gap:12px;height:168px">
+        <figure class="slot grow" data-src="private/photos/s08_fn.jpg" data-alt="놓친 정답(FN)" data-caption="FN · Val · kimchi_v5"></figure>
+        <figure class="slot grow" data-src="private/photos/s08_fp_background.jpg" data-alt="배경 오탐" data-caption="FP 배경 · Val"></figure>
+        <figure class="slot grow" data-src="private/photos/s08_class_error.jpg" data-alt="Class 혼동" data-caption="Class 혼동 · Val"></figure>
+      </div>
+    </div>
+  </div>
+  <footer><div class="fn">kimchi_v5 Validation 104장 · 정답 BBox 541 · YOLO11n·640·50 epoch · mAP는 Val best epoch · 실패 분석은 conf 0.25 · IoU 0.5 짝짓기 · S &lt;150px, M 150~300px, L ≥300px (소스 3.6, 3.7, 9.2)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>저는 김동훈입니다. 첫 Baseline은 YOLO11n을 640 해상도로 학습했고, mAP50-95 0.470, Recall 0.589였습니다.</p>
+    <p>정답 541개 중 111개를 놓쳤는데, 크기별로 나눠 보니 원인이 보였습니다. 플라스틱·돌은 작은 구간 Recall이 0.613, 중간 구간이 0.839였고, 작은 갈변은 15개 중 하나도 찾지 못했습니다.</p>
+    <p>4K 원본을 640으로 줄이면 20~30픽셀짜리 갈변이 3픽셀 정도가 되어 사라집니다. 그래서 개선 실험의 방향을 해상도로 정했습니다.</p></div>
+    <div class="hand">(이어서) 그런데 실험에 들어가기 전에, 평가 데이터 자체에 문제가 있다는 걸 발견했습니다.</div>
+  </aside>
+</section>
+
+<!-- 9 v4 누수 → v5 -->
+<section class="slide" data-id="9" data-speaker="김동훈" data-time="90" data-title="v4 누수 발견 → v5 재분할">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> 가장 중요한 발견</div><h1>점수가 높았던 v4는 누수였다 → v5 재분할</h1></header>
+  <div class="body row" style="gap:44px">
+    <div class="col" style="width:640px;gap:20px">
+      <div class="small" style="font-weight:700">Validation 중 Train과 <u>같은 촬영 묶음</u> 출신</div>
+      <div class="row" style="align-items:flex-end;gap:26px">
+        <div><div class="big" style="font-size:132px;color:var(--c1)">63%</div><div class="lab">kimchi_v4 · 83 / 132장</div></div>
+        <div style="font-size:60px;color:var(--faint);padding-bottom:40px">→</div>
+        <div><div class="big" style="font-size:132px;color:var(--done)">6%</div><div class="lab">kimchi_v5 · 6 / 104장</div></div>
+      </div>
+      <ul class="pts" style="margin-top:8px">
+        <li>v4는 이미 본 장면으로 시험 본 셈 (v4 갈변 AP50 0.86은 같은 묶음 G09)</li>
+        <li>v5: 18개 촬영 묶음을 <b>통째로</b> 한 역할에 배정, 예외는 G00 하나</li>
+      </ul>
+    </div>
+    <div class="col grow" style="gap:18px">
+      <table class="t" style="font-size:24px">
+        <thead><tr><th>항목</th><th class="r">kimchi_v4</th><th class="r">kimchi_v5 (공식)</th></tr></thead>
+        <tbody>
+          <tr><td>Train 장수</td><td class="r">526</td><td class="r"><b>558</b></td></tr>
+          <tr><td>나눠진 촬영 묶음</td><td class="r">3 (G00·G09·G12)</td><td class="r"><b>1 (G00)</b></td></tr>
+          <tr><td>Val 장수</td><td class="r">132</td><td class="r">104</td></tr>
+          <tr><td>Val에서 가장 적은 Class 박스</td><td class="r">36 (벌레)</td><td class="r">15 (갈변)</td></tr>
+        </tbody>
+      </table>
+      <figure class="slot" style="flex:1" data-src="private/photos/s09_g00_sheet.jpg" data-alt="G00 촬영 순서 사진판 (촬영 묶음 개념)" data-caption="촬영 묶음 G00 · 촬영 순서 사진판(50장, 간격 표시) · 실제 촬영본 · 로컬 전용"></figure>
+    </div>
+  </div>
+  <footer><div class="fn">촬영 묶음 = 촬영 시각 간격 5분(300초) 초과 지점에서 자동 분리한 G00~G17 · v5 분할 Train 558 · Val 104 · Test 82 · Bridge 156 · <b>v4와 v5는 Val이 달라 점수를 직접 비교하지 않음</b> (소스 3.3, 3.4, 9.3)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>이 슬라이드가 저희 발표에서 가장 중요한 결과입니다.</p>
+    <p>v4 분할에서는 Validation 132장 중 83장, 63%가 Train과 같은 촬영 묶음에서 나왔습니다. 같은 장면을 이미 본 채로 시험을 본 셈이라 점수가 부풀려져 있었습니다. 예를 들어 v4의 갈변 AP50 0.86은 Train과 같은 묶음의 갈변이었습니다.</p>
+    <p>그래서 10월 16일에 18개 촬영 묶음을 통째로 한 역할에 배정하는 v5로 다시 나눴고, 같은 묶음 출신은 6장, 6%로 줄었습니다.</p>
+    <p>점수는 낮아졌지만, 처음 보는 장면에 대한 성능에 더 가까운 정직한 숫자가 되었습니다. 대가로 희소 Class 박스가 15개까지 줄어든 점은 한계에서 말씀드리겠습니다.</p></div>
+    <div class="hand">(넘김) 이 정직한 평가 세트 위에서 진행한 개선 실험은 손상우 님이 설명드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 10 개선 실험 -->
+<section class="slide" data-id="10" data-speaker="손상우" data-time="60" data-title="개선 실험 결과">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> 개선 실험 (kimchi_v5, 같은 Val 104장)</div><h1>개선 실험: 0.470 → 0.739 <span class="sub">같은 조건을 seed 5개로 반복한 평균 — Final 조건 (11s · 2240)</span></h1></header>
+  <div class="body col" style="gap:12px">
+    <div class="row small" style="gap:26px;align-items:center">
+      <span><b>Val mAP50-95</b> · 막대 = 평균, <span style="color:#a14b00;font-weight:700">주황 선 = seed별 최저~최고</span></span>
+      <span class="badge b-acc">Final 조건</span><span class="badge" style="background:#f1f2f4;color:#5b6370">seed 1개</span>
+    </div>
+    <div id="chart-exp" style="flex:1;min-height:0" aria-label="조건별 Val mAP50-95 막대그래프 (seed 평균과 범위)"></div>
+    <div class="card small" style="padding:12px 22px"><b>해 봤지만 기각</b> — epoch 100 (+0.003, 학습 2배) · 11s 타일링 (−0.006, 학습 4배) · 증강 끄기 (−0.008) · 11s·1280 (−0.044) · TTA·agnostic NMS (손해) <span class="muted">· 전체 표 부록 A1</span></div>
+  </div>
+  <footer><div class="fn">값은 Val best epoch · 11n 세 줄과 C(11m)는 seed 1개 · A = exp007·013·014, B = exp015·016·018·049·050 · <b>seed 만 바꿔도 같은 조건이 0.02 흔들림</b>(B 0.726~0.749) → 후보는 평균끼리 비교 · 해상도를 올리면 GPU 메모리로 batch가 줄어듦(1920 → 3, 2240 → 2) (소스 3.8, 3.8.1)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>저는 손상우입니다. Baseline 0.470에서 출발해 해상도를 1280, 1920으로 올리면서 0.704까지 올랐습니다.</p>
+    <p>그런데 같은 조건을 seed만 바꿔 다시 돌려 보니 점수가 0.02까지 흔들렸습니다. 그래서 그 뒤로는 실험 한 번이 아니라 seed 여러 개의 평균으로 비교했습니다.</p>
+    <p>그 결과 YOLO11s에 해상도 2240인 조건 B가 seed 5개 평균 0.739로 가장 높았고, 이것이 Final 조건입니다. 에폭 늘리기, 타일링, 증강 끄기 같은 실험은 효과가 없어 기각했습니다.</p></div>
+    <div class="hand">(이어서) 그럼 이 B 안에서 Final을 어떻게 골랐는지 보여 드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 11 Final 선택 규칙 -->
+<section class="slide" data-id="11" data-speaker="손상우" data-time="35" data-title="Final을 고른 규칙">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> Final Model 선택 · 4라운드 (6명 PC 밤샘, 6방향 × seed 5개)</div><h1>미리 정한 규칙대로 골랐다 → Final = exp050</h1></header>
+  <div class="body row" style="gap:40px">
+    <div class="col" style="width:620px;gap:16px">
+      <div class="card" style="padding:18px 24px"><div class="small accent" style="font-weight:800">규칙 · 학습 시작 전에 기록 (10-19 16:42 커밋)</div>
+        <ol class="small" style="margin:8px 0 0;padding-left:1.3em;line-height:1.5"><li>방향마다 seed 5개 → <b>평균끼리</b> 비교</li><li>B 평균보다 <b>+0.02 이상</b>인 방향 중 최고를 채택</li><li>없으면 <b>B 그대로</b>, B 안에서 Val 최고 실행이 Final</li></ol></div>
+      <div class="card hl" style="padding:18px 24px"><div class="small" style="font-weight:800">결과</div>
+        <div style="font-size:30px;font-weight:800;line-height:1.35">+0.02 넘은 방향 없음 (최고 ② +0.001)<br>→ B 그대로 → <span class="accent">exp050</span></div>
+        <div class="small muted" style="margin-top:6px">YOLO11s · imgsz 2240 · 증강 · seed 2 · 학습 62분 · Val 0.749</div></div>
+    </div>
+    <div class="col grow" style="gap:8px;min-height:0">
+      <div class="small" style="font-weight:700">B 기반 개선 6방향 — <span class="accent">큰 점 = seed 5개 평균</span> · 작은 점 = seed 하나 (축 0.70~0.77 확대)</div>
+      <div id="chart-r4" style="flex:1;min-height:0" aria-label="4라운드 방향별 seed 평균 막대그래프와 채택선"></div>
+    </div>
+  </div>
+  <footer><div class="fn">① 반점 복제 · ② 반점 합성 · ③ 해상도 2560 · ④ 지운 반점 복원 + 복제 · ⑤ ③+① · ⑥ ③+② · ③은 seed 3개(exp026·027 재학습 중, 두 개가 각 0.80 이상이어야 채택선 도달 → 결론 불변) · 판정은 Validation만 (소스 3.10, 3.13)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>Final은 결과를 보기 전에 정해 둔 규칙으로 골랐습니다. 어제 오후 학습을 걸기 전에, 방향마다 seed 5개 평균으로 비교하고 B보다 0.02 이상 오른 방향이 없으면 B를 그대로 쓴다고 커밋해 두었습니다.</p>
+    <p>밤새 여섯 대 PC로 여섯 방향을 돌렸는데, 가장 좋은 반점 합성도 0.001 차이였습니다. 그래서 규칙대로 B를 유지하고, B 안에서 Validation이 가장 높은 exp050을 Final로 정했습니다.</p></div>
+    <div class="hand">(넘김) 이 실험들에서 무엇을 배웠는지, 그리고 Test 결과는 김석범 님이 말씀드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 12 인사이트 -->
+<section class="slide" data-id="12" data-speaker="김석범" data-time="40" data-title="무엇이 효과 있었나">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> 인사이트</div><h1>무엇이 효과 있었나 — 해상도는 2240까지, 나머지는 기각</h1></header>
+  <div class="body row" style="gap:40px">
+    <div class="grow" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-content:start">
+      <div class="card hl"><h3>해상도 ↑ <span class="badge b-acc">가장 큼</span></h3><div class="mid accent">+0.234</div><div class="lab">11n 640 → 1920<br>0.470 → 0.646 → 0.704</div></div>
+      <div class="card hl"><h3>모델 11n → 11s</h3><div class="mid accent">+0.040</div><div class="lab">같은 증강 조건(exp005 기준)<br>11m은 seed 1개 0.730 — 메모리 한계</div></div>
+      <div class="card"><h3>seed 흔들림 = 판정 기준</h3><div class="mid">0.02</div><div class="lab">같은 조건 B: 0.726 ~ 0.749<br>→ seed 5개 평균으로 판정</div></div>
+      <div class="card"><h3>효과 없음 ✕</h3><div class="mid" style="font-size:40px">epoch · 타일링 · TTA</div><div class="lab">+0.003 · −0.006 · 손해<br>갈변 대책 4방향도 효과 없음</div></div>
+    </div>
+    <div class="col" style="width:700px;gap:8px">
+      <div class="small" style="font-weight:700">11s 해상도별 Val mAP50-95 — 2240에서 멈춘다</div>
+      <div id="chart-res" style="flex:1;min-height:0" aria-label="11s 해상도별 Val mAP50-95 막대그래프"></div>
+    </div>
+  </div>
+  <footer><div class="fn">2560은 학습 약 1.4배(88분)인데 더 낮음 · B 모델을 학습 없이 큰 해상도로 예측해도 2240 0.749 · 2560 0.751 · 2880 0.749 (예측 37 → 49 → 61ms/장) · 11n 해상도 효과는 seed 1개, 11s는 평균 (소스 3.8 인사이트, 3.10)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>저는 김석범입니다. 가장 큰 효과는 해상도였습니다. 작은 이물이 수 픽셀로 사라지지 않게 되면서 0.234가 올랐고, 모델을 11s로 키운 효과도 0.040이었습니다.</p>
+    <p>다만 해상도는 2240에서 멈췄습니다. 2560은 학습이 1.4배 걸리는데 점수는 오히려 낮았습니다.</p>
+    <p>에폭, 타일링, 추론 옵션은 효과가 없었고, seed만 바꿔도 0.02가 흔들린다는 것을 알게 되어 평균으로 판정했습니다.</p></div>
+    <div class="hand">(이어서) 이렇게 고른 Final을 처음 보는 Test로 한 번 평가한 결과입니다.</div>
+  </aside>
+</section>
+
+<!-- 13 Frozen Test -->
+<section class="slide" data-id="13" data-speaker="김석범" data-time="50" data-title="Frozen Test 결과">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> Frozen Test · 82장 · 단 1회</div><h1>Final의 실력은 Frozen Test 0.639로 말한다</h1></header>
+  <div class="body row" style="gap:40px">
+    <div class="col" style="width:620px;gap:16px">
+      <div class="row" style="align-items:flex-end;gap:22px">
+        <div><div class="big" style="font-size:92px;color:var(--faint)">0.749</div><div class="lab" style="white-space:nowrap">Validation<br>선택에 쓴 점수<br>seed 5개 중 최고</div></div>
+        <div style="font-size:54px;color:var(--faint);padding-bottom:58px">→</div>
+        <div><div class="big accent" style="font-size:112px">0.639</div><div class="lab"><b style="color:var(--ink)">Frozen Test</b> mAP50-95</div></div>
+      </div>
+      <div class="row" style="gap:12px">
+        <div class="card grow" style="padding:12px 16px"><div class="mid" style="font-size:40px">0.868</div><div class="lab" style="margin-top:2px">Precision</div></div>
+        <div class="card grow" style="padding:12px 16px"><div class="mid" style="font-size:40px">0.744</div><div class="lab" style="margin-top:2px">Recall</div></div>
+        <div class="card grow" style="padding:12px 16px"><div class="mid" style="font-size:40px">0.726</div><div class="lab" style="margin-top:2px">mAP50</div></div>
+      </div>
+      <ul class="pts small" style="gap:10px">
+        <li>차이 0.110 중 <b>0.066이 나뭇잎·종이 한 Class</b> — Test에서 오탐 많음 (P 0.367)</li>
+        <li>갈변은 Test 16개 중 <b>0개</b> 찾음</li>
+        <li>가장 많은 플라스틱·돌·금속은 0.844 → 0.840으로 같다</li>
+      </ul>
+    </div>
+    <div class="col grow" style="gap:8px;min-height:0">
+      <div class="small" style="font-weight:700">Class별 mAP50-95 — <span style="color:#8a93a3">Val</span> vs <span class="accent">Frozen Test</span></div>
+      <div id="chart-test" style="flex:1;min-height:0" aria-label="Class별 Val과 Test mAP50-95 비교 막대그래프"></div>
+    </div>
+  </div>
+  <footer><div class="fn">Test 82장 · 432박스 (G07·G14 + G00 6장, Val과 다른 촬영 묶음) · 선택 문서를 쓴 <b>뒤 1회</b> 평가, 이 점수로 다시 고르지 않음 · 10-16에 확정 전 한 번 본 사실은 부록 A5 · Class 기여 = (Val − Test) ÷ 6 · Class 4는 Test에도 0건 · 상세 부록 A9 (소스 3.13)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>Validation 0.749는 모델을 고르는 데 쓴 점수라서 조금 부풀어 있습니다. 같은 조건 다섯 번의 평균은 0.739였습니다. 그래서 Final의 실력은 한 번도 쓰지 않은 Frozen Test 82장으로 단 한 번 평가한 0.639로 말씀드립니다.</p>
+    <p>0.11이 낮아졌는데, Class별로 보면 그중 0.066이 나뭇잎·종이 한 Class입니다. Test에서 다른 것을 나뭇잎·종이로 부르는 오탐이 많았고, 원인은 아직 분석하지 않았습니다. 갈변은 Test에서 하나도 찾지 못했습니다.</p>
+    <p>반대로 가장 많은 플라스틱·돌·금속은 Validation과 거의 같았습니다. 이 Test 점수를 보고 모델을 다시 고르지는 않았습니다.</p></div>
+    <div class="hand">(이어서) 그래서 저희가 주장하지 않는 것을 먼저 말씀드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 14 한계 -->
+<section class="slide" data-id="14" data-speaker="김석범" data-time="50" data-title="한계">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> 한계</div><h1>한계를 먼저 말한다</h1></header>
+  <div class="body col" style="gap:20px">
+    <div class="row" style="gap:36px;flex:1;min-height:0">
+      <table class="t grow" style="font-size:22px">
+        <thead><tr><th style="width:22%">한계</th><th>내용</th><th style="width:26%">대응</th></tr></thead>
+        <tbody>
+          <tr><td><span class="cls"><i class="k5"></i><b>갈변 (Class 5)</b></span></td><td>Train은 대부분 잎 전체 갈변(200px 이상), 평가는 25px 안팎 작은 반점 — <b>다른 물체</b>. Final도 Val 0.115, <b>Test Recall 0</b>. 반점 대책 4방향 × seed 5개 효과 없음</td><td><b>개선 중단, 한계로 보고</b> → 같은 기준 라벨링·반점 사진·Class 분리 결정 (교과 14)</td></tr>
+          <tr><td><span class="cls"><i class="k0"></i><b>Test 나뭇잎·종이</b></span></td><td>Test 오탐 많음 (P 0.367 · R 0.855, 정답 23박스) — Val↔Test 차이의 대부분</td><td>원인 분석 전 → 교과 14에서 새 데이터로</td></tr>
+          <tr><td><b>작은 평가 세트</b></td><td>Val 104장 · Test 82장, 희소 Class 15~29박스 → 박스 1개에 Recall 3~7%p</td><td>seed 5개 평균으로 판정</td></tr>
+          <tr><td><b>같은 날·같은 소품</b></td><td>평가 사진도 Train과 같은 날 촬영 → "본 물체를 새 장면에" 놓은 성능. 파·고추 255박스 중 250개가 한 묶음</td><td>한계로 기록, Class 6 따로 표시</td></tr>
+          <tr><td><b>정상 김치 0장</b></td><td>이물 없는 사진의 오탐(FP) 성능을 잴 수 없음</td><td>교과 14 데이터</td></tr>
+        </tbody>
+      </table>
+      <figure class="slot" style="width:430px" data-src="private/photos/s08_c5_train_vs_val.jpg" data-alt="갈변: Train(큰 조각) vs Val(작은 점)" data-caption="갈변 Train(큰 조각) vs Val(작은 점) · 실제 촬영본 · 로컬 전용"></figure>
+    </div>
+    <div>
+      <div class="small" style="font-weight:800;margin-bottom:10px">우리가 주장할 수 없는 것 9가지</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px" class="small">
+        <span class="badge b-warn">① 현장(생산라인) 성능</span><span class="badge b-warn">② 처음 보는 물체 일반화</span><span class="badge b-warn">③ 정상 김치 오탐률</span><span class="badge b-warn">④ 작은 반점 갈변 검출</span><span class="badge b-warn">⑤ 현장 실시간 처리</span><span class="badge b-warn">⑥ seed 1개의 0.02 차이</span><span class="badge b-warn">⑦ 라벨러 간 일치도</span><span class="badge b-warn">⑧ Val 0.749가 실력</span><span class="badge b-warn">⑨ 나뭇잎·종이 오탐 원인</span>
+      </div>
+    </div>
+  </div>
+  <footer><div class="fn">갈변 라벨 기준이 구간마다 다름: v3 개정 때 작은 반점을 Train 20→8 · Val 41→15로 줄였고 Test는 14→14 그대로 — 되살린 실험(④)도 B와 같아 원인은 아니었음 · 예측 속도는 사진 1장 약 37ms(RTX 3060)만 측정 · 머리카락·실은 Class에 없음 (소스 3.9, 9.7)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>저희가 못 하는 것을 먼저 말씀드리겠습니다.</p>
+    <p>가장 큰 한계는 갈변입니다. 학습 데이터의 갈변은 대부분 잎 전체가 변한 큰 조각인데, 평가에는 작은 반점이 대부분이라 사실상 다른 물체입니다. 반점을 늘리고 합성하는 방법을 seed 다섯 개씩 돌려 봤지만 효과가 없어서, 학습 기법이 아니라 데이터 문제로 보고 개선을 멈췄습니다.</p>
+    <p>두 번째는 방금 본 Test의 나뭇잎·종이 오탐입니다. 원인은 아직 분석하지 않았습니다. 그리고 평가 세트가 작고, 같은 날 같은 소품으로 촬영되었고, 정상 김치가 없습니다.</p>
+    <p>아래 아홉 가지는 오늘 저희가 주장하지 않는 것들입니다.</p></div>
+    <div class="hand">(넘김) 이제 Final Model이 실제로 찾는 모습을 손상우 님이 보여 드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 15 검출 시연 ② -->
+<section class="slide" data-id="15" data-speaker="손상우" data-time="85" data-title="[라이브] 검출 시연 ②">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> 라이브 시연 ② <span class="badge b-done" style="font-size:20px">Final Model · exp050</span></div><h1>[라이브] Final Model이 실제로 찾는 모습</h1></header>
+  <div class="body col" style="gap:18px">
+    <div class="demo"><div class="lbl">시연 ② · 1분 25초</div><div class="go">시연 화면으로 전환하세요</div>
+      <div class="small" style="margin-left:auto;text-align:right">kimchi_v5 Validation 사진 · YOLO11s · imgsz 2240 · conf 0.25 · 약 37ms/장<br>Frozen Test mAP50-95 <b>0.639</b> · 놓친 것·틀린 것도 함께 보여 드립니다</div></div>
+    <div class="row" style="gap:22px;flex:1;min-height:0">
+      <div class="col grow" style="gap:8px;min-height:0">
+        <figure class="slot" style="flex:1" data-src="private/photos/s15_detect_1.jpg" data-alt="Final 정답 vs 예측 비교 1" data-caption="백업 1 · Final · Val G13 · 정답 6 · 예측 4 · 놓침 2 (갈변·나뭇가지) · 오탐 0 — 왼쪽 정답 / 오른쪽 예측"></figure>
+        <figure class="slot" style="flex:1" data-src="private/photos/s15_detect_2.jpg" data-alt="Final 정답 vs 예측 비교 2" data-caption="백업 2 · Final · Val G05 · 정답 7 · 예측 6 · 놓침 1 (갈변 2개 중 1개는 찾음) · 오탐 0"></figure>
+        <figure class="slot" style="flex:1" data-src="private/photos/s15_detect_3.jpg" data-alt="Final 정답 vs 예측 비교 3" data-caption="백업 3 · Final · Val G13 · 정답 6 · 예측 6 · 놓침 1 (갈변) · 오탐 1 (나뭇잎·종이, 0.45)"></figure>
+      </div>
+      <figure class="slot" style="width:440px" data-type="video" data-src="private/photos/s15_backup.mp4" data-alt="시연 ② 백업 영상" data-caption="백업 영상 · 시연 ② 화면 녹화"></figure>
+    </div>
+  </div>
+  <footer><div class="fn">Validation 사진으로 시연 (Frozen Test·Bridge는 스크립트가 막음) · 명령: <code>.venv/bin/python scripts/08_predict_images.py --model final --limit 3</code> (imgsz는 학습 때 값 2240 자동) · 예측 시간은 사진 1장, RTX 3060 기준 (소스 1.2, 3.13)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>지금 보여 드리는 모델이 Final Model, exp050입니다.</p>
+    <p>kimchi_v5의 Validation 사진으로 하고, 해상도 2240, confidence 0.25입니다. 사진 한 장 예측에 약 37밀리초가 걸립니다. 왼쪽이 정답, 오른쪽이 모델 예측입니다.</p>
+    <p>작은 이물까지 찾도록 해상도를 키운 것이 개선의 핵심이었고, 보시는 것처럼 놓친 것과 틀린 것도 있습니다.</p></div>
+    <div class="demo-steps"><b>시연 ② 순서 (1분 25초)</b><ol>
+      <li>발표 직전에 같은 명령을 한 번 미리 실행해 모델 로드를 끝내 둔다 (첫 실행은 느림)</li>
+      <li>터미널: <code>cd ~/group_3/subject8</code> → <code>.venv/bin/python scripts/08_predict_images.py --model final --limit 3</code></li>
+      <li>결과 폴더 <code>runs/predict/&lt;이름&gt;/compare/*.jpg</code> 를 열어 3장 차례로 보여 주기 (이름은 실행 화면에 표시됨)</li>
+      <li>각 장에서 찾은 것 1개 + 놓치거나 틀린 것 1개를 짚기</li></ol>
+      <b>백업 사진 3장</b> (10-20 Final로 생성, 10-19 exp007 백업과 같은 Val 사진 — G00 예외 묶음 아님, <code>--source</code>로 지정): 백업 1 <code>250424_143312128093</code> · 백업 2 <code>250411_095845387065</code> · 백업 3 <code>250424_143017228317</code>. exp007 대비: 백업 1만 오탐 1 → 0, 백업 2·3은 같은 결과 (백업 2는 둘 다 갈변 2개 중 1개를 찾음, Final conf 0.61). 세 장 모두 갈변을 하나씩 놓침 → 14번 한계와 연결해서 말하기.<br>
+      <b>주의</b>: 시연 PC에서 학습이 돌고 있으면 GPU 메모리가 넘친다 → 시연 전에 학습을 끝내거나 다른 PC 사용.<br>
+      <b>백업 전환 조건</b>: import 오류 / GPU 오류 / 경로 오류, 또는 20초 안에 결과가 안 나오면 즉시 이 슬라이드로 돌아와 백업 이미지·영상 → "환경 문제라 미리 저장한 결과로 보여 드리고, 발표 후 확인하겠습니다."</div>
+    <div class="hand">(넘김) 다음 단계는 강동연 님이 정리해 드리겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 16 다음 단계 -->
+<section class="slide" data-id="16" data-speaker="강동연" data-time="30" data-title="다음 단계 · 교과 14 인계">
+  <header><div class="kicker">다음 단계</div><h1>다음 단계와 교과 14로 넘기는 것</h1></header>
+  <div class="body col" style="gap:30px">
+    <div class="pipe">
+      <div class="st done"><b>Final Model</b><span class="small">exp050 · Validation 근거만</span><span class="badge b-done">완료</span></div>
+      <div class="st done"><b>Frozen Test 1회</b><span class="small">82장 · 0.639</span><span class="badge b-done">완료</span></div>
+      <div class="st plan"><b>Auto Label + Human Review</b><span class="small">후보 TXT → 교과 7 도구에서 사람이 승인</span><span class="badge b-plan">예정</span></div>
+      <div class="st plan"><b>교과 14 Handoff</b><span class="small">문서 작성</span><span class="badge b-plan">9일차 예정</span></div>
+    </div>
+    <div class="row" style="gap:30px;align-items:flex-start">
+      <div class="card grow"><h3>교과 14로 넘기는 것</h3>
+        <ul class="pts small" style="gap:12px"><li>Final Model + Bridge Holdout <b>156장</b> (한 번도 쓰지 않음)</li><li><b>갈변 = 데이터 과제</b>: 같은 기준으로 반점 라벨링 · 반점 사진 더 모으기 · "잎 전체 갈변"과 "작은 반점" Class 분리 결정</li><li>나뭇잎·종이 Test 오탐 원인 분석</li><li>정상 김치 데이터 · 머리카락·실 등 Class 추가 협의</li></ul></div>
+      <div class="card grow hl"><h3>비솔 측에 드리는 요청</h3>
+        <ul class="pts small" style="gap:12px"><li>갈변 라벨 기준 확인 (잎 전체 vs 작은 반점)</li><li>정상 김치 샘플 제공 가능 여부</li><li>Class 추가 여부 (머리카락·실 등)</li><li>현장 요구 성능 지표 (놓침·오탐 허용치)</li></ul></div>
+    </div>
+  </div>
+  <footer><div class="fn">요구 지표는 받은 기록이 없음 — 알려 주시면 "오탐 N건 이하에서의 Recall" 같은 지표로 다시 평가 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 (소스 3.9, 3.11, 9.8 Q20)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>Final Model 선택과 Frozen Test는 끝났고, 남은 일은 자동 라벨 후보를 교과 7 도구에서 사람이 검토하는 흐름과 교과 14 인계 문서입니다.</p>
+    <p>교과 14에는 Final Model과 한 번도 쓰지 않은 Bridge Holdout 156장, 그리고 갈변 데이터 과제와 나뭇잎·종이 오탐 분석을 넘깁니다.</p>
+    <p>그리고 비솔 측에 갈변 라벨 기준, 정상 김치 샘플, Class 추가 여부, 현장에서 요구하는 성능 지표를 여쭙고 싶습니다.</p></div>
+    <div class="hand">(마무리) 이상으로 발표를 마치고 질문 받겠습니다.</div>
+  </aside>
+</section>
+
+<!-- 17 Q&A -->
+<section class="slide" data-id="17" data-speaker="전원" data-time="0" data-title="감사 · Q&A">
+  <header><div class="kicker">감사합니다</div><h1>질문 받겠습니다</h1></header>
+  <div class="body row" style="gap:56px">
+    <table class="t grow" style="font-size:27px">
+      <thead><tr><th>질문 주제</th><th>1차 답변</th></tr></thead>
+      <tbody>
+        <tr><td>데이터 · 라벨 기준 · 검수</td><td>이후영 · 지혜성</td></tr>
+        <tr><td>도구 · 검증 코드</td><td>김석범</td></tr>
+        <tr><td>분할 · 누수 · 검수표</td><td>김동훈</td></tr>
+        <tr><td>실험 · 모델 · 평가 · 속도</td><td>손상우 · 지혜성</td></tr>
+        <tr><td>협업 · 보안 · 일정 · 인계</td><td>강동연 (진행)</td></tr>
+      </tbody>
+    </table>
+    <div class="col" style="width:560px">
+      <div class="card"><h3>답변 원칙</h3><div class="small">사실(숫자·근거 파일) → 인정할 한계 → 다음 조치<br>측정하지 않은 것은 "측정 전"</div></div>
+      <div class="card"><h3>부록</h3><div class="small"><code>O</code> 목록 · A1 실험 전표 · A4 학습 설정 · A5 평가 방식 · A6 분할·라벨 이력 · A7 재현성·보안 · A8 예상 질문 · A9 Final Test 상세</div></div>
+    </div>
+  </div>
+  <footer><div class="fn">AI Campus 3조 · 강동연 · 이후영 · 지혜성 · 김동훈 · 손상우 · 김석범 (소스 4.4)</div></footer>
+  <aside class="notes">
+    <div class="script"><p>(강동연) 질문은 주제별로 담당자가 먼저 답하겠습니다. 자세한 방법은 부록으로 바로 띄워 보여 드릴 수 있습니다.</p>
+    <p>모르는 것은 추정하지 않고 "측정 전이라 확인 후 서면으로 답하겠다"고 말합니다. Q&A 대기 중에는 B 키로 화면을 검게 둘 수 있습니다.</p></div>
+    <div class="hand">질문이 상세하면 #a4~#a7, 예상 질문은 #a8, Val↔Test 차이·Class별 Test는 #a9.</div>
+  </aside>
+</section>
+
+<!-- ===================================================== 부록 ===================================================== -->
+
+<!-- A1 실험 전표 -->
+<section class="slide" data-id="a1" data-speaker="부록" data-time="0" data-title="A1 실험 전표">
+  <header style="margin-bottom:14px"><div class="kicker">부록 A1 <span class="sep">|</span> 마우스 휠·↑↓로 스크롤</div><h1 style="font-size:46px">실험 전표 — kimchi_v5, 같은 Val 104장 (0~3라운드 + B)</h1></header>
+  <div class="body scroll" style="overflow:auto;padding-right:10px" tabindex="0" aria-label="실험 전표">
+    <table class="t dense" style="font-size:19px">
+      <thead><tr><th>실험</th><th>모델</th><th class="r">imgsz</th><th class="r">batch</th><th>바꾼 것</th><th class="r">P</th><th class="r">R</th><th class="r">mAP50</th><th class="r">mAP50-95</th><th class="r">학습</th><th>판정</th></tr></thead>
+      <tbody id="tbl-exp"></tbody>
+    </table>
+    <div class="small muted" style="margin-top:16px">판정 기준: 비교 대상 대비 mAP50-95 +0.02 이상 채택 · 0라운드는 baseline → exp001 → exp002 순, exp003~005는 exp002 대비 · 1라운드는 exp007 대비 · 2라운드부터 seed 평균끼리 · <b>4라운드 6방향 × seed 5개(exp019~048)는 본편 11번 표와 소스 3.10</b></div>
+  </div>
+  <footer><div class="fn">* 타일링은 원본 사진 단위 채점값(exp004: 같은 방식 exp002 = 0.680, 조각 Val 값 0.709는 쓰지 않음 / exp010: 같은 방식 exp007 = 0.729) · † exp002 대비 두 변수(exp005 대비 한 변수) · 학습 "—"는 표에 옮기지 않음(각 <code>_training_condition.md</code>) · exp010b(다른 PC 재학습)는 exp010과 소수 4자리까지 같음 · 근거 <code>experiment_log.csv</code>, <code>runs_summary.csv</code>, <code>tiling_eval*.csv</code> (소스 3.8, 3.8.1)</div></footer>
+  <aside class="notes"><div class="script"><p>Q13·Q15·Q16·Q29 대응. 모든 값은 Val best epoch.</p></div></aside>
+</section>
+
+<!-- A2 Class별 성능 -->
+<section class="slide" data-id="a2" data-speaker="부록" data-time="0" data-title="A2 Class별 성능">
+  <header><div class="kicker">부록 A2</div><h1>Class별 성능 — Baseline과 타일링 비교</h1></header>
+  <div class="body row" style="gap:44px">
+    <div class="grow">
+      <div class="small" style="font-weight:700;margin-bottom:8px">Baseline (baseline_v5 · 11n · 640)</div>
+      <table class="t dense" style="font-size:22px">
+        <thead><tr><th>Class</th><th class="r">P</th><th class="r">R</th><th class="r">mAP50</th><th class="r">mAP50-95</th></tr></thead>
+        <tbody>
+          <tr><td><span class="cls"><i class="k0"></i>0 나뭇잎·종이</span></td><td class="r">0.922</td><td class="r">0.797</td><td class="r">0.883</td><td class="r">0.657</td></tr>
+          <tr><td><span class="cls"><i class="k1"></i>1 플라스틱·돌·금속</span></td><td class="r">0.868</td><td class="r">0.513</td><td class="r">0.742</td><td class="r">0.457</td></tr>
+          <tr><td><span class="cls"><i class="k2"></i>2 나뭇가지</span></td><td class="r">0.832</td><td class="r">0.644</td><td class="r">0.720</td><td class="r">0.538</td></tr>
+          <tr><td><span class="cls"><i class="k3"></i>3 벌레</span></td><td class="r">0.785</td><td class="r">0.812</td><td class="r">0.856</td><td class="r">0.463</td></tr>
+          <tr><td><span class="cls"><i class="k5"></i>5 병해·갈변</span></td><td class="r">1.000</td><td class="r"><b>0.000</b></td><td class="r">0.000</td><td class="r">0.000</td></tr>
+          <tr><td><span class="cls"><i class="k6"></i>6 파·고추</span></td><td class="r">0.920</td><td class="r">0.767</td><td class="r">0.923</td><td class="r">0.710</td></tr>
+          <tr><td><span class="cls"><i class="k4"></i>4 고무장갑</span></td><td class="r" colspan="4">Instance 0건</td></tr>
+        </tbody>
+      </table>
+      <div class="xs muted" style="margin-top:12px">Class별 FN: 플라스틱·돌 64 · 나뭇잎·종이 23 · 갈변 15(전부) · 파·고추 5 · 나뭇가지 3 · 벌레 1 / CLASS_ERROR: 플라스틱·돌 22 · 나뭇잎·종이 12 · 나뭇가지 1</div>
+    </div>
+    <div style="width:700px">
+      <div class="small" style="font-weight:700;margin-bottom:8px">타일링 비교 (원본 Val 단위, mAP50-95)</div>
+      <table class="t dense" style="font-size:22px">
+        <thead><tr><th>Class</th><th class="r">exp002 (원본)</th><th class="r">exp004 (2×2)*</th></tr></thead>
+        <tbody>
+          <tr class="em"><td>all</td><td class="r">0.680</td><td class="r">0.698</td></tr>
+          <tr><td><span class="cls"><i class="k0"></i>0 나뭇잎·종이</span></td><td class="r">0.783</td><td class="r">0.739</td></tr>
+          <tr><td><span class="cls"><i class="k1"></i>1 플라스틱·돌</span></td><td class="r">0.785</td><td class="r">0.816</td></tr>
+          <tr><td><span class="cls"><i class="k2"></i>2 나뭇가지</span></td><td class="r">0.804</td><td class="r">0.897</td></tr>
+          <tr><td><span class="cls"><i class="k3"></i>3 벌레</span></td><td class="r">0.822</td><td class="r">0.809</td></tr>
+          <tr><td><span class="cls"><i class="k5"></i>5 갈변</span></td><td class="r">0.040</td><td class="r">0.081</td></tr>
+          <tr><td><span class="cls"><i class="k6"></i>6 파·고추</span></td><td class="r">0.843</td><td class="r">0.849</td></tr>
+        </tbody>
+      </table>
+      <div class="xs muted" style="margin-top:12px">타일링: 작은 이물에 도움(나뭇가지 +, 갈변 +), 나뭇잎·종이 −0.04, 학습 약 4배</div>
+    </div>
+  </div>
+  <footer><div class="fn">Class 6(파·고추)은 255박스 중 250개가 G00 한 묶음이라 "본 물체 점수"로 따로 봐야 함, 이 Class를 뺀 평균은 계산하지 않음 · * 원본 사진 단위 채점 (소스 3.6, 3.7, 3.8, 9.8 Q12)</div></footer>
+  <aside class="notes"><div class="script"><p>Q12·Q18·Q21 대응.</p></div></aside>
+</section>
+
+<!-- A3 v5 분할표 -->
+<section class="slide" data-id="a3" data-speaker="부록" data-time="0" data-title="A3 v5 분할표">
+  <header><div class="kicker">부록 A3</div><h1>kimchi_v5 분할 — 촬영 묶음 단위, 평가 역할마다 Class별 15박스 이상</h1></header>
+  <div class="body col" style="gap:24px">
+    <table class="t dense" style="font-size:22px">
+      <thead><tr><th>역할</th><th class="r">장수</th><th class="r"><span class="cls"><i class="k0"></i>c0</span></th><th class="r"><span class="cls"><i class="k1"></i>c1</span></th><th class="r"><span class="cls"><i class="k2"></i>c2</span></th><th class="r"><span class="cls"><i class="k3"></i>c3</span></th><th class="r"><span class="cls"><i class="k5"></i>c5</span></th><th class="r"><span class="cls"><i class="k6"></i>c6</span></th><th>촬영 묶음</th><th>용도</th></tr></thead>
+      <tbody>
+        <tr><td><b>Train</b></td><td class="r">558</td><td class="r">308</td><td class="r">1,120</td><td class="r">427</td><td class="r">311</td><td class="r">209</td><td class="r">165</td><td>G01~04·06·08·09·15~17 + G00 일부</td><td>학습</td></tr>
+        <tr><td><b>Validation</b></td><td class="r">104</td><td class="r">192</td><td class="r">265</td><td class="r">23</td><td class="r">16</td><td class="r">15</td><td class="r">30</td><td>G05·G13 + G00 6장</td><td>실험 비교·Final 선택</td></tr>
+        <tr><td><b>Frozen Test</b></td><td class="r">82</td><td class="r">23</td><td class="r">140</td><td class="r">200</td><td class="r">23</td><td class="r">16</td><td class="r">30</td><td>G07·G14 + G00 6장</td><td>Final 확정 후 한 번만</td></tr>
+        <tr><td><b>Bridge Holdout</b></td><td class="r">156</td><td class="r">202</td><td class="r">326</td><td class="r">281</td><td class="r">29</td><td class="r">16</td><td class="r">30</td><td>G10·G11·G12 + G00 6장</td><td>교과 14 인계 (교과 8 사용 금지)</td></tr>
+      </tbody>
+    </table>
+    <div class="row" style="gap:28px">
+      <div class="card grow small"><b>분할 원칙</b><br>① 배정 단위 = 촬영 묶음 ② 평가 역할마다 Class 0·1·2·3·5·6 각 15박스 이상(미만이면 박스 1개에 Recall 7%p) ③ Train에 각 Class의 하위 모습 모두 ④ 이물 단독 150장(G17)은 Train ⑤ 갈변이 몰린 G09는 통째 Train ⑥ 조건을 지키는 조합 중 Train이 가장 큰 것을 전체 탐색 (후보 A/B/C 비교 → C)</div>
+      <div class="card small" style="width:560px"><b>같은 묶음 출신 비율</b><br>Val 83/132 → <b>6/104</b><br>Test 8/84 → <b>6/82</b><br>Bridge 8/158 → <b>6/156</b><br><span class="muted">(v4 → v5, G00 예외만 남음)</span></div>
+    </div>
+  </div>
+  <footer><div class="fn">근거 <code>subject8/docs/project/kimchi_v5_split.md</code>, <code>split_policy.md</code>, <code>reports/01_data/leakage_check.csv</code> (소스 3.3, 3.4)</div></footer>
+  <aside class="notes"><div class="script"><p>Q8~Q12 대응.</p></div></aside>
+</section>
+
+<!-- A4 학습 설정 -->
+<section class="slide" data-id="a4" data-speaker="부록" data-time="0" data-title="A4 학습 설정">
+  <header><div class="kicker">부록 A4</div><h1>학습 설정 — 그대로 재현할 수 있게</h1></header>
+  <div class="body">
+    <table class="t dense" style="font-size:21px">
+      <thead><tr><th style="width:15%">항목</th><th>Baseline (baseline_v5)</th><th>0라운드 최고 (exp007)</th><th>Final (exp050)</th></tr></thead>
+      <tbody>
+        <tr><td>모델</td><td>YOLO11n (COCO 사전학습)</td><td>YOLO11s (COCO 사전학습)</td><td>YOLO11s (COCO 사전학습)</td></tr>
+        <tr><td>입력 / batch</td><td>640 / 16</td><td>1920 / 3 (GPU 메모리 때문)</td><td><b>2240 / 2</b> (GPU 메모리 때문)</td></tr>
+        <tr><td>epoch</td><td>50</td><td>50 (patience 100 = 사실상 조기종료 없음)</td><td>50 (best epoch 50)</td></tr>
+        <tr><td>옵티마이저</td><td colspan="3">AdamW · lr0 0.001 · lrf 0.01 · momentum 0.937 · weight_decay 0.0005 · warmup 3 epoch (같음)</td></tr>
+        <tr><td>seed</td><td colspan="2">42, <code>deterministic=True</code></td><td><b>2</b> (B의 seed 5개 중 하나)</td></tr>
+        <tr><td>증강</td><td>Ultralytics 기본: mosaic 1.0(마지막 10 epoch 끔), 좌우반전 0.5, hsv_h 0.015·s 0.7·v 0.4, translate 0.1, scale 0.5, flipud 0</td><td colspan="2">기본 + <b>flipud 0.5 · hsv_v 0.6</b> (exp005와 동일)</td></tr>
+        <tr><td>AMP</td><td colspan="3">사용 (같음)</td></tr>
+        <tr><td>학습 · GPU 최대</td><td>4분 46초 · 2.1GB</td><td>42분 45초 · 6.9GB</td><td>62분 · 6.7GB · 예측 약 37ms/장</td></tr>
+        <tr><td>PC</td><td colspan="2">i7-12700 / 15GB RAM / RTX 3060 12GB, Ubuntu(WSL2), Python 3.14.4, Ultralytics 8.4.175, PyTorch 2.14.1+cu130</td><td>RTX 3060 12GB (팀원 PC, 실행 기록에 호스트명)</td></tr>
+      </tbody>
+    </table>
+    <div class="small muted" style="margin-top:16px">학습 전 <code>data/yolo/train·val</code>이 manifest와 같은지 자동 확인 · Manifest 해시(sha256 앞 12자리) train <code>989eebc34e7e</code> / val <code>c897b139828f</code> · 모델 해시 Baseline <code>cc688f2b3589</code> · Final <code>a185c4401ace</code> (<code>models/final/final_best.pt</code>)</div>
+  </div>
+  <footer><div class="fn">근거 <code>reports/02_baseline/baseline_training_condition.md</code>, <code>reports/04_improvement/&lt;실행&gt;_training_condition.md</code>, <code>runs/&lt;실행&gt;/args.yaml</code> (소스 9.1)</div></footer>
+  <aside class="notes"><div class="script"><p>Q16·Q24 대응. exp002↔exp005 args.yaml 차이는 두 줄뿐.</p></div></aside>
+</section>
+
+<!-- A5 평가 방식 -->
+<section class="slide" data-id="a5" data-speaker="부록" data-time="0" data-title="A5 평가 방식">
+  <header><div class="kicker">부록 A5</div><h1>평가 방식과 선택 편향 — 숫자가 어떻게 나온 것인가</h1></header>
+  <div class="body">
+    <table class="t" style="font-size:24px">
+      <thead><tr><th style="width:22%">구분</th><th>방법</th></tr></thead>
+      <tbody>
+        <tr><td>보고하는 점수</td><td>매 epoch Validation 104장에서 Ultralytics가 계산한 P·R·mAP50·mAP50-95 중 <b>best epoch</b> 값 (best.pt도 같은 Val로 선택)</td></tr>
+        <tr><td>검증 시 NMS</td><td>IoU 0.7, confidence 기본값(0.001 수준) — mAP 계산용</td></tr>
+        <tr><td>실패 분석·비교 이미지</td><td><b>conf 0.25, IoU 0.5</b>로 예측↔정답 짝짓기 (TP / CLASS_ERROR / FP 3종 / FN) — <code>src/inference.py</code></td></tr>
+        <tr><td>타일링 (exp004)</td><td>2×2 조각(20% 겹침)으로 학습, 조각 예측을 합쳐 <b>원본 사진 단위</b>로 같은 코드(<code>src/tiling.py</code>)로 채점</td></tr>
+        <tr><td>반복 측정</td><td>0라운드는 seed 42 한 번 → exp013에서 흔들림 ±0.01 확인 → 2라운드부터 seed 여러 개, <b>4라운드는 방향마다 seed 5개 평균</b> (B 표준편차 0.009, 신뢰구간은 계산 안 함)</td></tr>
+        <tr class="em"><td>선택 편향</td><td>Validation이 ① best epoch ② 채택/기각 ③ Final 선택(seed 5개 중 최고)에 <b>모두</b> 쓰임 → Val 0.749는 낙관적. 그래서 Frozen Test(82장) <b>1회</b> → <b>0.639</b> <span class="badge b-done">완료 · 10-20</span></td></tr>
+      </tbody>
+    </table>
+    <div class="card small" style="margin-top:20px"><b>Test를 본 적이 있다</b> — 2026-10-16, Final 확정 전에 Frozen Test 점수를 한 번 봤음. 결과·스크립트는 삭제했고 모델·조건 선택에 쓰지 않음. 공식 평가는 10-20 선택 문서 작성 <b>뒤 1회</b>이며 그 점수로 다시 고르지 않음. Final 보고서에 사전 열람 사실을 적음. Bridge Holdout은 한 번도 쓰지 않음.</div>
+  </div>
+  <footer><div class="fn">Frozen Test 평가: <code>scripts/16_evaluate_final_test.py</code>, imgsz 2240 · 소스 9.2, 0장 규칙 7·11, 9.8 Q13·Q14·Q26·Q28</div></footer>
+  <aside class="notes"><div class="script"><p>Q13·Q14·Q15·Q26·Q28 대응. Test를 본 사실은 숨기지 말고 먼저 말한다.</p></div></aside>
+</section>
+
+<!-- A6 분할·누수·라벨 변경 이력 -->
+<section class="slide" data-id="a6" data-speaker="부록" data-time="0" data-title="A6 분할·라벨 변경 이력">
+  <header><div class="kicker">부록 A6</div><h1>분할·누수 점검과 라벨 변경 이력</h1></header>
+  <div class="body row" style="gap:36px">
+    <div class="col grow" style="gap:14px">
+      <table class="t dense" style="font-size:20px">
+        <thead><tr><th>Version</th><th>날짜</th><th>바뀐 것</th></tr></thead>
+        <tbody>
+          <tr><td>kimchi_v1</td><td>10-12</td><td>첫 분할 (Val 84장) — Baseline 0.347</td></tr>
+          <tr><td>v2</td><td>—</td><td>분할 개선 (촬영 묶음 기준 도입)</td></tr>
+          <tr><td>v3</td><td>10-14</td><td><b>Class 5(갈변) 기준 개정</b>: "이어진 갈색 덩어리 + 주변보다 3%p 이상 어두움"(점무늬·초록 잎맥 제외), 라벨 파일 153개 수정, 머리카락을 가지로 그린 박스 1개 삭제</td></tr>
+          <tr><td>v4</td><td>—</td><td>G09 분할 (예외 분할 G00·G09·G12), Val 132장</td></tr>
+          <tr class="em"><td>v5 (공식)</td><td>10-16</td><td>v4 Val 누수 발견 → 재분할, 이물 없는 박스 3개 삭제(모두 Bridge의 G12, 사유 기록)</td></tr>
+        </tbody>
+      </table>
+      <table class="t dense" style="font-size:20px">
+        <thead><tr><th>Baseline mAP50-95 · Val이 서로 다름 <span class="badge b-warn" style="font-size:15px">직접 비교 금지</span></th><th class="r">640</th><th class="r">1280</th><th class="r">1920</th></tr></thead>
+        <tbody>
+          <tr><td>kimchi_v4 — <b>누수로 부풀려진 값</b> (Val 63%가 Train과 같은 묶음)</td><td class="r">0.534</td><td class="r">0.708</td><td class="r">0.757</td></tr>
+          <tr><td>kimchi_v5 — 공식</td><td class="r">0.470</td><td class="r">0.646</td><td class="r">0.704</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col" style="width:700px;gap:12px">
+      <div class="card xs" style="padding:16px 20px"><b class="small">분할·누수</b><br>촬영 시각 간격 300초 초과 지점에서 묶음 자동 분리 → G00~G17 · 유사 사진: dHash(256bit) 해밍거리 ≤ 40, 900장 전체 쌍 → 분할 사이 0쌍(G00 예외 제외) · 박스 crop SIFT 매칭은 육안 확인 결과 대부분 다른 물체라 <b>폐기</b></div>
+      <div class="card xs" style="padding:16px 20px"><b class="small">배치 판정 (정직하게)</b><br>배치 경계 70개는 AI가 900장을 육안 판정한 기록이며 사람 1명이 검수하도록 정함 — 문서의 검수 체크는 아직 비어 있음 <span class="badge b-tbd">발표 전 확인</span>. 최종 배정 단위는 시간으로 계산한 촬영 묶음이라 이 판정에 의존하지 않음</div>
+      <div class="card xs" style="padding:16px 20px"><b class="small">라벨 거버넌스</b><br>Class 번호 0~6 그대로(변경·신설 금지) · 크기·밝기 기준은 원본 라벨 4,399개 실측 집계로 정함 · 애매하면 REVIEW, 미처리 0건 · 최종본 직접 수정 금지, 고치면 Version을 올림 · <b>IAA 미측정</b></div>
+    </div>
+  </div>
+  <footer><div class="fn">근거 <code>label_changes_kimchi_v3.csv</code>(153개 파일), <code>label_changes_kimchi_v5.csv</code>(3박스), <code>capture_group_summary.csv</code> · 표의 v5 640 값은 원값 0.4695 (소스 3.3, 9.3, 9.4)</div></footer>
+  <aside class="notes"><div class="script"><p>Q1·Q2·Q9·Q10·Q11 대응. 갈변 기준 개정 시점(실패 분석 전/후)은 발표 전 확인해서 사실대로.</p></div></aside>
+</section>
+
+<!-- A7 재현성·보안 -->
+<section class="slide" data-id="a7" data-speaker="부록" data-time="0" data-title="A7 재현성·보안">
+  <header><div class="kicker">부록 A7</div><h1>재현성과 보안 운영 — 사고와 조치 포함</h1></header>
+  <div class="body row" style="gap:36px">
+    <div class="col grow" style="gap:18px">
+      <div class="card small"><h3>재현성</h3><code>python scripts/00_setup.py</code> 한 줄 → .venv → 교과 7 복원 → 점검 → 학습 폴더 → "같은 데이터·같은 분할 ✓" · 학습 조건·PC 정보·모델 해시를 실행마다 자동 기록 · Weight 해시 자동 점검(<code>qa_acceptance_check.py</code>) · <b>다른 PC에서 다시 학습한 exp010b가 exp010과 소수 4자리까지 같음</b><br><span class="muted">한계: 다른 팀원이 README만 보고 처음부터 재실행하는 시험은 아직 안 함</span> <span class="badge b-plan">8~9일차 예정</span></div>
+      <div class="card small"><h3>Acceptance 자동 점검 (2026-10-15)</h3>PASS 24 · FAIL 1 (학습 패키지 미설치 PC — 사진 PC에서 재시험 예정) · TODO 7 (8일차 산출물) · MANUAL 4</div>
+      <div class="card small"><h3>교과 7 도구 시험</h3>Golden Test 12개 항목 12 PASS · Pilot Test 20장 20분(1.0분/장) 6개 항목 PASS · Human Final QA 40장 이상 없음</div>
+    </div>
+    <div class="col" style="width:760px;gap:18px">
+      <div class="card small"><h3>보안 · NDA</h3>사진은 Git 제외(<code>*.jpg</code>), 외부 클라우드·메신저 금지, 이동은 USB · 자동 점검: <b>Git 추적 사진 0장</b>, <code>.pt</code>는 <code>models/</code> 안의 것만</div>
+      <div class="card small" style="border-color:#f4c7c3"><h3>실제 있었던 사고</h3>검수표 CSV(사진 파일명 포함)가 커밋에 들어감 → <b>푸시 전</b> 이력에서 제거 + <code>.gitignore</code> 추가 · 폴더 구조 변경 때 "모두 스테이징"으로 회사 데이터가 커밋될 수 있어 README에 순서·경고 명시</div>
+      <div class="card small"><h3>한계</h3>데이터가 팀원 PC 여러 대에 나뉘어 있고 각 PC 보관은 개인 책임</div>
+    </div>
+  </div>
+  <footer><div class="fn">소스 2.6, 3.12, 9.5, 9.6 · 9.8 Q22·Q24</div></footer>
+  <aside class="notes"><div class="script"><p>Q22·Q24 대응. Pilot 시험 시점 질문은 A8 마지막 항목 참고.</p></div></aside>
+</section>
+
+<!-- A8 예상 질문 -->
+<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+5">
+  <header style="margin-bottom:14px"><div class="kicker">부록 A8 <span class="sep">|</span> 마우스 휠·↑↓로 스크롤</div><h1 style="font-size:46px">예상 질문과 답 — 사실 → 인정 → 조치</h1></header>
+  <div class="body scroll" style="overflow:auto;padding-right:10px" tabindex="0" aria-label="예상 질문 목록">
+    <table class="t dense" style="font-size:19px" id="tbl-qa">
+      <thead><tr><th style="width:44px">#</th><th style="width:26%">질문</th><th>답변</th><th style="width:90px">담당</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <footer><div class="fn">하지 말 것: 측정하지 않은 숫자 추정 · "현장에서 쓸 수 있다" · 회사 라벨·기준 비난 · 팀원 한 명에게 책임 · 즉석 재계산 약속(필요하면 "확인 후 서면으로") (소스 9.8)</div></footer>
+  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로 추가.</p></div></aside>
+</section>
+
+<!-- A9 Final Frozen Test 상세 -->
+<section class="slide" data-id="a9" data-speaker="부록" data-time="0" data-title="A9 Final Frozen Test 상세">
+  <header><div class="kicker">부록 A9</div><h1>Final(exp050) — Validation vs Frozen Test, Class별</h1></header>
+  <div class="body row" style="gap:36px">
+    <div class="col grow" style="gap:14px">
+      <table class="t dense" style="font-size:20px">
+        <thead><tr><th>Class</th><th class="r">Val mAP50-95</th><th class="r">Test mAP50-95</th><th class="r">Test P</th><th class="r">Test R</th><th class="r">Test 박스(사진)</th><th class="r">평균 차이 기여</th></tr></thead>
+        <tbody>
+          <tr class="em"><td>all (6 Class 평균)</td><td class="r">0.749</td><td class="r">0.639</td><td class="r">0.868</td><td class="r">0.744</td><td class="r">432 (82)</td><td class="r">−0.110</td></tr>
+          <tr><td><span class="cls"><i class="k0"></i>0 나뭇잎·종이</span></td><td class="r">0.877</td><td class="r"><b>0.482</b></td><td class="r"><b>0.367</b></td><td class="r">0.855</td><td class="r">23 (16)</td><td class="r"><b>−0.066</b></td></tr>
+          <tr><td><span class="cls"><i class="k1"></i>1 플라스틱·돌·금속</span></td><td class="r">0.844</td><td class="r">0.840</td><td class="r">0.979</td><td class="r">0.929</td><td class="r">140 (51)</td><td class="r">−0.001</td></tr>
+          <tr><td><span class="cls"><i class="k2"></i>2 나뭇가지</span></td><td class="r">0.911</td><td class="r">0.839</td><td class="r">0.981</td><td class="r">0.768</td><td class="r">200 (67)</td><td class="r">−0.012</td></tr>
+          <tr><td><span class="cls"><i class="k3"></i>3 벌레</span></td><td class="r">0.886</td><td class="r">0.756</td><td class="r">0.893</td><td class="r">0.913</td><td class="r">23 (21)</td><td class="r">−0.022</td></tr>
+          <tr><td><span class="cls"><i class="k5"></i>5 병해·갈변</span></td><td class="r">0.115</td><td class="r"><b>0.007</b></td><td class="r">1.000</td><td class="r"><b>0.000</b></td><td class="r">16 (9)</td><td class="r">−0.018</td></tr>
+          <tr><td><span class="cls"><i class="k6"></i>6 파·고추</span></td><td class="r">0.862</td><td class="r">0.908</td><td class="r">0.987</td><td class="r">1.000</td><td class="r">30 (6)</td><td class="r">+0.008</td></tr>
+          <tr><td><span class="cls"><i class="k4"></i>4 고무장갑</span></td><td class="r" colspan="6">Test에도 Instance 0건 — 평가 불가</td></tr>
+        </tbody>
+      </table>
+      <div class="card xs" style="padding:14px 18px"><b class="small">읽는 법</b><br>평균 차이 기여 = (Val − Test) ÷ 6 — 6개 Class 평균이 떨어진 0.110을 Class별로 나눈 것 · Val 열은 Final Weight를 학습 때 imgsz(2240)로 Val에 다시 채점한 값 · Val 0.749는 seed 5개 중 최고(B 평균 0.739) · 나뭇잎·종이 오탐 원인은 <b>분석 전</b> · 파·고추는 G00 한 묶음이라 "본 물체 점수"</div>
+    </div>
+    <figure class="slot" style="width:640px" data-src="assets/final_test_confusion_matrix_normalized.png" data-alt="Final Frozen Test 혼동행렬 (정규화)" data-caption="Frozen Test 혼동행렬(정규화) · 열 = 정답, 행 = 예측 · 그래프 이미지(사진 없음)"></figure>
+  </div>
+  <footer><div class="fn">근거 <code>reports/05_final/final_metrics.csv</code>, <code>final_class_metrics.csv</code>, <code>reports/final_model_selection.md</code>, <code>reports/figures/final/</code> · PR 곡선 <code>assets/final_test_pr_curve.png</code> (소스 3.13)</div></footer>
+  <aside class="notes"><div class="script"><p>Q26·Q27 대응. 원인을 추측해서 말하지 않는다 — "분석 전, Test를 보며 고치면 Test가 오염되므로 교과 14에서 새 데이터로".</p></div></aside>
+</section>
+
+</div></div>
+
+<!-- ---------- UI ---------- -->
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="hint">← → 이동 · F 전체화면 · S 노트 · O 목록 · B 검은 화면</div>
+<div id="black" aria-hidden="true">B 키로 돌아가기</div>
+<div id="notesPanel" aria-live="polite"></div>
+<div id="overview" role="dialog" aria-label="슬라이드 목록"></div>
+<div id="lightbox" role="dialog" aria-label="사진 확대"><img alt=""><div class="lc"></div></div>
+
+<!-- ---------- 차트 데이터 (소스 5장 JSON + 3.8 표) ---------- -->
+<script type="application/json" id="data">
+{
+ "classes":[
+  {"id":0,"name":"나뭇잎·종이","final":727,"delta":"+11"},
+  {"id":1,"name":"플라스틱·돌·금속","final":1852,"delta":"+21"},
+  {"id":2,"name":"나뭇가지","final":932,"delta":"+21"},
+  {"id":3,"name":"벌레","final":379,"delta":"+0"},
+  {"id":5,"name":"병해·갈변","final":416,"delta":"+103"},
+  {"id":6,"name":"파·고추","final":255,"delta":"+6"},
+  {"id":4,"name":"고무장갑","final":0,"delta":"사용 안 함"}
+ ],
+ "issues":[{"d":"1일차","n":3},{"d":"2일차","n":5},{"d":"3일차","n":9},{"d":"4일차","n":10},{"d":"마무리","n":1}],
+ "sizeRecall":[
+  {"cls":1,"name":"플라스틱·돌","size":"S","gt":194,"hit":119,"r":0.613},
+  {"cls":1,"name":"플라스틱·돌","size":"M","gt":62,"hit":52,"r":0.839},
+  {"cls":1,"name":"플라스틱·돌","size":"L","gt":9,"hit":8,"r":0.889},
+  {"cls":0,"name":"나뭇잎·종이","size":"S","gt":8,"hit":1,"r":0.125},
+  {"cls":0,"name":"나뭇잎·종이","size":"M","gt":80,"hit":68,"r":0.850},
+  {"cls":0,"name":"나뭇잎·종이","size":"L","gt":104,"hit":88,"r":0.846},
+  {"cls":5,"name":"갈변","size":"S","gt":15,"hit":0,"r":0.000}
+ ],
+ "fail":{"FN":111,"CLASS_ERROR":35,"FP_PARTIAL":33,"FP_DUPLICATE":30,"FP_BACKGROUND":24},
+ "exp":[
+  {"run":"baseline_v5","label":"Baseline · 11n · 640","model":"11n","imgsz":640,"batch":16,"chg":"—","p":0.888,"r":0.589,"m50":0.688,"map":0.470,"min":5,"dec":"공식 Baseline","kind":"base"},
+  {"run":"exp001","label":"11n · 1280","model":"11n","imgsz":1280,"batch":16,"chg":"imgsz","p":0.957,"r":0.724,"m50":0.777,"map":0.646,"min":12,"dec":"채택 (+0.177)","kind":"adopt"},
+  {"run":"exp002","label":"11n · 1920","model":"11n","imgsz":1920,"batch":6,"chg":"imgsz (batch 6)","p":0.856,"r":0.766,"m50":0.809,"map":0.704,"min":23,"dec":"채택 (+0.058)","kind":"adopt"},
+  {"run":"exp003","label":"11n · 1920 · epoch 100","model":"11n","imgsz":1920,"batch":6,"chg":"epochs 50→100","p":0.872,"r":0.788,"m50":0.801,"map":0.701,"min":46,"dec":"기각 (−0.003, 시간 2배)","kind":"reject"},
+  {"run":"exp005","label":"11n · 1920 · 증강","model":"11n","imgsz":1920,"batch":6,"chg":"증강(상하반전·밝기)","p":0.841,"r":0.760,"m50":0.800,"map":0.684,"min":23,"dec":"기각 (−0.020)","kind":"reject"},
+  {"run":"exp004","label":"11n · 1920 · 2×2 타일링*","model":"11n","imgsz":1920,"batch":6,"chg":"2×2 타일링","p":0.829,"r":0.814,"m50":0.799,"map":0.698,"min":89,"dec":"보류 (+0.019*)","kind":"hold","star":true},
+  {"run":"exp006","label":"11n · 2560 · 증강†","model":"11n","imgsz":2560,"batch":3,"chg":"증강 + imgsz†","p":0.872,"r":0.814,"m50":0.832,"map":0.722,"min":303,"dec":"보류","kind":"hold"},
+  {"run":"exp007","label":"11s · 1920 · 증강†","model":"11s","imgsz":1920,"batch":3,"chg":"증강 + 모델 크기† (후보 A seed 42)","p":0.956,"r":0.794,"m50":0.824,"map":0.724,"min":43,"dec":"채택 (0라운드 최고)","kind":"adopt"},
+  {"run":"exp008","model":"11s","imgsz":1920,"batch":3,"chg":"epoch 50→100 (exp007 대비)","p":0.952,"r":0.796,"m50":0.828,"map":0.727,"min":86,"dec":"기각 (+0.003, 시간 2배)","kind":"reject"},
+  {"run":"exp009","model":"11m","imgsz":1920,"batch":2,"chg":"11s→11m (후보 C seed 42)","p":0.850,"r":0.790,"m50":0.819,"map":0.730,"min":89,"dec":"후보 C (seed 1개)","kind":"hold"},
+  {"run":"exp010","model":"11s","imgsz":1920,"batch":3,"chg":"2×2 타일링","p":0.859,"r":0.791,"m50":0.810,"map":0.723,"min":169,"dec":"기각 (같은 코드 exp007 0.729 대비 −0.006)","kind":"reject","star":true},
+  {"run":"exp011","model":"11s","imgsz":1920,"batch":3,"chg":"증강 끄기","p":0.857,"r":0.779,"m50":0.822,"map":0.716,"min":null,"dec":"증강 유지 (−0.008)","kind":"reject"},
+  {"run":"exp012","model":"11s","imgsz":1280,"batch":6,"chg":"imgsz 1920→1280","p":0.748,"r":0.741,"m50":0.785,"map":0.680,"min":18,"dec":"기각 (−0.044)","kind":"reject"},
+  {"run":"exp013","model":"11s","imgsz":1920,"batch":3,"chg":"seed 42→7 (후보 A)","p":0.827,"r":0.808,"m50":0.817,"map":0.714,"min":null,"dec":"흔들림 ±0.01 확인","kind":"hold"},
+  {"run":"exp014","model":"11s","imgsz":1920,"batch":3,"chg":"seed 123 (후보 A)","p":0.917,"r":0.795,"m50":0.822,"map":0.707,"min":null,"dec":"A 평균 0.715","kind":"hold"},
+  {"run":"exp015","model":"11s","imgsz":2240,"batch":2,"chg":"imgsz 2240 (후보 B seed 42)","p":0.876,"r":0.792,"m50":0.820,"map":0.726,"min":null,"dec":"후보 B","kind":"hold"},
+  {"run":"exp016","model":"11s","imgsz":2240,"batch":2,"chg":"후보 B seed 7","p":0.889,"r":0.780,"m50":0.821,"map":0.732,"min":null,"dec":"후보 B","kind":"hold"},
+  {"run":"exp018","model":"11s","imgsz":2240,"batch":2,"chg":"후보 B seed 123","p":0.909,"r":0.802,"m50":0.832,"map":0.746,"min":null,"dec":"B 평균 0.735 > A +0.020 → 기반 = B","kind":"adopt"},
+  {"run":"exp049","model":"11s","imgsz":2240,"batch":2,"chg":"후보 B seed 1","p":0.918,"r":0.803,"m50":0.832,"map":0.743,"min":null,"dec":"B (seed 5개 평균 0.739)","kind":"hold"},
+  {"run":"exp050","model":"11s","imgsz":2240,"batch":2,"chg":"후보 B seed 2","p":0.945,"r":0.822,"m50":0.840,"map":0.749,"min":62,"dec":"<b>Final</b> (B 안 Val 최고) · Test 0.639","kind":"best"}
+ ],
+ "cand":[
+  {"label":"Baseline","sub":"11n · 640","map":0.470,"kind":"base","note":"seed 1개"},
+  {"label":"11n · 1280","sub":"exp001","map":0.646,"kind":"one","note":"seed 1개"},
+  {"label":"11n · 1920","sub":"exp002","map":0.704,"kind":"one","note":"seed 1개"},
+  {"label":"A  11s · 1920","sub":"exp007 · 013 · 014","map":0.715,"lo":0.707,"hi":0.724,"kind":"avg","note":"seed 3개 · 0.707~0.724"},
+  {"label":"C  11m · 1920","sub":"exp009","map":0.730,"kind":"one","note":"seed 1개 · 학습 89분"},
+  {"label":"B  11s · 2240","sub":"exp015·016·018·049·050","map":0.739,"lo":0.726,"hi":0.749,"kind":"final","note":"seed 5개 · 0.726~0.749 · 62분"}
+ ],
+ "r4":[
+  {"id":"B","seeds":[0.726, 0.732, 0.746, 0.743, 0.749],"name":"기준 (11s·2240)","mean":0.739,"d":0,"br":0.108,"n":5},
+  {"id":"①","seeds":[0.732, 0.742, 0.73, 0.733, 0.727],"name":"반점 복제","mean":0.733,"d":-0.006,"br":0.094,"n":5},
+  {"id":"②","seeds":[0.748, 0.738, 0.737, 0.731, 0.746],"name":"반점 합성","mean":0.740,"d":0.001,"br":0.111,"n":5},
+  {"id":"③","seeds":[0.736, 0.721, 0.73],"name":"2560","mean":0.729,"d":-0.010,"br":0.080,"n":3},
+  {"id":"④","seeds":[0.732, 0.729, 0.735, 0.72, 0.719],"name":"반점 복원+복제","mean":0.727,"d":-0.012,"br":0.108,"n":5},
+  {"id":"⑤","seeds":[0.738, 0.744, 0.725, 0.728, 0.723],"name":"2560+복제","mean":0.732,"d":-0.007,"br":0.091,"n":5},
+  {"id":"⑥","seeds":[0.712, 0.728, 0.739, 0.723, 0.729],"name":"2560+합성","mean":0.726,"d":-0.013,"br":0.075,"n":5}
+ ],
+ "res":[
+  {"imgsz":1280,"map":0.680,"n":1,"note":"exp012"},
+  {"imgsz":1920,"map":0.715,"n":3,"note":"후보 A"},
+  {"imgsz":2240,"map":0.739,"n":5,"note":"후보 B = Final 조건"},
+  {"imgsz":2560,"map":0.729,"n":3,"note":"4라운드 ③ · 88분"}
+ ],
+ "test":[
+  {"id":0,"name":"나뭇잎·종이","val":0.877,"test":0.482},
+  {"id":1,"name":"플라스틱·돌·금속","val":0.844,"test":0.840},
+  {"id":2,"name":"나뭇가지","val":0.911,"test":0.839},
+  {"id":3,"name":"벌레","val":0.886,"test":0.756},
+  {"id":5,"name":"병해·갈변","val":0.115,"test":0.007},
+  {"id":6,"name":"파·고추","val":0.862,"test":0.908}
+ ],
+ "qa":[
+  ["A","1","회사 라벨을 26%나 고쳤다. 회사 라벨이 틀렸다는 건가, 팀 기준이 달라서인가?","235장에서 추가 166·수정 173·삭제 4(4,399→4,561). Class 번호는 그대로 두고 경계·누락 판단을 팀 기준서로 통일했다. RAW는 보존되어 있어 Diff로 전부 비교 가능. 회사 쪽 원 라벨링 기준 문서는 저장소에 없다 — 어느 쪽이 맞는지는 기준 문서 대조가 필요하며, 원하시면 RAW↔FINAL 비교표를 제공할 수 있다.","이후영"],
+  ["A","2","갈변 기준을 중간에 바꿨다. 점수 맞추려고 라벨을 바꾼 것 아닌가?","10-14 개정은 기준서의 모호함(\"점무늬 vs 이어진 변색\")을 명확히 한 것이고 라벨 파일 153개와 변경 목록 CSV가 남아 있다. Version을 v3로 올려 이전 점수와 직접 비교하지 않는다. [발표 전 확인] 개정이 모델 실패 분석을 본 뒤였는지의 시점은 확인해서 사실대로 답한다.","지혜성"],
+  ["A","3","검수자 간 일치도는?","재지 않았다. 대신 900장 전수 교차검수와 Human Final QA 40장. 표본 이중 라벨링으로 IAA를 재는 것이 개선점.","지혜성"],
+  ["A","4","정상 김치가 0장이다. 이게 이물검출 데이터로 맞나?","받은 데이터 구성 그대로이며, 그래서 이물 없는 사진의 오탐률은 재지 못한다(한계로 기록). 교과 14에서 정상 김치 샘플이 필요하니 제공 가능 여부를 여쭙고 싶다.","이후영"],
+  ["A","5","고무장갑(Class 4)을 왜 뺐나?","회사 번호를 유지하되 데이터에 0건이라 학습·평가 불가. 발견되면 임의 변환 없이 REVIEW로 보내는 규칙. 현장에서 나오면 현재 모델은 대응하지 못한다.","김석범"],
+  ["A","6","머리카락·실 같은 이물은?","Class 0~6에 없어 검출 대상이 아니다. 비슷한 Class로 그리지 않고(머리카락→가지 박스 1개 삭제) 한계로 넘겼다. Class 추가 여부를 확인하고 싶다.","이후영"],
+  ["A","7","가상 데이터로 현장 성능을 어떻게 보장하나?","보장하지 않는다. 가상 생성·유사 분포 데이터로 파이프라인과 평가 방법을 검증한 것이고, 현장 적용에는 실제 라인 데이터가 필요하다(교과 14).","강동연"],
+  ["B","8","평가 사진이 Train과 같은 날 촬영인데 일반화라 할 수 있나?","할 수 없다. 점수는 \"본 물체를 새 장면에 놓았을 때\" 성능이다. 날짜 분리는 Class 0 주제 묶음이 모두 4/24라 불가능했고 한계로 기록했다.","김동훈"],
+  ["B","9","v4의 누수를 몰랐다면 검증이 부실했던 것 아닌가?","촬영 묶음 점검은 처음부터 했고 v4의 G00·G09·G12 분할은 의도한 예외로 기록돼 있었다. 그러나 그 예외가 Val의 63%를 Train과 같은 묶음으로 만들어 점수를 부풀린다는 것을 정리한 것은 10-16이다. 발견 즉시 v5로 바로잡았다.","김동훈"],
+  ["B","10","분할에 AI 판정이 들어갔다는데 신뢰할 수 있나?","배정 단위는 시간 간격으로 계산한 촬영 묶음이라 AI 판정에 의존하지 않는다. AI 육안 판정(70배치)은 기록·검수용이며 [발표 전 확인] 사람 검수 체크는 아직 완료로 표시되지 않았다.","김동훈"],
+  ["B","11","비슷한 사진 중복은 어떻게 걸러냈나?","dHash 256bit 해밍거리 ≤ 40으로 900장 전체 쌍 검사 → 분할 사이 0쌍(G00 예외 제외). 실물 재사용은 SIFT가 오탐이 많아 폐기하고 육안으로 확인했다.","김동훈"],
+  ["B","12","파·고추(Class 6)는 같은 조각이 Train·Val에 있다면서요?","맞다(255박스 중 250개가 G00 한 묶음). 그래서 Class 6 점수는 \"본 물체 점수\"로 따로 표시하며, 이 Class를 뺀 평균은 계산하지 않았다.","김동훈"],
+  ["C", "13", "Val로 모델도 고르고 점수도 보고하면 낙관적이지 않은가?", "맞다. best epoch·채택/기각·Final 선택에 모두 Val을 썼고, 실제로 Val 0.749 → Frozen Test 0.639로 낮아졌다. 그래서 Final의 성능은 Test 0.639로 보고하고, Val 점수는 \"선택에 쓴 점수\"로만 쓴다.", "손상우"],
+  ["C", "14", "Test를 봤다고 했는데?", "10-16에 Final 확정 전 한 번 봤다. 결과·스크립트는 지웠고 모델·조건 선택에 쓰지 않았다. 공식 평가는 10-20 선택 문서를 쓴 뒤 1회이고, 그 점수로 다시 고르지 않았다. 사전 열람 사실은 Final 보고서에 적는다. Bridge Holdout은 한 번도 쓰지 않았다.", "손상우"],
+  ["C", "15", "0.02 차이는 노이즈 아닌가?", "맞다, 실측했다. 같은 조건(B)이 seed만 바꿔 0.726~0.749로 0.02 흔들렸다. 그래서 4라운드는 방향마다 seed 5개 평균으로 비교했고(약 0.013 차이까지 구분), 어느 방향도 +0.02를 넘지 못해 B를 그대로 뒀다.", "지혜성"],
+  ["C", "16", "한 변수씩 바꿨다더니 batch도 바뀌고 두 변수 실험도 있다.", "인정한다. GPU 메모리 때문에 해상도를 올리면 batch가 줄었다(1920 → 3, 2240 → 2, 2560 → 1). exp006·007은 두 변수 동시 변경이다. exp005를 기준으로 하면 각 효과가 분리되고, exp011(증강 끄기)로 증강 효과를 따로 쟀다(−0.008).", "손상우"],
+  ["C", "17", "해상도를 키우면 오르는 건 당연하다. 새로운 게 뭔가?", "예상된 방향이다. 우리 기여는 ① 크기별 Recall로 원인을 확인(작은 구간 0.613 vs 중간 0.839, 갈변은 640에서 3px) ② 어디서 멈추는지를 seed 평균으로 확인(2240이 최고, 2560은 더 느리고 낮음) ③ 누수 없는 평가 세트다.", "김석범"],
+  ["C", "18", "갈변을 못 찾으면 쓸 수 없는 것 아닌가?", "현재 모델로는 Class 5를 신뢰할 수 없다(Test Recall 0). Train 갈변(대부분 잎 전체)과 평가 갈변(작은 반점)이 다른 물체이고, 반점 대책 4가지를 seed 5개씩 돌려도 효과가 없었다. 그래서 학습 기법이 아니라 데이터(같은 기준 라벨링·반점 사진·Class 분리 결정)를 교과 14 과제로 넘긴다.", "김석범"],
+  ["C", "19", "실시간 처리가 되나? 추론 속도는?", "Final은 사진 1장 예측 약 37ms(RTX 3060, imgsz 2240, batch 1). 현장 하드웨어와 사진 읽기부터 결과까지 전체 시간은 재지 않았다. 목표 하드웨어·처리량이 정해지면 그 기준으로 잰다.", "손상우"],
+  ["C","20","현장 기준(놓침 허용치, 오탐 허용치)은 무엇인가?","요구 지표를 받은 기록이 문서에 없다. 알려 주시면 \"오탐 N건 이하에서의 Recall\" 같은 지표로 다시 평가하겠다.","강동연"],
+  ["C","21","배경 오탐은 얼마나 되나?","Baseline Val에서 FP_BACKGROUND 24건(이물 있는 사진 속 배경). 그러나 이물이 없는 사진이 없어 \"이물 없는 이미지의 오탐률\"은 측정 불가다.","김동훈"],
+  ["D","22","데이터 유출 관리는?","사진 Git 제외 규칙, USB 이동, 추적 사진 0장 자동 점검. 사고로 검수표 CSV가 커밋됐으나 푸시 전 이력에서 제거했다. 한계: 데이터가 팀원 PC 여러 대에 있고 개인별 보관 관리가 필요하다.","강동연"],
+  ["D","23","AI 도구를 썼나? 어디까지?","소스에 근거가 있는 것은 분할 배치 판정(70배치, 사람 검수 규정)이다. [발표 전 확인] 그 외 사용 범위는 발표 전에 팀이 합의해 사실대로 답한다.","강동연"],
+  ["D", "24", "다른 사람이 돌려도 같은 결과가 나오나?", "00_setup.py 한 줄, seed + deterministic, manifest·모델 해시 자동 일치 점검까지 했고, 다른 PC에서 같은 조건을 다시 학습한 exp010b가 exp010과 소수 4자리까지 같았다. 다만 README만 보고 처음부터 재실행하는 시험은 아직 못 했다.", "강동연"],
+  ["D","25","Pilot Test를 900장 본 작업 뒤에 했나? (저장소 확인 추가)","사실: subject7/reports/test_report.md 기준 Pilot 20장은 10-08 15:27~15:47, 복사본 환경(RAW 읽기 전용)에서 김석범이 시험, 6개 항목 PASS·결함 0. 900장 교차검수는 10-07. 인정: 3일차 규칙(Pilot 확인 후 본 작업)과 순서가 다르다 — 10-08 제출본에는 \"별도 시범 기록 없음\"으로 적혀 있었다. 조치: 사후 확인으로 기록을 남겼고, 본 작업 중 결함은 Test Report 2-1에 기록. [발표 전 팀 확인]","김석범 · 지혜성"],
+  ["E", "26", "Val 0.749인데 Test는 0.639다. 과적합 아닌가?", "차이 0.110은 사실이다. ① 0.749는 seed 5개 중 최고를 고른 값(같은 조건 평균 0.739) ② Class별로 보면 0.066이 나뭇잎·종이 한 Class(Val 0.877 → Test 0.482)이고 플라스틱·돌·금속은 0.844 → 0.840으로 같다 ③ Test는 Val과 다른 촬영 묶음(G07·G14)이다. 과적합인지 Test의 나뭇잎·종이가 다른 모습인지는 아직 분석하지 않았다 — Test를 보며 고치면 Test가 오염되므로 교과 14에서 새 데이터로 확인한다.", "손상우"],
+  ["E", "27", "나뭇잎·종이 Precision 0.37이면 오탐 투성이 아닌가?", "Test에서는 그렇다(P 0.367 · R 0.855, 정답 23박스·16장). 놓치지는 않지만 다른 것을 나뭇잎·종이로 많이 부른다. Val에서는 0.877로 문제가 안 보였다 — Val 192박스 vs Test 23박스로 구성이 다르다. 원인 분석 전이며 교과 14 인계 항목에 넣었다.", "김석범"],
+  ["E", "28", "seed 5개 중 제일 좋은 걸 고른 건 체리피킹 아닌가?", "고르는 규칙을 학습 전에(10-19 16시대 커밋) 정해 두었다: 방향끼리는 seed 5개 평균으로 비교, 이기는 방향이 없으면 B 안에서 Val 최고. 최고를 고른 만큼 Val이 부풀어 있다는 것도 인정하며, 그래서 성능은 Test 1회 점수로만 말한다.", "지혜성"],
+  ["E", "29", "50번 넘게 학습했는데 크게 안 올랐다. 시간 낭비 아닌가?", "Val 평균으로 A 0.715 → B 0.739(+0.024)가 실제 개선이고, 나머지는 \"더 해도 안 오른다\"를 확인한 것이다(epoch·타일링·2560·증강 끄기·TTA·갈변 대책 4가지). 특히 갈변이 학습 기법으로 안 풀린다는 결론은 seed 5개 × 4방향이 있어야 말할 수 있었다.", "강동연"]
+ ]
+}
+</script>
+
+<script>
+(function(){
+'use strict';
+var DATA = JSON.parse(document.getElementById('data').textContent);
+var CC = {0:'#2e7d32',1:'#c62828',2:'#1565c0',3:'#7b1fa2',4:'#757575',5:'#e8710a',6:'#00897b'};
+var INK='#1d2433', MUTED='#4b5565', LINE='#d7dbe2', ACC='#4338ca';
+var NS='http://www.w3.org/2000/svg';
+
+/* ---------- SVG 도우미 ---------- */
+function el(tag, attrs, text){
+  var e=document.createElementNS(NS,tag);
+  for(var k in attrs){ e.setAttribute(k, attrs[k]); }
+  if(text!==undefined) e.textContent=text;
+  return e;
+}
+function svgFor(box){
+  var w=Math.max(200, Math.round(box.clientWidth)), h=Math.max(120, Math.round(box.clientHeight));
+  var s=el('svg',{viewBox:'0 0 '+w+' '+h,width:w,height:h,role:'img','class':'chart'});
+  box.innerHTML=''; box.appendChild(s);
+  return {s:s,w:w,h:h};
+}
+function f3(v){ return v.toFixed(3); }
+function comma(n){ return n.toLocaleString('en-US'); }
+
+/* 가로 막대: rows = [{label, sub, value, color, text, dash}] — 막대는 0부터, 값은 끝에 직접 표기 */
+function hbars(box, rows, opt){
+  opt=opt||{};
+  var c=svgFor(box), s=c.s, W=c.w, H=c.h;
+  var labW=opt.labW||300, valW=opt.valW||260, top=opt.top||6;
+  var n=rows.length, gap=opt.gap||14;
+  var bh=Math.min(opt.maxBar||64, (H-top-gap*(n-1))/n);
+  var max=opt.max||Math.max.apply(null, rows.map(function(r){return r.value;}))||1;
+  var plotW=W-labW-valW-16;
+  s.appendChild(el('line',{x1:labW,y1:top-2,x2:labW,y2:top+n*(bh+gap)-gap+2,stroke:LINE,'stroke-width':2}));
+  rows.forEach(function(r,i){
+    var y=top+i*(bh+gap), bw=Math.max(r.value>0?3:0, plotW*r.value/max);
+    var lf=opt.labFont||26;
+    s.appendChild(el('text',{x:labW-14,y:y+bh/2+(r.sub?-2:lf*0.35),'text-anchor':'end','font-size':lf,'font-weight':r.bold?800:600,fill:INK},r.label));
+    if(r.sub) s.appendChild(el('text',{x:labW-14,y:y+bh/2+lf*0.8,'text-anchor':'end','font-size':Math.round(lf*0.72),fill:MUTED},r.sub));
+    if(r.dash){
+      s.appendChild(el('rect',{x:labW+1,y:y,width:bw,height:bh,rx:5,fill:r.fillSoft||'#fff',stroke:r.color,'stroke-width':3,'stroke-dasharray':'9 6'}));
+    } else {
+      s.appendChild(el('rect',{x:labW+1,y:y,width:bw,height:bh,rx:5,fill:r.color}));
+    }
+    var tx=labW+bw+14;
+    /* seed 범위(최저~최고): 막대 위 가는 선 + 양끝 눈금 */
+    if(r.lo!=null){
+      var x1=labW+plotW*r.lo/max, x2=labW+plotW*r.hi/max, yc=y+bh/2;
+      /* 진한 막대 위에서도 보이게 흰 테두리를 먼저 깔고 주황 선 */
+      [['#fff',8],['#e8710a',4]].forEach(function(st){
+        s.appendChild(el('line',{x1:x1,y1:yc,x2:x2,y2:yc,stroke:st[0],'stroke-width':st[1],'stroke-linecap':'round'}));
+        [x1,x2].forEach(function(x){ s.appendChild(el('line',{x1:x,y1:yc-bh*0.34,x2:x,y2:yc+bh*0.34,stroke:st[0],'stroke-width':st[1],'stroke-linecap':'round'})); });
+      });
+      tx=Math.max(tx,x2+14);
+    }
+    s.appendChild(el('text',{x:tx,y:y+bh/2+(opt.valFont||28)*0.35,'font-size':opt.valFont||28,'font-weight':800,fill:r.textColor||INK},r.text));
+    if(r.note) s.appendChild(el('text',{x:tx+(r.textW||110),y:y+bh/2+9,'font-size':opt.noteFont||22,fill:MUTED},r.note));
+  });
+  /* 기준선: [{v, label, color, dash}] */
+  (opt.vlines||[]).forEach(function(l){
+    var x=labW+plotW*l.v/max, yb=top+n*(bh+gap)-gap+4;
+    s.appendChild(el('line',{x1:x,y1:top-8,x2:x,y2:yb,stroke:l.color||INK,'stroke-width':3,'stroke-dasharray':l.dash||'0'}));
+    s.appendChild(el('text',{x:x+(l.dx||0),y:top-14,'text-anchor':l.anchor||'middle','font-size':19,'font-weight':700,fill:l.color||INK},l.label));
+  });
+}
+
+/* 슬라이드 3: Class별 BBox */
+function chartClasses(){
+  var b=document.getElementById('chart-classes'); if(!b) return;
+  hbars(b, DATA.classes.map(function(c){
+    return {label:c.id+'  '+c.name, value:c.final, color:CC[c.id], text:comma(c.final), note:c.id===4?'사용 안 함':'('+c.delta+')', textW:c.final>=1000?96:76, textColor:c.id===5?'#a14b00':INK};
+  }), {labW:330, valW:250, maxBar:76, gap:20, labFont:28, valFont:30});
+}
+/* 슬라이드 6: 일차별 이슈 (세로 막대) */
+function chartIssues(){
+  var b=document.getElementById('chart-issues'); if(!b) return;
+  var c=svgFor(b), s=c.s, W=c.w, H=c.h, rows=DATA.issues;
+  var base=H-46, top=40, max=10, n=rows.length, bw=(W-20)/n*0.62, step=(W-20)/n;
+  s.appendChild(el('line',{x1:0,y1:base,x2:W,y2:base,stroke:LINE,'stroke-width':2}));
+  rows.forEach(function(r,i){
+    var h=(base-top)*r.n/max, x=10+i*step+(step-bw)/2;
+    s.appendChild(el('rect',{x:x,y:base-h,width:bw,height:h,rx:4,fill:'#9aa3b2'}));
+    s.appendChild(el('text',{x:x+bw/2,y:base-h-10,'text-anchor':'middle','font-size':26,'font-weight':800,fill:INK},String(r.n)));
+    s.appendChild(el('text',{x:x+bw/2,y:base+30,'text-anchor':'middle','font-size':19,fill:MUTED},r.d));
+  });
+  s.appendChild(el('text',{x:W-4,y:24,'text-anchor':'end','font-size':20,'font-weight':700,fill:'#1b6b34'},'전부 해결 · 남은 이슈 0'));
+}
+/* 슬라이드 8: 크기별 Recall */
+function chartSize(){
+  var b=document.getElementById('chart-size'); if(!b) return;
+  var SZ={S:'S <150px',M:'M 150~300',L:'L ≥300px'};
+  hbars(b, DATA.sizeRecall.map(function(r){
+    return {label:r.name, sub:SZ[r.size], value:r.r, color:CC[r.cls], bold:r.size==='S', text:f3(r.r), note:r.hit+' / '+r.gt, textW:96, textColor:r.cls===5?'#a14b00':INK};
+  }), {labW:250, valW:230, max:1, gap:12, maxBar:58, labFont:24, valFont:28});
+}
+/* 슬라이드 8: 실패 유형 */
+function chartFail(){
+  var b=document.getElementById('chart-fail'); if(!b) return;
+  var f=DATA.fail, keys=['FN','CLASS_ERROR','FP_PARTIAL','FP_DUPLICATE','FP_BACKGROUND'];
+  var lab={FN:'FN 놓침',CLASS_ERROR:'Class 틀림',FP_PARTIAL:'FP 일부 걸침',FP_DUPLICATE:'FP 중복',FP_BACKGROUND:'FP 배경'};
+  hbars(b, keys.map(function(k){ return {label:lab[k], value:f[k], color:k==='FN'?ACC:'#9aa3b2', text:String(f[k])}; }),
+    {labW:200, valW:80, max:111, gap:8, maxBar:36, labFont:21, valFont:24});
+}
+/* 슬라이드 10: 조건별 Val mAP50-95 (seed 평균 + 범위) */
+function chartExp(){
+  var b=document.getElementById('chart-exp'); if(!b) return;
+  var COL={base:'#8a93a3',one:'#b4bac5',avg:ACC,final:'#312e81'};
+  hbars(b, DATA.cand.map(function(e){
+    return {label:e.label, sub:e.sub, value:e.map, lo:e.lo, hi:e.hi, color:COL[e.kind], bold:e.kind==='final',
+      text:f3(e.map), note:e.note, textW:100, textColor:e.kind==='final'?'#312e81':INK};
+  }), {labW:400, valW:470, max:0.8, gap:16, maxBar:80, labFont:24, valFont:30, noteFont:21});
+}
+/* 슬라이드 11: 4라운드 방향별 seed 평균 + B 평균 · 채택선(B+0.02) */
+/* 점 그래프: 막대가 아니므로 축을 0.70~0.77로 확대 (작은 점 = seed 하나, 큰 점 = 평균) */
+function chartR4(){
+  var b=document.getElementById('chart-r4'); if(!b) return;
+  var c=svgFor(b), s=c.s, W=c.w, H=c.h, rows=DATA.r4;
+  var labW=230, valW=210, T=46, B=H-44, lo=0.70, hi=0.77, n=rows.length;
+  var X=function(v){ return labW+(v-lo)/(hi-lo)*(W-labW-valW); };
+  var rh=(B-T)/n;
+  [0.70,0.72,0.74,0.76].forEach(function(v){
+    s.appendChild(el('line',{x1:X(v),y1:T-6,x2:X(v),y2:B,stroke:'#eceef3','stroke-width':2}));
+    s.appendChild(el('text',{x:X(v),y:B+30,'text-anchor':'middle','font-size':19,fill:MUTED},v.toFixed(2)));
+  });
+  var bm=rows[0].mean;
+  [[bm,'B 평균 '+f3(bm),'#312e81','0','end',-8],[bm+0.02,'채택선 B+0.02 = '+f3(bm+0.02),'#9b1c1c','8 6','start',8]].forEach(function(l){
+    s.appendChild(el('line',{x1:X(l[0]),y1:T-14,x2:X(l[0]),y2:B,stroke:l[2],'stroke-width':3,'stroke-dasharray':l[3]}));
+    s.appendChild(el('text',{x:X(l[0])+l[5],y:T-20,'text-anchor':l[4],'font-size':19,'font-weight':800,fill:l[2]},l[1]));
+  });
+  rows.forEach(function(r,i){
+    var y=T+i*rh+rh/2, isB=r.id==='B', col=isB?'#312e81':ACC;
+    s.appendChild(el('text',{x:labW-18,y:y+8,'text-anchor':'end','font-size':22,'font-weight':isB?800:600,fill:INK},r.id+'  '+r.name));
+    r.seeds.forEach(function(v){ s.appendChild(el('circle',{cx:X(v),cy:y,r:7,fill:'#fff',stroke:'#8a93a3','stroke-width':2.5})); });
+    s.appendChild(el('circle',{cx:X(r.mean),cy:y,r:13,fill:col,stroke:'#fff','stroke-width':3}));
+    s.appendChild(el('text',{x:W-valW+18,y:y+2,'font-size':22,'font-weight':800,fill:isB?'#312e81':INK},f3(r.mean)+(isB?'':'  '+(r.d>=0?'+':'−')+Math.abs(r.d).toFixed(3))));
+    s.appendChild(el('text',{x:W-valW+18,y:y+24,'font-size':17,fill:MUTED},'갈변 '+r.br.toFixed(3)+(r.n<5?' · seed '+r.n+'개':'')));
+  });
+}
+/* 슬라이드 12: 11s 해상도별 */
+function chartRes(){
+  var b=document.getElementById('chart-res'); if(!b) return;
+  hbars(b, DATA.res.map(function(r){
+    var best=r.imgsz===2240;
+    return {label:String(r.imgsz), sub:'seed '+r.n+'개', value:r.map, color:best?'#312e81':'#b4bac5', bold:best, text:f3(r.map), note:r.note||'', textW:96};
+  }), {labW:150, valW:300, max:0.8, gap:24, maxBar:96, labFont:28, valFont:30, noteFont:20});
+}
+/* 슬라이드 13: Class별 Val vs Test (두 줄 막대) */
+function chartTest(){
+  var b=document.getElementById('chart-test'); if(!b) return;
+  var c=svgFor(b), s=c.s, W=c.w, H=c.h, rows=DATA.test;
+  var labW=250, valW=170, top=8, gap=16, n=rows.length;
+  var rh=(H-top-gap*(n-1))/n, bh=Math.min(30,(rh-6)/2), plotW=W-labW-valW;
+  s.appendChild(el('line',{x1:labW,y1:top-2,x2:labW,y2:top+n*(rh+gap)-gap,stroke:LINE,'stroke-width':2}));
+  rows.forEach(function(r,i){
+    var y=top+i*(rh+gap), em=r.id===0||r.id===5;
+    s.appendChild(el('rect',{x:labW-36,y:y+rh/2-9,width:18,height:18,rx:4,fill:CC[r.id]}));
+    s.appendChild(el('text',{x:labW-46,y:y+rh/2+8,'text-anchor':'end','font-size':22,'font-weight':em?800:600,fill:INK},r.name));
+    [['val',r.val,'#9aa3b2',y+rh/2-bh-2],['test',r.test,ACC,y+rh/2+2]].forEach(function(q){
+      var bw=Math.max(3,plotW*q[1]);
+      s.appendChild(el('rect',{x:labW+1,y:q[3],width:bw,height:bh,rx:4,fill:q[2]}));
+      s.appendChild(el('text',{x:labW+bw+10,y:q[3]+bh*0.78,'font-size':q[0]==='test'?22:19,'font-weight':q[0]==='test'?800:600,fill:q[0]==='test'?'#312e81':MUTED},(q[0]==='test'?'Test ':'Val ')+f3(q[1])));
+    });
+  });
+}
+/* 부록 A1 표 */
+function tableExp(){
+  var tb=document.getElementById('tbl-exp'); if(!tb) return;
+  DATA.exp.slice().sort(function(a,b){ return a.run.localeCompare(b.run); }).forEach(function(e){
+    var tr=document.createElement('tr'); if(e.kind==='best') tr.className='em';
+    var st=e.star?'*':'';
+    [[e.run],[e.model],[e.imgsz,'r'],[e.batch,'r'],[e.chg],[f3(e.p)+st,'r'],[f3(e.r)+st,'r'],[f3(e.m50)+st,'r'],['<b>'+f3(e.map)+st+'</b>','r'],[e.min!=null?e.min+'분':'—','r'],[e.dec]].forEach(function(c){
+      var td=document.createElement('td'); td.innerHTML=String(c[0]); if(c[1]) td.className=c[1]; tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+}
+/* 부록 A8 표 */
+function tableQA(){
+  var tb=document.querySelector('#tbl-qa tbody'); if(!tb) return;
+  var G={A:'A. 데이터·라벨 (교과 7)',B:'B. 분할·누수',C:'C. 평가·실험',D:'D. 프로세스·보안·투명성',E:'E. Final Model · Frozen Test (10-20 추가)'}, last='';
+  DATA.qa.forEach(function(q){
+    if(q[0]!==last){ last=q[0]; var g=document.createElement('tr'); g.innerHTML='<td colspan="4" style="background:#eef0fd;font-weight:800;color:#312e81">'+G[q[0]]+'</td>'; tb.appendChild(g); }
+    var tr=document.createElement('tr');
+    var ans=q[3].replace(/\[(발표 전[^\]]*)\]/g,'<span class="badge b-tbd" style="font-size:14px">$1</span>');
+    tr.innerHTML='<td class="r"><b>'+q[1]+'</b></td><td><b>'+q[2]+'</b></td><td>'+ans+'</td><td>'+q[4]+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+/* ---------- 사진 슬롯: 참조만, 없으면 회색 자리 ---------- */
+function placeholder(fig, src){
+  fig.classList.remove('ok'); fig.classList.add('missing');
+  var fr=fig.querySelector('.frame');
+  fr.innerHTML='<div class="ph"><b>[사진 자리: '+fig.dataset.alt+']</b><code>'+src+'</code></div>';
+}
+function setupSlots(){
+  document.querySelectorAll('#stage .slot').forEach(function(fig){
+    var src=fig.dataset.src, isVid=fig.dataset.type==='video';
+    fig.innerHTML='<div class="frame"></div><figcaption></figcaption>';
+    var fr=fig.querySelector('.frame'), cap=fig.querySelector('figcaption');
+    cap.textContent=fig.dataset.caption||'';
+    if(isVid){
+      var v=document.createElement('video'); v.controls=true; v.preload='metadata'; v.muted=true;
+      v.addEventListener('error',function(){ placeholder(fig,src); });
+      v.addEventListener('loadedmetadata',function(){ fig.classList.add('ok'); });
+      v.src=src; fr.appendChild(v); return;
+    }
+    var img=new Image(); img.alt=fig.dataset.alt||''; img.decoding='async';
+    img.onload=function(){ fig.classList.add('ok'); };
+    img.onerror=function(){
+      if(fig.dataset.fallback && img.dataset.fb!=='1'){
+        img.dataset.fb='1'; cap.textContent=fig.dataset.fallbackCaption||cap.textContent;
+        var t=document.createElement('span'); t.className='tag'; t.textContent='대체 화면'; fr.appendChild(t);
+        img.src=fig.dataset.fallback; return;
+      }
+      placeholder(fig,src);
+    };
+    img.src=src; fr.appendChild(img);
+    fr.addEventListener('click',function(){ if(fig.classList.contains('ok')) openLightbox(img.src, cap.textContent); });
+  });
+}
+var lb=document.getElementById('lightbox');
+function openLightbox(src,text){ lb.querySelector('img').src=src; lb.querySelector('.lc').textContent=text; lb.classList.add('on'); }
+lb.addEventListener('click',function(){ lb.classList.remove('on'); });
+
+/* ---------- 슬라이드 구성 ---------- */
+var stage=document.getElementById('stage');
+var all=[].slice.call(stage.querySelectorAll(':scope > .slide'));
+var mainS=all.filter(function(s){ return !/^a/.test(s.dataset.id); });
+var appS=all.filter(function(s){ return /^a/.test(s.dataset.id); });
+var cur=0, lastMain=0;
+
+function fmt(sec){ var m=Math.floor(sec/60), s=sec%60; return m+':'+(s<10?'0':'')+s; }
+
+/* 우하단: 현재 발표자 · 다음 발표자 (본편만) */
+mainS.forEach(function(s,i){
+  var sp=s.dataset.speaker, next='';
+  for(var j=i+1;j<mainS.length;j++){ if(mainS[j].dataset.speaker!==sp){ next=mainS[j].dataset.speaker+' ('+mainS[j].dataset.id+')'; break; } }
+  var who=document.createElement('div'); who.className='who';
+  who.innerHTML='발표 <b>'+sp+'</b>'+(next?' · 다음 '+next:'')+'<span class="num">'+s.dataset.id+' / '+mainS.length+'</span>';
+  s.querySelector('footer').appendChild(who);
+});
+appS.forEach(function(s){
+  var who=document.createElement('div'); who.className='who';
+  who.innerHTML='<b>부록 '+s.dataset.id.toUpperCase()+'</b><span class="num">Backspace: 본편으로</span>';
+  s.querySelector('footer').appendChild(who);
+});
+var cum=0; mainS.forEach(function(s){ cum+=(+s.dataset.time||0); s.dataset.cum=cum; });
+
+function idxOf(s){ return all.indexOf(s); }
+function show(i, push){
+  if(i<0||i>=all.length) return;
+  all[cur].classList.remove('active');
+  cur=i; var s=all[cur]; s.classList.add('active');
+  if(mainS.indexOf(s)>=0) lastMain=cur;
+  var id=s.dataset.id;
+  if(push!==false && location.hash!=='#'+id) history.replaceState(null,'','#'+id);
+  var isApp=/^a/.test(id);
+  var pos=isApp?appS.indexOf(s)+1:mainS.indexOf(s)+1, tot=isApp?appS.length:mainS.length;
+  document.getElementById('progress').style.width=(isApp?100:(pos/tot*100))+'%';
+  document.getElementById('counter').textContent=(isApp?'부록 '+pos+' / '+tot:pos+' / '+tot);
+  renderNotes();
+  var sc=s.querySelector('.scroll'); if(sc) sc.scrollTop=0;
+}
+function step(d){
+  var s=all[cur], list=/^a/.test(s.dataset.id)?appS:mainS, k=list.indexOf(s)+d;
+  if(k<0||k>=list.length) return; /* 끝에서 멈춘다 */
+  show(idxOf(list[k]));
+}
+function fromHash(){
+  var h=decodeURIComponent(location.hash.replace('#','')).toLowerCase();
+  var t=all.filter(function(s){ return s.dataset.id===h; })[0];
+  show(t?idxOf(t):0,false);
+}
+
+/* ---------- 발표자 노트 ---------- */
+var notesOn=false, t0=null, timerId=null;
+var np=document.getElementById('notesPanel');
+function renderNotes(){
+  if(!notesOn) return;
+  var s=all[cur], n=s.querySelector('.notes');
+  var isApp=/^a/.test(s.dataset.id);
+  var meta='<div class="meta"><b>'+s.dataset.id.toUpperCase()+'. '+(s.dataset.title||'')+'</b><span>발표자 <b>'+s.dataset.speaker+'</b></span>'+
+    (isApp?'':'<span>목표 '+(+s.dataset.time||0)+'초 · 누적 목표 '+fmt(+s.dataset.cum)+' (+전환)</span>')+
+    '<span>경과 <span id="timer">'+(t0?fmt(Math.floor((Date.now()-t0)/1000)):'0:00')+'</span> (T: 타이머 시작/초기화)</span></div>';
+  np.innerHTML=meta+(n?n.innerHTML:'');
+}
+function tick(){ var t=document.getElementById('timer'); if(t&&t0) t.textContent=fmt(Math.floor((Date.now()-t0)/1000)); }
+
+/* ---------- 목록(썸네일) ---------- */
+var ov=document.getElementById('overview'), ovBuilt=false;
+function buildOverview(){
+  ov.innerHTML='';
+  [['본편',mainS],['부록 (#a1 ~ #a9)',appS]].forEach(function(g){
+    var h=document.createElement('h2'); h.textContent=g[0]; ov.appendChild(h);
+    var grid=document.createElement('div'); grid.className='grid'; ov.appendChild(grid);
+    g[1].forEach(function(s){
+      var bt=document.createElement('button'); bt.className='thumb'; bt.type='button'; bt.dataset.idx=idxOf(s);
+      var tv=document.createElement('div'); tv.className='tv';
+      var cl=s.cloneNode(true); cl.classList.add('active'); cl.removeAttribute('data-id');
+      cl.querySelectorAll('.notes').forEach(function(x){ x.remove(); });
+      tv.appendChild(cl); bt.appendChild(tv);
+      var cap=document.createElement('span'); cap.className='cap';
+      cap.innerHTML='<b>'+s.dataset.id.toUpperCase()+'</b> · '+(s.dataset.title||'')+' · '+s.dataset.speaker;
+      bt.appendChild(cap);
+      bt.addEventListener('click',function(){ toggleOverview(false); show(+bt.dataset.idx); });
+      grid.appendChild(bt);
+    });
+  });
+  ovBuilt=true;
+}
+function sizeThumbs(){
+  ov.querySelectorAll('.tv').forEach(function(tv){ var sl=tv.firstChild; sl.style.transform='scale('+(tv.clientWidth/1920)+')'; });
+}
+function toggleOverview(on){
+  if(on===undefined) on=!ov.classList.contains('on');
+  if(on){ if(!ovBuilt) buildOverview(); ov.classList.add('on'); sizeThumbs();
+    ov.querySelectorAll('.thumb').forEach(function(b){ b.classList.toggle('cur', +b.dataset.idx===cur); });
+    var c=ov.querySelector('.thumb.cur'); if(c){ c.focus(); c.scrollIntoView({block:'center'}); }
+  } else ov.classList.remove('on');
+}
+
+/* ---------- 무대 크기 ---------- */
+function fit(){
+  var sc=Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  stage.style.transform='scale('+sc+')';
+  if(ov.classList.contains('on')) sizeThumbs();
+}
+
+/* ---------- 키보드 ---------- */
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  var k=e.key;
+  if(lb.classList.contains('on')){ if(k==='Escape'||k===' '||k==='Enter'){ lb.classList.remove('on'); e.preventDefault(); } return; }
+  if(ov.classList.contains('on')){
+    if(k==='Escape'||k==='o'||k==='O'){ toggleOverview(false); e.preventDefault(); }
+    return; /* 목록에서는 Tab/Enter 로 선택 */
+  }
+  var black=document.getElementById('black');
+  if(black.classList.contains('on') && k!=='b' && k!=='B' && k!=='Escape') return;
+  var sc=all[cur].querySelector('.scroll');
+  switch(k){
+    case 'ArrowRight': case 'PageDown': case ' ': step(1); e.preventDefault(); break;
+    case 'ArrowLeft': case 'PageUp': step(-1); e.preventDefault(); break;
+    case 'ArrowDown': if(sc){ sc.scrollBy(0,120); e.preventDefault(); } break;
+    case 'ArrowUp': if(sc){ sc.scrollBy(0,-120); e.preventDefault(); } break;
+    case 'Home': show(idxOf(/^a/.test(all[cur].dataset.id)?appS[0]:mainS[0])); e.preventDefault(); break;
+    case 'End': show(idxOf(/^a/.test(all[cur].dataset.id)?appS[appS.length-1]:mainS[mainS.length-1])); e.preventDefault(); break;
+    case 'Backspace': if(/^a/.test(all[cur].dataset.id)){ show(lastMain); e.preventDefault(); } break;
+    case 'f': case 'F':
+      if(!document.fullscreenElement){ (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); }
+      else document.exitFullscreen(); break;
+    case 's': case 'S': notesOn=!notesOn; np.classList.toggle('on',notesOn); renderNotes(); break;
+    case 't': case 'T': t0=Date.now(); if(!timerId) timerId=setInterval(tick,1000); tick(); break;
+    case 'o': case 'O': toggleOverview(true); e.preventDefault(); break;
+    case 'b': case 'B': black.classList.toggle('on'); break;
+    case 'Escape': black.classList.remove('on'); break;
+  }
+});
+window.addEventListener('hashchange',fromHash);
+window.addEventListener('resize',fit);
+setTimeout(function(){ var h=document.getElementById('hint'); h.style.opacity='0'; }, 6000);
+
+/* ---------- 시작 ---------- */
+/* 차트는 크기를 재야 하므로 각 슬라이드를 잠시 표시한 상태에서 그린다 */
+function renderCharts(){
+  var map={'chart-classes':chartClasses,'chart-issues':chartIssues,'chart-size':chartSize,'chart-fail':chartFail,'chart-exp':chartExp,'chart-r4':chartR4,'chart-res':chartRes,'chart-test':chartTest};
+  Object.keys(map).forEach(function(id){
+    var box=document.getElementById(id); if(!box) return;
+    var sl=box.closest('.slide'), was=sl.classList.contains('active');
+    sl.classList.add('active'); map[id](); if(!was) sl.classList.remove('active');
+  });
+}
+tableExp(); tableQA(); setupSlots(); renderCharts(); fit(); fromHash();
+})();
+</script>
+</body>
+</html>

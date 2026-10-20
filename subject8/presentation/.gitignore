@@ -1,0 +1,7 @@
+# 발표자료: 실제 사진 · 영상 · PDF 는 Git 에 올리지 않는다 (사진은 각자 USB 로 private/photos/ 에)
+private/
+*.jpg
+*.jpeg
+*.mp4
+*.mov
+*.pdf
