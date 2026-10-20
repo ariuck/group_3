@@ -3,6 +3,7 @@
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
+const API_BASE = location.pathname.startsWith("/demo/") ? "/demo" : "";
 const COLORS = ["#16a34a", "#dc2626", "#2563eb", "#9333ea", "#6b7280", "#ea580c", "#0d9488"];
 const BAD = "#e11d74", WARN = "#f59e0b";
 const KIND_KO = { TP: "맞힘", CLASS_ERROR: "종류 틀림", FP: "오검출", FN: "놓침", PRED: "예측" };
@@ -18,7 +19,7 @@ const S = {
 
 /* ── 공통 ─────────────────────────────────────────────── */
 async function api(path, opt = {}) {
-  const r = await fetch(path, opt);
+  const r = await fetch(API_BASE + path, opt);
   const ct = r.headers.get("content-type") || "";
   const body = ct.includes("json") ? await r.json() : await r.text();
   if (!r.ok) throw new Error((body && body.detail) || r.statusText);
@@ -77,7 +78,13 @@ async function boot() {
   buildFilters();
   renderGallery();
   const m = /img=([^&]+)/.exec(location.hash);
-  if (m) select(decodeURIComponent(m[1]));
+  const initial = new URLSearchParams(location.hash.slice(1));
+  if (initial.has("conf")) setConf(Math.max(0.05, Math.min(0.95, Number(initial.get("conf")) || 0.25)), false);
+  if (initial.get("mode") === "cmp" || initial.get("mode") === "gt") setMode(initial.get("mode"));
+  if (m) await select(decodeURIComponent(m[1]));
+  if (initial.get("scene") === "report") openReport();
+  if (initial.get("scene") === "threshold") flash("#confCard");
+  notifyPresentation("g3-demo:ready");
 }
 
 async function loadInfo() {
@@ -141,7 +148,7 @@ function renderGallery() {
         : (x.source === "upload" ? `<span class="badge">새 사진</span>` : "");
       const dots = Object.keys(x.classes || {}).map((c) => `<span class="dot" style="background:${COLORS[c]}" title="${nameOf(c)}"></span>`).join("");
       return `<div class="thumb ${x.id === S.cur ? "on" : ""}" data-id="${esc(x.id)}" title="${esc(x.title || x.id)}">
-        <img loading="lazy" src="/api/images/${encodeURIComponent(x.id)}/thumb" alt="">${badge}
+        <img loading="lazy" src="${API_BASE}/api/images/${encodeURIComponent(x.id)}/thumb" alt="">${badge}
         <div class="cap"><span class="t">${x.group ? x.group + " · " : ""}${x.source === "upload" ? esc((x.title || "").slice(0, 16)) : shortTime(x.id)}</span>${dots}</div></div>`;
     }).join("");
   }
@@ -160,13 +167,13 @@ function select(id) {
   renderGallery(); renderPanel(); draw();
   loadImage(id);
   markStep("pick");
-  if (S.info && S.info.ready) predict(id);
+  if (S.info && S.info.ready) return predict(id);
 }
 function loadImage(id) {
   const im = new Image();
   im.onload = () => { if (S.cur !== id) return; S.img = im; S.imgId = id; fit(); renderDets(); };
   im.onerror = () => toast("사진을 열 수 없습니다", true);
-  im.src = `/api/images/${encodeURIComponent(id)}/full`;
+  im.src = `${API_BASE}/api/images/${encodeURIComponent(id)}/full`;
 }
 async function predict(id) {
   if (!S.done.has(id)) scanning(true);
@@ -572,9 +579,21 @@ function showHelp() {
       <span><kbd>S</kbd></span><span>라벨 후보 저장</span><span><kbd>F</kbd></span><span>사진 전체화면</span>
       <span><kbd>H</kbd> · <kbd>I</kbd></span><span>사용 방법 · 모델 정보</span><span><kbd>Backspace</kbd></span><span>발표로 돌아가기</span></div>`, true);
 }
+function presentationReturn() {
+  const raw = new URLSearchParams(location.search).get("return");
+  if (!raw) return null;
+  try { const u = new URL(raw); return /^https?:$/.test(u.protocol) && u.hostname === location.hostname ? u : null; } catch { return null; }
+}
+function notifyPresentation(type) {
+  const dest = presentationReturn();
+  if (window.parent !== window && dest) window.parent.postMessage({ type }, dest.origin);
+}
 function goBack() {
-  if (document.referrer && /presentation/.test(document.referrer)) history.back();
-  else if (S.info && S.info.presentation) location.href = "/presentation/index.html#16";
+  const dest = presentationReturn();
+  if (window.parent !== window && dest) { notifyPresentation("g3-demo:close"); return; }
+  if (dest) location.href = dest.href;
+  else if (document.referrer && /presentation/.test(document.referrer)) history.back();
+  else if (S.info && S.info.presentation) location.href = (API_BASE || "") + "/presentation/index.html#16";
   else history.back();
 }
 
@@ -639,6 +658,7 @@ function bindUI() {
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" && !["range", "checkbox"].includes(e.target.type)) return;
     if (!$("#modal").hidden) { if (e.key === "Escape") closeModal(); return; }
+    if (e.key === "Escape" && window.parent !== window) { e.preventDefault(); goBack(); return; }
     const k = e.key.toLowerCase();
     if (e.key === "ArrowRight") { e.preventDefault(); step(1); } else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
     else if (k === "1") { ensureImage(); setMode("pred"); } else if (k === "2") { ensureImage(); setMode("gt"); } else if (k === "3") { ensureImage(); setMode("cmp"); }
