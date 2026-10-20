@@ -4,9 +4,9 @@
 교과 8 `[중간] Vision 기반 객체검출 모듈` 과제 저장소입니다.
 교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11n 을 파인튜닝하여 교과 14 로 연결합니다.
 
-> **진행 상태**: 7일차 — 공식 Dataset `kimchi_v5` (2026-10-16, v4 의 Val 누수를 없앤 재분할) · Baseline + 개선 실험 7개 완료 (현재 최고 exp007 11s·1920·증강 Val 0.724), 3대 분산 실험 진행 예정 · Final Model 선택 전
+> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료(`presentation/`) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
 >
-> **먼저 볼 곳**: [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (개선점·한계 — 발표용) · [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md) (인수인계 · 3대 분산 실험 계획) · [`reports/README.md`](reports/README.md)
+> **먼저 볼 곳**: [`reports/final_model_selection.md`](reports/final_model_selection.md) (Final 선택 근거) · [`docs/handoff_subject14.md`](docs/handoff_subject14.md) (교과 14 인계 — 한계 포함) · [`reports/05_acceptance/acceptance_test.md`](reports/05_acceptance/acceptance_test.md) · [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (개선점·한계 — 발표용) · [`reports/README.md`](reports/README.md)
 >
 > **데이터 성격**: AI캠퍼스 교육을 위해 실제 산업데이터와 유사한 분포 구조로 100% 가상 생성된 조각김치 이물검출 학습데이터를 사용합니다.
 >
@@ -296,7 +296,7 @@ python scripts/plot_runs.py                         # 그래프 · runs_summary.
 
 - 가장 많은 실패: 플라스틱·돌 FN 64 · CLASS_ERROR 22, 갈변 FN 15 (15개 전부)
 - **갈변**: v5 Val 의 갈변은 대부분 작은 갈색 점(한 변 20~30px)이라 640 에서 3px 안팎 — Train 갈변은 거의 G09 의 넓게 변한 배추 조각. 라벨 기준은 교과 7 `class_guide.md` 대로 그대로 두고 모델 쪽(해상도·타일링)으로 다룸
-- 원인 가설 문서(`reports/03_failure_analysis/failure_hypothesis.md`)는 v5 기준으로 다시 작성 예정. kimchi_v1 때의 가설(H1~H5): [`reports/history/kimchi_v1/03_failure_analysis/failure_hypothesis.md`](reports/history/kimchi_v1/03_failure_analysis/failure_hypothesis.md)
+- 원인 가설 문서: [`reports/03_failure_analysis/failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) (v5 기준 H1~H5 · 이후 검증). kimchi_v1 때의 가설(H1~H5): [`reports/history/kimchi_v1/03_failure_analysis/failure_hypothesis.md`](reports/history/kimchi_v1/03_failure_analysis/failure_hypothesis.md)
 
 ## 10. Improvement (kimchi_v5, 같은 Val 104장)
 
@@ -319,19 +319,57 @@ python scripts/plot_runs.py                         # 그래프 · runs_summary.
 
 - 개선점·한계 정리 (발표용): [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md)
 - 1라운드(3대) 결과: epoch 100 · 타일링 · 1280 · TTA 모두 이득 없음, seed 흔들림 ±0.01, 다른 PC 재현성 확인 — 2라운드(6명, Final 후보 3개 × seed) 계획: [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md)
+- 2~4라운드(exp009 · 011 · 014~050): 후보 B(11s · 2240) 선택 → 갈변 개선 6방향 × seed 5개 모두 B 보다 +0.02 못 미침 → **Final = B 의 exp050**. 전체 설계·결과 [`reports/04_improvement/improvement_experiment.md`](reports/04_improvement/improvement_experiment.md)
 - 지난 Version(v4) 개선 분석: [`reports/history/kimchi_v4/baseline_vs_improved.md`](reports/history/kimchi_v4/baseline_vs_improved.md)
 
-## 11. Final Model
+## 11. Final Model (2026-10-20 확정)
 
-TBD (8일차) — Frozen Test 를 보기 전에 Validation 근거로 선택. 선택한 모델은 `models/final/final_best.pt` 로 복사하고 `src/registry.py` 의 `OFFICIAL["final"]` 에 실행 이름을 적습니다.
+**`exp050_v5_s_imgsz2240_aug_seed2`** → `models/final/final_best.pt` (`src/registry.py` 의 `OFFICIAL["final"]`)
 
-## 12. Frozen Test
+| 항목 | 값 |
+|---|---|
+| 조건 | YOLO11s · imgsz 2240 · batch 2 · epoch 50 · 증강(flipud 0.5 · hsv_v 0.6) · seed 2 · 학습 62분 (RTX 3060) |
+| Validation (best epoch 50) | P 0.945 · R 0.822 · mAP50 0.840 · mAP50-95 **0.749** (Baseline 0.470) |
+| 선택 이유 | 후보 B(11s · 2240) seed 5개 평균 0.739 가 A(11s · 1920) 0.715 보다 +0.024, 4라운드 6방향 중 B 보다 +0.02 오른 것이 없어 B 그대로 · B 안에서 Val 최고. Val 최고는 seed 5개 중 고른 값이라 부풀어 있다 |
+| 추론 설정 | 기본 (TTA · agnostic NMS 는 손해) · 예측 약 37ms/장 |
 
-TBD (8일차)
+근거: [`reports/final_model_selection.md`](reports/final_model_selection.md) (후보별 평균 · Class 별 · 갈변 분석) · 실험 전체 [`reports/04_improvement/improvement_experiment.md`](reports/04_improvement/improvement_experiment.md) · 52개 실험 기록 [`experiment_log.csv`](reports/04_improvement/experiment_log.csv)
+
+## 12. Frozen Test (Final 확정 뒤 한 번 · 82장)
+
+[`reports/05_final/final_metrics.csv`](reports/05_final/final_metrics.csv) · [`final_class_metrics.csv`](reports/05_final/final_class_metrics.csv) · 그림 `reports/figures/final/`
+
+| Precision | Recall | mAP50 | mAP50-95 |
+|---:|---:|---:|---:|
+| 0.868 | 0.744 | 0.726 | **0.639** |
+
+| Class | 박스 | P | R | mAP50 | mAP50-95 |
+|---|---:|---:|---:|---:|---:|
+| 0 leaf_paper | 23 | 0.367 | 0.855 | 0.521 | 0.482 |
+| 1 plastic_stone_metal | 140 | 0.979 | 0.929 | 0.949 | 0.840 |
+| 2 branch | 200 | 0.981 | 0.768 | 0.930 | 0.839 |
+| 3 insect | 23 | 0.893 | 0.913 | 0.946 | 0.756 |
+| 4 rubber_glove_unused | 0 | - | - | - | - (Instance 0건) |
+| 5 disease_browning | 16 | 1.000 | **0.000** | 0.015 | **0.007** |
+| 6 green_onion_pepper | 30 | 0.987 | 1.000 | 0.995 | 0.908 |
+
+- **대외 성능은 Test mAP50-95 0.639 로 말한다.** Val 0.749 는 최고 seed 를 고른 값이라 부풀었고 Test 는 다른 촬영 묶음(G07 · G14)이다.
+- **갈변은 사실상 검출하지 못한다** (Recall 0.00). 나뭇잎·종이는 Precision 0.37 로 오검출이 많다. 상세 [`docs/handoff_subject14.md`](docs/handoff_subject14.md) 5장.
+- Test 점수로 모델을 다시 고르지 않았다. 다만 2026-10-16 Final 확정 전에 Test 점수를 한 번 본 적이 있다는 기록이 있다 ([`baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) 3장 — 그 점수로 모델·조건을 고르지는 않았다).
 
 ## 13. Detection / Auto Label
 
-TBD (8일차) — Auto Label 결과는 교과 7 라벨링 도구로 Human Review 후 확정
+**Detection — 동작함.** 사진을 정답(GT)과 나란히 예측해 BBox · Class · Confidence 를 그린다.
+
+```bash
+python scripts/08_predict_images.py --model final --limit 5          # Final 모델로 Validation 사진 5장 (imgsz 2240 자동)
+python scripts/08_predict_images.py --model final --source 사진.jpg    # 사진 1장
+```
+
+- 결과: `runs/predict/exp050_v5_s_imgsz2240_aug_seed2_val/compare/*.jpg` (왼쪽 정답 · 오른쪽 예측), `predictions.csv`, `per_image.csv` — 사진이라 Git 제외.
+- 2026-10-20 확인: Val 5장 · 예측 29 · 정답 25 · TP 25 · FP 4 · FN 0 (모두 Class 6 사진이라 다른 Class 는 더 확인해야 한다 — [`acceptance_test.md`](reports/05_acceptance/acceptance_test.md) 4장).
+
+**Auto Label — 아직 구현하지 않았다** (`src/auto_labeler.py` · `scripts/12_auto_label.py` 없음). 구현하면 새 이미지 5장으로 먼저 시험하고, 후보 TXT 는 교과 7 라벨링 도구(`cd ../subject7 && python main.py`)로 사람이 확인·수정·승인한 뒤에만 Final Label 로 확정한다.
 
 ## 14. 알려진 한계
 
@@ -340,11 +378,17 @@ TBD (8일차) — Auto Label 결과는 교과 7 라벨링 도구로 Human Review
 - Class 6(파·고추)은 G00 한 묶음을 나눠 쓰므로 같은 조각이 Train 과 평가에 함께 나와 점수가 높게 나올 수 있습니다.
 - 평가 역할의 갈변·벌레가 15~29박스뿐이라 박스 1개에 Recall 이 3~7%p 움직입니다.
 - **머리카락·실 등 Class 0~6 에 없는 이물은 검출 대상이 아닙니다.** 회사 Class 정의에 없어 라벨을 그리지 않았습니다 (`kimchi_v3` 에서 머리카락을 나뭇가지로 그린 BBox 1개 삭제). 교과 14 에서 Class 추가 여부를 회사와 확인해야 합니다.
-- **Class 5(갈변)**: Train 갈변은 거의 G09 의 넓게 변한 조각이고, 평가 역할의 갈변은 작은 갈색 점(원본 20~30px)이 많아 현재 모델은 거의 찾지 못합니다 (exp002_v5 Val 갈변 AP50 0.06, 타일링 0.09). 타일링이 조금 낫지만 근본 대응은 작은 갈변 학습 데이터 보강이 필요합니다 (교과 14 과제).
+- **Class 5(갈변)**: Train 갈변은 거의 G09 의 넓게 변한 조각이고, 평가 역할의 갈변은 작은 갈색 점(원본 20~30px)이 많아 현재 모델은 거의 찾지 못합니다 (exp002_v5 Val 갈변 AP50 0.06, 타일링 0.09). 4라운드에서 반점 복제 · 합성 · 복원 · 2560 6방향을 seed 5개씩 시도했지만 갈변 mAP50-95 는 0.075~0.111 로 그대로였고 **Frozen Test 에서는 Recall 0.00** 입니다. 학습 기법이 아니라 데이터 문제로 보며, 같은 기준으로 라벨링한 작은 갈변 데이터 보강이 필요합니다 (교과 14 과제 · [`failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) H2).
+- **Frozen Test 를 한 번 먼저 본 적이 있습니다** (2026-10-16, Final 확정 전 · 그 점수로 모델을 고르지는 않음). 정식 평가는 Final 확정 뒤 한 번입니다 ([`baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) 3장).
+- 5라운드(P2 검출층 · 변형 반점 합성, exp051~065)는 코드만 있고 결과가 없습니다. Final 은 바꾸지 않습니다.
 
 ## 15. 교과 14 Handoff
 
-TBD (9일차) — `docs/handoff_subject14.md`
+[`docs/handoff_subject14.md`](docs/handoff_subject14.md) — Final Model · Dataset Version · **Bridge Holdout 156장(교과 8 에서 사용하지 않음)** · 새 사진 예측 방법 · 한계 · 지킬 규칙 · 이어서 할 일.
+
+- 교과 14 의 첫 평가는 Final Model 을 Bridge 156장에 한 번 돌린 값이 된다.
+- 먼저 알아야 할 한계: 갈변 검출 불가 · 정상 김치(Negative) 사진 없음 · 평가 점수는 "처음 보는 물체"가 아님 · `conf` 기준 미정.
+- 인수 점검: `python scripts/qa_acceptance_check.py` → [`reports/05_acceptance/acceptance_test.md`](reports/05_acceptance/acceptance_test.md)
 
 ## 디렉토리 구조
 
@@ -362,7 +406,7 @@ subject8/
 ├── manifests/                      # 공식 Version split_manifest.csv + 역할별 CSV (산출물 1), kimchi_v4/ (지난 Version)
 ├── models/                         # Weight (Git) — README.md(목록) · baseline/ · improved/ · final/ · history/<Version>/
 ├── runs/<실행>/                     # results.csv · args.yaml · 그래프 (Git) — weights·사진 미리보기는 제외
-├── reports/                        # 01_data ~ 05_acceptance (공식 Version) · history/<Version>/ · figures/ · runs_summary.csv
+├── reports/                        # 01_data ~ 05_final · 05_acceptance (공식 Version) · final_model_selection.md · history/<Version>/ · figures/ · runs_summary.csv
 ├── scripts/                        # 00_setup(올인원) · 01~14 단계별 실행 · plot_*.py (그래프)
 └── src/
     ├── constants.py                # Class · 공식 Version · Version 별 분할 규칙 (SSOT)
