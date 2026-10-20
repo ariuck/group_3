@@ -1,8 +1,8 @@
 # AI Campus Subject 8
-# 조각김치 이물검출 Object Detection (YOLO11n)
+# 조각김치 이물검출 Object Detection (YOLO11 — Baseline 11n · Final 11s)
 
 교과 8 `[중간] Vision 기반 객체검출 모듈` 과제 저장소입니다.
-교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11n 을 파인튜닝하여 교과 14 로 연결합니다.
+교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11 을 파인튜닝하여 (Baseline YOLO11n → Final YOLO11s) 교과 14 로 연결합니다.
 
 > **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료(`presentation/`) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
 >
@@ -18,7 +18,7 @@
 
 ## 1. 프로젝트 목적
 
-교과 7 에서 검수·확정한 정답 데이터(JPG 900장 + YOLO TXT 900개)로 YOLO11n 객체검출 모델을 학습하고,
+교과 7 에서 검수·확정한 정답 데이터(JPG 900장 + YOLO TXT 900개)로 YOLO11 객체검출 모델(Baseline 11n → Final 11s)을 학습하고,
 
 ```text
 Dataset Audit → Split → Smoke Test → Baseline → Validation 평가
@@ -271,6 +271,7 @@ python scripts/plot_runs.py                         # 그래프 · runs_summary.
 
 - 학습: 2026-10-16, 50 epoch · 약 5분 — [`reports/02_baseline/baseline_training_condition.md`](reports/02_baseline/baseline_training_condition.md), `models/baseline/baseline_best.pt` (= `baseline_v5.pt`)
 - Validation 평가 (104장 · 정답 BBox 541개) — [`reports/02_baseline/baseline_metrics.csv`](reports/02_baseline/baseline_metrics.csv), [`baseline_class_metrics.csv`](reports/02_baseline/baseline_class_metrics.csv), 그래프 `reports/figures/baseline/`
+- 아래 0.471 은 학습이 끝난 뒤 `07_evaluate_baseline.py` 로 다시 잰 값(0.4707)이고, 개선 실험 비교표의 **0.470** 은 학습 중 best epoch 44 의 값(0.4695)이다. 측정이 달라 소수 셋째 자리가 다르다 (실험끼리는 학습 중 값으로 비교)
 
 | Precision | Recall | mAP50 | mAP50-95 |
 |---:|---:|---:|---:|

@@ -8,7 +8,7 @@
 |---|---|
 | Final | **`exp050_v5_s_imgsz2240_aug_seed2`** → `models/final/final_best.pt` |
 | 조건 | YOLO11s · imgsz 2240 · batch 2 · epoch 50 · 증강(flipud 0.5 · hsv_v 0.6) · seed 2 · 학습 데이터 kimchi_v5 그대로 |
-| Val (best epoch 50) | P 0.945 · R 0.822 · mAP50 0.840 · **mAP50-95 0.749** (baseline_v5 0.469) |
+| Val (best epoch 50) | P 0.945 · R 0.822 · mAP50 0.840 · **mAP50-95 0.749** (baseline_v5 0.470 — 학습 중 best epoch, 같은 기준) |
 | 원본 Weight | `models/improved/exp050_v5_s_imgsz2240_aug_seed2.pt` · sha256 `a185c4401ace9bbcf12b79e89852ca5aa839c8c80730b20ffa2d4dfcb241845b` |
 | 학습 · 예측 시간 | 학습 62분 (RTX 3060, GPU 6.7GB) · 예측 약 37ms/장 (imgsz 2240, batch 1) |
 

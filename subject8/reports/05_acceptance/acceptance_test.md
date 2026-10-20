@@ -1,7 +1,7 @@
 # Acceptance Test (교과 8) — Final Model · Frozen Test 반영판
 
 > 산출물 7 · 가이드 22.7. 담당: 5번(QA·시연 검증).
-> **현재 상태**: Final Model(`exp050`)과 Frozen Test 까지 확인했다. 남은 것은 **Auto Label(8일차 구현)과 그 시연 백업자료, v5 기준 실패 원인 가설 문서**이며 `TODO` 로 표시했다. 사람이 해야 하는 `MANUAL` 중 이 PC 에서 가능한 것은 직접 확인해 아래에 기록했다.
+> **현재 상태**: Final Model(`exp050`)과 Frozen Test 까지 확인했다. 남은 것은 **Auto Label(8일차 구현)과 그 시연 백업자료**이며 (v5 실패 원인 가설 문서는 `03_failure_analysis/failure_hypothesis.md` 로 작성됨) `TODO` 로 표시했다. 사람이 해야 하는 `MANUAL` 중 이 PC 에서 가능한 것은 직접 확인해 아래에 기록했다.
 
 | | |
 |---|---|
@@ -56,7 +56,7 @@
 
 | 항목 | 결과 | 근거 |
 |---|:---:|---|
-| Baseline Validation 의 Precision·Recall·mAP50·mAP50-95 | PASS | `02_baseline/baseline_metrics.csv` (mAP50-95 0.471) |
+| Baseline Validation 의 Precision·Recall·mAP50·mAP50-95 | PASS | `02_baseline/baseline_metrics.csv` (mAP50-95 0.471 — `07` 재평가. 실험 비교표의 0.470 은 학습 중 best epoch 값) |
 | Class 별 성능 | PASS | `baseline_class_metrics.csv` (Class 4 는 Instance 0건으로 표시) |
 | Failure Analysis 표 | PASS | `03_failure_analysis/failure_analysis.csv` 외 3개 |
 | 실패 원인 가설 문서 | PASS | `03_failure_analysis/failure_hypothesis.md` — v5 기준 H1~H5 와 이후 검증 (2026-10-20 작성). 사진을 봐야 아는 부분(FP_BACKGROUND 24건에 빠진 라벨이 있는지 등)은 문서 안에 「사람 확인 필요」로 남아 있다 |

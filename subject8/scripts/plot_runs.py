@@ -204,9 +204,9 @@ def main():
             "model": Path(str(a.get("model", ""))).name, "imgsz": a.get("imgsz", ""),
             "epochs": a.get("epochs", ""), "batch": a.get("batch", ""), "optimizer": a.get("optimizer", ""),
             "lr0": a.get("lr0", ""), "seed": a.get("seed", ""), "epochs_done": int(rows[-1]["epoch"]),
-            "best_epoch": int(b["epoch"]), "precision": round(b["metrics/precision(B)"], 4),
-            "recall": round(b["metrics/recall(B)"], 4), "map50": round(b["metrics/mAP50(B)"], 4),
-            "map50_95": round(b["metrics/mAP50-95(B)"], 4),
+            "best_epoch": int(b["epoch"]), "precision": b["metrics/precision(B)"],   # 원래 값 — 반올림은 쓸 때 한 번만
+            "recall": b["metrics/recall(B)"], "map50": b["metrics/mAP50(B)"],
+            "map50_95": b["metrics/mAP50-95(B)"],
         })
         print(f" {name:<34} {version:<10} best ep {int(b['epoch']):>3}  mAP50 {b['metrics/mAP50(B)']:.3f}  mAP50-95 {b['metrics/mAP50-95(B)']:.3f}")
 
@@ -219,7 +219,7 @@ def main():
     with SUMMARY_CSV.open("w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(summary[0]))
         w.writeheader()
-        w.writerows(summary)
+        w.writerows({k: round(v, 4) if k in ("precision", "recall", "map50", "map50_95") else v for k, v in s.items()} for s in summary)
     write_models_readme(summary)
 
     print(f"\n 저장: reports/figures/runs/ ({len(data)}장), reports/figures/comparison/ ({', '.join(compare_files)}), "
