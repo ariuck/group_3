@@ -4,7 +4,7 @@
 교과 8 `[중간] Vision 기반 객체검출 모듈` 과제 저장소입니다.
 교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11 을 파인튜닝하여 (Baseline YOLO11n → Final YOLO11s) 교과 14 로 연결합니다.
 
-> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료([`../presentation/`](../presentation/README.md)) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
+> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료([`../presentation/`](../presentation/README.md)) · 다른 팀원 재현 시험 (5라운드 진단은 exp063 1회로 마침 — 갈변 0.237 · 전체 0.725, Final 그대로)
 >
 > **먼저 볼 곳**: [`reports/final_model_selection.md`](reports/final_model_selection.md) (Final 선택 근거) · [`docs/handoff_subject14.md`](docs/handoff_subject14.md) (교과 14 인계 — 한계 포함) · [`reports/05_acceptance/acceptance_test.md`](reports/05_acceptance/acceptance_test.md) · [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (개선점·한계 — 발표용) · [`reports/README.md`](reports/README.md)
 >
@@ -381,9 +381,9 @@ python scripts/08_predict_images.py --model final --source 사진.jpg    # 사�
 - Class 6(파·고추)은 G00 한 묶음을 나눠 쓰므로 같은 조각이 Train 과 평가에 함께 나와 점수가 높게 나올 수 있습니다.
 - 평가 역할의 갈변·벌레가 15~29박스뿐이라 박스 1개에 Recall 이 3~7%p 움직입니다.
 - **머리카락·실 등 Class 0~6 에 없는 이물은 검출 대상이 아닙니다.** 회사 Class 정의에 없어 라벨을 그리지 않았습니다 (`kimchi_v3` 에서 머리카락을 나뭇가지로 그린 BBox 1개 삭제). 교과 14 에서 Class 추가 여부를 회사와 확인해야 합니다.
-- **Class 5(갈변)**: Train 갈변은 거의 G09 의 넓게 변한 조각이고, 평가 역할의 갈변은 작은 갈색 점(원본 20~30px)이 많아 현재 모델은 거의 찾지 못합니다 (exp002_v5 Val 갈변 AP50 0.06, 타일링 0.09). 4라운드에서 반점 복제 · 합성 · 복원 · 2560 6방향을 seed 5개씩 시도했지만 갈변 mAP50-95 는 0.075~0.111 로 그대로였고 **Frozen Test 에서는 Recall 0.00** 입니다. 학습 기법이 아니라 데이터 문제로 보며, 같은 기준으로 라벨링한 작은 갈변 데이터 보강이 필요합니다 (교과 14 과제 · [`failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) H2).
+- **Class 5(갈변)**: Train 갈변은 거의 G09 의 넓게 변한 조각이고, 평가 역할의 갈변은 작은 갈색 점(원본 20~30px)이 많아 현재 모델은 거의 찾지 못합니다 (exp002_v5 Val 갈변 AP50 0.06, 타일링 0.09). 4라운드에서 반점 복제 · 합성 · 복원 · 2560 6방향을 seed 5개씩 시도했지만 갈변 mAP50-95 는 0.075~0.111 로 그대로였고 **Frozen Test 에서는 Recall 0.00** 입니다. 데이터를 늘리는 방법으로는 오르지 않았습니다. Final 뒤 진단(exp063, seed 1개)에서 P2 검출층 + 변형 반점 합성이 Val 갈변을 0.107 → **0.237** 로 올렸지만 다른 Class 가 모두 떨어져 전체 0.725 (같은 seed B 0.746) 라 Final 은 그대로다. 다음은 구조(P2 · head 사전학습)와 같은 기준으로 라벨링한 작은 갈변 데이터 보강입니다 (교과 14 과제 · [`failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) H2).
 - **Frozen Test 를 한 번 먼저 본 적이 있습니다** (2026-10-16, Final 확정 전 · 그 점수로 모델을 고르지는 않음). 정식 평가는 Final 확정 뒤 한 번입니다 ([`baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) 3장).
-- 5라운드(P2 검출층 · 변형 반점 합성, exp051~065)는 코드만 있고 결과가 없습니다. Final 은 바꾸지 않습니다.
+- 5라운드(P2 검출층 · 변형 반점 합성)는 팀 결정으로 exp063 하나만 학습했습니다 (exp051~065 중 나머지 14개는 등록만). 결과와 다른 Class 하락 원인은 [`docs/project/experiment_handoff.md`](docs/project/experiment_handoff.md) 10장.
 
 ## 15. 교과 14 Handoff
 
