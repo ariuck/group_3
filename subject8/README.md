@@ -4,7 +4,7 @@
 교과 8 `[중간] Vision 기반 객체검출 모듈` 과제 저장소입니다.
 교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11 을 파인튜닝하여 (Baseline YOLO11n → Final YOLO11s) 교과 14 로 연결합니다.
 
-> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료(`presentation/`) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
+> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료([`../presentation/`](../presentation/README.md)) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
 >
 > **먼저 볼 곳**: [`reports/final_model_selection.md`](reports/final_model_selection.md) (Final 선택 근거) · [`docs/handoff_subject14.md`](docs/handoff_subject14.md) (교과 14 인계 — 한계 포함) · [`reports/05_acceptance/acceptance_test.md`](reports/05_acceptance/acceptance_test.md) · [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (개선점·한계 — 발표용) · [`reports/README.md`](reports/README.md)
 >

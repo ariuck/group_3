@@ -287,9 +287,10 @@ def check_env():
 
     try:
         out = subprocess.run(["git", "ls-files", "--", ".", ":(exclude)runs"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
-        # presentation/assets 의 PNG 는 그래프 · 화면 캡처(가짜 샘플 UI)다 — 2026-10-20 사람이 확인. jpg 등 다른 형식은 여기서도 막는다
-        photos = [f for f in out if re.search(r"\.(jpe?g|png|bmp|webp|heic)$", f, re.I) and "/figures/" not in f
-                  and not f.startswith("reports/figures/") and not (f.startswith("presentation/assets/") and f.lower().endswith(".png"))]
+        photos = [f for f in out if re.search(r"\.(jpe?g|png|bmp|webp|heic)$", f, re.I) and "/figures/" not in f and not f.startswith("reports/figures/")]
+        # 발표자료(저장소 맨 위 presentation/)도 본다 — PNG 는 그래프 · 화면 캡처(가짜 샘플 UI)라 허용(2026-10-20 사람이 확인), 사진·영상·PDF 는 막는다
+        pres = subprocess.run(["git", "ls-files", "--", "../presentation"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+        photos += [f for f in pres if re.search(r"\.(jpe?g|bmp|webp|heic|mp4|mov|pdf)$", f, re.I)]
         weights = [f for f in out if f.endswith(".pt") and not f.startswith("models/")]
         add(A, "회사 사진이 Git 에 추적되지 않는다", "PASS" if not photos else "FAIL", "사진 0장" if not photos else f"{len(photos)}장: {photos[:3]}")
         add(A, "Weight(.pt) 는 models/ 안의 것만 추적된다", "PASS" if not weights else "FAIL", "models/ 밖 .pt 0개" if not weights else str(weights[:3]))

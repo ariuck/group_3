@@ -91,7 +91,7 @@
 | 항목 | 결과 | 근거 |
 |---|:---:|---|
 | `src/`·`scripts/` Python 파일이 문법 오류 없이 컴파일된다 | PASS | 전부 정상 |
-| 회사 사진이 Git 에 추적되지 않는다 | PASS | 추적 사진 0장. `presentation/assets/` 의 PNG 7개(혼동행렬·비교 그래프·가짜 샘플 UI 캡처)는 그래프·화면 캡처라 제외 — 2026-10-20 사람이 `ui_main.png` · `readme_2_RAW비교.png` 를 열어 회사 사진이 아님을 확인함 (발표 폴더가 `main` 에 합쳐진 뒤 이 점검이 FAIL 로 바뀌어 기준을 고침). jpg 등 다른 형식은 어디서도 허용하지 않는다 |
+| 회사 사진이 Git 에 추적되지 않는다 | PASS | 추적 사진 0장. 발표자료는 `subject8/` 밖 저장소 맨 위 `presentation/` 로 옮겼고(2026-10-20) 이 점검이 그 폴더도 본다 — 사진·영상·PDF 는 막고, `presentation/assets/` 의 PNG 7개(혼동행렬·비교 그래프·가짜 샘플 UI 캡처)는 그래프·화면 캡처라 허용한다. 2026-10-20 사람이 `ui_main.png` · `readme_2_RAW비교.png` 를 열어 회사 사진이 아님을 확인함. PNG 로 저장한 실제 사진은 이 점검이 못 잡으므로 사람이 본다 |
 | `.pt` 는 `models/` 안의 것만 추적된다 | PASS | |
 | 학습·추론 패키지가 설치되어 있다 | PASS | ultralytics · torch · cv2 import 가능, CUDA available True (RTX 3060) |
 | 환경 점검 | PASS (사람이 확인) | `01_check_environment.py` — Python 3.14.4 · PyTorch 2.14.1+cu130 · Ultralytics 8.4.175 · GPU · `yolo11n.pt` Load 성공 |

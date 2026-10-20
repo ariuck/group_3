@@ -6,15 +6,16 @@
 ## 여는 법
 - `index.html` 을 더블클릭해 브라우저(Chrome·Edge)로 엽니다. `F` 키로 전체화면.
 - 사진은 `private/photos/` 의 파일을 참조만 합니다. 파일이 없으면 회색 `[사진 자리]` 박스가 보입니다.
-- **이 폴더는 Git 에 있습니다** (`subject8/presentation/`, 2026-10-20 부터). 단 **`private/`(실제 사진) · PDF · 영상은 Git 에 없습니다** — 이 폴더의 `.gitignore` 와 저장소 `*.jpg` 규칙이 막는다.
-- 사진이 보이게 하려면 원본 PC 에서 USB 로 `private/photos/` 를 받아 **각자 이 폴더 안에** 넣습니다 (`subject8/presentation/private/photos/`). Git 이 무시하므로 커밋되지 않습니다. 절대 `git add -f` 하지 않기.
+- **이 폴더는 Git 에 있습니다** (저장소 맨 위 `presentation/`). 교과 7 + 교과 8 공동 발표라서 2026-10-20 에 `subject8/presentation/` 에서 **`presentation/` 으로 옮겼습니다** (파일 이력은 그대로 이어짐). 단 **`private/`(실제 사진) · PDF · 영상은 Git 에 없습니다** — 이 폴더의 `.gitignore` 와 저장소 `*.jpg` 규칙이 막는다.
+- 사진이 보이게 하려면 원본 PC 에서 USB 로 `private/photos/` 를 받아 **각자 이 폴더 안에** 넣습니다 (`presentation/private/photos/`). Git 이 무시하므로 커밋되지 않습니다. 절대 `git add -f` 하지 않기. 옛 위치 `subject8/presentation/private/` 에 사진을 넣어 둔 PC 는 **`presentation/private/` 로 옮기세요** (옛 폴더는 이 이동 뒤에 비어서 남습니다).
+- 아래 "숫자 → 근거 대조표"의 파일 이름(`final_model_selection.md`, `experiment_log.csv` 등)은 **`subject8/` 안의 파일**입니다.
 
 ## 함께 수정하기 (Git)
 
 ```bash
 cd ~/group_3 && git pull origin main          # 고치기 전에 항상 최신으로
-# subject8/presentation/index.html 수정 → 브라우저로 열어 확인
-git add subject8/presentation && git status --short   # .jpg · .mp4 · private/ 가 없어야 함
+# presentation/index.html 수정 → 브라우저로 열어 확인
+git add presentation && git status --short   # .jpg · .mp4 · private/ 가 없어야 함
 git commit -m "docs(presentation): <슬라이드 번호> <바꾼 것>" && git push origin main
 ```
 
