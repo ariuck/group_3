@@ -387,16 +387,16 @@ svg text{font-family:var(--font)}
       <div class="st done"><b>Detection 시연</b><span class="badge b-done">가능</span></div>
       <div class="st plan"><b>Auto Label</b><span class="badge b-plan">예정</span></div>
       <div class="st plan"><b>Human Review</b><span class="badge b-plan">예정</span></div>
-      <div class="st plan"><b>교과 14 Handoff</b><span class="badge b-plan">예정 · 9일차</span></div>
+      <div class="st done"><b>교과 14 Handoff</b><span class="small">문서 작성</span><span class="badge b-done">작성 · 팀 검토 전</span></div>
     </div>
     <ul class="pts">
       <li>교과 7: 2026-10-06 ~ 10-08 인계 완료 · 교과 8: 2026-10-12 ~ (10-20 Final 확정)</li>
     </ul>
   </div>
-  <footer><div class="fn">Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 의 seed 2개(exp026·027)는 재학습 중이나 결론에 영향 없음 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 (소스 1.1, 3.1)</div></footer>
+  <footer><div class="fn">Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 의 seed 2개(exp026·027)는 재학습 중이나 결론에 영향 없음 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 · 5라운드(P2 검출층·변형 반점 합성)는 Final 확정 뒤 갈변 진단용으로 진행 중이며 Final은 바꾸지 않음 · 교과 14 Handoff는 <code>docs/handoff_subject14.md</code> 작성 완료, 팀 검토 전 (소스 1.1, 3.1)</div></footer>
   <aside class="notes">
     <div class="script"><p>교과 8은 지금 이 단계에 와 있습니다.</p>
-    <p>데이터 점검부터 개선 실험 네 라운드까지 마쳤고, 오늘 아침 Final Model을 확정해 Frozen Test로 딱 한 번 평가했습니다. Auto Label과 사람 검토, 교과 14 인계 문서는 아직 남아 있어서 완료로 말씀드리지 않습니다.</p></div>
+    <p>데이터 점검부터 개선 실험 네 라운드까지 마쳤고, 오늘 아침 Final Model을 확정한 뒤 Frozen Test로 정식 평가를 한 번 했습니다. 그 전에 10월 16일에 Test 점수를 한 번 본 적이 있는데, 이 부분은 뒤에서 솔직하게 말씀드리겠습니다. Auto Label과 사람 검토는 아직 남아 있어서 완료로 말씀드리지 않습니다. 교과 14 인계 문서는 초안을 써 두었고 팀 검토가 남았습니다.</p></div>
     <div class="hand">(넘김) 첫 모델이 무엇을 놓쳤는지는 김동훈 님이 설명드리겠습니다.</div>
   </aside>
 </section>
@@ -498,7 +498,7 @@ svg text{font-family:var(--font)}
   <header><div class="kicker">교과 8 <span class="sep">|</span> Final Model 선택 · 4라운드 (6명 PC 밤샘, 6방향 × seed 5개)</div><h1>미리 정한 규칙대로 골랐다 → Final = exp050</h1></header>
   <div class="body row" style="gap:40px">
     <div class="col" style="width:620px;gap:16px">
-      <div class="card" style="padding:18px 24px"><div class="small accent" style="font-weight:800">규칙 · 학습 시작 전에 기록 (10-19 16:42 커밋)</div>
+      <div class="card" style="padding:18px 24px"><div class="small accent" style="font-weight:800">규칙 · 학습 시작 전에 기록 (10-19 16:55 커밋 · 첫 학습 17:25)</div>
         <ol class="small" style="margin:8px 0 0;padding-left:1.3em;line-height:1.5"><li>방향마다 seed 5개 → <b>평균끼리</b> 비교</li><li>B 평균보다 <b>+0.02 이상</b>인 방향 중 최고를 채택</li><li>없으면 <b>B 그대로</b>, B 안에서 Val 최고 실행이 Final</li></ol></div>
       <div class="card hl" style="padding:18px 24px"><div class="small" style="font-weight:800">결과</div>
         <div style="font-size:30px;font-weight:800;line-height:1.35">+0.02 넘은 방향 없음 (최고 ② +0.001)<br>→ B 그대로 → <span class="accent">exp050</span></div>
@@ -543,7 +543,7 @@ svg text{font-family:var(--font)}
 
 <!-- 13 Frozen Test -->
 <section class="slide" data-id="13" data-speaker="김석범" data-time="50" data-title="Frozen Test 결과">
-  <header><div class="kicker">교과 8 <span class="sep">|</span> Frozen Test · 82장 · 단 1회</div><h1>Final의 실력은 Frozen Test 0.639로 말한다</h1></header>
+  <header><div class="kicker">교과 8 <span class="sep">|</span> Frozen Test · 82장 · 정식 1회</div><h1>Final의 실력은 Frozen Test 0.639로 말한다</h1></header>
   <div class="body row" style="gap:40px">
     <div class="col" style="width:620px;gap:16px">
       <div class="row" style="align-items:flex-end;gap:22px">
@@ -569,7 +569,7 @@ svg text{font-family:var(--font)}
   </div>
   <footer><div class="fn">Test 82장 · 432박스 (G07·G14 + G00 6장, Val과 다른 촬영 묶음) · 선택 문서를 쓴 <b>뒤 1회</b> 평가, 이 점수로 다시 고르지 않음 · 10-16에 확정 전 한 번 본 사실은 부록 A5 · Class 기여 = (Val − Test) ÷ 6 · Class 4는 Test에도 0건 · 상세 부록 A9 (소스 3.13)</div></footer>
   <aside class="notes">
-    <div class="script"><p>Validation 0.749는 모델을 고르는 데 쓴 점수라서 조금 부풀어 있습니다. 같은 조건 다섯 번의 평균은 0.739였습니다. 그래서 Final의 실력은 한 번도 쓰지 않은 Frozen Test 82장으로 단 한 번 평가한 0.639로 말씀드립니다.</p>
+    <div class="script"><p>Validation 0.749는 모델을 고르는 데 쓴 점수라서 조금 부풀어 있습니다. 같은 조건 다섯 번의 평균은 0.739였습니다. 그래서 Final의 실력은 Final을 확정한 뒤 Frozen Test 82장으로 정식 평가한 0.639로 말씀드립니다. 정식 평가는 한 번이지만, 10월 16일에 확정 전에 Test 점수를 한 번 본 적이 있다는 점은 부록 A5에 밝혀 두었습니다. 그 점수로 모델을 고르지는 않았습니다.</p>
     <p>0.11이 낮아졌는데, Class별로 보면 그중 0.066이 나뭇잎·종이 한 Class입니다. Test에서 다른 것을 나뭇잎·종이로 부르는 오탐이 많았고, 원인은 아직 분석하지 않았습니다. 갈변은 Test에서 하나도 찾지 못했습니다.</p>
     <p>반대로 가장 많은 플라스틱·돌·금속은 Validation과 거의 같았습니다. 이 Test 점수를 보고 모델을 다시 고르지는 않았습니다.</p></div>
     <div class="hand">(이어서) 그래서 저희가 주장하지 않는 것을 먼저 말씀드리겠습니다.</div>
@@ -650,7 +650,7 @@ svg text{font-family:var(--font)}
       <div class="st done"><b>Final Model</b><span class="small">exp050 · Validation 근거만</span><span class="badge b-done">완료</span></div>
       <div class="st done"><b>Frozen Test 1회</b><span class="small">82장 · 0.639</span><span class="badge b-done">완료</span></div>
       <div class="st plan"><b>Auto Label + Human Review</b><span class="small">후보 TXT → 교과 7 도구에서 사람이 승인</span><span class="badge b-plan">예정</span></div>
-      <div class="st plan"><b>교과 14 Handoff</b><span class="small">문서 작성</span><span class="badge b-plan">9일차 예정</span></div>
+      <div class="st done"><b>교과 14 Handoff</b><span class="small">docs/handoff_subject14.md</span><span class="badge b-done">작성 · 팀 검토 전</span></div>
     </div>
     <div class="row" style="gap:30px;align-items:flex-start">
       <div class="card grow"><h3>교과 14로 넘기는 것</h3>
@@ -661,7 +661,7 @@ svg text{font-family:var(--font)}
   </div>
   <footer><div class="fn">요구 지표는 받은 기록이 없음 — 알려 주시면 "오탐 N건 이하에서의 Recall" 같은 지표로 다시 평가 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 (소스 3.9, 3.11, 9.8 Q20)</div></footer>
   <aside class="notes">
-    <div class="script"><p>Final Model 선택과 Frozen Test는 끝났고, 남은 일은 자동 라벨 후보를 교과 7 도구에서 사람이 검토하는 흐름과 교과 14 인계 문서입니다.</p>
+    <div class="script"><p>Final Model 선택과 Frozen Test는 끝났고, 남은 일은 자동 라벨 후보를 교과 7 도구에서 사람이 검토하는 흐름입니다. 교과 14 인계 문서는 초안을 써 두었고 팀 검토만 남았습니다.</p>
     <p>교과 14에는 Final Model과 한 번도 쓰지 않은 Bridge Holdout 156장, 그리고 갈변 데이터 과제와 나뭇잎·종이 오탐 분석을 넘깁니다.</p>
     <p>그리고 비솔 측에 갈변 라벨 기준, 정상 김치 샘플, Class 추가 여부, 현장에서 요구하는 성능 지표를 여쭙고 싶습니다.</p></div>
     <div class="hand">(마무리) 이상으로 발표를 마치고 질문 받겠습니다.</div>
@@ -858,7 +858,7 @@ svg text{font-family:var(--font)}
   <div class="body row" style="gap:36px">
     <div class="col grow" style="gap:18px">
       <div class="card small"><h3>재현성</h3><code>python scripts/00_setup.py</code> 한 줄 → .venv → 교과 7 복원 → 점검 → 학습 폴더 → "같은 데이터·같은 분할 ✓" · 학습 조건·PC 정보·모델 해시를 실행마다 자동 기록 · Weight 해시 자동 점검(<code>qa_acceptance_check.py</code>) · <b>다른 PC에서 다시 학습한 exp010b가 exp010과 소수 4자리까지 같음</b><br><span class="muted">한계: 다른 팀원이 README만 보고 처음부터 재실행하는 시험은 아직 안 함</span> <span class="badge b-plan">8~9일차 예정</span></div>
-      <div class="card small"><h3>Acceptance 자동 점검 (2026-10-15)</h3>PASS 24 · FAIL 1 (학습 패키지 미설치 PC — 사진 PC에서 재시험 예정) · TODO 7 (8일차 산출물) · MANUAL 4</div>
+      <div class="card small"><h3>Acceptance 자동 점검 (2026-10-20)</h3>PASS 79 · FAIL 0 · TODO 4 · MANUAL 4 → 사람이 확인한 2개 반영 시 PASS 81 · TODO 4 · MANUAL 2. 남은 TODO는 Auto Label · 시연 백업자료 (이전 10-15 판: PASS 24 · FAIL 1 — 패키지 미설치 PC, 사진 PC에서 재시험해 해결)</div>
       <div class="card small"><h3>교과 7 도구 시험</h3>Golden Test 12개 항목 12 PASS · Pilot Test 20장 20분(1.0분/장) 6개 항목 PASS · Human Final QA 40장 이상 없음</div>
     </div>
     <div class="col" style="width:760px;gap:18px">
@@ -1011,21 +1011,21 @@ svg text{font-family:var(--font)}
   ["B","11","비슷한 사진 중복은 어떻게 걸러냈나?","dHash 256bit 해밍거리 ≤ 40으로 900장 전체 쌍 검사 → 분할 사이 0쌍(G00 예외 제외). 실물 재사용은 SIFT가 오탐이 많아 폐기하고 육안으로 확인했다.","김동훈"],
   ["B","12","파·고추(Class 6)는 같은 조각이 Train·Val에 있다면서요?","맞다(255박스 중 250개가 G00 한 묶음). 그래서 Class 6 점수는 \"본 물체 점수\"로 따로 표시하며, 이 Class를 뺀 평균은 계산하지 않았다.","김동훈"],
   ["C", "13", "Val로 모델도 고르고 점수도 보고하면 낙관적이지 않은가?", "맞다. best epoch·채택/기각·Final 선택에 모두 Val을 썼고, 실제로 Val 0.749 → Frozen Test 0.639로 낮아졌다. 그래서 Final의 성능은 Test 0.639로 보고하고, Val 점수는 \"선택에 쓴 점수\"로만 쓴다.", "손상우"],
-  ["C", "14", "Test를 봤다고 했는데?", "10-16에 Final 확정 전 한 번 봤다. 결과·스크립트는 지웠고 모델·조건 선택에 쓰지 않았다. 공식 평가는 10-20 선택 문서를 쓴 뒤 1회이고, 그 점수로 다시 고르지 않았다. 사전 열람 사실은 Final 보고서에 적는다. Bridge Holdout은 한 번도 쓰지 않았다.", "손상우"],
+  ["C", "14", "Test를 봤다고 했는데?", "10-16에 Final 확정 전 한 번 봤다. 결과·스크립트는 지웠고 모델·조건 선택에 쓰지 않았다. 공식 평가는 10-20 선택 문서를 쓴 뒤 1회이고, 그 점수로 다시 고르지 않았다. 사전 열람 사실은 Final 보고서(final_model_selection.md)에 적었다. Bridge Holdout은 한 번도 쓰지 않았다.", "손상우"],
   ["C", "15", "0.02 차이는 노이즈 아닌가?", "맞다, 실측했다. 같은 조건(B)이 seed만 바꿔 0.726~0.749로 0.02 흔들렸다. 그래서 4라운드는 방향마다 seed 5개 평균으로 비교했고(약 0.013 차이까지 구분), 어느 방향도 +0.02를 넘지 못해 B를 그대로 뒀다.", "지혜성"],
   ["C", "16", "한 변수씩 바꿨다더니 batch도 바뀌고 두 변수 실험도 있다.", "인정한다. GPU 메모리 때문에 해상도를 올리면 batch가 줄었다(1920 → 3, 2240 → 2, 2560 → 1). exp006·007은 두 변수 동시 변경이다. exp005를 기준으로 하면 각 효과가 분리되고, exp011(증강 끄기)로 증강 효과를 따로 쟀다(−0.008).", "손상우"],
   ["C", "17", "해상도를 키우면 오르는 건 당연하다. 새로운 게 뭔가?", "예상된 방향이다. 우리 기여는 ① 크기별 Recall로 원인을 확인(작은 구간 0.613 vs 중간 0.839, 갈변은 640에서 3px) ② 어디서 멈추는지를 seed 평균으로 확인(2240이 최고, 2560은 더 느리고 낮음) ③ 누수 없는 평가 세트다.", "김석범"],
   ["C", "18", "갈변을 못 찾으면 쓸 수 없는 것 아닌가?", "현재 모델로는 Class 5를 신뢰할 수 없다(Test Recall 0). Train 갈변(대부분 잎 전체)과 평가 갈변(작은 반점)이 다른 물체이고, 반점 대책 4가지를 seed 5개씩 돌려도 효과가 없었다. 그래서 학습 기법이 아니라 데이터(같은 기준 라벨링·반점 사진·Class 분리 결정)를 교과 14 과제로 넘긴다.", "김석범"],
   ["C", "19", "실시간 처리가 되나? 추론 속도는?", "Final은 사진 1장 예측 약 37ms(RTX 3060, imgsz 2240, batch 1). 현장 하드웨어와 사진 읽기부터 결과까지 전체 시간은 재지 않았다. 목표 하드웨어·처리량이 정해지면 그 기준으로 잰다.", "손상우"],
   ["C","20","현장 기준(놓침 허용치, 오탐 허용치)은 무엇인가?","요구 지표를 받은 기록이 문서에 없다. 알려 주시면 \"오탐 N건 이하에서의 Recall\" 같은 지표로 다시 평가하겠다.","강동연"],
-  ["C","21","배경 오탐은 얼마나 되나?","Baseline Val에서 FP_BACKGROUND 24건(이물 있는 사진 속 배경). 그러나 이물이 없는 사진이 없어 \"이물 없는 이미지의 오탐률\"은 측정 불가다.","김동훈"],
+  ["C","21","배경 오탐은 얼마나 되나?","Baseline Val에서 FP_BACKGROUND 24건(이물 있는 사진 속 배경). 그러나 이물이 없는 사진이 없어 \"이물 없는 이미지의 오탐률\"은 측정 불가다. 또 이 24건 중 20건이 한 촬영 묶음(G05)에 몰려 있는데, 정상 김치를 이물로 본 것인지 빠진 라벨인지는 사진으로 확인하기 전이라 단정하지 않는다.","김동훈"],
   ["D","22","데이터 유출 관리는?","사진 Git 제외 규칙, USB 이동, 추적 사진 0장 자동 점검. 사고로 검수표 CSV가 커밋됐으나 푸시 전 이력에서 제거했다. 한계: 데이터가 팀원 PC 여러 대에 있고 개인별 보관 관리가 필요하다.","강동연"],
   ["D","23","AI 도구를 썼나? 어디까지?","소스에 근거가 있는 것은 분할 배치 판정(70배치, 사람 검수 규정)이다. [발표 전 확인] 그 외 사용 범위는 발표 전에 팀이 합의해 사실대로 답한다.","강동연"],
   ["D", "24", "다른 사람이 돌려도 같은 결과가 나오나?", "00_setup.py 한 줄, seed + deterministic, manifest·모델 해시 자동 일치 점검까지 했고, 다른 PC에서 같은 조건을 다시 학습한 exp010b가 exp010과 소수 4자리까지 같았다. 다만 README만 보고 처음부터 재실행하는 시험은 아직 못 했다.", "강동연"],
   ["D","25","Pilot Test를 900장 본 작업 뒤에 했나? (저장소 확인 추가)","사실: subject7/reports/test_report.md 기준 Pilot 20장은 10-08 15:27~15:47, 복사본 환경(RAW 읽기 전용)에서 김석범이 시험, 6개 항목 PASS·결함 0. 900장 교차검수는 10-07. 인정: 3일차 규칙(Pilot 확인 후 본 작업)과 순서가 다르다 — 10-08 제출본에는 \"별도 시범 기록 없음\"으로 적혀 있었다. 조치: 사후 확인으로 기록을 남겼고, 본 작업 중 결함은 Test Report 2-1에 기록. [발표 전 팀 확인]","김석범 · 지혜성"],
   ["E", "26", "Val 0.749인데 Test는 0.639다. 과적합 아닌가?", "차이 0.110은 사실이다. ① 0.749는 seed 5개 중 최고를 고른 값(같은 조건 평균 0.739) ② Class별로 보면 0.066이 나뭇잎·종이 한 Class(Val 0.877 → Test 0.482)이고 플라스틱·돌·금속은 0.844 → 0.840으로 같다 ③ Test는 Val과 다른 촬영 묶음(G07·G14)이다. 과적합인지 Test의 나뭇잎·종이가 다른 모습인지는 아직 분석하지 않았다 — Test를 보며 고치면 Test가 오염되므로 교과 14에서 새 데이터로 확인한다.", "손상우"],
   ["E", "27", "나뭇잎·종이 Precision 0.37이면 오탐 투성이 아닌가?", "Test에서는 그렇다(P 0.367 · R 0.855, 정답 23박스·16장). 놓치지는 않지만 다른 것을 나뭇잎·종이로 많이 부른다. Val에서는 0.877로 문제가 안 보였다 — Val 192박스 vs Test 23박스로 구성이 다르다. 원인 분석 전이며 교과 14 인계 항목에 넣었다.", "김석범"],
-  ["E", "28", "seed 5개 중 제일 좋은 걸 고른 건 체리피킹 아닌가?", "고르는 규칙을 학습 전에(10-19 16시대 커밋) 정해 두었다: 방향끼리는 seed 5개 평균으로 비교, 이기는 방향이 없으면 B 안에서 Val 최고. 최고를 고른 만큼 Val이 부풀어 있다는 것도 인정하며, 그래서 성능은 Test 1회 점수로만 말한다.", "지혜성"],
+  ["E", "28", "seed 5개 중 제일 좋은 걸 고른 건 체리피킹 아닌가?", "고르는 규칙을 학습 전에(10-19 16:55 커밋, 첫 학습 17:25) 정해 두었다: 방향끼리는 seed 5개 평균으로 비교, 이기는 방향이 없으면 B 안에서 Val 최고. 최고를 고른 만큼 Val이 부풀어 있다는 것도 인정하며, 그래서 성능은 Test 1회 점수로만 말한다.", "지혜성"],
   ["E", "29", "50번 넘게 학습했는데 크게 안 올랐다. 시간 낭비 아닌가?", "Val 평균으로 A 0.715 → B 0.739(+0.024)가 실제 개선이고, 나머지는 \"더 해도 안 오른다\"를 확인한 것이다(epoch·타일링·2560·증강 끄기·TTA·갈변 대책 4가지). 특히 갈변이 학습 기법으로 안 풀린다는 결론은 seed 5개 × 4방향이 있어야 말할 수 있었다.", "강동연"]
  ]
 }

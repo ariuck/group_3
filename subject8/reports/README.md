@@ -59,7 +59,8 @@ reports/
 | `failure_summary.csv` | 실패 유형 × Class 별 건수 |
 | `failure_recall_by_size.csv` | 박스 크기별 Recall |
 | `failure_box_size_shift.csv` | Train vs Val 박스 크기 차이 |
-| `failure_hypothesis.md` | v5 기준 원인 가설 H1~H5 와 이후 검증 (산출물 3) — kimchi_v1 때의 가설은 `history/kimchi_v1/03_failure_analysis/` |
+| `exp050_v5_s_imgsz2240_aug_seed2_failure_*.csv` (4개) | **Final 모델**의 Validation 실패 사례 표 (같은 방법 · `09_collect_failures.py --model final`) — Baseline 과 비교는 `failure_hypothesis.md` 6장 |
+| `failure_hypothesis.md` | v5 기준 원인 가설 H1~H5 와 이후 검증, Final 의 남은 실패 (산출물 3) — kimchi_v1 때의 가설은 `history/kimchi_v1/03_failure_analysis/` |
 
 ### 04_improvement (7일차)
 

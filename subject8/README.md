@@ -4,7 +4,7 @@
 교과 8 `[중간] Vision 기반 객체검출 모듈` 과제 저장소입니다.
 교과 7 FINAL 검수 완료 4K 조각김치 데이터셋(900장)을 촬영 회차 누수를 막아 분할하고, YOLO11 을 파인튜닝하여 (Baseline YOLO11n → Final YOLO11s) 교과 14 로 연결합니다.
 
-> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료(`presentation/`) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
+> **진행 상태 (2026-10-20)**: 공식 Dataset `kimchi_v5` · Baseline + 개선 실험 50개 · **Final Model `exp050` 확정 (Val 0.749) · Frozen Test mAP50-95 0.639** · Acceptance Test · 교과 14 Handoff 작성. **남은 것**: Auto Label 구현 · 시연 백업자료(`demo/`) · 발표 자료([`../presentation/`](../presentation/README.md)) · 다른 팀원 재현 시험 · 5라운드(갈변 진단) 결과
 >
 > **먼저 볼 곳**: [`reports/final_model_selection.md`](reports/final_model_selection.md) (Final 선택 근거) · [`docs/handoff_subject14.md`](docs/handoff_subject14.md) (교과 14 인계 — 한계 포함) · [`reports/05_acceptance/acceptance_test.md`](reports/05_acceptance/acceptance_test.md) · [`models/README.md`](models/README.md) (모든 모델·점수·그래프 링크) · [`reports/04_improvement/baseline_vs_improved.md`](reports/04_improvement/baseline_vs_improved.md) (개선점·한계 — 발표용) · [`reports/README.md`](reports/README.md)
 >
@@ -368,7 +368,9 @@ python scripts/08_predict_images.py --model final --source 사진.jpg    # 사�
 ```
 
 - 결과: `runs/predict/exp050_v5_s_imgsz2240_aug_seed2_val/compare/*.jpg` (왼쪽 정답 · 오른쪽 예측), `predictions.csv`, `per_image.csv` — 사진이라 Git 제외.
-- 2026-10-20 확인: Val 5장 · 예측 29 · 정답 25 · TP 25 · FP 4 · FN 0 (모두 Class 6 사진이라 다른 Class 는 더 확인해야 한다 — [`acceptance_test.md`](reports/05_acceptance/acceptance_test.md) 4장).
+- 2026-10-20 확인: **Val 104장 전체** · 예측 538 · 정답 541 · **TP 506 · FN 34 · FP 31 · Class 틀림 1** (Baseline 은 TP 395 · FN 111 · Class 틀림 35). Class 별 대표 사진도 눈으로 확인 ([`acceptance_test.md`](reports/05_acceptance/acceptance_test.md) 4장). Final 의 남은 실패 분석: [`failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) 6장.
+- 폴더 단위 예측: `--source <사진 폴더>`. 사진은 한 장씩 예측한다 (imgsz 2240 에서 목록째 넘기면 GPU 메모리 초과).
+- 교과 14 용 Bridge 평가: `python scripts/17_evaluate_bridge.py --subject14` (교과 8 에서는 실행하지 않음, `--dry-run` 은 개수만 확인).
 
 **Auto Label — 아직 구현하지 않았다** (`src/auto_labeler.py` · `scripts/12_auto_label.py` 없음). 구현하면 새 이미지 5장으로 먼저 시험하고, 후보 TXT 는 교과 7 라벨링 도구(`cd ../subject7 && python main.py`)로 사람이 확인·수정·승인한 뒤에만 Final Label 로 확정한다.
 

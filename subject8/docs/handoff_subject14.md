@@ -47,6 +47,12 @@
 
 - 교과 14 에서 처음 쓰는 데이터이므로, **교과 14 의 첫 평가는 `exp050` 을 Bridge 156장에 한 번 돌린 값**이 됩니다. 그 점수를 보고 교과 8 모델을 고르면 Bridge 가 Test 와 같은 처지가 되므로, 다시 고를 일이 있으면 교과 14 안의 새 Validation 으로 합니다.
 - Bridge 사진이 있는 PC 에서만 평가할 수 있습니다 (`00_setup.py` 가 `data/bridge_holdout/` 를 만든다). 사진은 Git 에 없습니다.
+- 평가 명령은 [`scripts/17_evaluate_bridge.py`](scripts/17_evaluate_bridge.md) 가 준비돼 있습니다. **교과 8 에서는 실행하지 않았습니다.**
+
+```bash
+python scripts/17_evaluate_bridge.py --dry-run       # 확인만: Manifest 156장 = 폴더 사진·라벨 개수 (모델을 쓰지 않음)
+python scripts/17_evaluate_bridge.py --subject14     # 교과 14 에서 처음 한 번 평가 → reports/06_subject14/bridge_metrics.csv
+```
 - Bridge 에도 갈변은 16박스뿐이라 갈변 Recall 은 박스 1개에 6%p 씩 움직입니다 (아래 5장).
 
 ## 4. 새 사진에 Final Model 쓰는 법
@@ -57,7 +63,10 @@ source .venv/bin/activate
 python scripts/08_predict_images.py --model final --source <사진 1장>.jpg --conf 0.25
 ```
 
-`--source` 없이 `--model final --limit 5` 를 주면 Validation 사진 5장을 정답과 나란히 예측합니다 (폴더 단위 예측은 Auto Label 구현 때 추가).
+- `--source` 에 **사진 폴더**도 줄 수 있습니다. 정답 TXT 가 같은 이름으로 있으면 정답과 비교하고, 없으면 예측만 그립니다.
+- `--source` 없이 `--model final` 만 주면 Validation 104장 전체를 정답과 나란히 예측합니다 (`--limit 5` 로 앞 5장만). 2026-10-20 결과: 예측 538개 · 정답 541개 · **TP 506 · FN 34 · FP 31 · Class 틀림 1** — 상세 [`failure_hypothesis.md`](../reports/03_failure_analysis/failure_hypothesis.md) 6장.
+- Frozen Test · Bridge 사진은 `--allow-test` 없이는 예측하지 않습니다.
+- 사진은 한 장씩 예측합니다. (예전에는 목록째 넘겨 imgsz 2240 에서 Val 전체를 돌리면 GPU 메모리가 넘쳤다 — 2026-10-20 수정)
 
 - `--model final` 이면 imgsz 2240 이 자동으로 정해집니다 (`src/registry.py`). Weight 만 따로 쓸 때는 **학습 때와 같은 imgsz 2240** 으로 예측해야 합니다. 이 모델을 더 큰 해상도(2560 · 2880)로 예측해도 점수는 같고 느려지기만 했습니다 (Val 0.749 → 0.751 → 0.749, 37 → 49 → 61ms/장).
 - 신뢰도 기준 `conf` 는 0.25 로 평가했습니다. 낮추면 FN 이 줄고 FP 가 늘어납니다 — 현장에서는 FN(이물을 놓침)이 더 위험한지 FP(정상을 불량 처리)가 더 위험한지부터 정하고 `conf` 를 고릅니다. 이 기준은 교과 14 에서 정해야 하며, 교과 8 에서는 정하지 않았습니다.
@@ -82,6 +91,7 @@ python scripts/08_predict_images.py --model final --source <사진 1장>.jpg --c
    - 다음에 필요한 것: ① 작은 반점을 Train · Val · Test 에 **같은 기준으로** 라벨링 ② 반점 사진 추가 수집 ③ "잎 전체 갈변"과 "작은 반점"을 Class 로 나눌지 회사와 결정.
    - 5라운드(P2 검출층 · 변형 반점 합성, exp051~065)는 코드만 들어와 있고 결과가 아직 없습니다. 결과가 나오면 이 항목을 갱신합니다.
 2. **정상 김치(Negative) 사진이 데이터에 없습니다.** 정상 김치에서 오검출(FP)이 얼마나 나는지 교과 8 에서는 측정하지 못했습니다. 제조 현장은 대부분이 정상이라 **교과 14 에서 가장 먼저 모아야 할 데이터**입니다.
+   - 힌트: Final 이 Validation 에서 이물 없는 곳에 낸 박스(FP_BACKGROUND) 14건을 눈으로 보면 **사진 가장자리의 어두운 띠**(작업대·트레이)를 플라스틱으로, **짙은 초록 줄기 조각**을 파·고추로 읽은 것이 눈에 띕니다 (확정 아님 — 사진으로 확인 필요, [`failure_hypothesis.md`](../reports/03_failure_analysis/failure_hypothesis.md) 6장). 갈변으로 예측한 2건은 빠진 라벨일 수 있습니다.
 3. **평가 점수는 "처음 보는 물체"가 아닙니다.** 촬영 팀이 같은 소품을 여러 날 다시 썼고 이물 단독 사진(G17, Train)에 대부분이 들어 있어, 점수는 "본 물체를 새 장면에 놓았을 때"의 성능입니다. 새 소품 · 새 조명 · 새 날짜의 성능은 교과 14 에서 처음 확인됩니다.
 4. **Class 0~6 에 없는 이물(머리카락 · 실 등)은 검출 대상이 아닙니다.** 회사 Class 정의에 없어 라벨을 그리지 않았습니다. 교과 14 에서 Class 를 추가할지 회사와 확인합니다 (추가하면 Dataset Version 을 올리고, 기존 ID 를 당기지 않도록 새 ID 는 뒤에 붙이는 것을 권합니다).
 5. **평가 역할의 박스 수가 적습니다.** 갈변 · 벌레는 15~30박스뿐이라 박스 1개가 Recall 3~7%p 를 움직입니다. 작은 차이를 개선으로 해석하지 않습니다.
@@ -109,7 +119,7 @@ python scripts/08_predict_images.py --model final --source <사진 1장>.jpg --c
 
 | 순서 | 할 일 | 이유 |
 |---|---|---|
-| 1 | Bridge Holdout 156장에 Final Model 을 한 번 평가하고 Class 별로 기록 | 처음 보는 데이터에서 실제 성능 확인 (5장 3번) |
+| 1 | Bridge Holdout 156장에 Final Model 을 한 번 평가하고 Class 별로 기록 — `python scripts/17_evaluate_bridge.py --subject14` | 처음 보는 데이터에서 실제 성능 확인 (5장 3번) |
 | 2 | 정상 김치(Negative) 사진 수집 · FP 율 측정 | 5장 2번 — 현장 비율과 가장 큰 차이 |
 | 3 | `conf` 기준 정하기 (FN 과 FP 중 무엇이 더 위험한가) | 4장 |
 | 4 | 갈변 데이터 보강 후 Class 5 만 다시 측정 | 5장 1번 |

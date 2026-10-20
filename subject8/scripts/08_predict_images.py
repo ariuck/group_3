@@ -87,7 +87,8 @@ def main():
     def predictions():
         """(사진 경로, [(cls, conf, x1, y1, x2, y2)] 비율 좌표) — 타일링 모델은 조각 예측을 합친다"""
         if not tiles:
-            for r in model.predict(source=[str(p) for p in images], conf=args.conf, imgsz=imgsz, stream=True, verbose=False):
+            for path in images:     # 한 장씩 — 목록째 넘기면 큰 imgsz(2240)에서 사진이 한꺼번에 묶여 GPU 메모리가 넘친다
+                r = model.predict(source=str(path), conf=args.conf, imgsz=imgsz, verbose=False)[0]
                 yield Path(r.path), [(int(c), float(p), *map(float, b)) for c, p, b in zip(r.boxes.cls, r.boxes.conf, r.boxes.xyxyn)]
             return
         for p in images:

@@ -1,0 +1,16 @@
+﻿failure_type,class_name,count
+CLASS_ERROR,plastic_stone_metal,1
+FN,branch,1
+FN,disease_browning,13
+FN,leaf_paper,14
+FN,plastic_stone_metal,6
+FP_BACKGROUND,disease_browning,2
+FP_BACKGROUND,green_onion_pepper,3
+FP_BACKGROUND,insect,1
+FP_BACKGROUND,plastic_stone_metal,8
+FP_DUPLICATE,leaf_paper,4
+FP_DUPLICATE,plastic_stone_metal,5
+FP_PARTIAL,branch,1
+FP_PARTIAL,green_onion_pepper,1
+FP_PARTIAL,leaf_paper,2
+FP_PARTIAL,plastic_stone_metal,4

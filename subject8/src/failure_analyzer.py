@@ -51,7 +51,9 @@ def collect_failures(model_path, images_dir: Path, labels_dir: Path, meta: Dict[
     names = names or model.names
     images = sorted(p for p in Path(images_dir).iterdir() if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
     failures, gt_rows = [], []
-    for r in model.predict([str(p) for p in images], conf=conf, imgsz=imgsz, stream=True, verbose=False):
+    # 사진을 한 장씩 예측한다 — 목록째 넘기면 Ultralytics 가 사진을 한꺼번에 묶어 imgsz 2240 에서 GPU 메모리가 넘친다
+    for p in images:
+        r = model.predict(str(p), conf=conf, imgsz=imgsz, verbose=False)[0]
         img = Path(r.path)
         h, w = r.orig_shape
         info = meta.get(img.name, {})

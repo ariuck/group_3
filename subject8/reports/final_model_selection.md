@@ -1,6 +1,8 @@
 # Final Model 선택 (kimchi_v5)
 
 > 2026-10-20 · 근거는 **Validation 104장만** (가이드 21.1). Frozen Test 는 이 문서를 쓴 뒤 한 번만 평가해 [`05_final/final_metrics.csv`](05_final/final_metrics.csv) 에 보고만 한다 — 그 점수로 다시 고르지 않는다.
+>
+> **사전 열람 기록**: 2026-10-16, 이 문서를 쓰기 전(Final 확정 전)에 Frozen Test 점수를 한 번 본 적이 있다 (결과·스크립트는 지움). 그 점수로 모델·조건을 고르지 않았고, 이 문서의 선택은 Validation 만 근거로 한다. 정식 Frozen Test 는 이 문서를 쓴 뒤 한 번이다 — 따라서 Test 는 "한 번도 보지 않은" 데이터는 아니다 ([`04_improvement/baseline_vs_improved.md`](04_improvement/baseline_vs_improved.md) 3장).
 
 ## 결론
 
