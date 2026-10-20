@@ -4,7 +4,7 @@
 > 판정 기준: confidence 0.25 · IoU 0.5. Validation = 촬영 묶음 **G05 · G13** + G00 6장.
 
 > **작성 시점 메모 (2026-10-20)**: 이 문서는 개선 실험(exp001~065)과 Final Model 확정 **이후에** 정리했다. 가설과 근거 숫자는 6일차에 만든 실패 표에서 가져왔고, 각 가설 끝의 **「이후 검증」** 칸은 그 뒤 실험 결과로 채웠다. 결과를 보고 가설을 바꾸지 않았다 — 맞지 않은 가설도 그대로 둔다. 개선 실험을 어떻게 골랐는지는 [`improvement_experiment.md`](../04_improvement/improvement_experiment.md) 에 있다.
-> **확인하지 못한 것**: 실패 사진(`demo/failure_analysis/*.jpg`, 회사 사진이라 Git 제외)을 이 문서를 쓰면서 다시 보지 않았다. 사진을 봐야 아는 내용(물체가 어떻게 생겼는지, 빠진 라벨이 있는지)은 아래에 **「사람 확인 필요」** 로 표시했다.
+> **사진 확인 범위**: 1~5장(Baseline 분석)은 실패 **표**(CSV)만으로 썼고 Baseline 실패 사진은 다시 보지 않았다. 6장(Final 의 남은 실패)을 쓰면서 Final 의 `FP_BACKGROUND` 사진 모음(14건)과 Class 별 대표 사진을 눈으로 한 번 봤다 — 인상만 적었고, 빠진 라벨 여부의 **판정은 사람이 한다**. 사진(`demo/failure_analysis/`)은 회사 사진이라 Git 에 없다. 사진을 봐야 아는 내용은 아래에 **「사람 확인 필요」** 로 표시했다.
 
 ## 1. 요약
 
@@ -118,6 +118,34 @@
 - 해상도·모델 크기·증강 같은 학습 기법은 더 시도할 근거가 약하다 (H2: 4라운드 6방향 × seed 5개에서 갈변 개선 없음).
 - 가설은 Validation 의 실패 표로만 만들었고 Frozen Test 는 쓰지 않았다. Test 는 Final Model(`exp050`) 확정 뒤 정식으로 한 번 평가했다 (그 전 2026-10-16 에 Test 점수를 한 번 본 적이 있다 — [`baseline_vs_improved.md`](../04_improvement/baseline_vs_improved.md) 3장). H3 의 Test Precision 0.37 은 사후 보고용으로만 적었다.
 
-## 6. 이전 Version
+## 6. Final 모델(`exp050`)의 남은 실패 — 같은 Validation 104장 · conf 0.25
+
+Baseline 과 같은 방법·같은 Val 로 Final 을 다시 분석했다 (`python scripts/09_collect_failures.py --model final`, 표 4개: `exp050_v5_s_imgsz2240_aug_seed2_failure_*.csv`). Validation 이라 Test 를 건드리지 않는다.
+
+| | Baseline (`baseline_v5`) | **Final (`exp050`)** |
+|---|---:|---:|
+| 정답 541개 중 TP | 395 (73%) | **506 (93.5%)** |
+| FN (놓침) | 111 | **34** |
+| CLASS_ERROR (종류 틀림) | 35 | **1** |
+| FP_DUPLICATE · PARTIAL · BACKGROUND | 30 · 33 · 24 (87) | **9 · 8 · 14 (31)** |
+
+**가설별로 다시 보면 (Baseline → Final)**
+
+| 가설 | 직접 확인한 숫자 | 판정 |
+|---|---|---|
+| H1 작은 이물 | 플라스틱 작은 박스 Recall **0.613 → 0.970** (188/194) · 플라스틱 FN 64 → 6 · CLASS_ERROR 35 → 1 (작은 플라스틱을 벌레·갈변으로 읽던 것이 사라짐) | **맞았다** — 해상도·모델을 키우자 작은 플라스틱과 Class 혼동이 함께 풀렸다 |
+| H2 갈변 | 갈변 FN 15 → **13** (15개 중 2개만 찾음, Recall 0.13) · 박스 크기는 그대로 Train 211px ↔ Val 23px | **안 풀렸다** — 남은 FN 34 중 13이 갈변 |
+| H3 나뭇잎·종이 | 나뭇잎·종이 FN 23 → 14. 큰 것(300px 이상)은 0.98 인데 **작은 것(150px 미만) Recall 0.38 (3/8)** | 일부 개선. 남은 14건은 중간·작은 박스에 몰림 — 8개뿐인 작은 박스 표본은 부족 |
+| H4 중복 박스 | FP_DUPLICATE 30 → 9, FP_PARTIAL 33 → 8 (추론 설정은 바꾸지 않음) | 중복·부분 박스는 **Class 혼동이 사라지면서 같이 줄었다** — agnostic NMS 가 필요하지 않았던 이유와 맞는다 |
+| H5 배경 오탐 | FP_BACKGROUND 24 → **14** (줄었지만 가장 안 줄어든 항목) | 아래 |
+
+**Final 의 FP_BACKGROUND 14건 — 사진 모음을 본 인상** (`python scripts/09_collect_failures.py --model final` 이 `demo/failure_analysis/exp050_v5_s_imgsz2240_aug_seed2_failure/fp_background.jpg` 를 다시 만든다)
+- 예측 Class: 플라스틱 8 · 파·고추 3 · 갈변 2 · 벌레 1. G05 9건 · G00 3건 · G13 2건. confidence 중앙값 0.37, 12건은 0.5 미만, **2건이 0.86 이상**.
+- 눈으로 본 인상 (확정 아님): ① 플라스틱 중 3건은 사진 가장자리의 **어두운 띠(작업대·트레이 가장자리)** 위의 박스로 보인다 → 배경 요소를 이물로 읽은 것. ② 파·고추 3건은 **짙은 초록 줄기 조각**. ③ 벌레 1건은 짙은 갈색 조각. ④ 갈변 2건(conf 0.256)은 갈색 배추 조각으로 보이며 **라벨이 빠진 실제 갈변일 가능성**이 있다. ⑤ 플라스틱 중 일부는 반투명한 흰 배추 조각.
+- **사람 확인 필요**: ④ 갈변 2건과 confidence 0.86 이상 2건이 **빠진 라벨인지** 반드시 확인한다. 빠진 라벨이면 GT 수정 → Dataset Version 변경 사안이다. 가장자리 띠는 3건 이상 반복되면 사진 가장자리 마스킹·Negative 사진으로 줄일 수 있다 (교과 14 데이터 과제).
+
+**남은 FN 34건의 구성**: 나뭇잎·종이 14 · 갈변 13 · 플라스틱 6 · 나뭇가지 1. Baseline 에서 가장 컸던 플라스틱 FN 은 사실상 사라졌고, **남은 실패의 약 80%(27/34)가 갈변과 작은 나뭇잎·종이 두 가지**다.
+
+## 7. 이전 Version
 
 `kimchi_v1` 때의 분석(H1~H5)은 [`../history/kimchi_v1/03_failure_analysis/failure_hypothesis.md`](../history/kimchi_v1/03_failure_analysis/failure_hypothesis.md) 에 있다. 당시 가설 H4(작은 이물 → 해상도)는 이 문서 H1 로 v5 에서도 확인됐다. v1 의 G12 몰림 문제와 G00 분할 문제는 `kimchi_v5` 재분할로 풀렸다 (`docs/project/kimchi_v5_split.md`).

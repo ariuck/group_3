@@ -22,6 +22,8 @@ demo/**/*.png
 #   공식 Version data/yolo · data/bridge_holdout, 지난 Version data/yolo_v4 · data/bridge_holdout_v4 …, 타일 data/yolo_v5_tiles
 data/yolo*/
 data/bridge_holdout*/
+#   교과 14 Bridge 평가 때만 만드는 설정 (scripts/17_evaluate_bridge.py)
+configs/dataset_bridge.yaml
 data/smoke/
 #   예전 사본 폴더 (지금은 쓰지 않음 — 남아 있는 PC 의 사진·엑셀이 올라가지 않게)
 data/subject7_final/

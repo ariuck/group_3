@@ -368,7 +368,9 @@ python scripts/08_predict_images.py --model final --source 사진.jpg    # 사�
 ```
 
 - 결과: `runs/predict/exp050_v5_s_imgsz2240_aug_seed2_val/compare/*.jpg` (왼쪽 정답 · 오른쪽 예측), `predictions.csv`, `per_image.csv` — 사진이라 Git 제외.
-- 2026-10-20 확인: Val 5장 · 예측 29 · 정답 25 · TP 25 · FP 4 · FN 0 (모두 Class 6 사진이라 다른 Class 는 더 확인해야 한다 — [`acceptance_test.md`](reports/05_acceptance/acceptance_test.md) 4장).
+- 2026-10-20 확인: **Val 104장 전체** · 예측 538 · 정답 541 · **TP 506 · FN 34 · FP 31 · Class 틀림 1** (Baseline 은 TP 395 · FN 111 · Class 틀림 35). Class 별 대표 사진도 눈으로 확인 ([`acceptance_test.md`](reports/05_acceptance/acceptance_test.md) 4장). Final 의 남은 실패 분석: [`failure_hypothesis.md`](reports/03_failure_analysis/failure_hypothesis.md) 6장.
+- 폴더 단위 예측: `--source <사진 폴더>`. 사진은 한 장씩 예측한다 (imgsz 2240 에서 목록째 넘기면 GPU 메모리 초과).
+- 교과 14 용 Bridge 평가: `python scripts/17_evaluate_bridge.py --subject14` (교과 8 에서는 실행하지 않음, `--dry-run` 은 개수만 확인).
 
 **Auto Label — 아직 구현하지 않았다** (`src/auto_labeler.py` · `scripts/12_auto_label.py` 없음). 구현하면 새 이미지 5장으로 먼저 시험하고, 후보 TXT 는 교과 7 라벨링 도구(`cd ../subject7 && python main.py`)로 사람이 확인·수정·승인한 뒤에만 Final Label 로 확정한다.
 

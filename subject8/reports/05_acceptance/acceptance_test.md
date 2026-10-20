@@ -18,13 +18,13 @@
 
 | | PASS | FAIL | TODO | MANUAL |
 |---|---:|---:|---:|---:|
-| 자동 점검 (2026-10-20, 문서·실험 기록 보완 후 재실행) | 79 | **0** | 4 | 4 |
+| 자동 점검 (2026-10-20, Bridge 미사용 점검 추가 후 재실행) | 80 | **0** | 4 | 4 |
 | 사람이 확인해 PASS 로 바꾼 것 | +2 | | | −2 |
-| **최종** | **81** | **0** | **4** | **2** |
+| **최종** | **82** | **0** | **4** | **2** |
 
 - **PASS**: 확인 완료 · **FAIL**: 고쳐야 함 · **TODO**: 아직 만들어지지 않은 산출물 · **MANUAL**: 사람이 직접 확인해야 함
 - 이전판 FAIL(F-1, 학습·추론 패키지)은 사진·GPU PC 에서 다시 시험해 **해결**됐다 (아래 FAIL 기록).
-- 자동 점검 79 중 Model 의 Weight 해시 일치가 50개다 (Baseline · exp001~050).
+- 자동 점검 80 중 Model 의 Weight 해시 일치가 50개다 (Baseline · exp001~050).
 
 ## 1. Dataset
 
@@ -40,6 +40,7 @@
 | Class ID 0~6 을 그대로 쓴다 | PASS | `configs/dataset.yaml` |
 | Bridge Holdout 이 `dataset.yaml` 에 없다 | PASS | |
 | Frozen Test 가 Final Model 선택 전에 사용되지 않았다 | **PASS (예외 1건 기록)** | `runs/` 에 test·final 이름의 실행 없음 · `runs/*/args.yaml` 에 `split: test` 0개 · `evaluate_detector.py` 의 `allow_test` 보호. **그러나 팀 기록(`04_improvement/baseline_vs_improved.md` 3장)에 "2026-10-16 Final 확정 전에 Test 점수를 한 번 본 적이 있다 (결과·스크립트는 지움)"고 적혀 있다.** 그 점수로 모델·조건을 고르지 않았다고 하나, 자동 점검은 남은 기록만 보므로 이 열람을 잡지 못한다. 가이드 Gate("Frozen Test 를 보고 Fine-tuning 하지 않는다")와의 관계는 **발표에서 사실대로 설명**해야 한다 |
+| Bridge Holdout 을 교과 8 에서 사용하지 않았다 | PASS (휴리스틱) | `runs/` · `runs/eval` · `reports/06_subject14` 에 Bridge 사용 흔적 없음 · `configs/dataset.yaml` 에 Bridge 없음 · Bridge 평가 스크립트(`17_evaluate_bridge.py`)는 `--subject14` 없이는 멈추고 교과 8 에서 실행하지 않았다. 한계: 남은 기록만 보는 점검 |
 | 학습에 쓴 Train/Val Manifest 가 지금과 같다 | PASS | 해시 일치 |
 
 ## 2. Model
@@ -78,7 +79,7 @@
 
 | 항목 | 결과 | 확인 방법 · 근거 |
 |---|:---:|---|
-| 이미지 Detection 이 실행되고 BBox·Class·Confidence 가 표시된다 | PASS (사람이 확인) | `python scripts/08_predict_images.py --model final --limit 5` → Val 5장 · 예측 29 · 정답 25 · TP 25 · FP 4 · FN 0. `runs/predict/exp050_…_val/compare/*.jpg` 에서 왼쪽 정답 · 오른쪽 예측에 BBox · Class 이름 · Confidence(0.90~0.93)가 보이는 것을 눈으로 확인함. **한계**: 이 5장은 Val 의 앞 5장이고 모두 Class 6(파·고추, G00 묶음)이라 다른 Class 의 표시는 아직 보지 않았다 |
+| 이미지 Detection 이 실행되고 BBox·Class·Confidence 가 표시된다 | PASS (사람이 확인) | `python scripts/08_predict_images.py --model final --name final_val_all` → **Val 104장 전체** · 예측 538 · 정답 541 · TP 506 · Class 틀림 1 · FP 31 · FN 34 (2026-10-20). `runs/predict/final_val_all/compare/*.jpg` 에서 Class 별 대표 사진을 눈으로 확인함: 나뭇잎·종이(5/5, conf 0.74~0.98) · 플라스틱 · 나뭇가지(0.86) · 벌레(0.87) · 파·고추(0.90~0.93) · 갈변(작은 반점 1개는 0.61 로 찾고 1개는 놓침). 왼쪽 정답 · 오른쪽 예측에 BBox · Class 이름 · Confidence 가 모두 표시된다. 이전판(Val 앞 5장, 모두 Class 6)의 "다른 Class 는 보지 못했다"는 한계는 해소됨. **참고**: 처음 Val 전체를 돌렸을 때 GPU 메모리 초과(imgsz 2240, 사진이 한꺼번에 묶임)가 나서 `08_predict_images.py` · `src/failure_analyzer.py` 를 사진 한 장씩 예측하도록 고쳤다 |
 | 새 이미지에서 YOLO TXT 후보가 저장된다 | TODO | Auto Label 코드 아직 없음 (`src/auto_labeler.py`, `scripts/12_auto_label.py`) |
 | 후보 TXT 를 교과 7 라벨링 도구에서 열고 수정·삭제·추가·승인·저장할 수 있다 | MANUAL | Auto Label 구현 후 `cd subject7 && python main.py` 로 후보 TXT 폴더를 열어 확인 |
 | 시연 백업자료: 예측 이미지 | TODO | `demo/prediction_images/` 비어 있음 (사진이라 Git 제외, 시연 PC 에 둔다) |
@@ -90,7 +91,7 @@
 | 항목 | 결과 | 근거 |
 |---|:---:|---|
 | `src/`·`scripts/` Python 파일이 문법 오류 없이 컴파일된다 | PASS | 전부 정상 |
-| 회사 사진이 Git 에 추적되지 않는다 | PASS | 추적 사진 0장 |
+| 회사 사진이 Git 에 추적되지 않는다 | PASS | 추적 사진 0장. `presentation/assets/` 의 PNG 7개(혼동행렬·비교 그래프·가짜 샘플 UI 캡처)는 그래프·화면 캡처라 제외 — 2026-10-20 사람이 `ui_main.png` · `readme_2_RAW비교.png` 를 열어 회사 사진이 아님을 확인함 (발표 폴더가 `main` 에 합쳐진 뒤 이 점검이 FAIL 로 바뀌어 기준을 고침). jpg 등 다른 형식은 어디서도 허용하지 않는다 |
 | `.pt` 는 `models/` 안의 것만 추적된다 | PASS | |
 | 학습·추론 패키지가 설치되어 있다 | PASS | ultralytics · torch · cv2 import 가능, CUDA available True (RTX 3060) |
 | 환경 점검 | PASS (사람이 확인) | `01_check_environment.py` — Python 3.14.4 · PyTorch 2.14.1+cu130 · Ultralytics 8.4.175 · GPU · `yolo11n.pt` Load 성공 |

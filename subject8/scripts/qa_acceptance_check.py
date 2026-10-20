@@ -131,6 +131,19 @@ def check_dataset():
         ("runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음" if not suspicious and guard
          else f"의심: {suspicious} · 보호 코드 {guard}") + " (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)")
 
+    # Bridge Holdout 사용 흔적 (휴리스틱) — 교과 8 에서는 학습·평가·예측에 쓰지 않아야 한다
+    bridge_use = []
+    for d in sorted((PROJECT_ROOT / "runs").glob("*")):
+        a = d / "args.yaml"
+        if re.search(r"bridge", d.name, re.I) or (a.is_file() and re.search(r"^data:.*bridge", a.read_text(encoding="utf-8"), re.M | re.I)):
+            bridge_use.append(d.name)
+    bridge_use += [p.name for p in (PROJECT_ROOT / "runs" / "eval").glob("bridge*")] if (PROJECT_ROOT / "runs" / "eval").is_dir() else []
+    if (PROJECT_ROOT / "reports" / "06_subject14").is_dir():
+        bridge_use.append("reports/06_subject14")
+    add(A, "Bridge Holdout 을 교과 8 에서 사용하지 않았다", "PASS" if not bridge_use else "MANUAL",
+        "runs/ · runs/eval · reports/06_subject14 에 Bridge 사용 흔적 없음 (휴리스틱 — 03 이 만든 data/bridge_holdout 폴더는 사진 보관용)"
+        if not bridge_use else f"Bridge 흔적 {bridge_use} — 교과 14 에서 평가한 결과라면 정상, 교과 8 안에서 만든 것이면 안 된다")
+
     # 학습에 쓴 Manifest 가 기록과 같은지 (공식 Baseline 학습 기록 기준 — 학습 당시 경로가 manifests/<Version>/ 일 수 있다)
     doc = (R / "02_baseline" / "baseline_training_condition.md").read_text(encoding="utf-8")
     ok = True
@@ -274,7 +287,9 @@ def check_env():
 
     try:
         out = subprocess.run(["git", "ls-files", "--", ".", ":(exclude)runs"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
-        photos = [f for f in out if re.search(r"\.(jpe?g|png|bmp|webp|heic)$", f, re.I) and "/figures/" not in f and not f.startswith("reports/figures/")]
+        # presentation/assets 의 PNG 는 그래프 · 화면 캡처(가짜 샘플 UI)다 — 2026-10-20 사람이 확인. jpg 등 다른 형식은 여기서도 막는다
+        photos = [f for f in out if re.search(r"\.(jpe?g|png|bmp|webp|heic)$", f, re.I) and "/figures/" not in f
+                  and not f.startswith("reports/figures/") and not (f.startswith("presentation/assets/") and f.lower().endswith(".png"))]
         weights = [f for f in out if f.endswith(".pt") and not f.startswith("models/")]
         add(A, "회사 사진이 Git 에 추적되지 않는다", "PASS" if not photos else "FAIL", "사진 0장" if not photos else f"{len(photos)}장: {photos[:3]}")
         add(A, "Weight(.pt) 는 models/ 안의 것만 추적된다", "PASS" if not weights else "FAIL", "models/ 밖 .pt 0개" if not weights else str(weights[:3]))

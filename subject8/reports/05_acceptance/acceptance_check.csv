@@ -9,6 +9,7 @@ Dataset,Split 정책이 문서로 확정(FROZEN)되어 있다,PASS,docs/project/
 Dataset,Class ID 0~6 을 그대로 쓴다,PASS,"dataset.yaml names [0, 1, 2, 3, 4, 5, 6]"
 Dataset,Bridge Holdout 이 dataset.yaml 에 포함되지 않는다,PASS,configs/dataset.yaml
 Dataset,Frozen Test 가 Final Model 선택 전에 사용되지 않았다,PASS,"runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음 (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)"
+Dataset,Bridge Holdout 을 교과 8 에서 사용하지 않았다,PASS,runs/ · runs/eval · reports/06_subject14 에 Bridge 사용 흔적 없음 (휴리스틱 — 03 이 만든 data/bridge_holdout 폴더는 사진 보관용)
 Dataset,학습에 쓴 Train/Val Manifest 가 지금 Manifest 와 같다 (해시),PASS,train 989eebc34e7e=989eebc34e7e · val c897b139828f=c897b139828f
 Model,baseline_best.pt (= baseline_v5) Weight 가 있고 기록(해시)과 같다,PASS,models/baseline/baseline_best.pt · cc688f2b3589
 Model,baseline_v5 Weight 가 있고 기록(해시)과 같다,PASS,models/baseline/baseline_v5.pt · cc688f2b3589
