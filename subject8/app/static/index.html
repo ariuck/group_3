@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이물검출 시연</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236366f1'/%3E%3Crect x='8' y='8' width='16' height='16' rx='2' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css?v=20261020">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8"/><rect x="8" y="8" width="16" height="16" rx="2"/><circle cx="24" cy="8" r="4"/></svg>
+    <div>
+      <div class="title">조각김치 이물검출 <span class="dim">· Final Model 시연</span></div>
+      <div class="sub" id="modelLine">모델 정보를 불러오는 중…</div>
+    </div>
+  </div>
+  <div class="chips" id="metricChips"></div>
+  <div class="top-right">
+    <span class="status" id="status"><i></i><b>연결 중</b></span>
+    <button class="btn ghost" id="btnInfo" title="모델 정보 · 한계 (I)">모델 정보</button>
+    <button class="btn ghost" id="btnHelp" title="단축키 (?)">단축키</button>
+    <button class="btn primary" id="btnBack" title="발표자료로 돌아가기 (Backspace)">← 발표로</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- 왼쪽: 사진 고르기 -->
+  <aside class="side">
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="val">Validation <span id="valCount">–</span></button>
+      <button class="tab" data-tab="up">올린 사진 <span id="upCount">0</span></button>
+    </div>
+    <div class="filters" id="filters">
+      <div class="seg small" id="groupSeg"></div>
+      <div class="classchips" id="classChips"></div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <label class="drop" id="drop">
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <span><b>사진 끌어다 놓기</b> 또는 클릭<br><small>Frozen Test · Bridge 사진은 거절됩니다</small></span>
+    </label>
+  </aside>
+
+  <!-- 가운데: 사진 보기 -->
+  <section class="viewer">
+    <div class="toolbar">
+      <div class="seg" id="modeSeg">
+        <button data-mode="pred" title="1">예측</button>
+        <button data-mode="gt" title="2">정답</button>
+        <button data-mode="cmp" class="on" title="3">비교</button>
+      </div>
+      <label class="toggle" title="L"><input type="checkbox" id="optLabels" checked><span></span>라벨</label>
+      <div class="spacer"></div>
+      <button class="icon" id="btnPrev" title="이전 (←)"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+      <span class="pos" id="pos">–</span>
+      <button class="icon" id="btnNext" title="다음 (→)"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+      <div class="sep"></div>
+      <button class="icon" id="btnZoomOut" title="축소 (-)"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+      <span class="zoom" id="zoomLabel">–</span>
+      <button class="icon" id="btnZoomIn" title="확대 (+)"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="btn ghost small" id="btnFit" title="맞춤 (0)">맞춤</button>
+      <button class="icon" id="btnFull" title="전체화면 (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="canvas"></canvas>
+      <div class="empty" id="empty">
+        <svg viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="3"/><rect x="14" y="17" width="10" height="9" rx="1"/><rect x="27" y="22" width="8" height="8" rx="1"/></svg>
+        <h2>왼쪽에서 사진을 고르세요</h2>
+        <p>고르면 바로 예측합니다 · 사진을 여기로 끌어다 놓아도 됩니다</p>
+        <p class="keys"><kbd>←</kbd><kbd>→</kbd> 사진 넘기기 · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 예측 · 정답 · 비교 · 휠 확대</p>
+      </div>
+      <div class="scan" id="scan"><div class="beam"></div><div class="scan-label" id="scanLabel">예측 중…</div></div>
+      <div class="hud hud-tl" id="hudCounts"></div>
+      <div class="hud hud-bl" id="hudMeta"></div>
+      <div class="legend" id="legend"></div>
+      <div class="tip" id="tip"></div>
+    </div>
+  </section>
+
+  <!-- 오른쪽: 결과 -->
+  <aside class="panel">
+    <section class="card">
+      <div class="card-h"><h3>확신도 기준 <small>confidence</small></h3><span class="conf-val" id="confVal">0.25</span></div>
+      <input type="range" id="conf" min="0.05" max="0.95" step="0.01" value="0.25">
+      <div class="presets"><button data-c="0.10">0.10</button><button data-c="0.25" class="on">0.25 평가 기준</button><button data-c="0.50">0.50</button><button data-c="0.75">0.75</button></div>
+      <p class="note">낮추면 놓침(FN)↓ 오검출(FP)↑ · 예측은 0.05 로 한 번 하고 기준은 화면에서 거릅니다</p>
+    </section>
+
+    <section class="card" id="resultCard">
+      <div class="card-h"><h3>이 사진 결과</h3><span class="ms" id="ms"></span></div>
+      <div class="stats" id="stats"></div>
+      <table class="cls" id="clsTable"></table>
+    </section>
+
+    <section class="card grow">
+      <div class="card-h"><h3>검출 목록 <small id="detCount"></small></h3><button class="btn ghost small" id="btnTxt" title="YOLO TXT 후보 저장 (S)">TXT 후보 저장</button></div>
+      <ul class="dets" id="dets"></ul>
+      <p class="note">TXT 후보 = Auto Label 후보 — 교과 7 라벨링 도구에서 사람이 확인 · 수정 · 승인한 뒤에만 정답으로 씁니다.</p>
+    </section>
+
+    <section class="card" id="sumCard">
+      <div class="card-h"><h3>Validation 전체 채점</h3><button class="btn small" id="btnAll">104장 일괄 실행</button></div>
+      <div class="progress" id="prog"><i></i><span></span></div>
+      <div id="summary"><p class="note">모든 Validation 사진을 같은 기준으로 예측해 합칩니다. 끝나면 확신도 기준을 움직여 전체 결과가 바뀌는 것을 볼 수 있습니다.</p></div>
+    </section>
+  </aside>
+</main>
+
+<div class="modal" id="modal" hidden><div class="modal-box"><button class="x" id="modalX" aria-label="닫기">×</button><div id="modalBody"></div></div></div>
+<div class="toasts" id="toasts"></div>
+<script src="app.js?v=20261020"></script>
+</body>
+</html>

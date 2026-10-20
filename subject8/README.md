@@ -372,6 +372,17 @@ python scripts/08_predict_images.py --model final --source 사진.jpg    # 사�
 - 폴더 단위 예측: `--source <사진 폴더>`. 사진은 한 장씩 예측한다 (imgsz 2240 에서 목록째 넘기면 GPU 메모리 초과).
 - 교과 14 용 Bridge 평가: `python scripts/17_evaluate_bridge.py --subject14` (교과 8 에서는 실행하지 않음, `--dry-run` 은 개수만 확인).
 
+**시연 프로그램 (FastAPI + 브라우저)** — 발표 15번 슬라이드의 *시연 프로그램 열기* 버튼으로 넘어간다. 설명: [`docs/app/server.md`](docs/app/server.md)
+
+```bash
+pip install -r requirements.txt          # fastapi · uvicorn 이 없으면 (2026-10-20 추가)
+.venv/bin/python app/server.py           # → http://127.0.0.1:8000 (발표자료는 http://127.0.0.1:8000/presentation/)
+```
+
+- Validation 사진을 고르면 바로 예측하고 정답과 비교(맞힘 · 종류 틀림 · 오검출 · 놓침), 확신도 기준을 움직이면 판정이 바로 바뀐다. 4K 원본을 휠로 확대해 작은 이물을 볼 수 있다.
+- Validation 104장 일괄 채점(약 12초) — 기준 0.25 에서 맞힘 506 · 놓침 34 · 오검출 31 로 `08` · `09` 와 같다.
+- 사진 끌어다 놓기 · YOLO TXT 후보 저장(Auto Label 후보 — 사람 검수 후 확정). Frozen Test · Bridge 사진은 거절, 127.0.0.1 전용, 올린 사진은 저장하지 않음.
+
 **Auto Label — 아직 구현하지 않았다** (`src/auto_labeler.py` · `scripts/12_auto_label.py` 없음). 구현하면 새 이미지 5장으로 먼저 시험하고, 후보 TXT 는 교과 7 라벨링 도구(`cd ../subject7 && python main.py`)로 사람이 확인·수정·승인한 뒤에만 Final Label 로 확정한다.
 
 ## 14. 알려진 한계
