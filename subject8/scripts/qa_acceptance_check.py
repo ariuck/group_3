@@ -174,6 +174,17 @@ def check_model():
     add(A, "Baseline 학습조건이 기록되어 있다", "PASS" if not miss else "FAIL", "reports/02_baseline/baseline_training_condition.md" + (f" — 빠짐 {miss}" if miss else ""))
     has_file("models/final/final_best.pt", A, "final_best.pt 가 있다", "8일차 Final Model 확정 후")
     has_file("reports/final_model_selection.md", A, "Final Model 을 선택한 이유가 기록되어 있다", "8일차")
+    # Final 이 registry 의 공식 Final 과 같고, 선택 문서에 적힌 해시와 같은지
+    fin, sel = PROJECT_ROOT / "models" / "final" / "final_best.pt", R / "final_model_selection.md"
+    final_run = registry.OFFICIAL.get("final")
+    if fin.is_file() and sel.is_file() and final_run:
+        src_pt = PROJECT_ROOT / "models" / "improved" / f"{final_run}.pt"
+        m = re.search(r"sha256 `([0-9a-f]{64})`", sel.read_text(encoding="utf-8"))
+        full = hashlib.sha256(fin.read_bytes()).hexdigest()
+        same_src = src_pt.is_file() and sha12(src_pt) == sha12(fin)
+        add(A, "final_best.pt 가 공식 Final 실행의 Weight 이고 선택 문서의 해시와 같다",
+            "PASS" if same_src and m and m.group(1) == full else "FAIL",
+            f"{final_run} · {full[:12]}{'' if same_src else ' ≠ models/improved 의 원본'}{'' if m and m.group(1) == full else ' ≠ 선택 문서 해시'}")
 
 
 # ── Evaluation ────────────────────────────────────────────────
@@ -197,7 +208,22 @@ def check_evaluation():
     el = read_csv(R / "04_improvement" / "experiment_log.csv")
     miss = [c for c in need if c not in el[0]]
     add(A, "experiment_log.csv 에 권장 필드 15개가 있다", "PASS" if not miss else "FAIL", f"{len(el)}개 실행" + (f" — 빠짐 {miss}" if miss else ""))
-    has_file("reports/final_metrics.csv", A, "Frozen Test 결과가 있다", "8일차 Final Model 확정 후 한 번만 평가")
+    fm = R / "05_final" / "final_metrics.csv"
+    if fm.is_file():
+        rows_ = read_csv(fm)
+        test_rows = [r for r in rows_ if r.get("split") == "test"]
+        run_ = {r.get("model_version") for r in test_rows}
+        n_img = {r.get("images") for r in test_rows}
+        ok = len(rows_) == 1 and len(test_rows) == 1 and n_img == {"82"}
+        add(A, "Frozen Test 결과가 있다 (Final 1개 · 한 번 · Test 82장)", "PASS" if ok else "FAIL",
+            f"reports/05_final/final_metrics.csv — {len(rows_)}행, 모델 {sorted(run_)}, 장수 {sorted(n_img)}, "
+            f"mAP50-95 {test_rows[0].get('map50_95') if test_rows else '-'}")
+        from src import registry
+        want = registry.OFFICIAL.get("final") or ""
+        add(A, "Frozen Test 를 잰 모델이 공식 Final 과 같다", "PASS" if run_ == {want} else "FAIL", f"{sorted(run_)} vs {want}")
+    else:
+        add(A, "Frozen Test 결과가 있다", "TODO", "reports/05_final/final_metrics.csv — Final Model 확정 후 한 번만 평가")
+    has_file("reports/05_final/final_class_metrics.csv", A, "Frozen Test Class 별 성능이 있다", "Final Model 확정 후")
 
 
 # ── Inference / Auto Label ────────────────────────────────────
@@ -249,6 +275,16 @@ def check_env():
         add(A, "Weight(.pt) 는 models/ 안의 것만 추적된다", "PASS" if not weights else "FAIL", "models/ 밖 .pt 0개" if not weights else str(weights[:3]))
     except (OSError, subprocess.CalledProcessError) as e:
         add(A, "Git 추적 파일 점검", "MANUAL", f"git 실행 실패: {e}")
+
+    h = PROJECT_ROOT / "docs" / "handoff_subject14.md"
+    htxt = h.read_text(encoding="utf-8") if h.is_file() else ""
+    need = ["Final Model", "Bridge Holdout", "Dataset Version", "한계"]
+    miss = [n for n in need if n not in htxt]
+    if not h.is_file():
+        add(A, "교과 14 Handoff 문서가 있다", "TODO", "docs/handoff_subject14.md 아직 없음")
+    else:
+        add(A, "교과 14 Handoff 문서가 있다 (Final · Bridge · Version · 한계 포함)", "PASS" if not miss else "FAIL",
+            "docs/handoff_subject14.md" + (f" — 빠짐 {miss}" if miss else ""))
 
     add(A, "다른 팀원이 README 만 보고 처음부터 재실행할 수 있다", "MANUAL",
         "README 6장 순서대로 다른 PC 에서 실행하고 막힌 곳을 기록 (가이드 22.6)")
