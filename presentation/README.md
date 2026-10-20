@@ -77,12 +77,12 @@ PDF 백업: 브라우저 인쇄(Ctrl+P) → 대상 "PDF로 저장" → 배경 �
 | 3 | Class별 727 · 1,852 · 932 · 379 · 416 · 255, 갈변 313→416 (+103) | 2.3, 5.4 | subject7 qa_summary |
 | 4 | Round-trip 900/900, 최대 오차 5e-11 | 2.5 | subject7 test_report |
 | 6 | 900/900 · 교차검수 100% · 235장(26.1%) · 추가 166·수정 173·삭제 4 · 이슈 28 | 2.6 | subject7 qa_summary |
-| 7 | 10-20 Final · Frozen Test 0.639, exp026·027 재학습 중 | 1.1, 3.1 | final_model_selection.md |
+| 7 | 10-20 Final · Frozen Test 0.639, exp026·027 재학습 완료 · 5라운드 exp063 1회 | 1.1, 3.1 | final_model_selection.md |
 | 8 | P 0.888 · R 0.589 · mAP50-95 0.470, 실패 233 | 3.6, 3.7 | runs_summary.csv |
 | 9 | 63% (83/132) → 6% (6/104), Train 558 · Val 104 · Test 82 · Bridge 156 | 3.3, 3.4 | — |
 | 10 | 0.470 · 0.646 · 0.704 · A 0.715(0.707~0.724) · C 0.730 · **B 0.739 (0.726~0.749)** · 62분 · 기각 +0.003 · −0.006 · −0.008 · −0.044 | 3.8, 3.8.1, 5.7 | experiment_log.csv, runs_summary.csv, final_model_selection.md |
-| 11 | 규칙 커밋 10-19 16:55(`f8b60cd`, seed 5개로 확정 · 16:42 `eed98b4` 는 seed 3개 버전) · 첫 학습 17:25 · 6방향 평균 0.733 · 0.740 · 0.729 · 0.727 · 0.732 · 0.726, 갈변 0.094~0.111, 채택선 0.759 | 3.10 | experiment_handoff.md 9장, final_model_selection.md |
-| 12 | +0.234 · +0.040 · 0.02 · 1280 0.680 / 1920 0.715 / 2240 0.739 / 2560 0.729 · 예측 2240 0.749 · 2560 0.751 · 2880 0.749 | 3.8 인사이트 8~11 | final_model_selection.md |
+| 11 | 규칙 커밋 10-19 16:55(`f8b60cd`, seed 5개로 확정 · 16:42 `eed98b4` 는 seed 3개 버전) · 첫 학습 17:25 · 6방향 평균 0.733 · 0.740 · 0.731 · 0.727 · 0.732 · 0.726, 갈변 0.094~0.111, 채택선 0.759 | 3.10 | experiment_handoff.md 9장, final_model_selection.md |
+| 12 | +0.234 · +0.040 · 0.02 · 1280 0.680 / 1920 0.715 / 2240 0.739 / 2560 0.731 · 예측 2240 0.749 · 2560 0.751 · 2880 0.749 | 3.8 인사이트 8~11 | final_model_selection.md |
 | 13 | Val 0.749 → Test 0.639 · P 0.868 · R 0.744 · mAP50 0.726 · Class Val/Test · 기여 0.066 | 3.13, 5.8 | 05_final/final_metrics.csv, final_class_metrics.csv |
 | 14 | 갈변 Val 0.115 · Test Recall 0 · 나뭇잎·종이 P 0.367 R 0.855 (23박스) · 반점 Train 20→8 · Val 41→15 · Test 14→14 | 3.9, 9.7 | final_model_selection.md, experiment_handoff.md 9장 |
 | 15 | imgsz 2240 · conf 0.25 · 약 37ms/장 · Test 0.639 | 1.2, 3.13 | models/README.md |
@@ -104,4 +104,4 @@ PDF 백업: 브라우저 인쇄(Ctrl+P) → 대상 "PDF로 저장" → 배경 �
 - [ ] **Val 0.749 → Test 0.639 답변(Q26~28)을 6명이 같은 말로** — 리허설
 - [ ] Q2 갈변 기준 개정 시점 · Q10 배치 기록 사람 검수 · Q23 AI 사용 범위 (A8 `발표 전 확인` 배지)
 - [x] `s15_detect_1~3.jpg` Final 로 생성 (10-20) · [ ] `s15_backup.mp4` 녹화, 시연 PC 점검 (`qa_acceptance_check.py`)
-- [ ] exp026 · 027 결과가 들어오면 11번 ③ 행 갱신 (결론은 바뀌지 않음)
+- [x] exp026 · 027 결과로 11번 ③ 행 갱신 (10-20: seed 5개 평균 0.731, 결론 그대로)

@@ -393,7 +393,7 @@ svg text{font-family:var(--font)}
       <li>교과 7: 2026-10-06 ~ 10-08 인계 완료 · 교과 8: 2026-10-12 ~ (10-20 Final 확정)</li>
     </ul>
   </div>
-  <footer><div class="fn">Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 의 seed 2개(exp026·027)는 재학습 중이나 결론에 영향 없음 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 · 5라운드(P2 검출층·변형 반점 합성)는 Final 확정 뒤 갈변 진단용으로 진행 중이며 Final은 바꾸지 않음 · 교과 14 Handoff는 <code>docs/handoff_subject14.md</code> 작성 완료, 팀 검토 전 (소스 1.1, 3.1)</div></footer>
+  <footer><div class="fn">Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 은 exp026·027 재학습으로 seed 5개 완료 (0.737·0.730, 결론 그대로) · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 · 5라운드(P2 검출층·변형 반점 합성)는 Final 확정 뒤 갈변 진단으로 1회(exp063)만 — 갈변 0.237 · 전체 0.725, Final은 바꾸지 않음 · 교과 14 Handoff는 <code>docs/handoff_subject14.md</code> 작성 완료, 팀 검토 전 (소스 1.1, 3.1)</div></footer>
   <aside class="notes">
     <div class="script"><p>교과 8은 지금 이 단계에 와 있습니다.</p>
     <p>데이터 점검부터 개선 실험 네 라운드까지 마쳤고, 오늘 아침 Final Model을 확정한 뒤 Frozen Test로 정식 평가를 한 번 했습니다. 그 전에 10월 16일에 Test 점수를 한 번 본 적이 있는데, 이 부분은 뒤에서 솔직하게 말씀드리겠습니다. Auto Label과 사람 검토는 아직 남아 있어서 완료로 말씀드리지 않습니다. 교과 14 인계 문서는 초안을 써 두었고 팀 검토가 남았습니다.</p></div>
@@ -509,7 +509,7 @@ svg text{font-family:var(--font)}
       <div id="chart-r4" style="flex:1;min-height:0" aria-label="4라운드 방향별 seed 평균 막대그래프와 채택선"></div>
     </div>
   </div>
-  <footer><div class="fn">① 반점 복제 · ② 반점 합성 · ③ 해상도 2560 · ④ 지운 반점 복원 + 복제 · ⑤ ③+① · ⑥ ③+② · ③은 seed 3개(exp026·027 재학습 중, 두 개가 각 0.80 이상이어야 채택선 도달 → 결론 불변) · 판정은 Validation만 (소스 3.10, 3.13)</div></footer>
+  <footer><div class="fn">① 반점 복제 · ② 반점 합성 · ③ 해상도 2560 · ④ 지운 반점 복원 + 복제 · ⑤ ③+① · ⑥ ③+② · ③은 exp026·027 재학습까지 seed 5개 (평균 0.731) · 판정은 Validation만 (소스 3.10, 3.13)</div></footer>
   <aside class="notes">
     <div class="script"><p>Final은 결과를 보기 전에 정해 둔 규칙으로 골랐습니다. 어제 오후 학습을 걸기 전에, 방향마다 seed 5개 평균으로 비교하고 B보다 0.02 이상 오른 방향이 없으면 B를 그대로 쓴다고 커밋해 두었습니다.</p>
     <p>밤새 여섯 대 PC로 여섯 방향을 돌렸는데, 가장 좋은 반점 합성도 0.001 차이였습니다. 그래서 규칙대로 B를 유지하고, B 안에서 Validation이 가장 높은 exp050을 Final로 정했습니다.</p></div>
@@ -978,7 +978,7 @@ svg text{font-family:var(--font)}
   {"id":"B","seeds":[0.726, 0.732, 0.746, 0.743, 0.749],"name":"기준 (11s·2240)","mean":0.739,"d":0,"br":0.108,"n":5},
   {"id":"①","seeds":[0.732, 0.742, 0.73, 0.733, 0.727],"name":"반점 복제","mean":0.733,"d":-0.006,"br":0.094,"n":5},
   {"id":"②","seeds":[0.748, 0.738, 0.737, 0.731, 0.746],"name":"반점 합성","mean":0.740,"d":0.001,"br":0.111,"n":5},
-  {"id":"③","seeds":[0.736, 0.721, 0.73],"name":"2560","mean":0.729,"d":-0.010,"br":0.080,"n":3},
+  {"id":"③","seeds":[0.736, 0.737, 0.73, 0.721, 0.73],"name":"2560","mean":0.731,"d":-0.008,"br":0.080,"n":5},
   {"id":"④","seeds":[0.732, 0.729, 0.735, 0.72, 0.719],"name":"반점 복원+복제","mean":0.727,"d":-0.012,"br":0.108,"n":5},
   {"id":"⑤","seeds":[0.738, 0.744, 0.725, 0.728, 0.723],"name":"2560+복제","mean":0.732,"d":-0.007,"br":0.091,"n":5},
   {"id":"⑥","seeds":[0.712, 0.728, 0.739, 0.723, 0.729],"name":"2560+합성","mean":0.726,"d":-0.013,"br":0.075,"n":5}
@@ -987,7 +987,7 @@ svg text{font-family:var(--font)}
   {"imgsz":1280,"map":0.680,"n":1,"note":"exp012"},
   {"imgsz":1920,"map":0.715,"n":3,"note":"후보 A"},
   {"imgsz":2240,"map":0.739,"n":5,"note":"후보 B = Final 조건"},
-  {"imgsz":2560,"map":0.729,"n":3,"note":"4라운드 ③ · 88분"}
+  {"imgsz":2560,"map":0.731,"n":5,"note":"4라운드 ③ · 88분"}
  ],
  "test":[
   {"id":0,"name":"나뭇잎·종이","val":0.877,"test":0.482},
