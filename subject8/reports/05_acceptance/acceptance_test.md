@@ -18,13 +18,13 @@
 
 | | PASS | FAIL | TODO | MANUAL |
 |---|---:|---:|---:|---:|
-| 자동 점검 (2026-10-20) | 77 | **0** | 5 | 4 |
+| 자동 점검 (2026-10-20, 문서·실험 기록 보완 후 재실행) | 79 | **0** | 4 | 4 |
 | 사람이 확인해 PASS 로 바꾼 것 | +2 | | | −2 |
-| **최종** | **79** | **0** | **5** | **2** |
+| **최종** | **81** | **0** | **4** | **2** |
 
 - **PASS**: 확인 완료 · **FAIL**: 고쳐야 함 · **TODO**: 아직 만들어지지 않은 산출물 · **MANUAL**: 사람이 직접 확인해야 함
 - 이전판 FAIL(F-1, 학습·추론 패키지)은 사진·GPU PC 에서 다시 시험해 **해결**됐다 (아래 FAIL 기록).
-- 자동 점검 77 중 Model 의 Weight 해시 일치가 50개다 (Baseline · exp001~050).
+- 자동 점검 79 중 Model 의 Weight 해시 일치가 50개다 (Baseline · exp001~050).
 
 ## 1. Dataset
 
@@ -39,7 +39,7 @@
 | Split 정책이 문서로 확정(FROZEN)되어 있다 | PASS | `docs/project/split_policy.md` |
 | Class ID 0~6 을 그대로 쓴다 | PASS | `configs/dataset.yaml` |
 | Bridge Holdout 이 `dataset.yaml` 에 없다 | PASS | |
-| Frozen Test 가 Final Model 선택 전에 사용되지 않았다 | PASS (휴리스틱) | `runs/` 에 test·final 이름의 실행 없음 · `runs/*/args.yaml` 에 `split: test` 0개 (사람이 확인함) · `evaluate_detector.py` 의 `allow_test` 보호. 한계: 이 점검은 남은 기록으로 하는 것이라, 기록 없이 따로 돌린 평가는 잡지 못한다 |
+| Frozen Test 가 Final Model 선택 전에 사용되지 않았다 | **PASS (예외 1건 기록)** | `runs/` 에 test·final 이름의 실행 없음 · `runs/*/args.yaml` 에 `split: test` 0개 · `evaluate_detector.py` 의 `allow_test` 보호. **그러나 팀 기록(`04_improvement/baseline_vs_improved.md` 3장)에 "2026-10-16 Final 확정 전에 Test 점수를 한 번 본 적이 있다 (결과·스크립트는 지움)"고 적혀 있다.** 그 점수로 모델·조건을 고르지 않았다고 하나, 자동 점검은 남은 기록만 보므로 이 열람을 잡지 못한다. 가이드 Gate("Frozen Test 를 보고 Fine-tuning 하지 않는다")와의 관계는 **발표에서 사실대로 설명**해야 한다 |
 | 학습에 쓴 Train/Val Manifest 가 지금과 같다 | PASS | 해시 일치 |
 
 ## 2. Model
@@ -59,7 +59,9 @@
 | Baseline Validation 의 Precision·Recall·mAP50·mAP50-95 | PASS | `02_baseline/baseline_metrics.csv` (mAP50-95 0.471) |
 | Class 별 성능 | PASS | `baseline_class_metrics.csv` (Class 4 는 Instance 0건으로 표시) |
 | Failure Analysis 표 | PASS | `03_failure_analysis/failure_analysis.csv` 외 3개 |
-| **실패 원인 가설 문서** | **TODO** | `03_failure_analysis/failure_hypothesis.md` — v5 기준으로 다시 쓰기로 한 문서가 아직 없다 (README 9장). v1 때의 H1~H5 는 `history/kimchi_v1/` 에 있어 v5 근거로 쓸 수 없다 |
+| 실패 원인 가설 문서 | PASS | `03_failure_analysis/failure_hypothesis.md` — v5 기준 H1~H5 와 이후 검증 (2026-10-20 작성). 사진을 봐야 아는 부분(FP_BACKGROUND 24건에 빠진 라벨이 있는지 등)은 문서 안에 「사람 확인 필요」로 남아 있다 |
+| 개선 실험 설계 문서 | PASS | `04_improvement/improvement_experiment.md` |
+| 실험 기록 완전성 | PASS (보완함) | `experiment_log.csv` 에 exp009 · 011 · 014~050 행이 빠져 있었다 (13행). 자동 점검은 열 이름만 봐서 통과했었다. 2026-10-20 에 39행을 덧붙여 **52행**. 점수 없는 실행 3개(exp017 중단 · 026 · 027 결과 없음)는 이유를 적고 점수 칸을 비웠다 |
 | Baseline vs Improved 비교 | PASS | `04_improvement/baseline_vs_improved.md` |
 | 실험 기록 | PASS | `experiment_log.csv` (권장 필드 15개) |
 | Frozen Test 결과 (Final 1개 · 한 번 · 82장) | PASS | `05_final/final_metrics.csv` — 1행, `exp050`, 82장 · 432박스, **mAP50-95 0.639** · mAP50 0.726 · P 0.868 · R 0.744 |
@@ -108,13 +110,13 @@
 Final · Frozen Test 가 생기면서 점검 기준과 실제 파일 위치가 달라, 점검이 `TODO` 로 남을 뻔한 것을 고쳤다.
 
 - Frozen Test 결과 위치를 `reports/final_metrics.csv` → `reports/05_final/final_metrics.csv` 로 맞춤
-- 추가한 점검: ① `final_best.pt` = 공식 Final 실행의 Weight = 선택 문서에 적힌 해시 ② Frozen Test 가 **1행 · Test 82장 · 공식 Final** 로 잰 것인지 ③ Class 별 Test 성능 파일 ④ `docs/handoff_subject14.md` 가 있고 Final · Bridge · Dataset Version · 한계를 다루는지
+- 추가한 점검: ① `final_best.pt` = 공식 Final 실행의 Weight = 선택 문서에 적힌 해시 ② Frozen Test 가 **1행 · Test 82장 · 공식 Final** 로 잰 것인지 ③ Class 별 Test 성능 파일 ④ `docs/handoff_subject14.md` 가 있고 Final · Bridge · Dataset Version · 한계를 다루는지 ⑤ **`models/` 에 보관된 모든 Weight 가 `experiment_log.csv` 에 행이 있는지** (열 이름만 보던 점검이 exp009 · 011 · 014~050 누락을 놓쳤다)
 
 ## 사람이 확인할 시험 절차 (MANUAL)
 
 1. ~~환경~~ — 2026-10-20 완료 (위 5장)
 2. ~~Detection~~ — 2026-10-20 완료, 단 Class 6 사진 5장뿐 (위 4장). **Class 0~3 · 5 가 들어 있는 사진으로 한 번 더** 보면 좋다 (`--limit` 를 늘리거나 `--source` 로 지정)
-3. ~~Frozen Test 미사용 확인~~ — 2026-10-20 완료 (`args.yaml` 에 `split: test` 없음, 위 1장)
+3. ~~Frozen Test 미사용 확인~~ — 2026-10-20 완료 (`args.yaml` 에 `split: test` 없음). 단 10-16 에 한 번 본 적이 있다는 팀 기록이 있어 "미사용"은 아니다 (위 1장)
 4. **재현**: 만든 사람이 아닌 팀원이 [`docs/handoff_subject14.md`](../../docs/handoff_subject14.md) 7장 순서로 환경 → Dataset 경로 → 예측까지 실행. 막힌 곳은 아래에 적는다
 5. **Auto Label → 교과 7 도구**: Auto Label 구현 후 후보 TXT 를 열어 수정·삭제·추가·승인·저장이 되는지 확인
 
@@ -126,7 +128,9 @@ Final · Frozen Test 가 생기면서 점검 기준과 실제 파일 위치가 �
 
 - [ ] Auto Label 구현 → 후보 TXT → 교과 7 도구에서 열기·수정·승인 (4장 TODO 1 · MANUAL 1)
 - [ ] `demo/` 백업자료 채우기 (사진은 Git 제외, 시연 PC 에 보관) (4장 TODO 3)
-- [ ] `failure_hypothesis.md` 를 v5 기준으로 작성 (3장 TODO 1) — 담당 확인 필요
+- [x] `failure_hypothesis.md` · `improvement_experiment.md` v5 기준 작성 (2026-10-20)
+- [x] `experiment_log.csv` 빠진 행 39개 추가(13 → 52행), `baseline_vs_improved.md` Final 기준 갱신 (2026-10-20)
+- [ ] 실패 사진으로 `FP_BACKGROUND` 24건 확인 (빠진 라벨 여부) — `failure_hypothesis.md` H5
 - [ ] README 11 · 12 · 13 · 15장 `TBD` 채우기 (Final · Frozen Test · Detection · Handoff 링크)
 - [ ] 다른 팀원 재현 시험 1회 (위 표)
 - [ ] 위가 끝나면 `python scripts/qa_acceptance_check.py` 를 다시 돌려 TODO 가 0 인지 확인하고 이 문서의 결과 요약을 갱신

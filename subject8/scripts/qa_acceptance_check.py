@@ -208,6 +208,11 @@ def check_evaluation():
     el = read_csv(R / "04_improvement" / "experiment_log.csv")
     miss = [c for c in need if c not in el[0]]
     add(A, "experiment_log.csv 에 권장 필드 15개가 있다", "PASS" if not miss else "FAIL", f"{len(el)}개 실행" + (f" — 빠짐 {miss}" if miss else ""))
+    ids = {r["experiment_id"] for r in el}
+    kept = [p.stem for d in ("baseline", "improved") for p in sorted((PROJECT_ROOT / "models" / d).glob("*.pt")) if p.stem != "baseline_best"]
+    missing = [k for k in kept if k not in ids]
+    add(A, "models/ 에 보관된 모든 실행이 experiment_log.csv 에 기록되어 있다", "PASS" if not missing else "FAIL",
+        f"보관 Weight {len(kept)}개 모두 기록됨" if not missing else f"기록 없는 실행 {len(missing)}개: {missing[:5]}")
     fm = R / "05_final" / "final_metrics.csv"
     if fm.is_file():
         rows_ = read_csv(fm)

@@ -1,8 +1,8 @@
 # Baseline vs Improved — kimchi_v5 (산출물 5)
 
-> 2026-10-19 기준. 모든 숫자는 **같은 Dataset `kimchi_v5`·같은 Validation 104장**(Train 이 보지 못한 촬영 묶음 G05·G13)의 학습 중 best epoch 지표다. Frozen Test 로 고른 것이 아니다. Final Model 은 아직 정하지 않았다.
+> 2026-10-20 갱신 (Final 확정 반영). 모든 숫자는 **같은 Dataset `kimchi_v5`·같은 Validation 104장**(Train 이 보지 못한 촬영 묶음 G05·G13)의 학습 중 best epoch 지표다. Frozen Test 로 고른 것이 아니다. **Final Model = `exp050_v5_s_imgsz2240_aug_seed2`** (4장). 2~4라운드(exp009 · 011 · 014~050) 결과는 1장 아래 표와 5장에 있다.
 >
-> 근거: [`experiment_log.csv`](experiment_log.csv) · 실행별 조건 `<실행>_training_condition.md` · [`../runs_summary.csv`](../runs_summary.csv) · [`../../models/README.md`](../../models/README.md) · 그림 [`runs_comparison_kimchi_v5.png`](../figures/comparison/runs_comparison_kimchi_v5.png), [`v5_vs_v4.png`](../figures/comparison/v5_vs_v4.png)
+> 근거: [`experiment_log.csv`](experiment_log.csv)(52행) · [`improvement_experiment.md`](improvement_experiment.md) · [`../final_model_selection.md`](../final_model_selection.md) · 실행별 조건 `<실행>_training_condition.md` · [`../runs_summary.csv`](../runs_summary.csv) · [`../../models/README.md`](../../models/README.md) · 그림 [`runs_comparison_kimchi_v5.png`](../figures/comparison/runs_comparison_kimchi_v5.png), [`v5_vs_v4.png`](../figures/comparison/v5_vs_v4.png)
 
 ## 1. 한눈에
 
@@ -21,6 +21,11 @@
 | exp012_v5 | 11s | 1280 | exp007 + imgsz 1280 | 0.748 | 0.741 | 0.785 | 0.680 | 18분 | 기각 (-0.044) |
 | exp010_v5 | 11s | 1920 | exp007 + 2×2 타일링 | 0.859* | 0.791* | 0.810* | 0.723* | 169분 | 기각 (같은 코드 exp007 0.729) |
 | exp010b_v5 | 11s | 1920 | exp010 을 다른 PC 에서 | 0.859* | 0.791* | 0.810* | 0.723* | 170분 | 재현성 확인 (소수 4자리 같음) |
+| exp011_v5 | 11s | 1920 | exp007 − 증강 | 0.857 | 0.779 | 0.822 | 0.716 | — | 증강 유지 (-0.008) |
+| exp009_v5 | **11m** | 1920 | exp007 + 모델 11m | 0.850 | 0.790 | 0.819 | 0.730 | — | 후보 C (+0.006, 더 무거움) |
+| exp014_v5 | 11s | 1920 | exp007 과 seed 만 다름 (123) | 0.917 | 0.795 | 0.822 | 0.707 | — | 후보 A 평균 **0.715** (3개) |
+| **B** exp015·016·018·049·050 | 11s | **2240** | exp007 + imgsz 2240 (batch 2) | — | — | — | 평균 **0.739** (0.726~0.749) | 약 1시간 | **후보 B 선택 (A 대비 +0.024)** |
+| **exp050_v5** | 11s | 2240 | B 의 seed 2 | 0.945 | 0.822 | 0.840 | **0.749** | 62분 | **Final Model** |
 
 \* 타일링은 학습 중 Val 이 조각 단위라, 조각 예측을 합쳐 원본 Val 을 같은 코드(`src/tiling.py`)로 채점 — 같은 코드로 잰 exp002_v5 는 0.680 ([`tiling_eval.csv`](tiling_eval.csv)).
 
@@ -29,10 +34,11 @@
 1. **해상도가 가장 큰 효과** — 640 → 1280 → 1920 에서 mAP50-95 0.470 → 0.646 → 0.704 (+0.234). 원본 4848×2704 를 640 으로 줄이면 작은 이물이 수 px 로 사라지기 때문 (kimchi_v1 실패 분석 H4 가 v5 에서도 그대로 확인됨).
 2. **해상도와 모델 크기는 비슷하게 큰 효과** — 같은 증강(exp005, 0.684)에서 해상도만 2560 으로 올리면 +0.038 (exp006), 모델만 11s 로 키우면 +0.040 (exp007).
 3. **증강은 모델 용량에 따라 다르게 작용** — 작은 모델(11n·1920)에서는 손해(-0.020, exp005) 였지만, 해상도나 모델을 키운 뒤에는 기본 모델(exp002)보다 좋아졌다 (exp006 +0.018, exp007 +0.020). 작은 모델은 바뀐 사진을 다 배우지 못하고, 큰 모델은 증강 덕에 과적합이 줄어든 것으로 본다.
-4. **아직 오르는 중** — exp006·exp007 은 best epoch 가 49·50 (마지막 근처). 학습량을 늘리면 더 오를 여지가 있다 → exp008 (epoch 100) 계획.
-5. **비용 대비 효율은 11s · 1920 이 최선** — exp006(2560)은 점수가 exp007 과 같은데 학습 시간이 7배 (2560 Val 이 RTX 3060 12GB 를 넘어 공유 메모리 사용). 이 GPU 에서는 해상도보다 모델 크기를 키우는 쪽이 효율적이다.
+4. **학습량(epoch)은 효과 없음** — exp006·exp007 은 best epoch 가 마지막 근처였지만, epoch 100 으로 늘린 exp008 은 +0.003 (시간 2배)이라 기각했다.
+5. **비용 대비 효율은 11s 계열이 최선** — exp006(11n · 2560)은 점수가 exp007 과 같은데 학습 시간이 7배였다 (2560 Val 이 RTX 3060 12GB 를 넘어 공유 메모리 사용). 11s 로 해상도를 2240 까지 올리면(후보 B) 평균 +0.024 오르지만 2560 은 오히려 B 보다 낮아져 **해상도는 2240 근처에서 포화**했다.
 6. **타일링은 작은 이물에 도움** — 원본 단위 +0.019, Recall +0.033, 가지 0.80 → 0.90, 갈변 0.04 → 0.08. 대신 나뭇잎·종이 -0.04, 학습 4배.
-8. **같은 조건 반복 흔들림 ±0.01** (exp007 0.724 vs exp013 seed 7 0.714) — 실험 사이 0.01 안쪽 차이는 우연일 수 있다. 그래서 2라운드는 후보마다 seed 2~3개 **평균**으로 Final 을 고른다.
+8. **같은 조건 반복 흔들림 ±0.01** (exp007 0.724 vs exp013 seed 7 0.714 vs exp014 seed 123 0.707) — 실험 사이 0.01 안쪽 차이는 우연일 수 있다. 그래서 후보·개선 방향은 seed 3~5개 **평균**으로 비교했다. B 안에서도 seed 5개가 0.726~0.749 로 흔들렸다.
+11. **4라운드 — 갈변 개선 시도 6방향 모두 실패** — B 기반으로 반점 복제 · 합성 · 복원+복제 · 2560 · 2560+복제 · 2560+합성을 seed 5개씩 돌렸지만 모두 B 평균(0.739) 대비 -0.013 ~ +0.001 이고 갈변 mAP50-95 도 0.075 ~ 0.111 (B 0.108). 채택 기준(+0.02)을 넘는 방향이 없어 **B 를 그대로 Final 로** 했다 ([`improvement_experiment.md`](improvement_experiment.md) 5장).
 9. **재현성** — 같은 조건을 다른 학원 PC 에서 돌린 exp010·exp010b 가 소수 4자리까지 같다 (seed·deterministic 고정). 결과를 PC 와 무관하게 다시 만들 수 있다.
 10. **효과 없던 것도 근거** — 11s 에서는 epoch 100 (+0.003, 시간 2배)·타일링 (-0.006, 4배)·TTA (-0.015)·agnostic NMS (-0.016) 모두 이득이 없었다 ([`inference_options.csv`](inference_options.csv)). 해상도를 1280 으로 낮추면 -0.044 라, 11s 에서도 해상도는 계속 중요하다.
 7. **데이터셋 재분할(v4 → v5) 자체가 개선** — v4 Val 은 132장 중 83장이 Train 과 같은 촬영 묶음이라 점수가 부풀려졌다 (v4 갈변 AP50 0.86 은 같은 묶음 G09 갈변). v5 에서 6장(G00 예외)으로 줄여 "처음 보는 장면" 성능에 가까운 숫자가 됐다 — 점수는 낮아졌지만 정직해졌다.
@@ -41,24 +47,34 @@
 
 | 한계 | 내용 | 대응 |
 |---|---|---|
-| **갈변(Class 5)** | Train 갈변 209개 중 207개가 G09 의 넓게 변한 조각(한 변 중앙값 260px), 작은 점 갈변(50px 미만)은 Train 에 4개뿐. 평가 쪽 갈변은 대부분 작은 점(G13 24px · G14 20px) → 거의 못 찾음 (exp002 Val AP50 0.06, 타일링 0.09) | 분할을 바꿔도 해결 안 됨 (옮기면 평가 불가). 라벨 기준은 교과 7 `class_guide.md` 그대로. **작은 갈변 학습 데이터 보강 = 교과 14 과제** |
-| 평가 세트가 작음 | Val 104장 · 정답 541개, 갈변·벌레 15~29박스 → 박스 1개에 Recall 3~7%p. 실험 사이 0.02 차이는 우연일 수 있음 | exp013 (exp007 과 seed 만 다른 반복)으로 흔들림 폭 측정 계획 |
-| 두 변수 동시 변경 | exp006·exp007 은 exp002 대비 두 변수(사용자 결정). exp005 대비로는 한 변수라 각 효과는 읽을 수 있음 | exp011 (11s · 증강 없음)으로 증강 효과 분리 계획 |
+| **갈변(Class 5)** | Train 갈변 209개 중 207개가 G09 의 넓게 변한 조각(한 변 중앙값 260px), 작은 점 갈변(50px 미만)은 Train 에 4개뿐. 평가 쪽 갈변은 대부분 작은 점(G13 24px · G14 20px) → 거의 못 찾음 (exp002 Val AP50 0.06, 타일링 0.09). **4라운드 6방향 × seed 5개로도 0.075~0.111, Frozen Test 에서는 Recall 0.00 · mAP50-95 0.007** | 분할을 바꿔도 해결 안 됨 (옮기면 평가 불가). 라벨 기준은 교과 7 `class_guide.md` 그대로. **같은 기준의 작은 갈변 학습 데이터 보강 = 교과 14 과제** |
+| 평가 세트가 작음 | Val 104장 · 정답 541개, 갈변·벌레 15~29박스 → 박스 1개에 Recall 3~7%p. 실험 사이 0.02 차이는 우연일 수 있음 | exp013 · 014 로 흔들림 ±0.01 측정, 이후 seed 3~5개 평균으로 비교 |
+| 두 변수 동시 변경 | exp006·exp007 은 exp002 대비 두 변수(사용자 결정). exp005 대비로는 한 변수라 각 효과는 읽을 수 있음 | exp011 (11s · 증강 없음, 0.716)로 증강 효과 분리 — 11s 에서 증강은 +0.008 |
 | 같은 소품·같은 날짜 | 촬영 팀이 같은 소품을 날짜를 넘어 다시 썼고 이물 단독 사진(G17, Train)에 소품 대부분이 있음. 평가 사진도 모두 Train 과 같은 날 촬영 → "처음 보는 물체" 가 아니라 "본 물체를 새 장면에 놓았을 때" 성능 | 한계로 기록 ([kimchi_v5_split.md](../../docs/project/kimchi_v5_split.md)) |
 | Class 6 (파·고추) | 255박스 중 250개가 G00 한 묶음 → 시간순으로 나눠 같은 조각이 Train·평가에 함께 나옴 → 점수가 높게 나올 수 있음 | 한계로 기록, Class 6 점수는 따로 표시 |
 | 정상 김치 없음 | 이물 없는 사진 0장 → 배경 오탐(FP) 성능을 제대로 잴 수 없음 | 교과 14 데이터 |
 | GPU 한계 | RTX 3060 12GB: 11s·2560 은 batch 2 도 13.6GB 로 넘침, 2560 은 학습 5시간 | 실험을 3대로 나눠 진행 ([experiment_handoff.md](../../docs/project/experiment_handoff.md)) |
-| Frozen Test 1회 사용 | 2026-10-16 Final Model 확정 전에 Test 점수를 한 번 본 적이 있다 (결과·스크립트는 지움). 그 점수로 모델·조건을 고르지 않는다 | Final 은 Val 근거로만 선택 |
+| Frozen Test 를 한 번 먼저 봄 | 2026-10-16 Final Model 확정 전에 Test 점수를 한 번 본 적이 있다 (결과·스크립트는 지움). 그 점수로 모델·조건을 고르지 않았다. Final 확정 뒤의 정식 Frozen Test 는 한 번이지만, 이 열람 때문에 Test 가 "한 번도 보지 않은" 데이터는 아니다 | Final 은 Val 근거로만 선택. 발표 때 이 사실을 같이 말한다 |
+| Test 와 Val 의 차이 | Val 0.749 → Test 0.639 (-0.11). Val 최고는 seed 5개 중 최고를 고른 값이라 부풀었고 (B 평균 0.739), Test 는 다른 촬영 묶음(G07 · G14) | 대외 성능은 Test 0.639 로 말한다 |
 
-## 4. Final Model 후보 (아직 정하지 않음)
+## 4. Final Model — `exp050_v5_s_imgsz2240_aug_seed2` (2026-10-20 확정)
 
-- **현재 1순위: 후보 A = 11s · 1920 · 증강** (exp007 0.724 · exp013 0.714). 2라운드에서 후보 B (11s · 2240) · C (11m · 1920) 와 seed 평균으로 비교해 오늘 확정한다 ([experiment_handoff.md](../../docs/project/experiment_handoff.md) 8장). 추론은 기본 설정 (TTA·agnostic NMS 는 손해).
-- 확정하면 `models/final/final_best.pt` 로 복사하고 `src/registry.py` 의 `OFFICIAL["final"]` 에 실행 이름을 적은 뒤, `reports/final_model_selection.md` 를 쓰고 Frozen Test 를 한 번 평가한다 (가이드 21장).
+| 항목 | 값 |
+|---|---|
+| 조건 | YOLO11s · imgsz 2240 · batch 2 · epoch 50 · 증강(flipud 0.5 · hsv_v 0.6) · seed 2 · kimchi_v5 그대로 |
+| Validation (best epoch 50) | P 0.945 · R 0.822 · mAP50 0.840 · mAP50-95 **0.749** (Baseline 0.470) |
+| **Frozen Test (82장 · 한 번)** | P 0.868 · R 0.744 · mAP50 0.726 · mAP50-95 **0.639** ([`../05_final/final_metrics.csv`](../05_final/final_metrics.csv)) |
+| 선택 이유 | 후보 B seed 5개 평균(0.739)이 A(0.715)보다 +0.024, 4라운드 6방향 중 B 보다 +0.02 오른 것이 없음 → B 그대로, B 안에서 Val 최고. [`../final_model_selection.md`](../final_model_selection.md) |
+| 추론 설정 | 기본 (TTA · agnostic NMS 는 손해) |
+
+**Baseline → Final 에서 바뀐 것**: 해상도 640 → 2240 · 모델 11n → 11s · 증강. 데이터는 그대로다. Class 별 Val mAP50-95 (Baseline → B 평균): 플라스틱 0.457 → 0.845 · 가지 0.538 → 0.897 · 벌레 0.463 → 0.873 · 잎·종이 0.657 → 0.840 · 파·고추 0.710 → 0.871 · **갈변 0.000 → 0.108**.
+
+**Frozen Test Class 별** ([`../05_final/final_class_metrics.csv`](../05_final/final_class_metrics.csv)): 플라스틱 0.84 · 가지 0.84 · 파·고추 0.91 · 벌레 0.76 · 잎·종이 0.48 (Precision 0.37) · **갈변 0.007 (Recall 0.00)**. 갈변은 사실상 검출하지 못한다.
 
 ## 5. 다시 만들기
 
 ```bash
 python scripts/plot_runs.py          # 학습 곡선 · 비교 그림 · runs_summary.csv · models/README.md
 python scripts/plot_v5_vs_v4.py      # v4 → v5 비교 그림
-python scripts/08_predict_images.py --model exp007_v5_s_imgsz1920_aug   # 발표용 비교 사진 (원본 사진 있는 PC)
+python scripts/08_predict_images.py --model final --limit 5   # Final 모델 비교 사진 (원본 사진 있는 PC)
 ```

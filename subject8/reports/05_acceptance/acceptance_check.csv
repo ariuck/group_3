@@ -67,9 +67,10 @@ Model,final_best.pt 가 공식 Final 실행의 Weight 이고 선택 문서의 �
 Evaluation,Baseline Validation 의 Precision·Recall·mAP50·mAP50-95 가 있다,PASS,precision 0.888 · recall 0.589 · map50 0.687 · map50_95 0.471
 Evaluation,Class 별 성능이 있다,PASS,7개 Class 행
 Evaluation,Failure Analysis 표가 있다,PASS,reports/03_failure_analysis/failure_analysis.csv
-Evaluation,실패 원인 가설 문서가 있다,TODO,reports/03_failure_analysis/failure_hypothesis.md — 아직 없음
+Evaluation,실패 원인 가설 문서가 있다,PASS,reports/03_failure_analysis/failure_hypothesis.md
 Evaluation,Baseline vs Improved 비교 결과가 있다,PASS,reports/04_improvement/baseline_vs_improved.md
-Evaluation,experiment_log.csv 에 권장 필드 15개가 있다,PASS,13개 실행
+Evaluation,experiment_log.csv 에 권장 필드 15개가 있다,PASS,52개 실행
+Evaluation,models/ 에 보관된 모든 실행이 experiment_log.csv 에 기록되어 있다,PASS,보관 Weight 49개 모두 기록됨
 Evaluation,Frozen Test 결과가 있다 (Final 1개 · 한 번 · Test 82장),PASS,"reports/05_final/final_metrics.csv — 1행, 모델 ['exp050_v5_s_imgsz2240_aug_seed2'], 장수 ['82'], mAP50-95 0.6388"
 Evaluation,Frozen Test 를 잰 모델이 공식 Final 과 같다,PASS,['exp050_v5_s_imgsz2240_aug_seed2'] vs exp050_v5_s_imgsz2240_aug_seed2
 Evaluation,Frozen Test Class 별 성능이 있다,PASS,reports/05_final/final_class_metrics.csv

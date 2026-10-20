@@ -10,7 +10,9 @@ reports/
 ├── 02_baseline/              4~5일차  공식 Baseline(baseline_v5) 학습 조건 · Validation 성능
 ├── 03_failure_analysis/      6일차    실패 사례 표 (baseline_v5) — 원인 가설 문서는 v5 기준으로 다시 작성 예정
 ├── 04_improvement/           7일차    v5 실험 기록 · 실험별 학습 조건 · 타일링 채점
-├── 05_acceptance/            9일차    Acceptance Test (작성 중 — 담당 5번)
+├── 05_final/                 8일차    Frozen Test (Final exp050, 한 번) — final_metrics.csv · final_class_metrics.csv
+├── final_model_selection.md  8일차    Final Model 선택 근거 (후보별 seed 평균 · 4라운드 · 갈변)
+├── 05_acceptance/            9일차    Acceptance Test (담당 5번 — Final · Frozen Test 반영, Auto Label 은 TODO)
 ├── runs_summary.csv          모든 Version 의 모든 학습 실행 요약 (scripts/plot_runs.py 가 생성)
 ├── history/                  지난 Dataset Version — 현재 기준 아님, 지우지 않고 남긴 기록
 │   ├── kimchi_v1/ · kimchi_v2/ · kimchi_v3/ · kimchi_v4/
@@ -22,6 +24,7 @@ reports/
 ```
 
 > **먼저 볼 파일**
+> 0. [`final_model_selection.md`](final_model_selection.md) · [`05_final/final_metrics.csv`](05_final/final_metrics.csv) — Final Model 과 Frozen Test 결과 · 교과 14 인계 [`../docs/handoff_subject14.md`](../docs/handoff_subject14.md)
 > 1. [`../models/README.md`](../models/README.md) — 모든 모델의 Version · 점수 · 조건 기록 · 그래프 링크 (자동 생성)
 > 2. [`04_improvement/baseline_vs_improved.md`](04_improvement/baseline_vs_improved.md) — v5 개선점 · 한계점 (발표용), [`experiment_log.csv`](04_improvement/experiment_log.csv) — 실험별 판정
 > 3. [`figures/comparison/runs_comparison_kimchi_v5.png`](figures/comparison/runs_comparison_kimchi_v5.png) — v5 실험 비교 그림
@@ -56,18 +59,26 @@ reports/
 | `failure_summary.csv` | 실패 유형 × Class 별 건수 |
 | `failure_recall_by_size.csv` | 박스 크기별 Recall |
 | `failure_box_size_shift.csv` | Train vs Val 박스 크기 차이 |
-| `failure_hypothesis.md` | **v5 기준 작성 예정** — kimchi_v1 때의 가설은 `history/kimchi_v1/03_failure_analysis/` |
+| `failure_hypothesis.md` | v5 기준 원인 가설 H1~H5 와 이후 검증 (산출물 3) — kimchi_v1 때의 가설은 `history/kimchi_v1/03_failure_analysis/` |
 
 ### 04_improvement (7일차)
 
 | 파일 | 내용 |
 |---|---|
 | **`experiment_log.csv`** | v5 실험 기록 · 판정 (산출물 5) |
-| `<실행>_training_condition.md` | exp001_v5 (1280) · exp002_v5 (1920) · exp003_v5 (epoch 100) · exp004_v5 (타일링) · exp005_v5 (증강) · exp006_v5 (2560 + 증강) · exp007_v5 (11s + 증강) 학습 조건 |
+| `<실행>_training_condition.md` | exp001~050 의 학습 조건 (해상도 · epoch · 타일링 · 증강 · 모델 11n/11s/11m · 4라운드 갈변 개선 6방향 × seed 5개) |
 | `tiling_eval.csv` | 타일링 비교 — 원본 Val 104장을 같은 코드로 채점 (exp002_v5 원본 vs exp004_v5 조각 합침) |
 | **`baseline_vs_improved.md`** | v5 실험 비교 · **개선점 · 한계점** (발표용) · Final 후보 (산출물 5) |
-| `improvement_experiment.md` | v5 기준 작성 예정 — v4 판은 `history/kimchi_v4/` |
+| `improvement_experiment.md` | v5 개선 실험 설계 · 기록 · Final 결정 (산출물 4) — v4 판은 `history/kimchi_v4/` |
 | `tiling_eval_exp010.csv` | (예정) exp010 11s 타일링 채점 |
+
+### 05_final (8일차)
+
+| 파일 | 내용 |
+|---|---|
+| `final_metrics.csv` | Frozen Test 82장 성능 — Final `exp050` · mAP50-95 0.639 (산출물 5, `scripts/16_evaluate_final_test.py`) |
+| `final_class_metrics.csv` | Class 별 Test 성능 (갈변 Recall 0.00 · Class 4 는 Instance 0건) |
+| `../final_model_selection.md` | Final 선택 근거 (Validation 기준 — Test 로 고르지 않음) |
 
 ### 05_acceptance (9일차)
 
@@ -98,6 +109,11 @@ Dataset Version 마다 Val 구성이 달라 **v5 점수와 직접 비교하지 �
 | `exp004_v5_tile2x2` | 1920 | 50 | 2×2 타일링 | 0.698* (원본 단위, exp002 = 0.680*) | 보류 |
 | `exp005_v5_imgsz1920_aug` | 1920 | 50 | 증강 | 0.684 | 기각 |
 | `exp006_v5_imgsz2560_aug` | 2560 | 50 | 증강 + 해상도 (두 변수) | 0.722 | 보류 (학습 5시간) |
-| `exp007_v5_s_imgsz1920_aug` | 1920 | 50 | 증강 + YOLO11s (두 변수) | **0.724** | 채택 후보 |
+| `exp007_v5_s_imgsz1920_aug` | 1920 | 50 | 증강 + YOLO11s (두 변수) | **0.724** | 채택 후보 (후보 A, 평균 0.715) |
+| `exp015·016·018·049·050` (후보 B) | 2240 | 50 | exp007 + imgsz 2240 (batch 2) | 평균 **0.739** (0.726~0.749) | 선택 |
+| **`exp050_v5_s_imgsz2240_aug_seed2`** | 2240 | 50 | B 의 seed 2 | **0.749** · Frozen Test **0.639** | **Final Model** |
+| exp019~048 (4라운드 6방향 × seed 5개) | 2240 · 2560 | 50 | 반점 복제 · 합성 · 복원 · 2560 · 조합 | 평균 0.726~0.740 | 모두 B 보다 +0.02 미달 (갈변 개선 실패) |
+
+(exp009 · 011 · 014 등 나머지는 [`04_improvement/experiment_log.csv`](04_improvement/experiment_log.csv) 52행 참고)
 
 \* `src/tiling.py` 로 원본 사진 단위 채점. 학습 곡선은 `figures/runs/<실행>.png`, Confusion Matrix · PR 곡선은 `../runs/<실행>/`, Weight 는 [`../models/README.md`](../models/README.md).

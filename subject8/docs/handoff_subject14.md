@@ -19,7 +19,7 @@
 | Baseline (비교용) | `baseline_v5` YOLO11n · 640 · Val mAP50-95 0.470 | [`reports/02_baseline/`](../reports/02_baseline/) |
 | 예측 속도 | 약 37ms/장 (RTX 3060 · imgsz 2240 · batch 1) | `final_model_selection.md` |
 
-**교과 14 에서 말할 성능은 Frozen Test 0.639 입니다.** Validation 0.749 는 seed 5개 중 최고를 고른 값이라 조금 부풀어 있습니다 (같은 조건의 seed 5개 평균 0.739). Test 점수를 보고 모델을 다시 고르지 않았습니다.
+**교과 14 에서 말할 성능은 Frozen Test 0.639 입니다.** Validation 0.749 는 seed 5개 중 최고를 고른 값이라 조금 부풀어 있습니다 (같은 조건의 seed 5개 평균 0.739). Test 점수를 보고 모델을 다시 고르지 않았습니다. (다만 2026-10-16 Final 확정 전에 Test 점수를 한 번 본 적이 있다는 팀 기록이 있습니다 — [`baseline_vs_improved.md`](../reports/04_improvement/baseline_vs_improved.md) 3장. 그 점수로 모델·조건을 고르지는 않았습니다.)
 
 ## 2. 어디에 무엇이 있나
 
@@ -91,7 +91,7 @@ python scripts/08_predict_images.py --model final --source <사진 1장>.jpg --c
 
 - **Class ID 0~6 을 바꾸지 않습니다.** 4번(고무장갑)은 쓰지 않아도 번호를 당기지 않습니다.
 - **GT 를 고치면 Dataset Version 을 올립니다** (`kimchi_v5 → kimchi_v6`). Version 이 다르면 Val · Test 가 달라지므로 점수를 직접 비교하지 않습니다 (예: v4 의 높은 Val 점수는 같은 촬영 묶음 누수 때문이었습니다).
-- **Test 점수를 보고 모델을 고치지 않습니다.** Frozen Test 는 `kimchi_v5` 에서 이미 한 번 사용되었습니다 — 같은 82장으로 다시 모델을 고르면 Test 가 Validation 이 됩니다.
+- **Test 점수를 보고 모델을 고치지 않습니다.** Frozen Test 는 `kimchi_v5` 에서 이미 정식으로 한 번 사용되었습니다(그 전에 한 번 본 적도 있음) — 같은 82장으로 다시 모델을 고르면 Test 가 Validation 이 됩니다.
 - **한 번에 변수 하나만** 바꿔 비교하고, 실패한 실험도 `experiment_log.csv` 에 남깁니다.
 - **Auto Label 은 후보입니다.** 사람이 확인 · 수정 · 승인한 뒤에만 Final Label 이 됩니다.
 - **사진을 외부 저장소 · 클라우드 · 메신저에 올리지 않습니다.**
