@@ -20,7 +20,7 @@ MODELS = PROJECT_ROOT / "models"
 RUNS = PROJECT_ROOT / "runs"
 
 # 가이드 이름이 가리키는 실행 (공식 Version 의 실행이어야 한다)
-OFFICIAL: Dict[str, Optional[str]] = {"baseline": "baseline_v5", "final": None}
+OFFICIAL: Dict[str, Optional[str]] = {"baseline": "baseline_v5", "final": "exp050_v5_s_imgsz2240_aug_seed2"}
 ALIASES: Dict[str, Path] = {"baseline": MODELS / "baseline" / "baseline_best.pt",
                             "final": MODELS / "final" / "final_best.pt"}
 VERSION_RE = re.compile(r"(?:^|_)v(\d+)(?:_|$)")

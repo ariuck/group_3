@@ -1,0 +1,2 @@
+model_version,dataset_version,split,imgsz,batch,epochs,seed,images,instances,precision,recall,map50,map50_95
+exp050_v5_s_imgsz2240_aug_seed2,kimchi_v5,test,2240,2,50,2,82,432,0.8676,0.7442,0.726,0.6388

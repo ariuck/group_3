@@ -241,3 +241,10 @@ git commit -m "feat(subject8): 4라운드 결과 (<실험들>)" && git push orig
 3. +0.02 넘는 방향이 없으면 **B 그대로**
 4. 실험이 많을수록 Val 최고점은 운으로 부풀므로, Final 의 성능은 **Frozen Test 점수로만** 말한다 → 8장 "Final 확정 순서" 3~5 (final_best.pt · registry · final_model_selection.md · Frozen Test 1번)
 5. (학습 없이, 몇 분) B 모델을 학습보다 큰 해상도(2560 · 2880)로 예측해 Val 비교 — 참고용
+
+### 결과 (10-20 아침) — Final = B (`exp050_v5_s_imgsz2240_aug_seed2`)
+
+- seed 5개 평균: **B 0.739** · ① 0.733 · ② 0.740 · ③ 0.729 (3개, exp026 · 027 재학습 중) · ④ 0.727 · ⑤ 0.732 · ⑥ 0.726 → **+0.02 넘는 방향 없음 → B 그대로**, B 안에서 Val 최고인 exp050(0.749) 을 Final 로.
+- 갈변 mAP50-95 평균은 모든 방향이 0.075 ~ 0.111 (B 0.108) — 작은 반점 대책 4가지 모두 효과 없음. ④ ≒ B 라 "개정 때 반점을 지운 것" 이 원인은 아니었다. 갈변 개선은 여기서 멈추고 한계로 보고 (다음은 데이터: 같은 기준으로 반점 라벨링 · 반점 사진 더 모으기).
+- B 모델을 큰 해상도로 예측: 2240 0.749 · 2560 0.751 · 2880 0.749 — 차이 없음.
+- **Frozen Test (82장, 한 번)**: P 0.868 · R 0.744 · mAP50 0.726 · **mAP50-95 0.639** → [`reports/05_final/final_metrics.csv`](../../reports/05_final/final_metrics.csv). 선택 근거와 표 전체: [`reports/final_model_selection.md`](../../reports/final_model_selection.md)
