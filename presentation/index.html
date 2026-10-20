@@ -8,7 +8,7 @@
   group_3 발표자료 (교과 7 + 교과 8) — 단일 파일, 외부 요청 0개
   - 사진은 내장하지 않는다: private/photos/<슬롯이름> 을 참조만 하고, 없으면 회색 자리 박스
   - 숫자는 01_source_facts.md (2026-10-20 개정, Final = exp050 · Frozen Test 0.639) 와 저장소 reports/ 의 값만 사용
-  - 조작: ← → Space PgUp/PgDn · F 전체화면 · S 노트 · O 목록 · B 검은 화면 · Home/End · #n · #a1~#a9
+  - 조작: ← → Space PgUp/PgDn · F 전체화면 · S 노트 · O 목록 · B 검은 화면 · Home/End · #n · #a1~#a10
   - 2026-10-19 판은 backup/index_2026-10-19.html
 -->
 <style>
@@ -525,7 +525,7 @@ svg text{font-family:var(--font)}
       <div class="card hl"><h3>해상도 ↑ <span class="badge b-acc">가장 큼</span></h3><div class="mid accent">+0.234</div><div class="lab">11n 640 → 1920<br>0.470 → 0.646 → 0.704</div></div>
       <div class="card hl"><h3>모델 11n → 11s</h3><div class="mid accent">+0.040</div><div class="lab">같은 증강 조건(exp005 기준)<br>11m은 seed 1개 0.730 — 메모리 한계</div></div>
       <div class="card"><h3>seed 흔들림 = 판정 기준</h3><div class="mid">0.02</div><div class="lab">같은 조건 B: 0.726 ~ 0.749<br>→ seed 5개 평균으로 판정</div></div>
-      <div class="card"><h3>효과 없음 ✕</h3><div class="mid" style="font-size:40px">epoch · 타일링 · TTA</div><div class="lab">+0.003 · −0.006 · 손해<br>갈변 대책 4방향도 효과 없음</div></div>
+      <div class="card"><h3>효과 없음 ✕</h3><div class="mid" style="font-size:40px">epoch · 타일링 · TTA</div><div class="lab">+0.003 · −0.006 · 손해<br>갈변 대책 4방향도 효과 없음 (구조 변경은 15번)</div></div>
     </div>
     <div class="col" style="width:700px;gap:8px">
       <div class="small" style="font-weight:700">11s 해상도별 Val mAP50-95 — 2240에서 멈춘다</div>
@@ -577,14 +577,14 @@ svg text{font-family:var(--font)}
 </section>
 
 <!-- 14 한계 -->
-<section class="slide" data-id="14" data-speaker="김석범" data-time="50" data-title="한계">
+<section class="slide" data-id="14" data-speaker="김석범" data-time="40" data-title="한계">
   <header><div class="kicker">교과 8 <span class="sep">|</span> 한계</div><h1>한계를 먼저 말한다</h1></header>
   <div class="body col" style="gap:20px">
     <div class="row" style="gap:36px;flex:1;min-height:0">
       <table class="t grow" style="font-size:22px">
         <thead><tr><th style="width:22%">한계</th><th>내용</th><th style="width:26%">대응</th></tr></thead>
         <tbody>
-          <tr><td><span class="cls"><i class="k5"></i><b>갈변 (Class 5)</b></span></td><td>Train은 대부분 잎 전체 갈변(200px 이상), 평가는 25px 안팎 작은 반점 — <b>다른 물체</b>. Final도 Val 0.115, <b>Test Recall 0</b>. 반점 대책 4방향 × seed 5개 효과 없음</td><td><b>개선 중단, 한계로 보고</b> → 같은 기준 라벨링·반점 사진·Class 분리 결정 (교과 14)</td></tr>
+          <tr><td><span class="cls"><i class="k5"></i><b>갈변 (Class 5)</b></span></td><td>Train은 대부분 잎 전체 갈변(200px 이상), 평가는 25px 안팎 작은 반점 — <b>다른 물체</b>. Final도 Val 0.115, <b>Test Recall 0</b>. 반점 대책 4방향 × seed 5개 효과 없음 → Final 뒤 진단은 다음 장</td><td><b>Final에서는 개선 못 함</b> → 다음 버전: P2 구조 + 같은 기준 라벨링·반점 사진 (교과 14)</td></tr>
           <tr><td><span class="cls"><i class="k0"></i><b>Test 나뭇잎·종이</b></span></td><td>Test 오탐 많음 (P 0.367 · R 0.855, 정답 23박스) — Val↔Test 차이의 대부분</td><td>원인 분석 전 → 교과 14에서 새 데이터로</td></tr>
           <tr><td><b>작은 평가 세트</b></td><td>Val 104장 · Test 82장, 희소 Class 15~29박스 → 박스 1개에 Recall 3~7%p</td><td>seed 5개 평균으로 판정</td></tr>
           <tr><td><b>같은 날·같은 소품</b></td><td>평가 사진도 Train과 같은 날 촬영 → "본 물체를 새 장면에" 놓은 성능. 파·고추 255박스 중 250개가 한 묶음</td><td>한계로 기록, Class 6 따로 표시</td></tr>
@@ -603,15 +603,48 @@ svg text{font-family:var(--font)}
   <footer><div class="fn">갈변 라벨 기준이 구간마다 다름: v3 개정 때 작은 반점을 Train 20→8 · Val 41→15로 줄였고 Test는 14→14 그대로 — 되살린 실험(④)도 B와 같아 원인은 아니었음 · 예측 속도는 사진 1장 약 37ms(RTX 3060)만 측정 · 머리카락·실은 Class에 없음 (소스 3.9, 9.7)</div></footer>
   <aside class="notes">
     <div class="script"><p>저희가 못 하는 것을 먼저 말씀드리겠습니다.</p>
-    <p>가장 큰 한계는 갈변입니다. 학습 데이터의 갈변은 대부분 잎 전체가 변한 큰 조각인데, 평가에는 작은 반점이 대부분이라 사실상 다른 물체입니다. 반점을 늘리고 합성하는 방법을 seed 다섯 개씩 돌려 봤지만 효과가 없어서, 학습 기법이 아니라 데이터 문제로 보고 개선을 멈췄습니다.</p>
+    <p>가장 큰 한계는 갈변입니다. 학습 데이터의 갈변은 대부분 잎 전체가 변한 큰 조각인데, 평가에는 작은 반점이 대부분이라 사실상 다른 물체입니다. 반점을 늘리고 합성하는 방법을 seed 다섯 개씩 돌려 봤지만 Final에서는 효과가 없었습니다. 확정 뒤 원인을 따로 진단한 결과는 다음 장에서 말씀드리겠습니다.</p>
     <p>두 번째는 방금 본 Test의 나뭇잎·종이 오탐입니다. 원인은 아직 분석하지 않았습니다. 그리고 평가 세트가 작고, 같은 날 같은 소품으로 촬영되었고, 정상 김치가 없습니다.</p>
     <p>아래 아홉 가지는 오늘 저희가 주장하지 않는 것들입니다.</p></div>
+    <div class="hand">(이어서) Final을 정한 뒤 갈변을 따로 진단한 결과입니다.</div>
+  </aside>
+</section>
+
+<!-- 15 Final 뒤 진단 (10-20 신규) -->
+<section class="slide" data-id="15" data-speaker="김석범" data-time="40" data-title="Final 뒤 진단 — 갈변">
+  <header><div class="kicker">교과 8 <span class="sep">|</span> Final 확정 뒤 진단 <span class="badge b-acc" style="font-size:20px">Final은 그대로</span></div><h1>갈변은 외웠고, 작은 반점은 후보조차 없었다<span class="sub">→ 촘촘한 검출층(P2) + 다양한 합성 반점으로 갈변 2배</span></h1></header>
+  <div class="body row" style="gap:40px">
+    <div class="col grow" style="gap:16px">
+      <div class="card"><h3>① 외웠다</h3><div class="small">반점 복제 모델은 Train 반점 <b>8개 모두</b> conf 0.35~0.95로 찾는데, Val 반점은 15개 중 <b>2개</b></div></div>
+      <div class="card"><h3>② 후보조차 없다</h3><div class="small">Val 작은 반점 13개 중 9~10개는 conf 0.001에서도 박스가 없다 — 입력 2240에서 약 12px = 가장 촘촘한 검출 격자(8px) 1~2칸</div></div>
+      <div class="card hl"><h3>③ 대응 — exp063 (seed 1개)</h3><div class="small"><b>P2 검출층</b>(격자 4px) + <b>변형 반점 합성</b> (Train 갈변 56개를 반점 크기로 줄여 하나씩 회전·찌그러뜨림·색·번짐을 바꿔 306개)</div></div>
+    </div>
+    <div class="col" style="width:780px;gap:14px">
+      <table class="t" style="font-size:24px">
+        <thead><tr><th>Validation · 같은 seed 123</th><th class="r">B · exp018</th><th class="r">exp063</th></tr></thead>
+        <tbody>
+          <tr class="em"><td><span class="cls"><i class="k5"></i>갈변 mAP50-95</span></td><td class="r">0.107</td><td class="r" style="color:var(--c5ink)">0.237</td></tr>
+          <tr><td>반점 후보가 생긴 수</td><td class="r">5 / 15</td><td class="r"><b>14 / 15</b></td></tr>
+          <tr><td>갈변 Recall</td><td class="r">0.13</td><td class="r">0.33</td></tr>
+          <tr><td>전체 mAP50-95</td><td class="r"><b>0.746</b></td><td class="r">0.725</td></tr>
+          <tr><td>다른 5개 Class</td><td class="r">—</td><td class="r">모두 하락</td></tr>
+          <tr><td>학습 · 예측</td><td class="r">62분 · 37ms</td><td class="r">131분 · 55ms</td></tr>
+        </tbody>
+      </table>
+      <div class="card small" style="padding:14px 18px"><b>Final을 바꾸지 않은 이유</b> — 전체가 B보다 낮고, seed 1개, 두 가지를 함께 바꿨다. 다른 Class가 떨어진 원인: P2를 넣으며 <b>검출 head 전체(파라미터 37.5%)가 COCO 사전학습 없이 시작</b> → 50 epoch로는 박스가 덜 정밀하고 큰 잎을 다른 Class로 혼동 (부록 A10)</div>
+    </div>
+  </div>
+  <footer><div class="fn">이전 35회 실험의 갈변은 0.044~0.144 — 0.237은 그 범위 밖 · 2단계 검사(어두운 점 후보 → 원본 crop 분류기, 저장소 밖 진단 코드)는 B 위에서 0.117 → 0.159, exp063 위에서는 거의 그대로 · Final 확정 뒤 진단이라 Test는 보지 않음 · 근거 <code>experiment_handoff.md</code> 10장 · 상세 부록 A10</div></footer>
+  <aside class="notes">
+    <div class="script"><p>Final을 정한 뒤, 가장 큰 약점인 갈변을 따로 진단했습니다. 반점을 복제한 모델은 학습에 있던 반점 여덟 개는 모두 찾았지만 검증의 반점은 두 개만 찾았습니다. 외운 겁니다. 그리고 작은 반점 대부분은 확신도를 0.001까지 낮춰도 후보 박스조차 나오지 않았습니다.</p>
+    <p>그래서 더 촘촘한 검출층 P2를 넣고, 반점을 다양하게 바꿔 붙인 합성 사진으로 한 번 학습했더니 갈변이 0.107에서 0.237로 두 배 넘게 올랐고, 반점 15개 중 14개에 후보가 생겼습니다.</p>
+    <p>다만 다른 Class가 모두 떨어져 전체는 B보다 낮고 seed도 하나라 Final은 바꾸지 않았습니다. 원인은 새 검출 head가 사전학습 없이 시작한 것이고, 다음 버전의 과제입니다.</p></div>
     <div class="hand">(넘김) 이제 Final Model이 실제로 찾는 모습을 손상우 님이 보여 드리겠습니다.</div>
   </aside>
 </section>
 
-<!-- 15 검출 시연 ② -->
-<section class="slide" data-id="15" data-speaker="손상우" data-time="85" data-title="[라이브] 검출 시연 ②">
+<!-- 16 검출 시연 ② -->
+<section class="slide" data-id="16" data-speaker="손상우" data-time="85" data-title="[라이브] 검출 시연 ②">
   <header><div class="kicker">교과 8 <span class="sep">|</span> 라이브 시연 ② <span class="badge b-done" style="font-size:20px">Final Model · exp050</span></div><h1>[라이브] Final Model이 실제로 찾는 모습</h1></header>
   <div class="body col" style="gap:18px">
     <div class="demo"><div class="lbl">시연 ② · 1분 25초</div><div class="go">시연 화면으로 전환하세요</div>
@@ -643,7 +676,7 @@ svg text{font-family:var(--font)}
 </section>
 
 <!-- 16 다음 단계 -->
-<section class="slide" data-id="16" data-speaker="강동연" data-time="30" data-title="다음 단계 · 교과 14 인계">
+<section class="slide" data-id="17" data-speaker="강동연" data-time="30" data-title="다음 단계 · 교과 14 인계">
   <header><div class="kicker">다음 단계</div><h1>다음 단계와 교과 14로 넘기는 것</h1></header>
   <div class="body col" style="gap:30px">
     <div class="pipe">
@@ -654,7 +687,7 @@ svg text{font-family:var(--font)}
     </div>
     <div class="row" style="gap:30px;align-items:flex-start">
       <div class="card grow"><h3>교과 14로 넘기는 것</h3>
-        <ul class="pts small" style="gap:12px"><li>Final Model + Bridge Holdout <b>156장</b> (한 번도 쓰지 않음)</li><li><b>갈변 = 데이터 과제</b>: 같은 기준으로 반점 라벨링 · 반점 사진 더 모으기 · "잎 전체 갈변"과 "작은 반점" Class 분리 결정</li><li>나뭇잎·종이 Test 오탐 원인 분석</li><li>정상 김치 데이터 · 머리카락·실 등 Class 추가 협의</li></ul></div>
+        <ul class="pts small" style="gap:12px"><li>Final Model + Bridge Holdout <b>156장</b> (한 번도 쓰지 않음)</li><li><b>갈변 = 데이터 + 구조 과제</b>: P2 구조(Val 0.107 → 0.237, seed 1개)를 head 가중치 옮기기 · seed 반복으로 확인 · 같은 기준으로 반점 라벨링 · 반점 사진 · Class 분리 결정</li><li>나뭇잎·종이 Test 오탐 원인 분석</li><li>정상 김치 데이터 · 머리카락·실 등 Class 추가 협의</li></ul></div>
       <div class="card grow hl"><h3>비솔 측에 드리는 요청</h3>
         <ul class="pts small" style="gap:12px"><li>갈변 라벨 기준 확인 (잎 전체 vs 작은 반점)</li><li>정상 김치 샘플 제공 가능 여부</li><li>Class 추가 여부 (머리카락·실 등)</li><li>현장 요구 성능 지표 (놓침·오탐 허용치)</li></ul></div>
     </div>
@@ -662,14 +695,14 @@ svg text{font-family:var(--font)}
   <footer><div class="fn">요구 지표는 받은 기록이 없음 — 알려 주시면 "오탐 N건 이하에서의 Recall" 같은 지표로 다시 평가 · Auto Label 코드(<code>12_auto_label.py</code>)는 아직 없음 (소스 3.9, 3.11, 9.8 Q20)</div></footer>
   <aside class="notes">
     <div class="script"><p>Final Model 선택과 Frozen Test는 끝났고, 남은 일은 자동 라벨 후보를 교과 7 도구에서 사람이 검토하는 흐름입니다. 교과 14 인계 문서는 초안을 써 두었고 팀 검토만 남았습니다.</p>
-    <p>교과 14에는 Final Model과 한 번도 쓰지 않은 Bridge Holdout 156장, 그리고 갈변 데이터 과제와 나뭇잎·종이 오탐 분석을 넘깁니다.</p>
+    <p>교과 14에는 Final Model과 한 번도 쓰지 않은 Bridge Holdout 156장, 그리고 갈변의 데이터·구조 과제와 나뭇잎·종이 오탐 분석을 넘깁니다.</p>
     <p>그리고 비솔 측에 갈변 라벨 기준, 정상 김치 샘플, Class 추가 여부, 현장에서 요구하는 성능 지표를 여쭙고 싶습니다.</p></div>
     <div class="hand">(마무리) 이상으로 발표를 마치고 질문 받겠습니다.</div>
   </aside>
 </section>
 
 <!-- 17 Q&A -->
-<section class="slide" data-id="17" data-speaker="전원" data-time="0" data-title="감사 · Q&A">
+<section class="slide" data-id="18" data-speaker="전원" data-time="0" data-title="감사 · Q&A">
   <header><div class="kicker">감사합니다</div><h1>질문 받겠습니다</h1></header>
   <div class="body row" style="gap:56px">
     <table class="t grow" style="font-size:27px">
@@ -684,14 +717,14 @@ svg text{font-family:var(--font)}
     </table>
     <div class="col" style="width:560px">
       <div class="card"><h3>답변 원칙</h3><div class="small">사실(숫자·근거 파일) → 인정할 한계 → 다음 조치<br>측정하지 않은 것은 "측정 전"</div></div>
-      <div class="card"><h3>부록</h3><div class="small"><code>O</code> 목록 · A1 실험 전표 · A4 학습 설정 · A5 평가 방식 · A6 분할·라벨 이력 · A7 재현성·보안 · A8 예상 질문 · A9 Final Test 상세</div></div>
+      <div class="card"><h3>부록</h3><div class="small"><code>O</code> 목록 · A1 실험 전표 · A4 학습 설정 · A5 평가 방식 · A6 분할·라벨 이력 · A7 재현성·보안 · A8 예상 질문 · A9 Final Test 상세 · A10 Final 뒤 진단</div></div>
     </div>
   </div>
   <footer><div class="fn">AI Campus 3조 · 강동연 · 이후영 · 지혜성 · 김동훈 · 손상우 · 김석범 (소스 4.4)</div></footer>
   <aside class="notes">
     <div class="script"><p>(강동연) 질문은 주제별로 담당자가 먼저 답하겠습니다. 자세한 방법은 부록으로 바로 띄워 보여 드릴 수 있습니다.</p>
     <p>모르는 것은 추정하지 않고 "측정 전이라 확인 후 서면으로 답하겠다"고 말합니다. Q&A 대기 중에는 B 키로 화면을 검게 둘 수 있습니다.</p></div>
-    <div class="hand">질문이 상세하면 #a4~#a7, 예상 질문은 #a8, Val↔Test 차이·Class별 Test는 #a9.</div>
+    <div class="hand">질문이 상세하면 #a4~#a7, 예상 질문은 #a8, Val↔Test 차이·Class별 Test는 #a9, 갈변 진단·exp063은 #a10.</div>
   </aside>
 </section>
 
@@ -872,7 +905,7 @@ svg text{font-family:var(--font)}
 </section>
 
 <!-- A8 예상 질문 -->
-<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+5">
+<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+7">
   <header style="margin-bottom:14px"><div class="kicker">부록 A8 <span class="sep">|</span> 마우스 휠·↑↓로 스크롤</div><h1 style="font-size:46px">예상 질문과 답 — 사실 → 인정 → 조치</h1></header>
   <div class="body scroll" style="overflow:auto;padding-right:10px" tabindex="0" aria-label="예상 질문 목록">
     <table class="t dense" style="font-size:19px" id="tbl-qa">
@@ -881,7 +914,7 @@ svg text{font-family:var(--font)}
     </table>
   </div>
   <footer><div class="fn">하지 말 것: 측정하지 않은 숫자 추정 · "현장에서 쓸 수 있다" · 회사 라벨·기준 비난 · 팀원 한 명에게 책임 · 즉석 재계산 약속(필요하면 "확인 후 서면으로") (소스 9.8)</div></footer>
-  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로 추가.</p></div></aside>
+  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로, 30·31번은 Final 뒤 진단(exp063)으로 추가.</p></div></aside>
 </section>
 
 <!-- A9 Final Frozen Test 상세 -->
@@ -908,6 +941,47 @@ svg text{font-family:var(--font)}
   </div>
   <footer><div class="fn">근거 <code>reports/05_final/final_metrics.csv</code>, <code>final_class_metrics.csv</code>, <code>reports/final_model_selection.md</code>, <code>reports/figures/final/</code> · PR 곡선 <code>assets/final_test_pr_curve.png</code> (소스 3.13)</div></footer>
   <aside class="notes"><div class="script"><p>Q26·Q27 대응. 원인을 추측해서 말하지 않는다 — "분석 전, Test를 보며 고치면 Test가 오염되므로 교과 14에서 새 데이터로".</p></div></aside>
+</section>
+
+<!-- A10 Final 뒤 진단 상세 -->
+<section class="slide" data-id="a10" data-speaker="부록" data-time="0" data-title="A10 Final 뒤 진단 상세 (exp063)">
+  <header><div class="kicker">부록 A10 <span class="sep">|</span> 5라운드 진단 · exp063 vs 같은 seed의 B(exp018)</div><h1>exp063은 왜 다른 Class가 떨어졌나</h1></header>
+  <div class="body row" style="gap:36px">
+    <div class="col grow" style="gap:10px">
+      <div class="small" style="font-weight:700">Class별 AP — IoU 기준을 엄격하게 할수록 차이가 커진다 (B → exp063)</div>
+      <table class="t dense" style="font-size:19px">
+        <thead><tr><th>Class</th><th class="r">AP @ IoU 0.50</th><th class="r">AP @ 0.75</th><th class="r">AP @ 0.90</th><th class="r">맞힌 박스 평균 IoU</th></tr></thead>
+        <tbody>
+          <tr><td><span class="cls"><i class="k0"></i>0 나뭇잎·종이</span></td><td class="r">0.973 → 0.949</td><td class="r">0.955 → <b>0.870</b></td><td class="r">0.778 → <b>0.625</b></td><td class="r">0.947 → 0.922</td></tr>
+          <tr><td><span class="cls"><i class="k1"></i>1 플라스틱·돌·금속</span></td><td class="r">0.981 → 0.973</td><td class="r">0.967 → 0.956</td><td class="r">0.588 → <b>0.458</b></td><td class="r">0.916 → 0.905</td></tr>
+          <tr><td><span class="cls"><i class="k2"></i>2 나뭇가지</span></td><td class="r">0.955 → 0.934</td><td class="r">0.955 → 0.934</td><td class="r">0.915 → <b>0.849</b></td><td class="r">0.949 → 0.939</td></tr>
+          <tr><td><span class="cls"><i class="k3"></i>3 벌레</span></td><td class="r">0.995 → 0.995</td><td class="r">0.995 → 0.995</td><td class="r">0.731 → <b>0.482</b></td><td class="r">0.926 → 0.913</td></tr>
+          <tr><td><span class="cls"><i class="k6"></i>6 파·고추</span></td><td class="r">0.961 → 0.961</td><td class="r">0.961 → 0.961</td><td class="r">0.785 → <b>0.701</b></td><td class="r">0.945 → 0.916</td></tr>
+          <tr><td><span class="cls"><i class="k5"></i>5 병해·갈변</span></td><td class="r">0.123 → <b>0.408</b></td><td class="r">0.117 → <b>0.222</b></td><td class="r">0.113 → <b>0.033</b></td><td class="r">0.900 → <b>0.811</b></td></tr>
+        </tbody>
+      </table>
+      <div class="small" style="font-weight:700;margin-top:6px">다른 Class 물체 위에 그린 박스 (conf 0.25 · IoU 0.5)</div>
+      <table class="t dense" style="font-size:19px">
+        <thead><tr><th>예측 ← 실제</th><th class="r">B</th><th class="r">exp063</th></tr></thead>
+        <tbody>
+          <tr><td>플라스틱·돌·금속 ← 나뭇잎·종이</td><td class="r">3</td><td class="r"><b>18</b></td></tr>
+          <tr><td>나뭇가지 ← 나뭇잎·종이</td><td class="r">1</td><td class="r"><b>10</b></td></tr>
+          <tr><td>플라스틱·돌·금속 ← 파·고추</td><td class="r">0</td><td class="r">4</td></tr>
+          <tr><td>나뭇잎·종이 ← 플라스틱·돌·금속</td><td class="r">8</td><td class="r">1</td></tr>
+          <tr class="em"><td>합계 (confidence 중앙값)</td><td class="r">14 (0.76)</td><td class="r">41 (0.51)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col" style="width:660px;gap:12px">
+      <div class="card" style="padding:14px 20px"><h3>① 찾기는 같고, 박스가 덜 정밀</h3><div class="xs">IoU 0.5 AP는 거의 같은데 0.9에서 크게 하락 (벌레 0.731 → 0.482) · Val box loss 0.527 → 0.660</div></div>
+      <div class="card" style="padding:14px 20px"><h3>② 큰 마른 잎을 다른 Class로</h3><div class="xs">나뭇잎·종이 놓침 10 → 21 · 나뭇가지 오탐 2 → 17 (Precision 0.99 → 0.60) — Val 잎(G13)은 Train 잎보다 2배 큰 분포 차이 (실패 가설 H3)</div></div>
+      <div class="card hl" style="padding:14px 20px"><h3>③ 원인: 사전학습 없는 검출 head</h3><div class="xs">P2를 넣으며 층 번호가 밀려 <b>layer 19~29 (neck 후반 + Detect 전체, 파라미터 37.5%)</b>가 COCO 가중치 없이 시작 → 20 epoch 0.550 (B 0.680), 50 epoch 끝에도 계속 오름 (마지막 5 epoch +0.026)</div></div>
+      <div class="card" style="padding:14px 20px"><h3>주원인이 아닌 것</h3><div class="xs">batch 1 — 4라운드 ③ 2560(batch 1) 평균 0.731 ≈ B · 합성 — 4라운드 ② 합성 평균 0.740 (손해 없음) · P2의 작은 박스 — 다른 Class 오탐은 263~449px 큰 박스</div></div>
+      <div class="card" style="padding:14px 20px"><h3>다음 버전</h3><div class="xs">COCO head 가중치를 새 층 번호에 맞춰 옮기기 · epoch 늘리기 · P2만 / 합성만을 seed 3개 이상 (exp051~060 등록됨)</div></div>
+    </div>
+  </div>
+  <footer><div class="fn">exp063 = YOLO11s + P2 · imgsz 2240 · batch 1 · 변형 반점 합성 150장 · seed 123 · 50 epoch 131분 · GPU 5.2GB · 모두 Validation 104장 (Test 미사용) · AP는 Ultralytics val, 혼동 · IoU는 conf 0.25 예측을 정답과 맞춰 셈 · 근거 <code>experiment_handoff.md</code> 10장, <code>models/improved/exp063_v5_r5_p2_cp2_seed123.pt</code></div></footer>
+  <aside class="notes"><div class="script"><p>Q30·Q31 대응. "구조를 바꿔 갈변은 올랐지만, 새 head가 사전학습 없이 시작해 다른 Class의 박스 정밀도와 큰 잎 분류가 덜 배웠다"까지만 말한다. seed 1개라 확정이 아니라 가설 + 근거.</p></div></aside>
 </section>
 
 </div></div>
@@ -1015,7 +1089,7 @@ svg text{font-family:var(--font)}
   ["C", "15", "0.02 차이는 노이즈 아닌가?", "맞다, 실측했다. 같은 조건(B)이 seed만 바꿔 0.726~0.749로 0.02 흔들렸다. 그래서 4라운드는 방향마다 seed 5개 평균으로 비교했고(약 0.013 차이까지 구분), 어느 방향도 +0.02를 넘지 못해 B를 그대로 뒀다.", "지혜성"],
   ["C", "16", "한 변수씩 바꿨다더니 batch도 바뀌고 두 변수 실험도 있다.", "인정한다. GPU 메모리 때문에 해상도를 올리면 batch가 줄었다(1920 → 3, 2240 → 2, 2560 → 1). exp006·007은 두 변수 동시 변경이다. exp005를 기준으로 하면 각 효과가 분리되고, exp011(증강 끄기)로 증강 효과를 따로 쟀다(−0.008).", "손상우"],
   ["C", "17", "해상도를 키우면 오르는 건 당연하다. 새로운 게 뭔가?", "예상된 방향이다. 우리 기여는 ① 크기별 Recall로 원인을 확인(작은 구간 0.613 vs 중간 0.839, 갈변은 640에서 3px) ② 어디서 멈추는지를 seed 평균으로 확인(2240이 최고, 2560은 더 느리고 낮음) ③ 누수 없는 평가 세트다.", "김석범"],
-  ["C", "18", "갈변을 못 찾으면 쓸 수 없는 것 아닌가?", "현재 모델로는 Class 5를 신뢰할 수 없다(Test Recall 0). Train 갈변(대부분 잎 전체)과 평가 갈변(작은 반점)이 다른 물체이고, 반점 대책 4가지를 seed 5개씩 돌려도 효과가 없었다. 그래서 학습 기법이 아니라 데이터(같은 기준 라벨링·반점 사진·Class 분리 결정)를 교과 14 과제로 넘긴다.", "김석범"],
+  ["C", "18", "갈변을 못 찾으면 쓸 수 없는 것 아닌가?", "현재 모델로는 Class 5를 신뢰할 수 없다(Test Recall 0). Train 갈변(대부분 잎 전체)과 평가 갈변(작은 반점)이 다른 물체이고, 데이터를 늘리는 반점 대책 4가지는 seed 5개씩 돌려도 효과가 없었다. Final 뒤 진단에서 P2 구조 + 변형 합성이 Val 갈변을 0.107 → 0.237로 올렸지만 seed 1개이고 다른 Class가 떨어져, 구조 확인과 데이터(같은 기준 라벨링·반점 사진·Class 분리 결정)를 교과 14 과제로 넘긴다(15번 · 부록 A10).", "김석범"],
   ["C", "19", "실시간 처리가 되나? 추론 속도는?", "Final은 사진 1장 예측 약 37ms(RTX 3060, imgsz 2240, batch 1). 현장 하드웨어와 사진 읽기부터 결과까지 전체 시간은 재지 않았다. 목표 하드웨어·처리량이 정해지면 그 기준으로 잰다.", "손상우"],
   ["C","20","현장 기준(놓침 허용치, 오탐 허용치)은 무엇인가?","요구 지표를 받은 기록이 문서에 없다. 알려 주시면 \"오탐 N건 이하에서의 Recall\" 같은 지표로 다시 평가하겠다.","강동연"],
   ["C","21","배경 오탐은 얼마나 되나?","Baseline Val에서 FP_BACKGROUND 24건(이물 있는 사진 속 배경). 그러나 이물이 없는 사진이 없어 \"이물 없는 이미지의 오탐률\"은 측정 불가다. 또 이 24건 중 20건이 한 촬영 묶음(G05)에 몰려 있는데, 정상 김치를 이물로 본 것인지 빠진 라벨인지는 사진으로 확인하기 전이라 단정하지 않는다.","김동훈"],
@@ -1026,7 +1100,9 @@ svg text{font-family:var(--font)}
   ["E", "26", "Val 0.749인데 Test는 0.639다. 과적합 아닌가?", "차이 0.110은 사실이다. ① 0.749는 seed 5개 중 최고를 고른 값(같은 조건 평균 0.739) ② Class별로 보면 0.066이 나뭇잎·종이 한 Class(Val 0.877 → Test 0.482)이고 플라스틱·돌·금속은 0.844 → 0.840으로 같다 ③ Test는 Val과 다른 촬영 묶음(G07·G14)이다. 과적합인지 Test의 나뭇잎·종이가 다른 모습인지는 아직 분석하지 않았다 — Test를 보며 고치면 Test가 오염되므로 교과 14에서 새 데이터로 확인한다.", "손상우"],
   ["E", "27", "나뭇잎·종이 Precision 0.37이면 오탐 투성이 아닌가?", "Test에서는 그렇다(P 0.367 · R 0.855, 정답 23박스·16장). 놓치지는 않지만 다른 것을 나뭇잎·종이로 많이 부른다. Val에서는 0.877로 문제가 안 보였다 — Val 192박스 vs Test 23박스로 구성이 다르다. 원인 분석 전이며 교과 14 인계 항목에 넣었다.", "김석범"],
   ["E", "28", "seed 5개 중 제일 좋은 걸 고른 건 체리피킹 아닌가?", "고르는 규칙을 학습 전에(10-19 16:55 커밋, 첫 학습 17:25) 정해 두었다: 방향끼리는 seed 5개 평균으로 비교, 이기는 방향이 없으면 B 안에서 Val 최고. 최고를 고른 만큼 Val이 부풀어 있다는 것도 인정하며, 그래서 성능은 Test 1회 점수로만 말한다.", "지혜성"],
-  ["E", "29", "50번 넘게 학습했는데 크게 안 올랐다. 시간 낭비 아닌가?", "Val 평균으로 A 0.715 → B 0.739(+0.024)가 실제 개선이고, 나머지는 \"더 해도 안 오른다\"를 확인한 것이다(epoch·타일링·2560·증강 끄기·TTA·갈변 대책 4가지). 특히 갈변이 학습 기법으로 안 풀린다는 결론은 seed 5개 × 4방향이 있어야 말할 수 있었다.", "강동연"]
+  ["E", "29", "50번 넘게 학습했는데 크게 안 올랐다. 시간 낭비 아닌가?", "Val 평균으로 A 0.715 → B 0.739(+0.024)가 실제 개선이고, 나머지는 \"더 해도 안 오른다\"를 확인한 것이다(epoch·타일링·2560·증강 끄기·TTA·갈변 대책 4가지). 특히 \"데이터를 늘리는 갈변 대책은 안 통한다\"는 결론은 seed 5개 × 4방향이 있어야 말할 수 있었고, 그 덕분에 구조(P2)라는 다음 방향을 찾았다.", "강동연"],
+  ["E", "30", "갈변이 두 배 오른 exp063을 왜 Final로 안 했나?", "① 전체 mAP50-95가 0.725로 같은 seed B(0.746)보다 낮고 ② seed 1개라 운인지 모르며 ③ P2와 합성을 함께 바꿔 원인을 나눌 수 없다. 무엇보다 Final은 Test를 보기 전에 정한 규칙(+0.02, seed 평균)으로 이미 확정했고, Test를 본 뒤 모델을 바꾸면 Test가 의미를 잃는다. 그래서 다음 버전 방향으로만 보고한다.", "김석범"],
+  ["E", "31", "exp063은 왜 다른 Class가 떨어졌나?", "분석했다(부록 A10). ① 박스 위치 정밀도: IoU 0.5 AP는 거의 같은데 IoU 0.9 AP가 크게 떨어짐(플라스틱 0.588 → 0.458, 벌레 0.731 → 0.482) ② 큰 마른 잎을 플라스틱·나뭇가지로 부르는 혼동이 14 → 41건 ③ 원인: P2를 넣으며 층 번호가 밀려 검출 head 전체(파라미터 37.5%)가 COCO 사전학습 없이 시작 — 20 epoch 0.550(B 0.680), 50 epoch 끝에도 오르는 중. batch 1(③ 2560 평균 0.731)이나 합성(4라운드 ② 0.740)은 주원인이 아니다. seed 1개라 확정이 아니라 근거 있는 가설이다.", "김석범"]
  ]
 }
 </script>
@@ -1324,7 +1400,7 @@ function tick(){ var t=document.getElementById('timer'); if(t&&t0) t.textContent
 var ov=document.getElementById('overview'), ovBuilt=false;
 function buildOverview(){
   ov.innerHTML='';
-  [['본편',mainS],['부록 (#a1 ~ #a9)',appS]].forEach(function(g){
+  [['본편',mainS],['부록 (#a1 ~ #a10)',appS]].forEach(function(g){
     var h=document.createElement('h2'); h.textContent=g[0]; ov.appendChild(h);
     var grid=document.createElement('div'); grid.className='grid'; ov.appendChild(grid);
     g[1].forEach(function(s){
