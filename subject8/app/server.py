@@ -31,7 +31,7 @@ from typing import Dict, List, Optional
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PROJECT_ROOT.parent
 if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+    sys.path.insert(0, str(PROJECT_ROOT))      # src · app 을 패키지로 불러온다
 os.chdir(PROJECT_ROOT)
 
 import cv2  # noqa: E402
@@ -269,6 +269,33 @@ class Demo:
                 "per_class": {c: dict(v) for c, v in sorted(per.items())},
                 "inference_ms": round(float(np.median(ms)), 1) if ms else None}
 
+    def val_done(self) -> List[str]:
+        return sorted(i for i, it in self.items.items() if it.get("source") == "val" and it.get("preds") is not None)
+
+    def sweep(self, step: float = 0.05) -> Dict:
+        """확신도 기준별 박스 개수 결과 (예측이 끝난 Validation 사진). 기준마다 재예측 없이 다시 판정만 한다"""
+        ids = self.val_done()
+        rows = []
+        for k in range(1, int(round(0.95 / step)) + 1):
+            conf = round(k * step, 2)
+            if conf < PREDICT_CONF:
+                continue
+            t = Counter()
+            for iid in ids:
+                t.update(self.judge(iid, conf)["counts"])
+            p = t["tp"] / t["pred"] if t["pred"] else 0.0
+            r = t["tp"] / t["gt"] if t["gt"] else 0.0
+            f1 = 2 * p * r / (p + r) if p + r else 0.0
+            rows.append({"conf": conf, "tp": t["tp"], "class_error": t["class_error"], "fp": t["fp"], "fn": t["fn"],
+                         "gt": t["gt"], "pred": t["pred"], "precision": round(p, 4), "recall": round(r, 4), "f1": round(f1, 4)})
+        best = max(rows, key=lambda x: x["f1"]) if rows else None
+        return {"images": len(ids), "of": len(self.val_list()), "rows": rows, "best": best}
+
+    def read_image(self, iid: str):
+        if iid in self.uploads:
+            return cv2.imdecode(np.frombuffer(self.uploads[iid], np.uint8), cv2.IMREAD_COLOR)
+        return cv2.imread(str(self._val_path(iid)))
+
 
 # ── FastAPI ───────────────────────────────────────────────
 def create_app(device: Optional[str] = None) -> FastAPI:
@@ -329,6 +356,21 @@ def create_app(device: Optional[str] = None) -> FastAPI:
     @app.get("/api/summary")
     def summary(conf: float = DEFAULT_CONF):
         return demo.summary(max(PREDICT_CONF, min(conf, 0.99)))
+
+    @app.get("/api/sweep")
+    def sweep():
+        return demo.sweep()
+
+    @app.post("/api/report")
+    async def report(request: Request):
+        """시연 보고서 (HTML 한 파일) — 브라우저가 미리보기 · 저장 · 인쇄(PDF). 서버 디스크에는 저장하지 않는다"""
+        from app.report import build_report
+        body = await request.json()
+        conf = max(PREDICT_CONF, min(float(body.get("conf", DEFAULT_CONF)), 0.99))
+        viewed = [str(v) for v in body.get("viewed", [])][:300]
+        html = build_report(demo, conf=conf, viewed=viewed, include_crops=bool(body.get("crops", False)),
+                            include_all=bool(body.get("all", True)), presenter=str(body.get("presenter", ""))[:60])
+        return Response(html, media_type="text/html; charset=utf-8")
 
     @app.exception_handler(HTTPException)
     async def _err(_, e: HTTPException):
