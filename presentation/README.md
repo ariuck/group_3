@@ -125,3 +125,17 @@ PDF 백업: 브라우저 인쇄(Ctrl+P) → 대상 "PDF로 저장" → 배경 �
 - seed 반복은 유의성이나 작은 Val의 대표성을 보장하지 않는다. +0.02는 사전에 정한 채택 기준이다.
 - 라벨 복원과 검출부 초기화는 단독 원인이 확정되지 않았다.
 - 시연은 이 PC의 기존 Python 프로그램으로 진행. HTML 실행 서버·추가 녹화는 이번 변경 범위에 없음.
+
+## 다른 PC에서 서버 링크로 보기
+
+1. Windows에서 `발표서버 시작.bat`을 더블클릭합니다 (Windows Python 3 필요).
+   WSL 저장소도 탐색기에서 `\\wsl.localhost\Ubuntu\home\<사용자>\group_3\presentation`을 열어 실행할 수 있습니다.
+2. 창에 표시된 `http://<이 PC IP>:8765/index.html#1`을 같은 네트워크의 팀원에게 보냅니다.
+   PC마다 IP가 다릅니다. 여러 주소가 표시되면 학원 유선/Wi-Fi 주소를 사용하세요.
+3. HTML을 저장한 뒤 팀원 브라우저에서 새로고침하면 반영됩니다. 사진은 서버 PC의 `private/photos/`를 사용합니다.
+4. 창을 닫으면 서버가 종료됩니다. 재부팅 후에는 다시 실행하고 표시된 주소를 확인하세요.
+
+포트가 이미 사용 중이면 기존 서버를 종료하거나 `py -3 serve_deck.py --port 8766`으로 실행합니다.
+접속이 막히면 Windows 방화벽의 Python 허용 여부와 동일 네트워크 연결을 확인하세요.
+서버는 발표 HTML, assets/, private/만 제공하며 Git 제외 규칙은 그대로 적용됩니다.
+Linux/WSL 터미널에서는 `python3 serve_deck.py`로 실행할 수 있지만, WSL 네트워크 설정에 따라 Windows LAN 접근이 달라지므로 Windows 시작 파일 사용을 권장합니다.
