@@ -8,7 +8,7 @@ Dataset,같은 촬영 묶음이 여러 역할에 섞이지 않았다 (또는 예
 Dataset,Split 정책이 문서로 확정(FROZEN)되어 있다,PASS,docs/project/split_policy.md
 Dataset,Class ID 0~6 을 그대로 쓴다,PASS,"dataset.yaml names [0, 1, 2, 3, 4, 5, 6]"
 Dataset,Bridge Holdout 이 dataset.yaml 에 포함되지 않는다,PASS,configs/dataset.yaml
-Dataset,Frozen Test 가 Final Model 선택 전에 사용되지 않았다,PASS,"runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음 (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)"
+Dataset,Frozen Test 실행 보호와 잔여 로그 확인 (사전 열람 여부는 자동 판정 불가),MANUAL,allow_test 보호 True · 관련 로그 []. 자동 점검은 삭제된 기록·과거 열람을 증명하지 못함. 2026-10-16 사전 열람 예외는 reports/04_improvement/baseline_vs_improved.md에 기록됨
 Dataset,Bridge Holdout 을 교과 8 에서 사용하지 않았다,PASS,runs/ · runs/eval · reports/06_subject14 에 Bridge 사용 흔적 없음 (휴리스틱 — 03 이 만든 data/bridge_holdout 폴더는 사진 보관용)
 Dataset,학습에 쓴 Train/Val Manifest 가 지금 Manifest 와 같다 (해시),PASS,train 989eebc34e7e=989eebc34e7e · val c897b139828f=c897b139828f
 Model,baseline_best.pt (= baseline_v5) Weight 가 있고 기록(해시)과 같다,PASS,models/baseline/baseline_best.pt · cc688f2b3589
@@ -78,15 +78,17 @@ Evaluation,models/ 에 보관된 모든 실행이 experiment_log.csv 에 기록�
 Evaluation,Frozen Test 결과가 있다 (Final 1개 · 한 번 · Test 82장),PASS,"reports/05_final/final_metrics.csv — 1행, 모델 ['exp050_v5_s_imgsz2240_aug_seed2'], 장수 ['82'], mAP50-95 0.6388"
 Evaluation,Frozen Test 를 잰 모델이 공식 Final 과 같다,PASS,['exp050_v5_s_imgsz2240_aug_seed2'] vs exp050_v5_s_imgsz2240_aug_seed2
 Evaluation,Frozen Test Class 별 성능이 있다,PASS,reports/05_final/final_class_metrics.csv
-Inference · Auto Label,이미지 Detection 이 실행되고 BBox·Class·Confidence 가 표시된다,MANUAL,사진·GPU 가 있는 PC 에서 `python scripts/08_predict_images.py` 실행 후 비교 이미지 확인
-Inference · Auto Label,새 이미지에서 YOLO TXT 후보가 저장된다,TODO,src/auto_labeler.py · scripts/12_auto_label.py 아직 없음 (8일차)
-Inference · Auto Label,후보 TXT 를 교과 7 라벨링 도구에서 열고 수정·삭제·추가·승인·저장할 수 있다,MANUAL,`cd subject7 && python main.py` 로 후보 TXT 를 열어 확인 (Auto Label 구현 후)
-Inference · Auto Label,시연 백업자료: 예측 이미지,TODO,demo/prediction_images — 0개
-Inference · Auto Label,시연 백업자료: Auto Label 후보,TODO,demo/auto_label/candidate_labels — 0개
-Inference · Auto Label,시연 백업자료: 검수 완료 라벨,TODO,demo/auto_label/reviewed_labels — 0개
-환경 · 코드 · 보안,src/·scripts/ 의 모든 Python 파일이 문법 오류 없이 컴파일된다,PASS,전부 정상
+Inference · 시연,예측 스크립트 구현이 있다,PASS,scripts/08_predict_images.py
+Inference · 시연,추론 모듈 구현이 있다,PASS,src/inference.py
+Inference · 시연,이미지 Detection의 화면 동작,MANUAL,자동 실행하지 않음. 2026-10-20 Val 104장 예측·사람 확인 기록은 acceptance_test.md 참고
+Inference · 시연,웹 GUI의 YOLO TXT 후보 저장 구현이 있다,PASS,app/static/app.js saveTxt() + index.html 버튼. 코드 존재 점검이며 브라우저 전체 동작을 뜻하지 않음
+Inference · 시연,전용 Auto Label 배치 도구,NOT_DELIVERED,12_auto_label.py·auto_labeler.py 없음. 종료 시점 제공 기능은 웹 GUI의 후보 TXT 저장; 배치 도구 완료로 표시하지 않음
+Inference · 시연,후보 TXT → 교과 7 수정·승인 전체 흐름,MANUAL,"도구별 구현과 별개로, 전체 흐름의 독립 시험 기록은 확인되지 않음. 종료 후 개발 예정으로 간주하지 않음"
+Inference · 시연,발표용 녹화 시연 영상의 로컬 준비,PASS,presentation/private/videos/ 유효 영상 2개. Git 제외·이 PC의 존재만 점검; 재생 품질은 별도 확인
+Inference · 시연,초기 demo/ 폴더는 현행 발표 준비의 필수 경로가 아님,INFO,"초기 폴더 파일 수 [0, 0, 0]; 현행 발표 영상 경로는 presentation/README.md 기준"
+환경 · 코드 · 보안,src/·scripts/·app/ 의 모든 Python 파일이 문법 오류 없이 컴파일된다,PASS,전부 정상
 환경 · 코드 · 보안,학습·추론에 필요한 패키지가 이 PC 에 설치되어 있다,PASS,전부 import 가능
 환경 · 코드 · 보안,회사 사진이 Git 에 추적되지 않는다,PASS,사진 0장
 환경 · 코드 · 보안,Weight(.pt) 는 models/ 안의 것만 추적된다,PASS,models/ 밖 .pt 0개
-환경 · 코드 · 보안,교과 14 Handoff 문서가 있다 (Final · Bridge · Version · 한계 포함),PASS,docs/handoff_subject14.md
-환경 · 코드 · 보안,다른 팀원이 README 만 보고 처음부터 재실행할 수 있다,MANUAL,README 6장 순서대로 다른 PC 에서 실행하고 막힌 곳을 기록 (가이드 22.6)
+환경 · 코드 · 보안,후속 활용 참고 문서 (교과 14 방향 미정),INFO,기존 참고 문서 보존; 교과 7·8 종료의 합격 조건이 아님
+환경 · 코드 · 보안,다른 팀원이 README 만 보고 처음부터 재실행할 수 있다,MANUAL,종료 시점 다른 팀원의 독립 환경 재현 결과가 기록되어 있는지는 acceptance_test.md에 구분함

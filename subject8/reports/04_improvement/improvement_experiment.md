@@ -110,7 +110,7 @@ Final 확정 뒤라 `exp050` 은 바꾸지 않는다. 진단: Train 반점 8개�
 | ① + ③ | P2 + 변형 합성 | exp061 ~ 065 | **exp063 (seed 123) 만** — 갈변 0.237 · 전체 0.725 |
 
 - exp063 vs 같은 seed 의 B(exp018): 갈변 0.107 → **0.237** · 반점 후보 5 → 14 / 15 · 전체 0.746 → 0.725 · 다른 5개 Class 모두 하락 · 학습 131분 · 예측 55ms/장.
-- 다른 Class 하락 원인 (IoU 0.9 AP 하락 · 큰 마른 잎 혼동 14 → 41 · 검출 head 37.5% 가 사전학습 없이 시작): [`../../docs/project/experiment_handoff.md`](../../docs/project/experiment_handoff.md) 10장 · 발표자료 부록 A10.
+- 다른 Class 하락 원인 (IoU 0.9 AP 하락 · 큰 마른 잎 혼동 14 → 41 · 검출 head 37.5% 가 사전학습 없이 시작): [`../../docs/project/experiment_handoff.md`](../../docs/project/experiment_handoff.md) 10장 · 발표자료 부록 A15.
 - 전체가 B 보다 낮고 seed 1개 · 두 변수라 **Final 은 바꾸지 않았다** — 다음 버전 방향.
 
 ## 7. Final Model 결정

@@ -1,6 +1,6 @@
 # `subject8/app/server.py`
 
-> **Final Model 시연 프로그램** — FastAPI 서버 + 브라우저 화면(`app/static/`). 발표 15번 슬라이드 "라이브 시연 ②"의 **시연 프로그램 열기** 버튼으로 넘어오고, `← 발표로`(Backspace)로 돌아간다.
+> **Final Model 시연 프로그램** — FastAPI 서버 + 브라우저 화면(`app/static/`). 본편 15번은 녹화 시연이며, 라이브 GUI는 부록 A13에서 열고, `← 발표로`(Backspace)로 돌아간다.
 
 [← 코드 문서 목차](../README.md) · [코드 보기](../../app/server.py)
 
@@ -14,8 +14,8 @@ cd subject8
 ```
 
 - 발표자료도 같은 서버가 `http://127.0.0.1:8010/presentation/` 으로 연다 (저장소 맨 위 `presentation/` 이 있을 때). 이렇게 열면 발표 → 시연 → 발표가 한 탭에서 오간다.
-- 발표자료를 파일(더블클릭)로 열어도 15번의 버튼은 `http://127.0.0.1:8010/` 로 간다. 이때 서버가 켜져 있어야 한다.
-- 주소 끝에 `#img=<사진 이름>` 을 붙이면 그 사진을 바로 예측한다 (15번의 백업 1~3 링크).
+- 발표자료를 파일(더블클릭)로 열어도 부록 A13의 버튼은 `http://127.0.0.1:8010/` 로 간다. 이때 서버가 켜져 있어야 한다.
+- 주소 끝에 `#img=<사진 이름>` 을 붙이면 그 사진을 바로 예측한다 (기존 사진 직접 연결 링크).
 - 끄기: 서버를 켠 터미널에서 `Ctrl+C` (백그라운드로 켰다면 `pkill -f app/server.py`).
 
 ## 화면 (흰 배경)
@@ -65,7 +65,7 @@ cd subject8
 ## 의존성
 
 - **사용하는 것**: [`src/registry`](../src/registry.md) (`resolve("final")`, `run_args`), [`src/inference`](../src/inference.md) (`load_gt`, `match`), [`src/split_builder`](../src/split_builder.md), [`src/train_detector`](../src/train_detector.md) (`sha256_short`), FastAPI · uvicorn (`requirements.txt`)
-- **사용하는 곳**: 발표자료 [`presentation/index.html`](../../../presentation/README.md) 15번 슬라이드
+- **사용하는 곳**: 발표자료 [`presentation/index.html`](../../../presentation/README.md) 부록 A13
 
 ## 주의사항 (보안 · 교과 8 규칙)
 

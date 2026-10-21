@@ -5,12 +5,15 @@
 결과 상태
     PASS    확인 완료
     FAIL    기준에 어긋남 (고쳐야 함)
-    TODO    아직 만들어지지 않은 산출물 (8~9일차 작업 후 PASS 가 되어야 함)
-    MANUAL  사진·GPU 가 있는 PC 에서 사람이 직접 확인해야 함
+    TODO    요구 파일이 없어 확인하지 못함
+    MANUAL  자동으로 확인하지 못한 동작·기록
+    INFO    참고·예외·비필수 로컬 자료 상태
+    NOT_DELIVERED  종료 시점 제공하지 않은 기능 (PASS가 아님)
 
 출력: 화면 표 + reports/05_acceptance/acceptance_check.csv (reports/05_acceptance/acceptance_test.md 의 근거)
 FAIL 이 하나라도 있으면 종료 코드 1.
 """
+import argparse
 import csv
 import hashlib
 import importlib
@@ -127,9 +130,10 @@ def check_dataset():
         if a.is_file() and re.search(r"^split:\s*test", a.read_text(encoding="utf-8"), re.M):
             suspicious.append(f"{d.name}(split=test)")
     guard = "allow_test" in (PROJECT_ROOT / "src" / "evaluate_detector.py").read_text(encoding="utf-8")
-    add(A, "Frozen Test 가 Final Model 선택 전에 사용되지 않았다", "PASS" if not suspicious and guard else "FAIL",
-        ("runs/ 에 test·final 실행 없음, evaluate_detector 에 allow_test 보호 있음" if not suspicious and guard
-         else f"의심: {suspicious} · 보호 코드 {guard}") + " (휴리스틱 — 사람이 학습 로그로 한 번 더 확인)")
+    add(A, "Frozen Test 실행 보호와 잔여 로그 확인 (사전 열람 여부는 자동 판정 불가)",
+        "MANUAL" if guard else "FAIL",
+        f"allow_test 보호 {guard} · 관련 로그 {suspicious}. 자동 점검은 삭제된 기록·과거 열람을 증명하지 못함. "
+        "2026-10-16 사전 열람 예외는 reports/04_improvement/baseline_vs_improved.md에 기록됨")
 
     # Bridge Holdout 사용 흔적 (휴리스틱) — 교과 8 에서는 학습·평가·예측에 쓰지 않아야 한다
     bridge_use = []
@@ -244,40 +248,54 @@ def check_evaluation():
     has_file("reports/05_final/final_class_metrics.csv", A, "Frozen Test Class 별 성능이 있다", "Final Model 확정 후")
 
 
-# ── Inference / Auto Label ────────────────────────────────────
+# ── Inference / 시연 ───────────────────────────────────────────
 def check_use():
-    A = "Inference · Auto Label"
-    code = [("scripts/08_predict_images.py", "예측 스크립트"), ("src/inference.py", "추론 모듈")]
-    for rel, label in code:
-        if not (PROJECT_ROOT / rel).is_file():
-            add(A, f"{label} 가 있다", "FAIL", rel)
-    add(A, "이미지 Detection 이 실행되고 BBox·Class·Confidence 가 표시된다", "MANUAL",
-        "사진·GPU 가 있는 PC 에서 `python scripts/08_predict_images.py` 실행 후 비교 이미지 확인")
-    if (PROJECT_ROOT / "scripts" / "12_auto_label.py").is_file() or (PROJECT_ROOT / "src" / "auto_labeler.py").is_file():
-        add(A, "새 이미지에서 YOLO TXT 후보가 저장된다", "MANUAL", "새 이미지 5장으로 실행 후 TXT 확인")
-    else:
-        add(A, "새 이미지에서 YOLO TXT 후보가 저장된다", "TODO", "src/auto_labeler.py · scripts/12_auto_label.py 아직 없음 (8일차)")
-    add(A, "후보 TXT 를 교과 7 라벨링 도구에서 열고 수정·삭제·추가·승인·저장할 수 있다", "MANUAL",
-        "`cd subject7 && python main.py` 로 후보 TXT 를 열어 확인 (Auto Label 구현 후)")
-    for rel, label in (("demo/prediction_images", "예측 이미지"), ("demo/auto_label/candidate_labels", "Auto Label 후보"),
-                       ("demo/auto_label/reviewed_labels", "검수 완료 라벨")):
-        files = [p for p in (PROJECT_ROOT / rel).glob("*") if p.name != ".gitkeep"] if (PROJECT_ROOT / rel).is_dir() else []
-        add(A, f"시연 백업자료: {label}", "PASS" if files else "TODO", f"{rel} — {len(files)}개")
+    A = "Inference · 시연"
+    for rel, label in (("scripts/08_predict_images.py", "예측 스크립트"), ("src/inference.py", "추론 모듈")):
+        add(A, f"{label} 구현이 있다", "PASS" if (PROJECT_ROOT / rel).is_file() else "FAIL", rel)
+    add(A, "이미지 Detection의 화면 동작", "MANUAL",
+        "자동 실행하지 않음. 2026-10-20 Val 104장 예측·사람 확인 기록은 acceptance_test.md 참고")
+
+    js = PROJECT_ROOT / "app" / "static" / "app.js"
+    html = PROJECT_ROOT / "app" / "static" / "index.html"
+    code = js.read_text(encoding="utf-8") if js.is_file() else ""
+    markup = html.read_text(encoding="utf-8") if html.is_file() else ""
+    export = all(token in code for token in ("function saveTxt()", "toFixed(6)", "new Blob", "a.download"))
+    export = export and "라벨 후보 저장" in markup
+    add(A, "웹 GUI의 YOLO TXT 후보 저장 구현이 있다", "PASS" if export else "FAIL",
+        "app/static/app.js saveTxt() + index.html 버튼. 코드 존재 점검이며 브라우저 전체 동작을 뜻하지 않음")
+
+    batch = any((PROJECT_ROOT / rel).is_file() for rel in ("scripts/12_auto_label.py", "src/auto_labeler.py"))
+    add(A, "전용 Auto Label 배치 도구", "INFO" if batch else "NOT_DELIVERED",
+        "배치 파일 존재·동작은 별도 확인" if batch else
+        "12_auto_label.py·auto_labeler.py 없음. 종료 시점 제공 기능은 웹 GUI의 후보 TXT 저장; 배치 도구 완료로 표시하지 않음")
+    add(A, "후보 TXT → 교과 7 수정·승인 전체 흐름", "MANUAL",
+        "도구별 구현과 별개로, 전체 흐름의 독립 시험 기록은 확인되지 않음. 종료 후 개발 예정으로 간주하지 않음")
+
+    videos = PROJECT_ROOT.parent / "presentation" / "private" / "videos"
+    media = [p for p in videos.glob("*") if p.is_file() and p.suffix.lower() in {".mp4", ".mov", ".webm"}
+             and p.stat().st_size > 0] if videos.is_dir() else []
+    add(A, "발표용 녹화 시연 영상의 로컬 준비", "PASS" if len(media) >= 2 else "MANUAL",
+        f"presentation/private/videos/ 유효 영상 {len(media)}개. Git 제외·이 PC의 존재만 점검; 재생 품질은 별도 확인")
+    legacy = ["demo/prediction_images", "demo/auto_label/candidate_labels", "demo/auto_label/reviewed_labels"]
+    counts = [sum(p.is_file() and p.name != ".gitkeep" for p in (PROJECT_ROOT / rel).glob("*")) for rel in legacy]
+    add(A, "초기 demo/ 폴더는 현행 발표 준비의 필수 경로가 아님", "INFO",
+        f"초기 폴더 파일 수 {counts}; 현행 발표 영상 경로는 presentation/README.md 기준")
 
 
 # ── 환경 · 코드 · 보안 ────────────────────────────────────────
 def check_env():
     A = "환경 · 코드 · 보안"
     bad = []
-    for p in sorted(list((PROJECT_ROOT / "src").glob("*.py")) + list((PROJECT_ROOT / "scripts").glob("*.py"))):
+    for p in sorted(p for folder in ("src", "scripts", "app") for p in (PROJECT_ROOT / folder).rglob("*.py")):
         try:
             py_compile.compile(str(p), doraise=True, cfile=str(Path("/tmp") / (p.stem + ".pyc")) if Path("/tmp").is_dir() else None)
         except py_compile.PyCompileError as e:
             bad.append(f"{p.name}: {str(e).splitlines()[-1]}")
-    add(A, "src/·scripts/ 의 모든 Python 파일이 문법 오류 없이 컴파일된다", "PASS" if not bad else "FAIL", "전부 정상" if not bad else "; ".join(bad))
+    add(A, "src/·scripts/·app/ 의 모든 Python 파일이 문법 오류 없이 컴파일된다", "PASS" if not bad else "FAIL", "전부 정상" if not bad else "; ".join(bad))
 
     missing = []
-    for mod in ("yaml", "pandas", "matplotlib", "ultralytics", "torch", "cv2"):
+    for mod in ("yaml", "pandas", "matplotlib", "ultralytics", "torch", "cv2", "fastapi", "uvicorn"):
         try:
             importlib.import_module(mod)
         except Exception:
@@ -298,28 +316,27 @@ def check_env():
         add(A, "Git 추적 파일 점검", "MANUAL", f"git 실행 실패: {e}")
 
     h = PROJECT_ROOT / "docs" / "project" / "handoff" / "subject14_handoff.md"
-    htxt = h.read_text(encoding="utf-8") if h.is_file() else ""
-    need = ["Final Model", "Bridge Holdout", "Dataset Version", "한계"]
-    miss = [n for n in need if n not in htxt]
-    if not h.is_file():
-        add(A, "교과 14 Handoff 문서가 있다", "TODO", "docs/project/handoff/subject14_handoff.md 아직 없음")
-    else:
-        add(A, "교과 14 Handoff 문서가 있다 (Final · Bridge · Version · 한계 포함)", "PASS" if not miss else "FAIL",
-            "docs/project/handoff/subject14_handoff.md" + (f" — 빠짐 {miss}" if miss else ""))
+    add(A, "후속 활용 참고 문서 (교과 14 방향 미정)", "INFO",
+        "기존 참고 문서 보존; 교과 7·8 종료의 합격 조건이 아님" if h.is_file() else
+        "참고 문서 없음; 교과 14의 모델·데이터·방향은 미정")
 
     add(A, "다른 팀원이 README 만 보고 처음부터 재실행할 수 있다", "MANUAL",
-        "README의 빠른 시작과 docs/project/guides/training.md 순서로 다른 PC에서 실행하고 막힌 곳을 기록 (가이드 22.6)")
+        "종료 시점 다른 팀원의 독립 환경 재현 결과가 기록되어 있는지는 acceptance_test.md에 구분함")
 
 
-def main():
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", type=Path, default=OUT_CSV, help="점검 CSV 경로 (기본: reports/05_acceptance/acceptance_check.csv)")
+    output = parser.parse_args(argv).output.resolve()
+    rows.clear()
     for fn in (check_dataset, check_model, check_evaluation, check_use, check_env):
         try:
             fn()
         except Exception as e:      # 점검 코드 자체의 오류도 결과로 남긴다
             add(fn.__name__, "점검 실행", "FAIL", f"{type(e).__name__}: {e}")
 
-    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    with OUT_CSV.open("w", encoding="utf-8-sig", newline="") as f:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["area", "item", "status", "detail"])
         w.writerows(rows)
@@ -333,7 +350,7 @@ def main():
         if status != "PASS" and detail:
             print(f"         └ {detail}")
     c = Counter(r[2] for r in rows)
-    print(f"\n합계: PASS {c['PASS']} · FAIL {c['FAIL']} · TODO {c['TODO']} · MANUAL {c['MANUAL']}  →  {OUT_CSV.relative_to(PROJECT_ROOT)}")
+    print("\n합계: " + " · ".join(f"{status} {c[status]}" for status in ("PASS", "FAIL", "TODO", "MANUAL", "INFO", "NOT_DELIVERED")) + f"  →  {output}")
     return 1 if c["FAIL"] else 0
 
 
