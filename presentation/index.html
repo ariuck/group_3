@@ -333,7 +333,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
           <tr><td><b>Train</b></td><td class="r">558</td><td>G01~04·06·08·09·15~17 + G00 일부</td><td>학습</td></tr>
           <tr><td><b>Validation</b></td><td class="r">104</td><td>G05·G13 + G00 6장</td><td>실험 비교 · 모델 선정</td></tr>
           <tr><td><b>Frozen Test</b></td><td class="r">82</td><td>G07·G14 + G00 6장</td><td>Final 확정 후 1회</td></tr>
-          <tr><td><b>Bridge Holdout</b></td><td class="r">156</td><td>G10·G11·G12 + G00 6장</td><td>교과 14 인계 (교과 8 미사용)</td></tr>
+          <tr><td><b>Bridge Holdout</b></td><td class="r">156</td><td>G10·G11·G12 + G00 6장</td><td>미사용 보존 (후속 활용 미정)</td></tr>
         </tbody>
       </table>
     </div>
@@ -345,7 +345,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
     </div>
   </div>
   <footer><div class="fn">예외: 파·고추 집중 묶음 G00만 역할별 6장씩 분산 · Class별 BBox 수 전체는 부록 A3 · 근거 subject8/docs/project/kimchi_v5_split.md, split_policy.md</div></footer>
-  <aside class="notes"><div class="script"><p>여기까지가 교과 7의 라벨링이고, 이어서 교과 8을 진행했습니다.</p><p>교과 8의 첫 작업은 900장을 나누는 일이었습니다. 학습용 Train 558장, 모델을 고를 때 볼 Validation 104장, 마지막 시험용 Test 82장, 그리고 교과 14에 넘길 156장입니다.</p><p>나누는 단위는 촬영 묶음입니다. 5분 안에 연달아 찍은 사진은 한 묶음으로 보고, 한쪽에만 넣었습니다.</p><p>평가용 사진에는 종류마다 정답 박스를 15개 이상 넣었습니다. 너무 적으면 박스 하나에 결과가 크게 흔들리기 때문입니다.</p></div><div class="speaker-rescue"><b>막히면 이 한 문장</b> 사진을 촬영 묶음 단위로 나누고, 평가용에는 종류마다 15박스 이상 넣었습니다.</div><details class="speaker-terms"><summary>용어·예상 질문 (읽지 않아도 됨)</summary><p><b>촬영 묶음</b>: 5분 안에 연달아 찍은 사진 한 덩어리 (G00~G17)</p><p><b>Frozen Test</b>: 최종 모델을 정한 뒤 한 번만 쓰는 시험 사진</p><p><b>Bridge Holdout</b>: 교과 14에서 처음 쓰려고 남겨 둔 사진</p><p>왜 무작위로 나누지 않았나요? → 연달아 찍은 비슷한 사진이 학습과 평가로 갈리면 점수가 부풀려지기 때문입니다. 이전 분할에서 실제로 그 문제가 나왔고, 두 장 뒤에서 설명합니다. 종류별 박스 수 전체는 부록 A3에 있습니다.</p><p>Test가 있는데 Bridge를 왜 또 남겼나요? → 부록 A17 Q32·Q33</p></details></aside>
+  <aside class="notes"><div class="script"><p>여기까지가 교과 7의 라벨링이고, 이어서 교과 8을 진행했습니다.</p><p>교과 8의 첫 작업은 900장을 나누는 일이었습니다. 학습용 Train 558장, 모델을 고를 때 볼 Validation 104장, 마지막 시험용 Test 82장, 그리고 쓰지 않고 남겨 둔 156장입니다.</p><p>나누는 단위는 촬영 묶음입니다. 5분 안에 연달아 찍은 사진은 한 묶음으로 보고, 한쪽에만 넣었습니다.</p><p>평가용 사진에는 종류마다 정답 박스를 15개 이상 넣었습니다. 너무 적으면 박스 하나에 결과가 크게 흔들리기 때문입니다.</p></div><div class="speaker-rescue"><b>막히면 이 한 문장</b> 사진을 촬영 묶음 단위로 나누고, 평가용에는 종류마다 15박스 이상 넣었습니다.</div><details class="speaker-terms"><summary>용어·예상 질문 (읽지 않아도 됨)</summary><p><b>촬영 묶음</b>: 5분 안에 연달아 찍은 사진 한 덩어리 (G00~G17)</p><p><b>Frozen Test</b>: 최종 모델을 정한 뒤 한 번만 쓰는 시험 사진</p><p><b>Bridge Holdout</b>: 교과 8의 학습·선택·평가에 쓰지 않고 보존한 사진. 후속 활용은 미정</p><p>왜 무작위로 나누지 않았나요? → 연달아 찍은 비슷한 사진이 학습과 평가로 갈리면 점수가 부풀려지기 때문입니다. 이전 분할에서 실제로 그 문제가 나왔고, 두 장 뒤에서 설명합니다. 종류별 박스 수 전체는 부록 A3에 있습니다.</p><p>Test가 있는데 Bridge를 왜 또 남겼나요? → 부록 A17 Q32·Q33</p></details></aside>
 </section>
 
 <section class="slide" data-id="8" data-speaker="손상우" data-time="45" data-title="Baseline 한계: 소형 객체 미검출" data-chapter="model"><div class="chapter-rail"><span>교과 7 · 데이터</span><span class="current">교과 8 · 모델</span><span>결과와 다음 단계</span></div>
@@ -430,11 +430,11 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
   <aside class="notes"><div class="script"><p>0:00 제가 만든 웹 시연 프로그램입니다. 최종 모델이 찾은 이물을 박스로 보여 줍니다.</p><p>0:04 검증 사진 104장을 한 번에 채점합니다. 확신도 0.25에서는 놓친 게 34개, 잘못 찾은 게 31개입니다.</p><p>0:09 기준을 0.50으로 올리면 잘못 찾은 건 12개로 줄지만, 놓친 건 41개로 늘어납니다.</p><p>0:14 둘의 균형이 가장 좋은 기준은 0.45였습니다. 고를 때 본 사진으로 정한 값이라 참고용입니다.</p><p>0:17 정답과 비교하면 맞힌 것, 놓친 것, 잘못 찾은 것이 나뉘어 보입니다.</p><p>0:24 결과는 보고서 하나로 만듭니다. 공식 점수 0.639와 기준별 결과, 종류별 결과가 들어가고, 갈변은 15개 중 2개만 찾았다는 것도 그대로 적힙니다.</p><p>0:42 틀린 박스는 사진과 함께 목록으로 남겨, 다음 과제에서 바로 확인할 수 있게 했습니다.</p></div><div class="speaker-cue"><b>화면·조작</b> 슬라이드에 오면 영상이 자동 재생됩니다. 문장 앞 시간에 맞춰 읽습니다. 직접 조작이 필요하면 부록 A13.</div><div class="speaker-rescue"><b>막히면 이 한 문장</b> 최종 모델로 104장을 채점하고, 기준을 바꿔 보고, 보고서로 남깁니다.</div><div class="speaker-rescue"><b>영상이 안 나오면</b> 최종 모델로 검증 사진 104장을 채점하고, 확신도 기준을 바꿔 보고, 결과를 보고서로 남기는 프로그램입니다.</div><details class="speaker-terms"><summary>용어·예상 질문 (읽지 않아도 됨)</summary><p><b>확신도</b>: 모델이 예측에 붙인 점수. 기준보다 낮은 박스는 숨김</p><p><b>보고서의 93% · 97%</b>: 박스 개수로 센 비율. 공식 성능(0.639)과 다른 기준</p><p>보고서의 93%와 0.639는 왜 다른가요? → 보고서는 박스 개수로 센 비율이고, 0.639는 위치가 얼마나 정확한지까지 보는 점수입니다. 공식 성능은 0.639입니다.</p></details></aside>
 </section>
 
-<section class="slide" data-id="16" data-speaker="지혜성" data-time="40" data-title="후속 과제 (교과 14)" data-chapter="next"><div class="chapter-rail"><span>교과 7 · 데이터</span><span>교과 8 · 모델</span><span class="current">결과와 다음 단계</span></div>
-  <header><div class="kicker">다음 단계</div><h1>후속 과제 (교과 14)</h1></header>
-  <div class="body story-body"><div class="story-three next-steps"><div class="story-line"><span class="step-number">01</span><div><h3>갈변 라벨 기준 통일</h3><p>넓은 변색 · 소형 반점</p></div></div><div class="story-line"><span class="step-number">02</span><div><h3>데이터 추가 확보</h3><p>정상 김치 · 신규 촬영 환경 · 소형 반점</p></div></div><div class="story-line"><span class="step-number">03</span><div><h3>현장 기준 평가</h3><p>FN·FP 허용 범위 · 처리 속도</p></div></div></div><div class="chapter-bridge handoff-result"><div><span class="eyebrow">인계 항목</span><h2>Final Model + 기록</h2><p>검수 도구 · 라벨 기준서 · 실험·한계 기록</p></div><div><span class="eyebrow">교과 14 평가용</span><h2>Bridge Holdout 156장</h2><p>교과 8 미사용</p></div></div></div>
-  <footer><div class="fn">Bridge Holdout 156장은 교과 14 인계용 · 현장 요구 지표와 라벨 기준은 협의 필요 · 인계 문서 docs/project/handoff/subject14_handoff.md</div></footer>
-  <aside class="notes"><div class="script"><p>교과 14로 넘길 것은 최종 모델과 실험 기록, 그리고 한 번도 쓰지 않은 Bridge Holdout 156장입니다. 인계 문서는 따로 정리해 두었습니다.</p><p>다음에 할 일은 세 가지입니다. 갈변 반점을 같은 기준으로 다시 표시하기, 깨끗한 김치 사진 모으기, 현장에서 놓침과 오탐을 어디까지 허용할지 정하기입니다.</p></div><div class="speaker-cue"><b>화면·조작</b> 01 · 02 · 03을 하나씩 셉니다.</div><div class="speaker-rescue"><b>막히면 이 한 문장</b> 모델과 기록을 넘기고, 다음엔 데이터 기준부터 맞춥니다.</div><details class="source-note"><summary>근거·조건 상세</summary><div>요구 지표는 받은 기록이 없음 — 알려 주시면 "오탐 N건 이하에서의 Recall" 같은 지표로 다시 평가 · GUI에서 YOLO TXT 후보 저장 가능 · 전용 배치 스크립트(<code>12_auto_label.py</code>)와 사람 검수 연계는 예정 (소스 3.9, 3.11, 9.8 Q20)</div></details></aside>
+<section class="slide" data-id="16" data-speaker="지혜성" data-time="40" data-title="남은 과제 · 보존 자료" data-chapter="next"><div class="chapter-rail"><span>교과 7 · 데이터</span><span>교과 8 · 모델</span><span class="current">결과와 다음 단계</span></div>
+  <header><div class="kicker">다음 단계 <span class="sep">|</span> 교과 14 방향 미정</div><h1>남은 과제 · 보존 자료</h1></header>
+  <div class="body story-body"><div class="story-three next-steps"><div class="story-line"><span class="step-number">01</span><div><h3>갈변 라벨 기준 통일</h3><p>넓은 변색 · 소형 반점</p></div></div><div class="story-line"><span class="step-number">02</span><div><h3>데이터 추가 확보</h3><p>정상 김치 · 신규 촬영 환경 · 소형 반점</p></div></div><div class="story-line"><span class="step-number">03</span><div><h3>평가 기준 설정</h3><p>FN·FP 허용 범위 · 처리 속도</p></div></div></div><div class="chapter-bridge handoff-result"><div><span class="eyebrow">남긴 자료</span><h2>Final Model + 기록</h2><p>검수 도구 · 라벨 기준서 · 실험·한계 기록</p></div><div><span class="eyebrow">미사용 보존</span><h2>Bridge Holdout 156장</h2><p>교과 8 학습·선택·평가 미사용</p></div></div></div>
+  <footer><div class="fn">교과 14 대상·모델·진행 방향 미정 (김치 모델 계속 사용 여부 미정) · Bridge 156장은 미사용 보존, 필수 평가 절차로 확정하지 않음 · 종료 현황 PROJECT_STATUS.md · 참고 subject8/docs/project/handoff/subject14_handoff.md</div></footer>
+  <aside class="notes"><div class="script"><p>교과 8에서 남긴 것은 최종 모델과 실험 기록, 그리고 한 번도 쓰지 않고 보존한 Bridge Holdout 156장입니다. 교과 14에서 이 모델을 계속 쓸지는 아직 정해지지 않았습니다.</p><p>이 모델을 이어서 쓴다면 할 일은 세 가지입니다. 갈변 반점을 같은 기준으로 다시 표시하기, 깨끗한 김치 사진 모으기, 놓침과 오탐을 어디까지 허용할지 정하기입니다.</p></div><div class="speaker-cue"><b>화면·조작</b> 01 · 02 · 03을 하나씩 셉니다.</div><div class="speaker-rescue"><b>막히면 이 한 문장</b> 모델과 기록, 쓰지 않은 156장을 남겼고, 후속 방향은 아직 미정입니다.</div><details class="speaker-terms"><summary>용어·예상 질문 (읽지 않아도 됨)</summary><p><b>Bridge Holdout 156장</b>: 교과 8의 학습·선택·평가에 쓰지 않고 보존한 사진</p><p>교과 14에서 이 모델을 쓰나요? → 아직 정해지지 않았습니다. 다른 모델이나 데이터로 바뀌면 요구사항과 분할·평가 기준을 새로 정해야 합니다.</p><p>Bridge는 언제 쓰나요? → 이 모델을 이어서 쓴다면 처음 한 번 평가해 기준점으로 삼을 수 있지만, 필수 절차로 정하지는 않았습니다 (부록 A17 Q32·Q33).</p></details><details class="source-note"><summary>근거·조건 상세</summary><div>요구 지표는 받은 기록이 없음 — 알려 주시면 "오탐 N건 이하에서의 Recall" 같은 지표로 다시 평가 · GUI에서 YOLO TXT 후보 저장 가능 · 전용 배치 스크립트(<code>12_auto_label.py</code>)는 종료 시점 미제공 · 교과 14 대상·모델·방향 미정 (PROJECT_STATUS.md · 소스 3.9, 9.8 Q20)</div></details></aside>
 </section>
 
 <section class="slide" data-id="17" data-speaker="지혜성" data-time="10" data-title="요약" data-chapter="next"><div class="chapter-rail"><span>교과 7 · 데이터</span><span>교과 8 · 모델</span><span class="current">결과와 다음 단계</span></div>
@@ -443,7 +443,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
     <div class="row" style="gap:28px">
       <div class="card grow"><div class="kicker">데이터</div><div class="big accent">900<span style="font-size:36px">장</span></div><h3 style="margin-top:24px">전수 교차검수 · 원본 보존</h3><div class="small muted">수정 이력 기록</div></div>
       <div class="card grow hl"><div class="kicker">최종 평가</div><div class="big accent">0.639</div><h3 style="margin-top:24px">Frozen Test mAP50-95</h3><div class="small muted">선정 규칙 · 한계 공개</div></div>
-      <div class="card grow"><div class="kicker">후속 과제</div><div class="big" style="color: var(--c5ink); font-size: 64px;">교과 14</div><h3 style="margin-top:24px">소형 갈변 · 현장 검증</h3><div class="small muted">라벨 기준 통일 · 데이터 확보</div></div>
+      <div class="card grow"><div class="kicker">남은 과제</div><div class="big" style="color: var(--c5ink); font-size: 64px;">소형 갈변</div><h3 style="margin-top:24px">정상 김치 오탐 미측정</h3><div class="small muted">Bridge 156장 보존 · 후속 방향 미정</div></div>
     </div>
     <div style="font-size:38px;font-weight:700">감사합니다. 질문 받겠습니다.</div>
     <div class="small muted">O : 슬라이드 목록 · 부록 목차 A0 · 예상 질문 A17 · Frozen Test 상세 A11 · 라이브 시연 A13</div>
@@ -472,7 +472,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
   <header><div class="kicker">부록 A2 <span class="sep">|</span> 교과 7 → 교과 8 인계</div><h1>교과 7 산출물과 교과 8 모델 개발 절차</h1></header>
   <div class="body story-body"><div class="chapter-bridge"><div><span class="eyebrow">교과 7 산출물</span><h2>검수 데이터</h2><p>사진 · 라벨 · 기준서 · 변경 이력</p></div><div class="bridge-arrow">→</div><div><span class="eyebrow">교과 8 목표</span><h2>검출 성능 개선</h2><p>동일 평가 세트에서 모델 비교</p></div></div><div class="story-three"><div class="story-line"><span class="step-number">01</span><div><h3>평가 세트 점검</h3><p>학습 · 평가 간 유사 장면 혼입 여부</p></div></div><div class="story-line"><span class="step-number">02</span><div><h3>놓침 분석</h3><p>크기별 Recall · 실패 유형</p></div></div><div class="story-line"><span class="step-number">03</span><div><h3>실험 · 선택</h3><p>seed 평균 비교 · 사전 채택 기준</p></div></div></div><div class="takeaway">데이터 정리 → 평가 세트 점검 → 개선 실험 → 최종 평가 (Frozen Test 1회)</div></div>
   <footer><div class="fn">2026-10-20 기준 · Final exp050 평가 완료 · GUI 라벨 후보(TXT) 저장 구현 · 사람 검수 연계 예정 · 인계 문서 팀 검토 전</div></footer>
-  <aside class="notes"><div class="script"><p><b>요점</b> 교과 7 산출물(사진 · 라벨 · 기준서 · 변경 이력)을 교과 8 학습 · 평가 기준으로 사용. 모델 비교 전에 평가 세트 누수부터 점검.</p><p><b>예상 질문</b> 교과 7과 8의 연결? → 검수 라벨로 학습하고, 같은 라벨을 정답으로 예측을 채점.</p></div><details class="source-note"><summary>근거·조건 상세</summary><div>Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 은 exp026·027 재학습으로 seed 5개 완료 (0.737·0.730, 결론 그대로) · GUI에서 YOLO TXT 후보 저장 가능 · 전용 배치 스크립트(<code>12_auto_label.py</code>)와 사람 검수 연계는 예정 · 5라운드(P2 검출층·변형 반점 합성)는 Final 확정 뒤 갈변 진단으로 1회(exp063)만 — 갈변 0.237 · 전체 0.725, Final은 바꾸지 않음 · 교과 14 Handoff는 <code>docs/project/handoff/subject14_handoff.md</code> 작성 완료, 팀 검토 전 (소스 1.1, 3.1)</div></details></aside>
+  <aside class="notes"><div class="script"><p><b>요점</b> 교과 7 산출물(사진 · 라벨 · 기준서 · 변경 이력)을 교과 8 학습 · 평가 기준으로 사용. 모델 비교 전에 평가 세트 누수부터 점검.</p><p><b>예상 질문</b> 교과 7과 8의 연결? → 검수 라벨로 학습하고, 같은 라벨을 정답으로 예측을 채점.</p></div><details class="source-note"><summary>근거·조건 상세</summary><div>Smoke Test·Validation 평가·Baseline vs Improved 비교도 완료 · 4라운드 ③ 2560 은 exp026·027 재학습으로 seed 5개 완료 (0.737·0.730, 결론 그대로) · GUI에서 YOLO TXT 후보 저장 가능 · 전용 배치 스크립트(<code>12_auto_label.py</code>)와 사람 검수 연계는 예정 · 5라운드(P2 검출층·변형 반점 합성)는 Final 확정 뒤 갈변 진단으로 1회(exp063)만 — 갈변 0.237 · 전체 0.725, Final은 바꾸지 않음 · 후속 활용 참고 문서 <code>docs/project/handoff/subject14_handoff.md</code> · 교과 14 방향 미정 (PROJECT_STATUS.md) (소스 1.1, 3.1)</div></details></aside>
 </section>
 
 <section class="slide" data-id="a3" data-speaker="부록" data-time="0" data-title="A3 v5 분할표" data-group="데이터 분할">
@@ -484,7 +484,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
         <tr><td><b>Train</b></td><td class="r">558</td><td class="r">308</td><td class="r">1,120</td><td class="r">427</td><td class="r">311</td><td class="r">209</td><td class="r">165</td><td>G01~04·06·08·09·15~17 + G00 일부</td><td>학습</td></tr>
         <tr><td><b>Validation</b></td><td class="r">104</td><td class="r">192</td><td class="r">265</td><td class="r">23</td><td class="r">16</td><td class="r">15</td><td class="r">30</td><td>G05·G13 + G00 6장</td><td>실험 비교·Final 선택</td></tr>
         <tr><td><b>Frozen Test</b></td><td class="r">82</td><td class="r">23</td><td class="r">140</td><td class="r">200</td><td class="r">23</td><td class="r">16</td><td class="r">30</td><td>G07·G14 + G00 6장</td><td>Final 확정 후 한 번만</td></tr>
-        <tr><td><b>Bridge Holdout</b></td><td class="r">156</td><td class="r">202</td><td class="r">326</td><td class="r">281</td><td class="r">29</td><td class="r">16</td><td class="r">30</td><td>G10·G11·G12 + G00 6장</td><td>교과 14 인계 (교과 8 사용 금지)</td></tr>
+        <tr><td><b>Bridge Holdout</b></td><td class="r">156</td><td class="r">202</td><td class="r">326</td><td class="r">281</td><td class="r">29</td><td class="r">16</td><td class="r">30</td><td>G10·G11·G12 + G00 6장</td><td>미사용 보존 (교과 8 사용 금지)</td></tr>
       </tbody>
     </table>
     <div class="row" style="gap:28px">
@@ -674,7 +674,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
     <figure class="slot" style="width:640px" data-src="assets/final_test_confusion_matrix_normalized.png" data-alt="Final Frozen Test 혼동행렬 (정규화)" data-caption="Frozen Test 혼동행렬(정규화) · 열 = 정답, 행 = 예측 · 그래프 이미지(사진 없음)"></figure>
   </div>
   <footer><div class="fn">근거 <code>reports/05_final/final_metrics.csv</code>, <code>final_class_metrics.csv</code>, <code>reports/final_model_selection.md</code>, <code>reports/figures/final/</code> · PR 곡선 <code>assets/final_test_pr_curve.png</code> (소스 3.13)</div></footer>
-  <aside class="notes"><div class="script"><p><b>요점</b> Val − Test 차이 0.110 중 0.066 이 나뭇잎 · 종이 (Test P 0.367) · 갈변 Test Recall 0 · 플라스틱은 0.844 → 0.840 유지.</p><p><b>대응 질문</b> Q26 · Q27. Test 오탐 원인은 분석 전 — Test 를 보며 고치면 오염되므로 교과 14 새 데이터로 확인.</p></div></aside>
+  <aside class="notes"><div class="script"><p><b>요점</b> Val − Test 차이 0.110 중 0.066 이 나뭇잎 · 종이 (Test P 0.367) · 갈변 Test Recall 0 · 플라스틱은 0.844 → 0.840 유지.</p><p><b>대응 질문</b> Q26 · Q27. Test 오탐 원인은 분석 전 — Test 를 보며 고치면 오염되므로 새 데이터로 확인할 과제.</p></div></aside>
 </section>
 
 <section class="slide" data-id="a12" data-speaker="부록" data-time="0" data-title="A12 confidence 기준별 박스 판정 · 보고서" data-group="평가 · 최종 모델">
@@ -1668,7 +1668,7 @@ WEBVTT
       "A",
       "4",
       "정상 김치가 0장이다. 이게 이물검출 데이터로 맞나?",
-      "받은 데이터 구성 그대로이며, 그래서 이물 없는 사진의 오탐률은 재지 못한다(한계로 기록). 정상 김치 샘플 제공 여부는 교과 14 요청 항목이다.",
+      "받은 데이터 구성 그대로이며, 그래서 이물 없는 사진의 오탐률은 재지 못한다(한계로 기록). 정상 김치 샘플은 후속 과제에서 요청할 항목이다.",
       "이후영"
     ],
     [
@@ -1689,7 +1689,7 @@ WEBVTT
       "A",
       "7",
       "가상 데이터로 현장 성능을 어떻게 보장하나?",
-      "보장하지 않는다. 가상 생성·유사 분포 데이터로 파이프라인과 평가 방법을 검증한 것이고, 현장 적용에는 실제 라인 데이터가 필요하다(교과 14).",
+      "보장하지 않는다. 가상 생성·유사 분포 데이터로 파이프라인과 평가 방법을 검증한 것이고, 현장 적용에는 실제 라인 데이터가 필요하다.",
       "강동연"
     ],
     [
@@ -1731,14 +1731,14 @@ WEBVTT
       "B",
       "32",
       "Bridge Holdout이 뭔가? Test가 있는데 왜 또 남겼나?",
-      "교과 8의 학습·튜닝·모델 선택·Frozen Test 어디에도 쓰지 않고 교과 14용으로 남긴 156장이다(G10·G11·G12 + G00 6장). Test는 교과 8 마지막 채점에 이미 썼고 그 전에 한 번 본 기록도 있다. 교과 14에서는 현장 장비·경량화로 모델이 다시 바뀌므로, 아직 아무도 보지 않은 기준 데이터가 따로 필요하다. 교과 14의 첫 평가는 Final(exp050)을 Bridge에 한 번 돌린 값이다(scripts/17_evaluate_bridge.py --subject14).",
+      "교과 8의 학습·튜닝·모델 선택·Frozen Test 어디에도 쓰지 않고 보존한 156장이다(G10·G11·G12 + G00 6장). Test는 교과 8 마지막 채점에 이미 썼고 그 전에 한 번 본 기록도 있어, 아무도 보지 않은 데이터를 따로 남겼다. 이 모델을 이어서 쓴다면 처음 한 번 평가해 기준점으로 삼을 수 있지만, 교과 14의 대상·모델·진행 방향이 정해지지 않아 필수 입력이나 첫 평가 절차로 확정하지 않았다(PROJECT_STATUS.md).",
       "손상우"
     ],
     [
       "B",
       "33",
       "Bridge에서 몇 점이 나와야 합격인가? 완전히 새로운 데이터인가?",
-      "합격 점수는 아직 정하지 않았다. 놓침·오탐 허용 범위는 현장 요구를 받아 교과 14에서 정한다. Bridge도 Train과 같은 날·같은 소품으로 찍은 사진이라 \"교과 8이 손대지 않은 사진\"이지 새 현장 데이터는 아니다. 새 조명·새 소품·정상 김치에서의 성능은 교과 14에서 새로 모아 확인한다(docs/project/handoff/subject14_handoff.md 3·5장).",
+      "합격 점수는 정하지 않았다. 후속 방향이 정해지면 요구사항에 맞춰 놓침·오탐 허용 범위를 정한다. Bridge도 Train과 같은 날·같은 소품으로 찍은 사진이라 \"교과 8이 손대지 않은 사진\"이지 새 현장 데이터는 아니다. 다른 검출 모델이나 데이터로 바뀌면 요구사항·분할·평가 기준을 새로 정해야 한다(PROJECT_STATUS.md).",
       "김석범"
     ],
     [
@@ -1808,7 +1808,7 @@ WEBVTT
       "C",
       "34",
       "공개 벤치마크에선 YOLO11m이 11s보다 좋은데 왜 11s를 썼나?",
-      "COCO(640) 기준으로는 11m이 더 높지만 우리 데이터에서는 차이가 작았다. 같은 1920에서 11s → 11m은 exp007 대비 +0.006(exp009, 0.730)으로 seed 흔들림(±0.01) 안이고, 11s의 해상도를 2240으로 올린 후보 B가 seed 5개 평균 0.739로 더 높았다. 작은 이물이 많아 모델 크기보다 해상도가 더 효과적이었다. 11m은 RTX 3060 12GB에서 1920·batch 2로 9.8GB를 썼고 두 번째 seed(exp017)는 메모리 부족으로 중단돼 seed 1개뿐이며, 2240은 학습할 수 없었다. 미리 정한 규칙(seed 평균, +0.02 이상일 때만 무거운 쪽 채택)을 넘지 못했고, 교과 14의 Jetson 배포에도 가벼운 11s가 유리하다. 단, \"11m이 더 나쁘다\"가 아니라 \"11m·2240은 더 큰 GPU에서 확인할 과제\"로 답한다(final_model_selection.md).",
+      "COCO(640) 기준으로는 11m이 더 높지만 우리 데이터에서는 차이가 작았다. 같은 1920에서 11s → 11m은 exp007 대비 +0.006(exp009, 0.730)으로 seed 흔들림(±0.01) 안이고, 11s의 해상도를 2240으로 올린 후보 B가 seed 5개 평균 0.739로 더 높았다. 작은 이물이 많아 모델 크기보다 해상도가 더 효과적이었다. 11m은 RTX 3060 12GB에서 1920·batch 2로 9.8GB를 썼고 두 번째 seed(exp017)는 메모리 부족으로 중단돼 seed 1개뿐이며, 2240은 학습할 수 없었다. 미리 정한 규칙(seed 평균, +0.02 이상일 때만 무거운 쪽 채택)을 넘지 못했고, 장치 배포를 고려해도 가벼운 11s가 유리하다. 단, \"11m이 더 나쁘다\"가 아니라 \"11m·2240은 더 큰 GPU에서 확인할 과제\"로 답한다(final_model_selection.md).",
       "김동훈"
     ],
     [
@@ -1843,14 +1843,14 @@ WEBVTT
       "E",
       "26",
       "Val 0.749인데 Test는 0.639다. 과적합 아닌가?",
-      "차이 0.110은 사실이다. ① 0.749는 seed 5개 중 최고를 고른 값(같은 조건 평균 0.739) ② Class별로 보면 0.066이 나뭇잎·종이 한 Class(Val 0.877 → Test 0.482)이고 플라스틱·돌·금속은 0.844 → 0.840으로 같다 ③ Test는 Val과 다른 촬영 묶음(G07·G14)이다. 과적합인지 Test의 나뭇잎·종이가 다른 모습인지는 아직 분석하지 않았다 — Test를 보며 고치면 Test가 오염되므로 교과 14에서 새 데이터로 확인한다.",
+      "차이 0.110은 사실이다. ① 0.749는 seed 5개 중 최고를 고른 값(같은 조건 평균 0.739) ② Class별로 보면 0.066이 나뭇잎·종이 한 Class(Val 0.877 → Test 0.482)이고 플라스틱·돌·금속은 0.844 → 0.840으로 같다 ③ Test는 Val과 다른 촬영 묶음(G07·G14)이다. 과적합인지 Test의 나뭇잎·종이가 다른 모습인지는 아직 분석하지 않았다 — Test를 보며 고치면 Test가 오염되므로 새 데이터로 확인해야 한다.",
       "지혜성"
     ],
     [
       "E",
       "27",
       "나뭇잎·종이 Precision 0.37이면 오탐 투성이 아닌가?",
-      "Test에서는 그렇다(P 0.367 · R 0.855, 정답 23박스·16장). 일부 누락도 있고 다른 것을 나뭇잎·종이로 잘못 부른다. Val에서는 0.877로 문제가 안 보였다 — Val 192박스 vs Test 23박스로 구성이 다르다. 원인 분석 전이며 교과 14 인계 항목에 넣었다.",
+      "Test에서는 그렇다(P 0.367 · R 0.855, 정답 23박스·16장). 일부 누락도 있고 다른 것을 나뭇잎·종이로 잘못 부른다. Val에서는 0.877로 문제가 안 보였다 — Val 192박스 vs Test 23박스로 구성이 다르다. 원인 분석 전이며 한계로 기록했다.",
       "지혜성"
     ],
     [
