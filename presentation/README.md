@@ -27,7 +27,7 @@ Windows 경로: `\\wsl.localhost\Ubuntu\home\user1\group_3\presentation` · 사�
 1. `발표서버 시작.bat` 실행 (Windows Python 3 필요). 발표 서버(8765)와 시연 GUI 서버(8010, `subject8/app/server.py`)를 함께 켭니다. 실행 로그 `private/runtime/`.
 2. `http://127.0.0.1:8765/index.html#1` 을 열고 `F` 전체화면.
 3. 같은 네트워크의 팀원은 창에 표시된 `http://<이 PC IP>:8765/index.html#1` 로 봅니다 (IP 는 바뀔 수 있음, 서버 PC 가 켜져 있는 동안만).
-4. 서버 없이 `index.html` 을 더블클릭해도 열리지만, 이때 **영상 자막은 Chrome 이 막아 표시되지 않습니다** — 발표는 서버 주소로 엽니다.
+4. 서버 없이 `index.html` 을 더블클릭해도 영상과 한국어 자막이 표시됩니다. 파일로 열 때는 HTML에 내장된 자막을 사용하고, 서버 주소에서는 `assets/`의 VTT 파일을 사용합니다. 라이브 GUI는 서버 실행이 필요합니다.
 
 영상 장(6 · 15번)은 들어가면 자동 재생됩니다. 클릭 또는 `P` 로 멈춤/재생. 라이브 GUI 시연은 본편에서 하지 않고, 질문이 나오면 부록 **A17** 에서 엽니다.
 
