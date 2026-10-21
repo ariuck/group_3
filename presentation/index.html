@@ -802,6 +802,94 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
 
 <nav id="presentation-tools" aria-label="발표 도구"><button data-tool="prev" title="이전 슬라이드">←</button><button data-tool="next" title="다음 슬라이드">→</button><button data-tool="overview">목록 O</button><button data-tool="notes">노트 S</button><button data-tool="pointer">포인터 L</button><button data-tool="motion" aria-pressed="true">효과 M</button><button data-tool="help">도움말 ?</button></nav><div id="pointer-dot" aria-hidden="true"></div><div id="help-overlay" role="dialog" aria-label="발표 조작법"><div><h2>발표를 위한 작은 도구들</h2><p>← → / Space : 슬라이드 이동<br>F : 전체화면 · O : 전체 목록 · S : 발표자 노트<br>L : 포인터 · M : 효과 끄기/켜기 · B : 검은 화면<br>표 행 클릭 : 비교할 행 강조<br>카드 클릭 : 핵심 카드 집중 · 사진 클릭 : 확대<br>11번 실험 버튼 : 방향별 수치 확인</p><p>효과는 자동으로 재생됩니다. 추가 클릭 없이 발표하세요.<br>Esc : 도움말·강조 해제</p><button type="button" id="close-help">닫기</button></div></div>
 <!-- ---------- 차트 데이터 (소스 5장 JSON + 3.8 표) ---------- -->
+<!-- embedded-vtt:start -->
+<script type="text/vtt" data-vtt="assets/video1_labeling.vtt">
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.000
+사진을 열면 라벨 박스가 함께 뜹니다
+
+2
+00:00:05.000 --> 00:00:11.000
+확대해서 박스 크기를 고칩니다 · 원래 박스는 빨간 점선으로 남습니다
+
+3
+00:00:11.000 --> 00:00:18.000
+쓰지 않는 종류(고무장갑)로 바꾸려 하면 막습니다
+
+4
+00:00:18.000 --> 00:00:26.000
+되돌리기로 원래 상태로 돌아갑니다
+
+5
+00:00:26.000 --> 00:00:36.000
+박스를 숨기고 밝기 · 대비 · 흑백으로 경계를 확인합니다
+
+6
+00:00:36.000 --> 00:00:41.000
+전체 화면으로 돌아옵니다
+
+7
+00:00:41.000 --> 00:00:49.000
+데이터 조사 — 사진 900장 · 사진과 라벨 짝 900 · 종류별 원본 박스 수
+
+8
+00:00:49.000 --> 00:00:57.000
+QA 검증 — 치명 오류 0 · 주의 0 · 안내 0
+
+9
+00:00:57.000 --> 00:01:05.700
+박스를 지우면 점선으로 남고, 다시 되돌릴 수 있습니다
+</script>
+<script type="text/vtt" data-vtt="assets/video2_final.vtt">
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:04.000
+최종 모델(exp050)이 찾은 이물 박스
+
+2
+00:00:04.000 --> 00:00:09.000
+검증 사진 104장 채점 · 확신도 0.25 — 맞힘 506 · 오탐 31 · 놓침 34
+
+3
+00:00:09.000 --> 00:00:14.000
+확신도 0.50 — 오탐은 12로 줄고, 놓침은 41로 늘어남
+
+4
+00:00:14.000 --> 00:00:17.000
+확신도 0.45 — 맞힘 503 · 오탐 15 · 놓침 38
+
+5
+00:00:17.000 --> 00:00:24.000
+정답과 비교 — 맞힘 · 놓침 · 오탐을 나눠 표시
+
+6
+00:00:24.000 --> 00:00:30.000
+시연 보고서 만들기 (확신도 기준 0.45)
+
+7
+00:00:30.000 --> 00:00:33.000
+요약 — 시험 점수 0.639 · 찾은 비율 93.0% · 맞은 비율 97.1%
+
+8
+00:00:33.000 --> 00:00:39.000
+기준별 결과 — 기준을 올리면 오탐은 줄고 놓침은 늘어남
+
+9
+00:00:39.000 --> 00:00:42.000
+종류별 결과 — 갈변은 15개 중 2개
+
+10
+00:00:42.000 --> 00:00:47.000
+틀린 박스 목록 — 사진과 함께 정리
+
+11
+00:00:47.000 --> 00:00:49.100
+읽는 법과 한계까지 보고서에 담습니다
+</script>
+<!-- embedded-vtt:end -->
 <script type="application/json" id="data">{
  "bvf":{"metrics":["Precision","Recall","mAP50","mAP50-95"],"base":[0.888,0.589,0.688,0.470],"final":[0.945,0.822,0.840,0.749],"test":[0.868,0.744,0.726,0.639]},
  "sizeHitFinal":[188,61,9,3,73,102,2],
@@ -2162,6 +2250,26 @@ document.addEventListener('keydown',function(e){
   if(e.key==='p'||e.key==='P'){ var v=document.querySelector('#stage .slide.active video.deck-video'); if(v){ if(v.paused) v.play(); else v.pause(); e.preventDefault(); } }
 });
 
+/* embedded-vtt-js:start */
+/* 파일(file://)로 열면 Chrome 이 .vtt 를 막는다 → index.html 안의 자막으로 트랙을 만든다 */
+function embeddedCues(src){
+  var el=document.querySelector('script[type="text/vtt"][data-vtt="'+src+'"]'); if(!el) return [];
+  var t=function(x){var p=x.trim().split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];};
+  return el.textContent.replace(/<\\\//g,'</').split(/\n\s*\n/).map(function(b){
+    var m=b.match(/(\d[\d:.]+)\s*-->\s*(\d[\d:.]+)[^\n]*\n([\s\S]+)/); return m?[t(m[1]),t(m[2]),m[3].trim()]:null;
+  }).filter(Boolean);
+}
+if(location.protocol==='file:'){
+  document.querySelectorAll('#stage video.deck-video').forEach(function(v){
+    var tr=v.querySelector('track'); if(!tr) return;
+    var cues=embeddedCues(tr.getAttribute('src')); if(!cues.length) return;
+    tr.remove();
+    var tt=v.addTextTrack('subtitles','한국어 자막','ko');
+    cues.forEach(function(c){ tt.addCue(new VTTCue(c[0],c[1],c[2])); });
+    tt.mode='showing';
+  });
+}
+/* embedded-vtt-js:end */
 /* ---------- 시작 ---------- */
 /* 차트는 크기를 재야 하므로 각 슬라이드를 잠시 표시한 상태에서 그린다 */
 function renderCharts(){
