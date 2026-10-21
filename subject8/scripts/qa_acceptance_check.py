@@ -337,7 +337,7 @@ def main(argv=None):
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["area", "item", "status", "detail"])
         w.writerows(rows)
 
