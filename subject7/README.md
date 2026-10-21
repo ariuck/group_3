@@ -17,7 +17,7 @@
 
 ## 빠른 시작
 
-Linux / WSL의 **저장소 루트(`group_3/`)**에서 실행합니다. 원본 사진·라벨은 `subject7/data/raw/`에 별도로 준비합니다.
+Linux / WSL의 **저장소 루트** (`group_3/`)에서 실행합니다. 원본 사진·라벨은 `subject7/data/raw/`에 별도로 준비합니다.
 
 ```bash
 python3 -m venv .venv
