@@ -1,5 +1,7 @@
 # 교과 8 · 객체검출
 
+**2026-10-21 교과 7·8 종료. 현재는 발표자료를 보완합니다.** [종료 현황](../PROJECT_STATUS.md)
+
 **라벨 품질을 바탕으로 모델을 개선하고, 놓치는 이물까지 확인합니다.**
 
 [전체 프로젝트](../README.md) · [실행·실험 가이드](docs/project/guides/training.md) · [코드 설명서](docs/README.md)
@@ -46,7 +48,7 @@ python3 scripts/00_setup.py
 | 환경 준비·학습·재현 | [실행·실험 가이드](docs/project/guides/training.md) |
 | 분할 정책·실험 운영·시연 | [프로젝트 문서](docs/project/README.md) |
 | 실험·성능·검증 근거 | [보고서](reports/README.md) · [모델 목록](models/README.md) |
-| 후속 교과로 이어가기 | [교과 14 인계](docs/project/handoff/subject14_handoff.md) |
+| 종료 범위·미제공·검증 기록 | [프로젝트 종료 현황](../PROJECT_STATUS.md) |
 
 <details>
 <summary>개선 과정·평가 조건·구현 상태</summary>
@@ -63,8 +65,8 @@ python3 scripts/00_setup.py
 - Final의 Val 0.749는 동일 조건 seed 5개 중 최고 값이며 평균은 0.739입니다. Val과 Test는 서로 다른 역할의 데이터입니다.
 - Final 확정 전 Test 점수를 한 번 열람한 [기록](reports/04_improvement/baseline_vs_improved.md)이 있습니다.
 - 갈변 검출, 정상 김치 부재, 촬영 소품 공유·작은 표본 수에 따른 한계는 인계 문서에 남겼습니다.
-- 데이터 점검·학습·평가·웹 시연·보고서·후보 TXT 저장은 구현되어 있습니다. 전용 Auto Label 배치 도구(`12_auto_label.py`)와 사람 검수 연계는 미완성입니다.
-- 다른 팀원의 독립 재현 등 확인이 남은 항목은 [인수 시험](reports/05_acceptance/acceptance_test.md)에 구분했습니다.
+- 데이터 점검·학습·평가·웹 시연·보고서·후보 TXT 저장은 구현되어 있습니다. 전용 Auto Label 배치 도구(`12_auto_label.py`)는 종료 시점 미제공 기능입니다. 후보 TXT의 사람 수정·승인 전체 흐름은 별도 시험 기록이 확인되지 않았습니다.
+- 다른 팀원의 독립 재현 등 별도 확인 기록이 없는 항목은 [인수 시험](reports/05_acceptance/acceptance_test.md)에 구분했습니다.
 
 [모든 학습 실행 CSV](reports/runs_summary.csv) · [Class별 Test 결과](reports/05_final/final_class_metrics.csv) · [보고서 설명서](docs/app/report.md)
 
@@ -77,7 +79,7 @@ python3 scripts/00_setup.py
 |---:|---:|---:|---:|
 | 558장 | 104장 | 82장 | 156장 |
 
-Bridge는 교과 14용으로 남겨 두었으며 교과 8 학습·선택·평가에 사용하지 않았습니다. 같은 촬영 묶음의 공유를 줄이기 위한 [분할 정책](docs/project/split_policy.md)과 [v5 기준](docs/project/kimchi_v5_split.md)을 따릅니다.
+Bridge 156장은 교과 8 학습·선택·평가에 사용하지 않고 보존했습니다. 후속 과제에서 김치 모델·데이터를 사용할지는 미정입니다. 같은 촬영 묶음의 공유를 줄이기 위한 [분할 정책](docs/project/split_policy.md)과 [v5 기준](docs/project/kimchi_v5_split.md)을 따릅니다.
 
 ```text
 subject8/

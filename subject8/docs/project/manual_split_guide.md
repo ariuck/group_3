@@ -1,5 +1,7 @@
 # 수동 분할 가이드 (`kimchi_v5`) — 6명이 "같은 장면 묶음"을 직접 정하고 4개 역할로 나누기
 
+> **기록의 시점**: 이 문서는 분할 준비 당시의 작업 가이드입니다. 현재는 `kimchi_v5` 분할과 교과 8 평가가 종료되었으며, 과거의 미평가 체크리스트·교과 14 김치 검사 가정은 현재 진행 상태가 아닙니다. 후속 대상·모델은 미정입니다. 현재 기준은 [프로젝트 문서](README.md)에서 확인합니다.
+
 > 대상: 교과 8 팀 6명 · 데이터: 교과 7 FINAL 900장 (라벨은 `kimchi_v4` 그대로)
 > 결과: `kimchi_v5` Split (Train / Validation / Frozen Test / Bridge Holdout) · 기준서: [split_policy.md](split_policy.md)
 

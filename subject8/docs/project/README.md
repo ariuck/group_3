@@ -11,6 +11,7 @@
 | **분할 작업·과정** | [수동 분할 가이드](manual_split_guide.md) · [데이터 점검·분할 과정](process/dataset_audit_and_split.md) |
 | **실험 운영** | [실험 인수인계·분산 실험 기록](experiment_handoff.md) |
 | **시연** | [현행 시연 절차](demo_procedure.md) — 웹 GUI·녹화 시연·후보 라벨 검수 |
-| **후속 교과 인계** | [교과 8 → 교과 14](handoff/subject14_handoff.md) — Final·Bridge·한계·재현 절차 |
+| **종료 현황** | [교과 7·8 종료 범위·검증 기록](../../../PROJECT_STATUS.md) |
+| **후속 활용 참고** | [현재 김치 모델·데이터 기록](handoff/subject14_handoff.md) — 교과 14의 대상·모델·진행 방향은 미정 |
 
 실험의 성능·판정·최종 평가 결과는 [`reports/`](../../reports/README.md), 공식 모델의 실제 실행 이름은 [`src/registry.py`](../../src/registry.py)를 기준으로 확인합니다. 과거 Dataset Version의 결과는 `reports/history/`에 보존합니다.

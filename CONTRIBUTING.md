@@ -44,6 +44,8 @@ subject8/manifests/…/tools/groups.py   → subject8/docs/manifests/…/tools/g
 
 ## 결과와 상태를 쓰는 기준
 
+교과 7·8의 종료 상태는 [PROJECT_STATUS.md](PROJECT_STATUS.md)를 기준으로 봅니다. 과거 계획의 `예정`·`TODO`를 현재 진행 중인 작업으로 옮겨 쓰지 않습니다. 미제공 기능과 시험 기록이 없는 항목도 완료로 바꾸지 않고 따로 기록합니다. 후속 교과의 대상·모델·방향은 확정된 사실만 적습니다.
+
 - 성능에는 **Dataset Version·split·지표·평가 조건**을 함께 적습니다. 서로 다른 버전이나 Val/Test를 같은 비교로 묶지 않습니다.
 - 핵심 결과의 근거는 `reports/`의 CSV·보고서에 두고 README에는 필요한 요약과 링크만 둡니다.
 - `models/README.md`처럼 스크립트가 만드는 문서는 생성 원본을 고쳐 다시 생성합니다.

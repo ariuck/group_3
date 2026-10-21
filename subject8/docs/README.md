@@ -36,9 +36,9 @@ Python 문서 대응 검사: `subject8/`에서 `python ../subject7/tools/check_d
 | [`scripts/14_train_tiles_v5.py`](scripts/14_train_tiles_v5.md) | 개선 실험 exp004_v5 타일링 (2×2 조각 학습 → 조각 예측 합쳐 원본 Val 채점) |
 | [`scripts/15_eval_inference_options.py`](scripts/15_eval_inference_options.md) | 추론 설정 비교 (TTA · agnostic NMS) — 재학습 없이 Validation |
 | [`scripts/16_evaluate_final_test.py`](scripts/16_evaluate_final_test.md) | Final Model Frozen Test 평가 (한 번만, Final 확정·선택 기록 후) |
-| [`app/server.py`](app/server.md) | **시연 프로그램** (FastAPI + 브라우저 화면) — 예측·정답 비교·확신도 기준·Val 일괄 채점·후보 TXT; 라이브 시연은 부록 A17 |
+| [`app/server.py`](app/server.md) | **시연 프로그램** (FastAPI + 브라우저 화면) — 예측·정답 비교·확신도 기준·Val 일괄 채점·후보 TXT; 라이브 시연은 부록 A13 |
 | [`app/report.py`](app/report.md) | 시연 **보고서** HTML (요약 · 기준별 그래프 · Class 별 · 본 사진 · 틀린 박스) — 미리보기 · 저장 · 인쇄(PDF) |
-| [`scripts/17_evaluate_bridge.py`](scripts/17_evaluate_bridge.md) | **교과 14 용** Bridge Holdout 156장 첫 평가 (`--subject14` 확인 필요 · 교과 8 에서는 실행하지 않음 · `--dry-run` 은 개수만 확인) |
+| [`scripts/17_evaluate_bridge.py`](scripts/17_evaluate_bridge.md) | 보존 Bridge 156장 평가용 기존 도구 (`--subject14` 보호 플래그 · 교과 8에서는 미사용 · 후속 모델·방향 미정) |
 | [`scripts/plot_v5_vs_v4.py`](scripts/plot_v5_vs_v4.md) | `kimchi_v4` → `v5` 달라진 점 그림·CSV (누수 · Class 박스 · Val 점수) |
 | [`scripts/make_split_worksheet.py`](scripts/make_split_worksheet.md) | 수동 분할 준비: 담당자별 작업 시트(CSV) 6개 · 촬영 순서 사진판(JPG) |
 | [`scripts/plot_portfolio.py`](scripts/plot_portfolio.md) | README용 핵심 Validation 비교·별도 Frozen Test 요약 — 기존 CSV만 읽음 |
@@ -59,3 +59,9 @@ Python 문서 대응 검사: `subject8/`에서 `python ../subject7/tools/check_d
 | [`src/registry.py`](src/registry.md) | 모델 등록부: 실행 이름 → Weight 위치 · Version · imgsz · 타일링, 공식 Baseline/Final 지정 |
 | [`src/tiling.py`](src/tiling.md) | 타일링: 조각 만들기 · 조각 예측 합치기 · 원본 사진 단위 채점 |
 | [`src/train_detector.py`](src/train_detector.md) | YOLO 학습 공통 함수 · 학습 점검 · 조건 기록 |
+
+## `tests/`
+
+| 코드 | 설명 |
+|---|---|
+| [`tests/test_qa_acceptance_check.py`](tests/test_qa_acceptance_check.md) | 인수 점검의 GUI·영상 경로·미제공 분류·출력 보존 회귀 테스트 5개 |

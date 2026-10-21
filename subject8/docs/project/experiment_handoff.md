@@ -2,7 +2,8 @@
 
 > 작성 2026-10-19 · 정리 담당 ariuck (`feature/ariuck`). 이 문서만 보고 다른 PC 에서 이어서 실험할 수 있게 쓴다.
 
-> **현재 상태 (2026-10-21 문서 정리)**: Final은 `exp050`(YOLO11s · 2240), Frozen Test mAP50–95는 0.639로 확정·기록되어 있습니다. [최종 선택 근거](../../reports/final_model_selection.md) · [현재 실행 가이드](guides/training.md) · [교과 14 인계](handoff/subject14_handoff.md)
+> **종료 상태 (2026-10-21)**: 교과 7·8은 종료했고 발표자료만 보완합니다. 아래는 진행 중인 실험 지시가 아닌 과거 운영 기록입니다. 기존 Final·점수는 유지합니다.
+> **확정 결과**: Final은 `exp050`(YOLO11s · 2240), Frozen Test mAP50–95는 0.639로 확정·기록되어 있습니다. [최종 선택 근거](../../reports/final_model_selection.md) · [현재 실행 가이드](guides/training.md) · [후속 활용 참고](handoff/subject14_handoff.md)
 >
 > 아래 1~3장은 2026-10-19에 세운 초기 계획이며, 뒤 장에 라운드별 결과가 이어집니다. 초기 계획의 "현재 최고"·"Final 미정"은 당시 상태입니다. 새로 실행할 절차는 현재 실행 가이드를 따릅니다.
 
@@ -293,7 +294,7 @@ git commit -m "feat(subject8): 4라운드 결과 (<실험들>)" && git push orig
 - **다음 버전에서 할 일**: P2 만 (exp051~055) · 변형 합성만 (exp056~060) 을 seed 3개 이상 돌려 효과를 나누고, 다른 Class 하락을 막는 방법(epoch 늘리기 · P2 갈래만 먼저 학습 등)을 본다. 실행 조건은 이미 `11_train_v5.py` 에 등록돼 있다.
 - 참고 (저장소 밖 진단 코드): 2단계 검사(어두운 점 후보 → 원본 crop 분류기, Train 만으로 학습)는 B 위에서 갈변 0.117 → 0.159 였지만, exp063 위에서는 0.198 → 0.207 로 거의 더해지지 않았다 — P2 가 후보를 이미 내기 때문.
 
-#### 다른 Class 가 떨어진 원인 (10-20 분석 · 발표자료 부록 A10)
+#### 다른 Class 가 떨어진 원인 (10-20 분석 · 발표자료 부록 A15)
 
 같은 seed 의 B(exp018) 와 Validation 104장에서 비교했다 (AP 는 Ultralytics val, 혼동 · IoU 는 conf 0.25 예측을 정답과 맞춰 셈).
 

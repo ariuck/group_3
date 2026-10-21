@@ -14,7 +14,7 @@ Dataset Audit → Split → Smoke Test → Baseline → Validation 평가
 → Final Model → Frozen Test → Detection · Auto Label → Human Review
 ```
 
-까지 수행하여 교과 14(제조 제품검사)로 인계합니다.
+까지 수행한 교과 8의 종료 결과를 기록합니다. 교과 14의 대상·모델·진행 방향은 미정입니다.
 
 ## 2. 교과 7 → 교과 8 연결
 
@@ -242,14 +242,14 @@ python scripts/plot_runs.py                         # 그래프 · runs_summary.
 - **정책**: 촬영 간격 5분 초과로 나눈 18개 `capture_group` 을 **통째로** 배정, 예외는 파·고추(Class 6)가 몰린 `G00` 하나 (구간별 시간순 블록). 평가 역할마다 Class 별 15박스 이상, 그 조건에서 Train 이 가장 큰 조합
 - **v4 → v5 이유**: v4 는 Val 132장 중 83장이 Train 과 같은 촬영 묶음 → v5 는 6장(G00 예외)뿐. v4 의 높은 Val 점수(특히 갈변)는 이미 본 장면으로 잰 값이었음 — [`docs/project/kimchi_v5_split.md`](../kimchi_v5_split.md), 비교 그림 `reports/figures/comparison/v5_vs_v4.png`
 - 버전: `kimchi_v1`(2026-10-12) → `v2`(분할) → `v3`(Class 5 라벨 개정) → `v4`(G09 분할) → **`v5`(재분할, 2026-10-16)**. Version 마다 Val 이 달라 Validation 점수는 직접 비교하지 않습니다. 지난 Version: [split_policy.md](../split_policy.md), `reports/history/`
-- Bridge Holdout 은 교과 8 학습·튜닝·모델 선택·Frozen Test 에 사용하지 않고 교과 14 용으로 보존합니다. `dataset.yaml` 에 넣지 않습니다.
+- Bridge Holdout 은 교과 8 학습·튜닝·모델 선택·Frozen Test 에 사용하지 않고 후속 활용을 위해 보존합니다. `dataset.yaml` 에 넣지 않습니다.
 
 | 역할 | 장수 | C0 | C1 | C2 | C3 | C5 | C6 | 촬영 묶음 | 용도 |
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
 | Train | 558 | 308 | 1120 | 427 | 311 | 209 | 165 | G01~04 · G06 · G08 · G09 · G15~17 + G00 일부 | 모델 학습 (이물 단독 150장 포함) |
 | Validation | 104 | 192 | 265 | 23 | 16 | 15 | 30 | G05 · G13 + G00 6장 | 실험 비교 · Final 선택 |
 | Frozen Test | 82 | 23 | 140 | 200 | 23 | 16 | 30 | G07 · G14 + G00 6장 | Final Model 확정 후 마지막 평가 |
-| Bridge Holdout | 156 | 202 | 326 | 281 | 29 | 16 | 30 | G10 · G11 · G12 + G00 6장 | 교과 14 인계 |
+| Bridge Holdout | 156 | 202 | 326 | 281 | 29 | 16 | 30 | G10 · G11 · G12 + G00 6장 | 미사용 보존·후속 방향 미정 |
 
 *(숫자는 BBox 수)*
 
@@ -358,9 +358,9 @@ python scripts/08_predict_images.py --model final --source 사진.jpg    # 사�
 - 결과: `runs/predict/exp050_v5_s_imgsz2240_aug_seed2_val/compare/*.jpg` (왼쪽 정답 · 오른쪽 예측), `predictions.csv`, `per_image.csv` — 사진이라 Git 제외.
 - 2026-10-20 확인: **Val 104장 전체** · 예측 538 · 정답 541 · **TP 506 · FN 34 · FP 31 · Class 틀림 1** (Baseline 은 TP 395 · FN 111 · Class 틀림 35). Class 별 대표 사진도 눈으로 확인 ([`acceptance_test.md`](../../../reports/05_acceptance/acceptance_test.md) 4장). Final 의 남은 실패 분석: [`failure_hypothesis.md`](../../../reports/03_failure_analysis/failure_hypothesis.md) 6장.
 - 폴더 단위 예측: `--source <사진 폴더>`. 사진은 한 장씩 예측한다 (imgsz 2240 에서 목록째 넘기면 GPU 메모리 초과).
-- 교과 14 용 Bridge 평가: `python scripts/17_evaluate_bridge.py --subject14` (교과 8 에서는 실행하지 않음, `--dry-run` 은 개수만 확인).
+- 보존 Bridge 평가용 기존 도구: `python scripts/17_evaluate_bridge.py --subject14` (교과 8 에서는 실행하지 않음, `--dry-run` 은 개수만 확인).
 
-**시연 프로그램 (FastAPI + 브라우저)** — 본편 15번은 녹화 시연이며 라이브 GUI는 부록 A17 또는 서버 주소로 연다. 설명: [`docs/app/server.md`](../../app/server.md)
+**시연 프로그램 (FastAPI + 브라우저)** — 본편 15번은 녹화 시연이며 라이브 GUI는 부록 A13 또는 서버 주소로 연다. 설명: [`docs/app/server.md`](../../app/server.md)
 
 ```bash
 pip install -r requirements.txt          # fastapi · uvicorn 이 없으면 (2026-10-20 추가)
@@ -371,7 +371,7 @@ pip install -r requirements.txt          # fastapi · uvicorn 이 없으면 (202
 - Validation 104장 일괄 채점(약 12초) — 기준 0.25 에서 맞힘 506 · 놓침 34 · 오검출 31 로 `08` · `09` 와 같다.
 - 사진 끌어다 놓기 · YOLO TXT 후보 저장(Auto Label 후보 — 사람 검수 후 확정). Frozen Test · Bridge 사진은 거절, 127.0.0.1 전용, 올린 사진은 저장하지 않음.
 
-**Auto Label — 웹 시연에서 YOLO TXT 후보를 저장할 수 있습니다.** 전용 배치 모듈(`src/auto_labeler.py` · `scripts/12_auto_label.py`)과 사람 검수까지 이어지는 전체 자동화는 아직 없습니다. 후보 TXT는 교과 7 라벨링 도구에서 사람이 확인·수정·승인한 뒤에만 정답으로 사용합니다.
+**Auto Label — 웹 시연에서 YOLO TXT 후보를 저장할 수 있습니다.** 전용 배치 모듈(`src/auto_labeler.py` · `scripts/12_auto_label.py`)과 사람 검수까지 이어지는 전체 자동화는 종료 시점 제공하지 않은 범위입니다. 후보 TXT는 교과 7 라벨링 도구에서 사람이 확인·수정·승인한 뒤에만 정답으로 사용합니다.
 
 ## 14. 알려진 한계
 
@@ -379,15 +379,13 @@ pip install -r requirements.txt          # fastapi · uvicorn 이 없으면 (202
 - 촬영 팀이 같은 소품(이물)을 날짜를 넘어 다시 썼고 이물 단독 사진(G17, Train)에 소품 대부분이 있어, 평가 점수는 "처음 보는 물체"가 아니라 "본 물체를 새 장면에 놓았을 때" 성능입니다. 평가 사진도 모두 Train 과 같은 날짜에 찍었습니다 ([kimchi_v5_split.md](../kimchi_v5_split.md) 한계).
 - Class 6(파·고추)은 G00 한 묶음을 나눠 쓰므로 같은 조각이 Train 과 평가에 함께 나와 점수가 높게 나올 수 있습니다.
 - 평가 역할의 갈변·벌레가 15~29박스뿐이라 박스 1개에 Recall 이 3~7%p 움직입니다.
-- **머리카락·실 등 Class 0~6 에 없는 이물은 검출 대상이 아닙니다.** 회사 Class 정의에 없어 라벨을 그리지 않았습니다 (`kimchi_v3` 에서 머리카락을 나뭇가지로 그린 BBox 1개 삭제). 교과 14 에서 Class 추가 여부를 회사와 확인해야 합니다.
-- **Class 5(갈변)**: Train 갈변은 거의 G09 의 넓게 변한 조각이고, 평가 역할의 갈변은 작은 갈색 점(원본 20~30px)이 많아 현재 모델은 거의 찾지 못합니다 (exp002_v5 Val 갈변 AP50 0.06, 타일링 0.09). 4라운드에서 반점 복제 · 합성 · 복원 · 2560 6방향을 seed 5개씩 시도했지만 갈변 mAP50-95 는 0.075~0.111 로 그대로였고 **Frozen Test 에서는 Recall 0.00** 입니다. 데이터를 늘리는 방법으로는 오르지 않았습니다. Final 뒤 진단(exp063, seed 1개)에서 P2 검출층 + 변형 반점 합성이 Val 갈변을 0.107 → **0.237** 로 올렸지만 다른 Class 가 모두 떨어져 전체 0.725 (같은 seed B 0.746) 라 Final 은 그대로다. 다음은 구조(P2 · head 사전학습)와 같은 기준으로 라벨링한 작은 갈변 데이터 보강입니다 (교과 14 과제 · [`failure_hypothesis.md`](../../../reports/03_failure_analysis/failure_hypothesis.md) H2).
+- **머리카락·실 등 Class 0~6 에 없는 이물은 검출 대상이 아닙니다.** 회사 Class 정의에 없어 라벨을 그리지 않았습니다 (`kimchi_v3` 에서 머리카락을 나뭇가지로 그린 BBox 1개 삭제). 후속 작업이 진행된다면 대상·Class 범위를 새로 정해야 합니다.
+- **Class 5(갈변)**: Train 갈변은 거의 G09 의 넓게 변한 조각이고, 평가 역할의 갈변은 작은 갈색 점(원본 20~30px)이 많아 현재 모델은 거의 찾지 못합니다 (exp002_v5 Val 갈변 AP50 0.06, 타일링 0.09). 4라운드에서 반점 복제 · 합성 · 복원 · 2560 6방향을 seed 5개씩 시도했지만 갈변 mAP50-95 는 0.075~0.111 로 그대로였고 **Frozen Test 에서는 Recall 0.00** 입니다. 데이터를 늘리는 방법으로는 오르지 않았습니다. Final 뒤 진단(exp063, seed 1개)에서 P2 검출층 + 변형 반점 합성이 Val 갈변을 0.107 → **0.237** 로 올렸지만 다른 Class 가 모두 떨어져 전체 0.725 (같은 seed B 0.746) 라 Final 은 그대로다. 다음은 구조(P2 · head 사전학습)와 같은 기준으로 라벨링한 작은 갈변 데이터 보강입니다 (후속 활용 시 참고 · [`failure_hypothesis.md`](../../../reports/03_failure_analysis/failure_hypothesis.md) H2).
 - **Frozen Test 를 한 번 먼저 본 적이 있습니다** (2026-10-16, Final 확정 전 · 그 점수로 모델을 고르지는 않음). 정식 평가는 Final 확정 뒤 한 번입니다 ([`baseline_vs_improved.md`](../../../reports/04_improvement/baseline_vs_improved.md) 3장).
 - 5라운드(P2 검출층 · 변형 반점 합성)는 팀 결정으로 exp063 하나만 학습했습니다 (exp051~065 중 나머지 14개는 등록만). 결과와 다른 Class 하락 원인은 [`docs/project/experiment_handoff.md`](../experiment_handoff.md) 10장.
 
-## 15. 교과 14 Handoff
+## 15. 후속 활용 참고 (방향 미정)
 
-[`docs/project/handoff/subject14_handoff.md`](../handoff/subject14_handoff.md) — Final Model · Dataset Version · **Bridge Holdout 156장(교과 8 에서 사용하지 않음)** · 새 사진 예측 방법 · 한계 · 지킬 규칙 · 이어서 할 일.
+교과 7·8은 종료했습니다. 현재 김치 모델·데이터를 후속 과제에서 계속 사용할지, 다른 검출 모델로 바꿀지는 정해지지 않았습니다.
 
-- 교과 14 의 첫 평가는 Final Model 을 Bridge 156장에 한 번 돌린 값이 된다.
-- 먼저 알아야 할 한계: 갈변 검출 불가 · 정상 김치(Negative) 사진 없음 · 평가 점수는 "처음 보는 물체"가 아님 · `conf` 기준 미정.
-- 인수 점검: `python scripts/qa_acceptance_check.py` → [`reports/05_acceptance/acceptance_test.md`](../../../reports/05_acceptance/acceptance_test.md)
+기존 [후속 활용 참고 문서](../handoff/subject14_handoff.md)는 Final·미사용 Bridge 156장·알려진 한계·재현 경로를 보존합니다. 교과 14의 필수 인계 조건이나 확정 실행 계획으로 사용하지 않습니다.

@@ -2,19 +2,19 @@
 
 > **문서 ID**: S08-DOC-001  
 > **현행 공식 Dataset Version**: **`kimchi_v5`** (2026-10-16) — Train 558 · Val 104 · Frozen Test 82 · **Bridge Holdout 156장 (G10 · G11 · G12 + G00 6장)**. 분할표 · 근거는 [`kimchi_v5_split.md`](kimchi_v5_split.md), 요약은 7.3장.  
-> **이 문서 2~7.2장**: `kimchi_v1`~`kimchi_v4` 의 기록입니다. 그 안의 Bridge 158장(G10 · G13 · G15)은 v4 까지의 값이며 현행이 아닙니다.  
+> **이 문서 1~7.2장**: `kimchi_v1`~`kimchi_v4` 의 기록입니다. 그 안의 Bridge 158장(G10 · G13 · G15)은 v4 까지의 값이며 현행이 아닙니다.  
 > **Split 상태**: `FROZEN`  
-> **Bridge Holdout 상태**: `RESERVED FOR SUBJECT 14`  
+> **Bridge Holdout 상태**: `RESERVED` — 교과 8 미사용·후속 활용 미정  
 > **대상 데이터**: 교과 7 FINAL 데이터셋 (4K JPG 900장 + YOLO TXT 900개)  
 > **확정 일자**: 2026-10-12 (`kimchi_v1` 2일차 확정 / 3일차 동결) · 2026-10-14 (`kimchi_v2` 개정)  
 > **핵심 원칙**: 촬영 묶음(`capture_group`) 단위 분할을 통한 회차 누수(Data Leakage) 차단 및 희귀 Class 6 평가를 위한 제어된 예외 적용  
-> **재현**: `python scripts/03_build_split.py --copy-files` (기본 `kimchi_v4`, `--version kimchi_v1` 등으로 이전 분할 재현 · 규칙은 `src/constants.py` 의 `BLOCK_RULES`)  
+> **재현**: `python scripts/03_build_split.py --copy-files` (기본 `kimchi_v5`, `--version kimchi_v1` 등으로 이전 분할 재현 · 규칙은 `src/constants.py` 의 `BLOCK_RULES`)  
 
 ---
 
 ## 1. 📌 Split 정책 개요 및 원칙
 
-본 문서는 교과 7에서 전수 검수를 마친 900장의 데이터를 교과 8 개발용(`Train`, `Validation`, `Frozen Test`)과 교과 14 연결용(`Bridge Holdout`)의 4가지 역할로 나누는 분할 기준을 정의합니다.
+본 문서는 교과 7에서 전수 검수를 마친 900장의 데이터를 교과 8 개발용(`Train`, `Validation`, `Frozen Test`)과 후속 활용을 위해 보존한 `Bridge Holdout`의 4가지 역할로 나누는 분할 기준을 정의합니다.
 
 ### 1.1 핵심 분할 원칙
 1. **회차(Session) 누수 방지**:
@@ -24,9 +24,9 @@
    - (`kimchi_v2`) 마른 잎(Class 0)·작은 반점 갈변(Class 5)은 G12·G13 에만 있어 Train 에 그 모습이 없었습니다. **G12 75장의 가운데 배치 25장을 Train** 으로 보내는 두 번째 예외를 적용합니다 (5장 참고).
    - (`kimchi_v4`) 라벨 개정 후 갈변의 81% 가 G09 에 몰려 Val 갈변이 8개뿐이라 **G09 마지막 배치 25장을 Val** 로 보냅니다 (5.2 참고).
    - 원칙: **각 Class 의 주요 모습(하위 유형)이 Train 에 있어야 한다.** 평가 역할에만 있는 모습은 모델이 배울 수 없어 성능이 아니라 데이터 구성을 재게 됩니다.
-3. **교과 14 실전 검사 환경 정합성 (이물 단독 150장 처리)**:
+3. **평가 장면의 일관성 (이물 단독 150장 처리)**:
    - G17(이물 단독 150장)은 동일한 배경에서 연속 촬영되어 사진 간 유사도가 매우 높으므로, 여러 Split으로 쪼갤 경우 누수 위험이 큽니다.
-   - 또한 교과 14는 컨베이어 벨트 위의 '김치+이물'을 검사하는 실전 프로젝트이므로, **G17(150장)은 모델의 순수 객체 표현력 학습을 위해 Train에 전량 배정**하고, Val / Test / Bridge는 100% '김치+이물' 실전 장면으로만 구성합니다.
+   - 당시 김치+이물 장면의 검출 성능을 비교하기 위해 **G17(150장)은 Train에 전량 배정**하고, Val / Test / Bridge는 '김치+이물' 장면으로 구성했습니다. 이는 교과 8의 평가 설계이며 교과 14의 대상·환경을 확정한 것은 아닙니다.
 
 ### 1.2 원본 데이터 출처 구성 (교과 7 FINAL)
 * **이물검출_학습데이터1 (train)**: 500장
@@ -59,7 +59,7 @@ flowchart TD
     Standard --> Test["Frozen Test (84장)<br>• 최종 성능 평가용 (FROZEN)"]
     G00 --> Test
     
-    Standard --> Bridge["Bridge Holdout (v4 158장 · 현행 v5 156장)<br>• 교과 14 실전 인계용 (RESERVED)"]
+    Standard --> Bridge["Bridge Holdout (v4 158장 · 현행 v5 156장)<br>• 후속 활용 참고용 (방향 미정) (RESERVED)"]
     G00 --> Bridge
 
     classDef default fill:#f9f9fb,stroke:#4b5563,stroke-width:1px;
@@ -290,6 +290,6 @@ G09 시간순 75장
 | 이물 없는 박스 3개 삭제 (모두 G12 = Bridge) | 육안 확인 | `reports/01_data/label_fixes_kimchi_v5/label_changes_kimchi_v5.csv` |
 
 * 최종: Train **558** · Val **104** · Frozen Test **82** · Bridge Holdout **156** = 900 (`reports/01_data/dataset_summary.csv`).
-* **Bridge Holdout 의 역할**: 교과 8 의 학습 · 튜닝 · 모델 선택 · Frozen Test 어디에도 쓰지 않고 `configs/dataset.yaml` 에도 넣지 않습니다. 교과 14 에서 Final Model 을 처음 보는 사진에 한 번 평가하는 기준점입니다 (`scripts/17_evaluate_bridge.py --subject14`, 교과 8 에서는 실행하지 않음).
-* Bridge 의 합격 점수는 정하지 않았습니다. 놓침(FN) · 오탐(FP) 허용 범위는 교과 14 에서 현장 요구를 받아 정합니다. Bridge 도 Train 과 같은 날 · 같은 소품으로 찍은 사진이므로 "교과 8 이 손대지 않은 사진"이지 새 현장 데이터는 아닙니다 ([`../handoff_subject14.md`](handoff/subject14_handoff.md) 3 · 5장).
+* **Bridge Holdout 의 역할**: 교과 8의 학습·튜닝·모델 선택·Frozen Test에 사용하지 않았고 `configs/dataset.yaml`에도 넣지 않은 156장입니다. 후속 활용을 위해 보존하지만, 교과 14의 대상·모델·첫 평가 절차는 미정입니다.
+* Bridge의 합격 점수와 활용 기준은 정하지 않았습니다. 후속 작업이 이 김치 모델·데이터를 유지할 때 참고할 수 있으며, 다른 검출 모델·데이터를 선택하면 요구사항과 평가 기준도 별도로 정해야 합니다. [기존 모델·데이터 참고](handoff/subject14_handoff.md)
 * v4 와 v5 는 Val 구성이 달라 Validation 점수를 직접 비교하지 않습니다.
