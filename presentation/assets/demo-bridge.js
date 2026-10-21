@@ -12,7 +12,7 @@
  function returnUrl(){var u=new URL(location.href);return u.href;}
  function urlFor(scene){var u=new URL(base);u.searchParams.set('embedded','1');u.searchParams.set('return',returnUrl());u.hash='img='+encodeURIComponent(scene==='threshold'?second:first)+'&mode='+(scene==='pred'?'pred':'cmp')+'&conf=0.25&scene='+encodeURIComponent(scene);return u;}
  function close(){clearTimeout(timer);if(dialog.open)dialog.close();document.body.classList.remove('live-open');if(activeLink)activeLink.focus();}
- function backups(){close();location.hash='16';document.getElementById('live-backups').classList.add('on');}
+ function backups(){close();location.hash='a17';document.getElementById('live-backups').classList.add('on');}
  function open(scene,trigger){activeLink=trigger;var u=urlFor(scene);u.searchParams.set("launch",String(++launch));err.classList.remove('on');dialog.querySelector('[data-live-new]').href=u.href;
    if(!dialog.open)dialog.showModal();document.body.classList.add('live-open');frame.src=u.href;
    clearTimeout(timer);timer=setTimeout(function(){err.classList.add('on');},15000);
@@ -29,5 +29,5 @@
  });
  window.addEventListener('keydown',function(e){if(dialog.open&&e.target!==frame){e.stopImmediatePropagation();if(e.key==='Escape'){e.preventDefault();close();}}},true);
  async function health(){var targets=document.querySelectorAll('[data-demo-status]');try{var r=await fetch(new URL('api/info',base),{signal:AbortSignal.timeout(3500)});if(!r.ok)throw Error();var info=await r.json();targets.forEach(function(el){el.dataset.state=info.ready?'ready':'loading';el.textContent=info.ready?'연결됨 · Final 모델 준비 완료':info.error?'모델 준비 오류 · 백업 사진 사용 가능':'연결됨 · 모델 준비 중';});}catch(e){targets.forEach(function(el){el.dataset.state='offline';el.textContent='서버 대기 중 · 저장된 비교 사진 사용 가능';});}}
- health();var slide=document.querySelector('#stage > [data-id="16"]');if(slide)new MutationObserver(function(){if(slide.classList.contains('active'))health();}).observe(slide,{attributes:true,attributeFilter:['class']});
+ health();var slide=document.querySelector('#stage > [data-id="a17"]');if(slide)new MutationObserver(function(){if(slide.classList.contains('active'))health();}).observe(slide,{attributes:true,attributeFilter:['class']});
 })();
