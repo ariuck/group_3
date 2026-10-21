@@ -21,15 +21,15 @@ AI Campus · Group 3 · 교과 7 & 8
 라벨이 바뀐 이유와 실험의 성공·실패를 기록하고, 최종 모델이 놓치는 대상까지 확인했습니다. 데이터는 산업데이터와 유사하게 가상 생성된 교육용 데이터이며, 실제 생산라인에 배포한 시스템은 아닙니다.
 
 ```mermaid
-flowchart LR
-    A["교과 7 · 라벨링 도구<br/>BBox·Class 확인 및 수정"] --> B["900장 전수 교차검수<br/>품질검사·최종 데이터"]
-    B --> C["교과 8 · 데이터 분할<br/>촬영 묶음·평가 역할 구분"]
-    C --> D["YOLO11 학습·개선<br/>실패 분석·후보 비교"]
-    D --> E["최종 평가·웹 시연<br/>후속 교과 인계"]
+flowchart TB
+    A["교과 7 · 라벨링 도구<br/>BBox·Class 수정 → 900장 교차검수·품질검사"]
+    B["교과 8 · 객체검출<br/>데이터 분할 → YOLO11 학습·실패 분석·개선"]
+    C["최종 결과<br/>Frozen Test → 웹 시연·발표·후속 교과 인계"]
+    A --> B --> C
     classDef labeling fill:#edf4ff,stroke:#3b6edc,color:#163a72;
     classDef detection fill:#eaf7f1,stroke:#258667,color:#14543f;
-    class A,B labeling;
-    class C,D,E detection;
+    class A labeling;
+    class B,C detection;
 ```
 
 ## 핵심 결과
