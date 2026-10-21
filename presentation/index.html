@@ -612,7 +612,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
   <aside class="notes"><div class="script"><p>Q22·Q24 대응. Pilot 시험 시점 질문은 A8 마지막 항목 참고.</p></div></aside>
 </section>
 
-<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+9">
+<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+10">
   <header style="margin-bottom:14px"><div class="kicker">부록 A8 <span class="sep">|</span> 마우스 휠·↑↓로 스크롤</div><h1 style="font-size:46px">예상 질문과 답 — 사실 → 인정 → 조치</h1></header>
   <div class="body scroll" style="overflow:auto;padding-right:10px" tabindex="0" aria-label="예상 질문 목록">
     <table class="t dense" style="font-size:19px" id="tbl-qa">
@@ -621,7 +621,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
     </table>
   </div>
   <footer><div class="fn">하지 말 것: 측정하지 않은 숫자 추정 · "현장에서 쓸 수 있다" · 회사 라벨·기준 비난 · 팀원 한 명에게 책임 · 즉석 재계산 약속(필요하면 "확인 후 서면으로") (소스 9.8)</div></footer>
-  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로, 30·31번은 Final 뒤 진단(exp063)으로, 32·33번(Bridge Holdout)은 10-21에 추가.</p></div></aside>
+  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로, 30·31번은 Final 뒤 진단(exp063)으로, 32·33번(Bridge Holdout) · 34번(11s vs 11m)은 10-21에 추가.</p></div></aside>
 </section>
 
 <section class="slide" data-id="a9" data-speaker="부록" data-time="0" data-title="A9 Final Frozen Test 상세">
@@ -1696,6 +1696,13 @@ WEBVTT
       "21",
       "배경 오탐은 얼마나 되나?",
       "Baseline Val에서 FP_BACKGROUND 24건(이물 있는 사진 속 배경). 그러나 이물이 없는 사진이 없어 \"이물 없는 이미지의 오탐률\"은 측정 불가다. 또 이 24건 중 20건이 한 촬영 묶음(G05)에 몰려 있는데, 정상 김치를 이물로 본 것인지 빠진 라벨인지는 사진으로 확인하기 전이라 단정하지 않는다.",
+      "김동훈"
+    ],
+    [
+      "C",
+      "34",
+      "공개 벤치마크에선 YOLO11m이 11s보다 좋은데 왜 11s를 썼나?",
+      "COCO(640) 기준으로는 11m이 더 높지만 우리 데이터에서는 차이가 작았다. 같은 1920에서 11s → 11m은 exp007 대비 +0.006(exp009, 0.730)으로 seed 흔들림(±0.01) 안이고, 11s의 해상도를 2240으로 올린 후보 B가 seed 5개 평균 0.739로 더 높았다. 작은 이물이 많아 모델 크기보다 해상도가 더 효과적이었다. 11m은 RTX 3060 12GB에서 1920·batch 2로 9.8GB를 썼고 두 번째 seed(exp017)는 메모리 부족으로 중단돼 seed 1개뿐이며, 2240은 학습할 수 없었다. 미리 정한 규칙(seed 평균, +0.02 이상일 때만 무거운 쪽 채택)을 넘지 못했고, 교과 14의 Jetson 배포에도 가벼운 11s가 유리하다. 단, \"11m이 더 나쁘다\"가 아니라 \"11m·2240은 더 큰 GPU에서 확인할 과제\"로 답한다(final_model_selection.md).",
       "김동훈"
     ],
     [
