@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="921.6pt" height="367.2pt" viewBox="0 0 921.6 367.2" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <title>Group 3 portfolio: selected validation runs and final test</title>
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Group 3 portfolio: selected validation runs and final test</dc:title>
+    <dc:description>Recorded kimchi_v5 CSV results. Validation and Frozen Test are separate evaluations.</dc:description>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 367.2
+L 921.6 367.2
+L 921.6 0
+L 0 0
+z
+" style="fill: #f8fafc"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 78.336 275.4
+L 594.432 275.4
+L 594.432 91.8
+L 78.336 91.8
+z
+" style="fill: #f8fafc"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1"/>
+     <g id="text_1">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(116.940479 293.999414)">Baseline</text>
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(103.73501 306.002148)">yolo11n / 640</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2"/>
+     <g id="text_2">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(251.63616 293.998633)">exp001</text>
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(232.716628 306.001367)">yolo11n / 1280</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3"/>
+     <g id="text_3">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(383.799028 293.998633)">exp002</text>
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(364.879497 306.001367)">yolo11n / 1920</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4"/>
+     <g id="text_4">
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(523.105646 293.999414)">Final</text>
+      <text style="font-size: 10px; font-family: 'DejaVu Sans'; fill: #475569" transform="translate(497.606427 306.002148)">yolo11s / 2240</text>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_5">
+      <path d="M 78.336 275.4
+L 594.432 275.4
+" clip-path="url(#pca1bcfbed7)" style="fill: none; stroke: #e2e8f0; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6"/>
+     <g id="text_5">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #475569" x="68.336" y="279.578711" transform="rotate(-0 68.336 279.578711)">0.0</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_7">
+      <path d="M 78.336 233.193103
+L 594.432 233.193103
+" clip-path="url(#pca1bcfbed7)" style="fill: none; stroke: #e2e8f0; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8"/>
+     <g id="text_6">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #475569" x="68.336" y="237.371814" transform="rotate(-0 68.336 237.371814)">0.2</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_9">
+      <path d="M 78.336 190.986207
+L 594.432 190.986207
+" clip-path="url(#pca1bcfbed7)" style="fill: none; stroke: #e2e8f0; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10"/>
+     <g id="text_7">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #475569" x="68.336" y="195.164918" transform="rotate(-0 68.336 195.164918)">0.4</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_11">
+      <path d="M 78.336 148.77931
+L 594.432 148.77931
+" clip-path="url(#pca1bcfbed7)" style="fill: none; stroke: #e2e8f0; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12"/>
+     <g id="text_8">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #475569" x="68.336" y="152.958021" transform="rotate(-0 68.336 152.958021)">0.6</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_13">
+      <path d="M 78.336 106.572414
+L 594.432 106.572414
+" clip-path="url(#pca1bcfbed7)" style="fill: none; stroke: #e2e8f0; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14"/>
+     <g id="text_9">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #475569" x="68.336" y="110.751125" transform="rotate(-0 68.336 110.751125)">0.8</text>
+     </g>
+    </g>
+    <g id="text_10">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #475569" x="44.199984" y="183.6" transform="rotate(-90 44.199984 183.6)">Validation mAP50-95</text>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 101.794909 275.4
+L 174.484487 275.4
+L 174.484487 176.31931
+L 101.794909 176.31931
+z
+" clip-path="url(#pca1bcfbed7)" style="fill: #94a3b8"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 233.957777 275.4
+L 306.647355 275.4
+L 306.647355 139.050621
+L 233.957777 139.050621
+z
+" clip-path="url(#pca1bcfbed7)" style="fill: #60a5fa"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 366.120645 275.4
+L 438.810223 275.4
+L 438.810223 126.810621
+L 366.120645 126.810621
+z
+" clip-path="url(#pca1bcfbed7)" style="fill: #3b82f6"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 498.283513 275.4
+L 570.973091 275.4
+L 570.973091 117.292966
+L 498.283513 117.292966
+z
+" clip-path="url(#pca1bcfbed7)" style="fill: #0f766e"/>
+   </g>
+   <g id="text_11">
+    <text style="font-weight: 700; font-size: 15px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #0f172a" x="138.139698" y="167.650967" transform="rotate(-0 138.139698 167.650967)">0.470</text>
+   </g>
+   <g id="text_12">
+    <text style="font-weight: 700; font-size: 15px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #0f172a" x="270.302566" y="130.382277" transform="rotate(-0 270.302566 130.382277)">0.646</text>
+   </g>
+   <g id="text_13">
+    <text style="font-weight: 700; font-size: 15px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #0f172a" x="402.465434" y="118.142277" transform="rotate(-0 402.465434 118.142277)">0.704</text>
+   </g>
+   <g id="text_14">
+    <text style="font-weight: 700; font-size: 15px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #0f172a" x="534.628302" y="108.624622" transform="rotate(-0 534.628302 108.624622)">0.749</text>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_7">
+    <path d="M 654.336 293.76
+L 893.952 293.76
+L 893.952 91.8
+L 654.336 91.8
+z
+" style="fill: #e8f3ef"/>
+   </g>
+   <g id="matplotlib.axis_3"/>
+   <g id="matplotlib.axis_4"/>
+   <g id="text_15">
+    <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #0f766e" x="678.2976" y="120.0744" transform="rotate(-0 678.2976 120.0744)">FROZEN TEST</text>
+   </g>
+   <g id="text_16">
+    <text style="font-weight: 700; font-size: 49px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #134e4a" x="678.2976" y="178.6428" transform="rotate(-0 678.2976 178.6428)">0.639</text>
+   </g>
+   <g id="text_17">
+    <text style="font-size: 13px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #134e4a" x="678.2976" y="210.9564" transform="rotate(-0 678.2976 210.9564)">mAP50-95</text>
+   </g>
+   <g id="text_18">
+    <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #475569" x="678.2976" y="247.3092" transform="rotate(-0 678.2976 247.3092)">Final model / 82 images</text>
+   </g>
+   <g id="text_19">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #475569" x="678.2976" y="271.5444" transform="rotate(-0 678.2976 271.5444)">Separate from model-selection Val</text>
+   </g>
+  </g>
+  <g id="text_20">
+   <text style="font-weight: 700; font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #0f766e" x="59.904" y="29.376" transform="rotate(-0 59.904 29.376)">FROM LABEL QUALITY TO OBJECT DETECTION</text>
+  </g>
+  <g id="text_21">
+   <text style="font-weight: 700; font-size: 18px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #0f172a" x="59.904" y="56.916" transform="rotate(-0 59.904 56.916)">Validation improvement &amp; final test</text>
+  </g>
+  <g id="text_22">
+   <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #64748b" x="78.336" y="86.292" transform="rotate(-0 78.336 86.292)">kimchi_v5  /  same validation split  /  best epoch</text>
+  </g>
+  <g id="text_23">
+   <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #64748b" x="78.336" y="324.972" transform="rotate(-0 78.336 324.972)">Final Val: selected best seed; see seed means and test-access history in the report.</text>
+  </g>
+  <g id="text_24">
+   <text style="font-size: 10px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #64748b" x="78.336" y="343.332" transform="rotate(-0 78.336 343.332)">Limits: browning Test recall = 0; no negative (normal-only) images.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pca1bcfbed7">
+   <rect x="78.336" y="91.8" width="516.096" height="183.6"/>
+  </clipPath>
+ </defs>
+</svg>

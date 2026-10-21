@@ -1,7 +1,8 @@
 # 3조 발표자료 — 조각김치 이물검출 (교과 7 + 교과 8)
 
-발표자료는 **`/home/user1/group_3/presentation/` 한 곳에서만 수정**합니다.
-Windows 경로: `\\wsl.localhost\Ubuntu\home\user1\group_3\presentation` · 사본을 만들지 않습니다.
+[전체 프로젝트](../README.md) · [교과 7](../subject7/README.md) · [교과 8](../subject8/README.md)
+
+이 폴더는 프로젝트의 통합 발표 결과물입니다. 저장소의 **`presentation/`를 원본으로 수정**하고, 별도 사본과 내용을 섞지 않습니다.
 현재 판: **2026-10-21 · 본편 17장 (시연영상 2개 포함) + 부록 A1~A17** · 말하는 시간 13:05 + 교대 6회 ≈ **13:35** (15분 제한).
 
 ## 파일
@@ -100,7 +101,7 @@ git commit -m "docs(presentation): <슬라이드 번호> <바꾼 것>" && git pu
 | 13 | Val 0.749 → Frozen Test 0.639 · Class별 Val/Test | `05_final/final_metrics.csv`, `final_class_metrics.csv` |
 | 14 | 갈변 Test Recall 0 · Val 갈변 BBox 15개 | `final_model_selection.md` |
 | 15 | conf 0.25: TP 506 · FP 31 · FN 34 · 0.50: 500 · 12 · 41 · 0.45: 503 · 15 · 38 · 93.0% / 97.1% · 37ms | 시연 보고서 (2026-10-21 10:15), `subject8/app/report.py` |
-| 16 | Bridge Holdout 156장 | `docs/handoff_subject14.md` |
+| 16 | Bridge Holdout 156장 | `docs/project/handoff/subject14_handoff.md` |
 
 계산·표기 메모: Baseline mAP50 원값 0.6875 → 0.688, mAP50-95 0.4695 → 0.470 · 타일링 실험(exp004·010)은 원본 단위 채점값만 사용.
 

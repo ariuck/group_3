@@ -291,5 +291,5 @@ G09 시간순 75장
 
 * 최종: Train **558** · Val **104** · Frozen Test **82** · Bridge Holdout **156** = 900 (`reports/01_data/dataset_summary.csv`).
 * **Bridge Holdout 의 역할**: 교과 8 의 학습 · 튜닝 · 모델 선택 · Frozen Test 어디에도 쓰지 않고 `configs/dataset.yaml` 에도 넣지 않습니다. 교과 14 에서 Final Model 을 처음 보는 사진에 한 번 평가하는 기준점입니다 (`scripts/17_evaluate_bridge.py --subject14`, 교과 8 에서는 실행하지 않음).
-* Bridge 의 합격 점수는 정하지 않았습니다. 놓침(FN) · 오탐(FP) 허용 범위는 교과 14 에서 현장 요구를 받아 정합니다. Bridge 도 Train 과 같은 날 · 같은 소품으로 찍은 사진이므로 "교과 8 이 손대지 않은 사진"이지 새 현장 데이터는 아닙니다 ([`../handoff_subject14.md`](../handoff_subject14.md) 3 · 5장).
+* Bridge 의 합격 점수는 정하지 않았습니다. 놓침(FN) · 오탐(FP) 허용 범위는 교과 14 에서 현장 요구를 받아 정합니다. Bridge 도 Train 과 같은 날 · 같은 소품으로 찍은 사진이므로 "교과 8 이 손대지 않은 사진"이지 새 현장 데이터는 아닙니다 ([`../handoff_subject14.md`](handoff/subject14_handoff.md) 3 · 5장).
 * v4 와 v5 는 Val 구성이 달라 Validation 점수를 직접 비교하지 않습니다.

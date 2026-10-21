@@ -32,7 +32,7 @@ python scripts/17_evaluate_bridge.py --subject14     # 교과 14 에서 처음 �
 ## 의존성
 
 - **사용하는 것**: [`src/registry`](../src/registry.md), [`src/evaluate_detector`](../src/evaluate_detector.md), [`src/split_builder`](../src/split_builder.md), [`src/constants`](../src/constants.md)
-- **사용하는 곳**: 직접 실행 (교과 14 첫 단계). 근거 문서: [`docs/handoff_subject14.md`](../../docs/handoff_subject14.md) 3·8장
+- **사용하는 곳**: 직접 실행 (교과 14 첫 단계). 근거 문서: [`docs/project/handoff/subject14_handoff.md`](../project/handoff/subject14_handoff.md) 3·8장
 
 ## 주의사항
 

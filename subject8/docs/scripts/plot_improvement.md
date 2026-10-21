@@ -35,6 +35,6 @@ python scripts/plot_improvement.py
 
 - **마지막 10 epoch 평균·표준편차**는 epoch 사이 흔들림을 보려는 값이다. 한 단계의 상승폭이 이 표준편차와 비슷하면 우연일 수 있다.
 - best epoch 는 Validation 으로 고른 값이라 약간 낙관적이다. 최종 성능은 Frozen Test(8일차)로만 말한다.
-- 숫자는 학습 중 Validation 지표(`results.csv`)다. README 10장의 공식 평가 값과 0.005 안팎 차이가 날 수 있다.
+- 숫자는 학습 중 Validation 지표(`results.csv`)다. [실행·실험 가이드](../project/guides/training.md)의 공식 평가 값과 0.005 안팎 차이가 날 수 있다.
 - 학습 조건 문서의 `걸린 시간`·`GPU 최대 사용 메모리` 줄 형식이 바뀌면 시간·메모리 칸이 비어 나온다.
 - SVG 의 한글은 보는 PC 에 한글 글꼴이 있어야 제대로 보인다 (`Noto Sans CJK KR` → `Malgun Gothic` → `Apple SD Gothic Neo` 순으로 찾음).

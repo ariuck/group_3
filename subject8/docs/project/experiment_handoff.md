@@ -1,15 +1,19 @@
-# 실험 인수인계 · 3대 분산 학습 계획 (kimchi_v5)
+# 분산 실험 운영·결과 기록 (kimchi_v5)
 
 > 작성 2026-10-19 · 정리 담당 ariuck (`feature/ariuck`). 이 문서만 보고 다른 PC 에서 이어서 실험할 수 있게 쓴다.
 
-## 1. 지금까지 (요약)
+> **현재 상태 (2026-10-21 문서 정리)**: Final은 `exp050`(YOLO11s · 2240), Frozen Test mAP50–95는 0.639로 확정·기록되어 있습니다. [최종 선택 근거](../../reports/final_model_selection.md) · [현재 실행 가이드](guides/training.md) · [교과 14 인계](handoff/subject14_handoff.md)
+>
+> 아래 1~3장은 2026-10-19에 세운 초기 계획이며, 뒤 장에 라운드별 결과가 이어집니다. 초기 계획의 "현재 최고"·"Final 미정"은 당시 상태입니다. 새로 실행할 절차는 현재 실행 가이드를 따릅니다.
 
-- **공식 Dataset `kimchi_v5`** — v4 Val 의 누수(132장 중 83장이 Train 과 같은 촬영 묶음)를 없앤 재분할. Train 558 / Val 104 / Test 82 / Bridge 156. 기준 [`kimchi_v5_split.md`](kimchi_v5_split.md)
+## 1. 초기 상태 요약 (2026-10-19)
+
+- **공식 Dataset `kimchi_v5`** — v4 Val 의 같은 촬영 묶음 공유(132장 중 83장)를 줄이기 위한 재분할. 잔여 공유와 예외는 분할 정책에 기록했다. Train 558 / Val 104 / Test 82 / Bridge 156. 기준 [`kimchi_v5_split.md`](kimchi_v5_split.md)
 - **실험 8개** (같은 Val 104장, mAP50-95): baseline 0.470 → 1280 0.646 → 1920 0.704 → **11s·1920·증강(exp007) 0.724 (현재 최고)**. 전체 표·개선점·한계: [`reports/04_improvement/baseline_vs_improved.md`](../../reports/04_improvement/baseline_vs_improved.md), 판정 [`experiment_log.csv`](../../reports/04_improvement/experiment_log.csv), 모델 목록 [`models/README.md`](../../models/README.md)
 - **Final Model 은 아직 정하지 않았다.** 아래 분산 실험 결과를 보고 8일차에 Val 근거로 정한다.
 - **Frozen Test(G07·G14)·Bridge Holdout 은 쓰지 않는다.** 예측 스크립트도 막혀 있다.
 
-## 2. 3대 분산 계획
+## 2. 3대 분산 계획 (당시 계획)
 
 세 PC 모두 학원 컴퓨터로 사양이 같다 (RTX 3060 12GB). 모든 실험은 **exp007 (YOLO11s · imgsz 1920 · batch 3 · 증강 flipud 0.5·hsv_v 0.6 · 50 epoch)** 에서 한 변수씩 바꾼다. 조건은 `scripts/11_train_v5.py` 의 `RUNS` · `scripts/14_train_tiles_v5.py` 의 `TILE_EXPS` 에 **이미 다 등록**돼 있어서, 각자 명령만 실행한다 (코드를 고치지 않으므로 브랜치끼리 충돌하지 않음).
 

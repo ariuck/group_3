@@ -1,4 +1,6 @@
-# reports 안내
+# 교과 8 · 결과 보고서
+
+[교과 8 README](../README.md) · [프로젝트 문서](../docs/project/README.md) · [모델 목록](../models/README.md)
 
 파일 이름은 가이드와 같은 영어 이름 그대로이고, **단계(일차)별 폴더만 추가**했다. 단계 폴더(01~05)는 **공식 Dataset Version `kimchi_v5`** 의 결과이고, 지난 Version 은 `history/<Version>/` 에 같은 이름 규칙으로 둔다.
 
@@ -8,7 +10,7 @@ reports/
 │   ├── label_fixes_kimchi_v3/    Class 5(갈변) 재검수와 라벨 수정 내역
 │   └── label_fixes_kimchi_v5/    v5 에서 지운 박스 3개 (이물 없음)
 ├── 02_baseline/              4~5일차  공식 Baseline(baseline_v5) 학습 조건 · Validation 성능
-├── 03_failure_analysis/      6일차    실패 사례 표 (baseline_v5) — 원인 가설 문서는 v5 기준으로 다시 작성 예정
+├── 03_failure_analysis/      6일차    Baseline·Final 실패 사례와 v5 원인 가설·검증
 ├── 04_improvement/           7일차    v5 실험 기록 · 실험별 학습 조건 · 타일링 채점
 ├── 05_final/                 8일차    Frozen Test (Final exp050, 한 번) — final_metrics.csv · final_class_metrics.csv
 ├── final_model_selection.md  8일차    Final Model 선택 근거 (후보별 seed 평균 · 4라운드 · 갈변)
@@ -24,11 +26,13 @@ reports/
 ```
 
 > **먼저 볼 파일**
-> 0. [`final_model_selection.md`](final_model_selection.md) · [`05_final/final_metrics.csv`](05_final/final_metrics.csv) — Final Model 과 Frozen Test 결과 · 교과 14 인계 [`../docs/handoff_subject14.md`](../docs/handoff_subject14.md)
+> 0. [`final_model_selection.md`](final_model_selection.md) · [`05_final/final_metrics.csv`](05_final/final_metrics.csv) — Final Model 과 Frozen Test 결과 · 교과 14 인계 [`../docs/project/handoff/subject14_handoff.md`](../docs/project/handoff/subject14_handoff.md)
 > 1. [`../models/README.md`](../models/README.md) — 모든 모델의 Version · 점수 · 조건 기록 · 그래프 링크 (자동 생성)
 > 2. [`04_improvement/baseline_vs_improved.md`](04_improvement/baseline_vs_improved.md) — v5 개선점 · 한계점 (발표용), [`experiment_log.csv`](04_improvement/experiment_log.csv) — 실험별 판정
 > 3. [`figures/comparison/runs_comparison_kimchi_v5.png`](figures/comparison/runs_comparison_kimchi_v5.png) — v5 실험 비교 그림
 > 4. [`figures/comparison/v5_vs_v4.png`](figures/comparison/v5_vs_v4.png) — v4 → v5 에서 달라진 점 (누수 · Class 박스 · 점수)
+
+포트폴리오 요약 그림: [`portfolio_summary.svg`](figures/comparison/portfolio_summary.svg) — 핵심 Validation 실험과 별도 Frozen Test. 재생성: `subject8/`에서 `python scripts/plot_portfolio.py`.
 
 ## 폴더별 파일
 
@@ -71,7 +75,7 @@ reports/
 | `tiling_eval.csv` | 타일링 비교 — 원본 Val 104장을 같은 코드로 채점 (exp002_v5 원본 vs exp004_v5 조각 합침) |
 | **`baseline_vs_improved.md`** | v5 실험 비교 · **개선점 · 한계점** (발표용) · Final 후보 (산출물 5) |
 | `improvement_experiment.md` | v5 개선 실험 설계 · 기록 · Final 결정 (산출물 4) — v4 판은 `history/kimchi_v4/` |
-| `tiling_eval_exp010.csv` | (예정) exp010 11s 타일링 채점 |
+| `tiling_eval_exp010.csv` | exp010 11s 타일링의 원본 이미지 단위 채점 |
 
 ### 05_final (8일차)
 

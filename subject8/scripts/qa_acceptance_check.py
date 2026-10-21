@@ -297,18 +297,18 @@ def check_env():
     except (OSError, subprocess.CalledProcessError) as e:
         add(A, "Git 추적 파일 점검", "MANUAL", f"git 실행 실패: {e}")
 
-    h = PROJECT_ROOT / "docs" / "handoff_subject14.md"
+    h = PROJECT_ROOT / "docs" / "project" / "handoff" / "subject14_handoff.md"
     htxt = h.read_text(encoding="utf-8") if h.is_file() else ""
     need = ["Final Model", "Bridge Holdout", "Dataset Version", "한계"]
     miss = [n for n in need if n not in htxt]
     if not h.is_file():
-        add(A, "교과 14 Handoff 문서가 있다", "TODO", "docs/handoff_subject14.md 아직 없음")
+        add(A, "교과 14 Handoff 문서가 있다", "TODO", "docs/project/handoff/subject14_handoff.md 아직 없음")
     else:
         add(A, "교과 14 Handoff 문서가 있다 (Final · Bridge · Version · 한계 포함)", "PASS" if not miss else "FAIL",
-            "docs/handoff_subject14.md" + (f" — 빠짐 {miss}" if miss else ""))
+            "docs/project/handoff/subject14_handoff.md" + (f" — 빠짐 {miss}" if miss else ""))
 
     add(A, "다른 팀원이 README 만 보고 처음부터 재실행할 수 있다", "MANUAL",
-        "README 6장 순서대로 다른 PC 에서 실행하고 막힌 곳을 기록 (가이드 22.6)")
+        "README의 빠른 시작과 docs/project/guides/training.md 순서로 다른 PC에서 실행하고 막힌 곳을 기록 (가이드 22.6)")
 
 
 def main():

@@ -72,7 +72,7 @@
 **해석할 때 주의할 점 (사람이 읽고 적음)**
 
 - Val 0.749 → Test 0.639 로 0.11 낮다. Val 0.749 는 seed 5개 중 최고를 고른 값이라 부풀어 있고 (B 평균 0.739), Test 는 Val 과 다른 촬영 묶음이다. **대외 성능은 Test 0.639 로 말한다.**
-- Test 에서 **갈변(Class 5) Recall 0.00 · mAP50-95 0.007**, 나뭇잎·종이(Class 0) Precision 0.37 이다. 평균 점수 뒤에 이 두 Class 가 있으므로 발표·인계 문서에서 같이 말해야 한다 ([`docs/handoff_subject14.md`](../../docs/handoff_subject14.md) 5장).
+- Test 에서 **갈변(Class 5) Recall 0.00 · mAP50-95 0.007**, 나뭇잎·종이(Class 0) Precision 0.37 이다. 평균 점수 뒤에 이 두 Class 가 있으므로 발표·인계 문서에서 같이 말해야 한다 ([`docs/project/handoff/subject14_handoff.md`](../../docs/project/handoff/subject14_handoff.md) 5장).
 - Class 5 · 3 은 박스가 16 · 23개뿐이라 박스 1개로 점수가 크게 움직인다.
 
 ## 4. Inference · Auto Label
@@ -95,8 +95,8 @@
 | `.pt` 는 `models/` 안의 것만 추적된다 | PASS | |
 | 학습·추론 패키지가 설치되어 있다 | PASS | ultralytics · torch · cv2 import 가능, CUDA available True (RTX 3060) |
 | 환경 점검 | PASS (사람이 확인) | `01_check_environment.py` — Python 3.14.4 · PyTorch 2.14.1+cu130 · Ultralytics 8.4.175 · GPU · `yolo11n.pt` Load 성공 |
-| 교과 14 Handoff 문서가 있다 (Final · Bridge · Version · 한계 포함) | PASS | [`docs/handoff_subject14.md`](../../docs/handoff_subject14.md) |
-| 다른 팀원이 README 만 보고 처음부터 재실행할 수 있다 | MANUAL | 아래 재현 시험 표. **README 11~13 · 15장이 아직 `TBD`** 라서 지금 다른 팀원이 읽으면 Final · Frozen Test · Handoff 위치를 README 에서 찾을 수 없다 |
+| 교과 14 Handoff 문서가 있다 (Final · Bridge · Version · 한계 포함) | PASS | [`docs/project/handoff/subject14_handoff.md`](../../docs/project/handoff/subject14_handoff.md) |
+| 다른 팀원이 README 만 보고 처음부터 재실행할 수 있다 | MANUAL | 아래 재현 시험 표. 2026-10-21 README·실행 가이드·Final·Frozen Test·인계 링크 정리 완료. 다른 팀원의 독립 재현은 아직 확인하지 않았으므로 MANUAL 유지 |
 
 ## FAIL 기록과 재시험
 
@@ -111,14 +111,14 @@
 Final · Frozen Test 가 생기면서 점검 기준과 실제 파일 위치가 달라, 점검이 `TODO` 로 남을 뻔한 것을 고쳤다.
 
 - Frozen Test 결과 위치를 `reports/final_metrics.csv` → `reports/05_final/final_metrics.csv` 로 맞춤
-- 추가한 점검: ① `final_best.pt` = 공식 Final 실행의 Weight = 선택 문서에 적힌 해시 ② Frozen Test 가 **1행 · Test 82장 · 공식 Final** 로 잰 것인지 ③ Class 별 Test 성능 파일 ④ `docs/handoff_subject14.md` 가 있고 Final · Bridge · Dataset Version · 한계를 다루는지 ⑤ **`models/` 에 보관된 모든 Weight 가 `experiment_log.csv` 에 행이 있는지** (열 이름만 보던 점검이 exp009 · 011 · 014~050 누락을 놓쳤다)
+- 추가한 점검: ① `final_best.pt` = 공식 Final 실행의 Weight = 선택 문서에 적힌 해시 ② Frozen Test 가 **1행 · Test 82장 · 공식 Final** 로 잰 것인지 ③ Class 별 Test 성능 파일 ④ `docs/project/handoff/subject14_handoff.md` 가 있고 Final · Bridge · Dataset Version · 한계를 다루는지 ⑤ **`models/` 에 보관된 모든 Weight 가 `experiment_log.csv` 에 행이 있는지** (열 이름만 보던 점검이 exp009 · 011 · 014~050 누락을 놓쳤다)
 
 ## 사람이 확인할 시험 절차 (MANUAL)
 
 1. ~~환경~~ — 2026-10-20 완료 (위 5장)
 2. ~~Detection~~ — 2026-10-20 완료, 단 Class 6 사진 5장뿐 (위 4장). **Class 0~3 · 5 가 들어 있는 사진으로 한 번 더** 보면 좋다 (`--limit` 를 늘리거나 `--source` 로 지정)
 3. ~~Frozen Test 미사용 확인~~ — 2026-10-20 완료 (`args.yaml` 에 `split: test` 없음). 단 10-16 에 한 번 본 적이 있다는 팀 기록이 있어 "미사용"은 아니다 (위 1장)
-4. **재현**: 만든 사람이 아닌 팀원이 [`docs/handoff_subject14.md`](../../docs/handoff_subject14.md) 7장 순서로 환경 → Dataset 경로 → 예측까지 실행. 막힌 곳은 아래에 적는다
+4. **재현**: 만든 사람이 아닌 팀원이 [`docs/project/handoff/subject14_handoff.md`](../../docs/project/handoff/subject14_handoff.md) 7장 순서로 환경 → Dataset 경로 → 예측까지 실행. 막힌 곳은 아래에 적는다
 5. **Auto Label → 교과 7 도구**: Auto Label 구현 후 후보 TXT 를 열어 수정·삭제·추가·승인·저장이 되는지 확인
 
 | 시험자 | 일시 | 막힌 곳 · 문서와 실제가 다른 곳 | 수정 후 재시험 |
@@ -132,6 +132,6 @@ Final · Frozen Test 가 생기면서 점검 기준과 실제 파일 위치가 �
 - [x] `failure_hypothesis.md` · `improvement_experiment.md` v5 기준 작성 (2026-10-20)
 - [x] `experiment_log.csv` 빠진 행 39개 추가(13 → 52행), `baseline_vs_improved.md` Final 기준 갱신 (2026-10-20)
 - [ ] 실패 사진으로 `FP_BACKGROUND` 24건 확인 (빠진 라벨 여부) — `failure_hypothesis.md` H5
-- [ ] README 11 · 12 · 13 · 15장 `TBD` 채우기 (Final · Frozen Test · Detection · Handoff 링크)
+- [x] README·상세 실행 가이드·Final·Frozen Test·Detection·Handoff 링크 정리 (2026-10-21, 문서 점검; 모델 평가·인수 시험 전체를 다시 실행한 기록은 아님)
 - [ ] 다른 팀원 재현 시험 1회 (위 표)
 - [ ] 위가 끝나면 `python scripts/qa_acceptance_check.py` 를 다시 돌려 TODO 가 0 인지 확인하고 이 문서의 결과 요약을 갱신

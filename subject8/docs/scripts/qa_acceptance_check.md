@@ -32,7 +32,7 @@ python scripts/qa_acceptance_check.py       # FAIL 이 있으면 종료 코드 1
 | `check_model()` | `models/` 에 보관된 모든 Weight(Baseline·exp001~050)의 SHA-256 앞 12자리가 `*_training_condition.md` 기록과 일치, 학습조건 항목, `final_best.pt`·선택 이유, **`final_best.pt` = 공식 Final 실행의 Weight = 선택 문서의 해시** |
 | `check_evaluation()` | Baseline 지표 4종, Class 별 성능, 실패분석, 가설·비교 문서, `experiment_log.csv` 15개 필드, **`models/` 의 모든 실행이 `experiment_log.csv` 에 있는지**, **Frozen Test 결과(1행 · 82장 · 공식 Final)와 Class 별 파일** |
 | `check_use()` | 예측·Auto Label 코드 존재, 시연 백업자료(`demo/`) |
-| `check_env()` | `src/`·`scripts/` 문법 컴파일, 패키지(`ultralytics`·`torch`·`cv2` 등) import, Git 에 사진·모델 밖 `.pt` 없음, **`docs/handoff_subject14.md` 존재와 필수 내용(Final · Bridge · Dataset Version · 한계)** |
+| `check_env()` | `src/`·`scripts/` 문법 컴파일, 패키지(`ultralytics`·`torch`·`cv2` 등) import, Git 에 사진·모델 밖 `.pt` 없음, **`docs/project/handoff/subject14_handoff.md` 존재와 필수 내용(Final · Bridge · Dataset Version · 한계)** |
 
 ## 주의사항
 

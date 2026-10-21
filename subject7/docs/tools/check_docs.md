@@ -12,7 +12,7 @@ python tools/check_docs.py ../subject8   # subject8
 ```
 
 ```
-[subject7] 점검 완료: 코드 65개 · 문서 없음 0개 · 코드 없는 문서 0개
+[subject7] 점검 완료: 코드 N개 · 문서 없음 0개 · 코드 없는 문서 0개
 ```
 
 문제가 있으면 목록을 보여 주고 **종료 코드 1** 을 돌려준다. 커밋 전에 돌리면 된다.
@@ -21,7 +21,7 @@ python tools/check_docs.py ../subject8   # subject8
 
 - `<경로>/<이름>.py` → `docs/<경로>/<이름>.md` (과목 폴더 기준, 코드와 같은 경로)
 - 내용이 없는 `__init__.py` 는 문서를 만들지 않는다.
-- `docs/` 에는 주제별 문서(`standards/`, `design/`, `team/` …)도 함께 있다. 그래서 "코드 없는 문서"는 **코드가 있는 폴더와 같은 이름의 docs 하위 폴더**(`docs/src/`, `docs/tools/`, `docs/tests/`, 교과 8 은 `docs/scripts/`) 안에서만 찾는다.
+- `docs/project/`에는 기준서·설계·팀 운영 문서도 함께 있다. 그래서 "코드 없는 문서"는 **코드가 있는 폴더와 같은 이름의 docs 하위 폴더**(`docs/src/`, `docs/tools/`, `docs/tests/`, 교과 8 은 `docs/scripts/`) 안에서만 찾는다.
 - 설정 파일 설명서(예: `configs/dataset.yaml` → `docs/configs/dataset.md`)를 두더라도, 같은 이름의 원본 파일이 있으면 정상으로 본다.
 
 ## 주요 구성요소

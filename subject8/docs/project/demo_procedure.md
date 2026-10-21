@@ -1,73 +1,57 @@
-# 시연 절차서 (교과 8) — 초안
+# 교과 8 · 시연 절차
 
-> 담당: 5번(QA·시연 검증). 가이드 22.13: 모든 기능을 현장에서 다시 돌리지 않고 **핵심 2가지만** 보여준다.
-> **초안 상태**: Final Model·Auto Label 이 아직 없어 `<…>` 로 표시한 곳은 8일차 이후 채운다. 아래 명령 중 `08_predict_images.py` 는 현재 있는 것이고, Auto Label 명령은 만들어진 뒤 확인한다.
+[← 프로젝트 문서](README.md) · [웹 시연 설명서](../app/server.md) · [발표자료 실행](../../../presentation/README.md)
 
-| 시연 | 보여줄 것 | 목표 시간 |
-|---|---|---|
-| 1. 이미지 Detection | Final Model 이 새 이미지에서 BBox·Class·Confidence 를 그린다 | 2분 |
-| 2. Auto Label + Human Review | 후보 TXT 를 만들고 교과 7 라벨링 도구에서 사람이 고쳐 승인한다 | 3분 |
+현재 시연 대상은 **`kimchi_v5` · Final `exp050` (YOLO11s · imgsz 2240)**입니다. 본편 15번에서는 녹화 영상을 재생하고, 라이브 GUI는 질문이 있을 때 부록 A17에서 엽니다. 발표 진행과 영상 파일은 발표 README를 기준으로 준비합니다.
 
-## 발표 30분 전 점검
+## 준비
 
-- [ ] 시연 PC 에서 `cd subject8 && python scripts/qa_acceptance_check.py` → **FAIL 0** (패키지·Weight 해시·Manifest 확인)
-- [ ] 시연용 사진이 있다 (`<사진 위치>`) — 회사 사진이라 발표용 PC 외부로 보내지 않는다
-- [ ] 시연 폴더가 비어 있다 (이전 결과가 섞이지 않게): `runs/predict/demo_detection/`, `demo/auto_label/candidate_labels/`
-- [ ] 라벨링 프로그램이 열린다: `cd subject7 && python main.py`
-- [ ] 백업 영상·화면 캡처를 바로 열 수 있다 (아래 "실패 대비")
-- [ ] 화면 글자가 뒤에서도 보인다 (터미널 글꼴 크게)
-
-## 시연 1 — 이미지 Detection
-
-```text
-Final Model Load → 새 이미지 입력 → BBox → Class → Confidence
-```
+1. [실행 가이드](guides/training.md#6-실행-및-재현-방법)에 따라 원본 사진·환경·모델 경로를 준비합니다.
+2. `subject8/`에서 가상환경의 Python으로 `app/server.py`를 실행하고 `http://127.0.0.1:8010`을 엽니다.
+3. Validation 사진이 열리고 Final 모델·데이터 버전이 맞는지 확인합니다. Frozen Test·Bridge를 시연용으로 사용하지 않습니다.
+4. 발표 PC에 별도로 받은 영상과 자막이 재생되는지 확인합니다. 실제 사진·영상은 Git에 올리지 않습니다.
 
 ```bash
-cd ~/group_3/subject8
-python scripts/08_predict_images.py \
-    --weights <models/final/final_best.pt> --imgsz <학습 때와 같은 값> \
-    --source <시연용 사진 1장 또는 폴더> --name demo_detection
+# 저장소 루트에서
+cd subject8
+.venv/bin/python app/server.py
 ```
 
-- 결과: `runs/predict/demo_detection/compare/*.jpg` (왼쪽 정답, 오른쪽 예측) — 정답이 없는 새 사진이면 예측만 나온다.
-- 말할 것: 사용한 모델과 Dataset Version, Confidence 기준 0.25, "작은 이물까지 찾도록 imgsz 를 키운 것이 개선의 핵심".
-- 화면에서 확인: BBox 가 사진 안에 있고, Class 이름이 맞고, Confidence 숫자가 보인다.
-- Frozen Test·Bridge 사진은 `--allow-test` 없이는 예측되지 않는다. **Final Model 을 확정한 뒤**에만 쓴다.
+## 라이브 GUI에서 보여줄 순서
 
-## 시연 2 — Auto Label + Human Review
+| 순서 | 조작 | 설명할 내용 |
+|---|---|---|
+| 1 | Validation 사진 선택 | 정답과 예측 BBox·Class·확신도 비교 |
+| 2 | 화면 확대 | 작은 이물을 실제로 찾았는지 확인 |
+| 3 | 확신도 기준 조절 | 맞힘·놓침·오검출의 변화, 운영 기준은 현장 요구로 결정 |
+| 4 | Validation 일괄 채점 | 평균 점수뿐 아니라 실패 유형·Class별 결과 확인 |
+| 5 | 보고서 미리보기·저장·인쇄 | 기준별 그래프·사진별 결과와 한계를 정리 |
 
-```text
-새 이미지 → Final Model → BBox·Class 후보 → YOLO TXT 후보 저장
-        → 교과 7 라벨링 도구에서 열기 → 사람이 수정·삭제·추가 → 승인·저장
+Validation 전체 비교의 기록은 conf 0.25에서 **TP 506 · FP 31 · FN 34 · Class 틀림 1**입니다. 이 집계와 mAP는 다른 지표이므로 같은 값으로 설명하지 않습니다. [근거](../../reports/03_failure_analysis/failure_hypothesis.md)
+
+## 후보 라벨과 사람 검수
+
+웹 GUI는 새 사진을 입력받아 **YOLO TXT 후보 저장**을 지원합니다. 후보를 사진과 함께 교과 7 도구에서 열고 사람이 BBox·Class를 확인·수정·승인해야 정답으로 사용할 수 있습니다.
+
+전용 배치 도구 `scripts/12_auto_label.py`와 사람 검수까지 이어지는 전체 자동화는 미완성입니다. 시연에서 후보 저장을 보여줬다는 이유로 Auto Label 전체가 완료됐다고 설명하지 않습니다. 사진·후보 TXT를 공개 경로에 올리지 않습니다.
+
+## 터미널로 예측만 확인하기
+
+이미 준비된 `subject8/`에서 실행합니다. 기본 예측은 Validation을 사용합니다.
+
+```bash
+.venv/bin/python scripts/08_predict_images.py --model final --limit 5
 ```
 
-1. 후보 생성: `<python scripts/12_auto_label.py …>` (구현 후 확인) → `demo/auto_label/candidate_labels/<사진이름>.txt`
-2. 교과 7 도구: `cd ~/group_3/subject7 && python main.py` → **[폴더 열기]** 로 사진과 후보 TXT 가 있는 폴더를 연다.
-3. 사람이 확인: 틀린 BBox 삭제, 빠진 BBox 추가, Class 수정 → 저장.
-4. 승인된 라벨을 `demo/auto_label/reviewed_labels/` 에 둔다.
-- 말할 것: "Auto Label 결과를 바로 정답으로 쓰지 않고, 사람이 확인한 뒤에만 Final Label 이 된다" (교과 7 ↔ 교과 8 연결).
+출력은 `runs/predict/` 아래이며, 정확한 실행별 폴더는 [예측 스크립트 설명서](../scripts/08_predict_images.md)를 봅니다. `--model final`을 사용하면 공식 Weight와 imgsz가 자동으로 정해집니다.
 
-## 실패 대비
+## 문제가 생겼을 때
 
-발표 중 환경 오류가 나도 발표가 멈추지 않게 미리 준비한다.
-
-| 준비물 | 위치 |
+| 증상 | 대응 |
 |---|---|
-| Detection 시연 영상 | `demo/final_detection_demo.mp4` |
-| Auto Label → Human Review 영상 | `demo/auto_label_human_review_demo.mp4` |
-| 예측 결과 이미지 | `demo/prediction_images/` |
-| 후보·검수 라벨 | `demo/auto_label/candidate_labels/`, `reviewed_labels/` |
-| 성능 숫자 | `reports/final_metrics.csv`, `reports/04_improvement/baseline_vs_improved.md` |
+| 사진·영상이 안 보임 | 별도로 받은 파일과 경로를 확인하고 준비한 녹화 시연으로 전환 |
+| 패키지·모델 경로 오류 | 녹화 시연을 사용하고 발표 뒤 실행 가이드로 환경 확인 |
+| GPU 메모리 부족·예측 지연 | 녹화 시연으로 전환; 발표 중 모델 조건을 임의로 바꾸어 성능을 주장하지 않음 |
+| 검수 연계가 안 됨 | 후보 저장과 사람 승인 절차의 차이를 설명하고 미완성 범위를 명시 |
 
-| 증상 | 바로 할 일 |
-|---|---|
-| `ultralytics`/`torch` import 오류 | 영상으로 대체. 발표 후 `pip install -r requirements.txt` |
-| CUDA/GPU 오류, 메모리 부족 | `--imgsz` 를 줄이거나 영상으로 대체 |
-| 사진·Weight 경로 오류 | 백업 영상 · `demo/prediction_images/` 의 결과 사진을 연다 |
-| 라벨링 도구가 안 열림 | 승인 전·후 캡처 두 장으로 설명 |
-
-## 시연 후 정리
-
-- [ ] 시연으로 만든 `runs/predict/demo_detection/` 등 사진이 포함된 결과는 Git 에 올리지 않는다 (`git status` 로 확인)
-- [ ] 시연 중 발견한 오류는 `reports/05_acceptance/acceptance_test.md` 의 FAIL 기록에 적는다
+시연 중 발견한 문제는 [인수 시험 보고서](../../reports/05_acceptance/acceptance_test.md)의 재현·오류 기록에 남깁니다. 기존 보고서의 PASS·TODO를 확인 없이 바꾸지 않습니다.
