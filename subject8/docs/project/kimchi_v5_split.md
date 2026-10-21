@@ -10,7 +10,7 @@ kimchi\_v5는 kimchi\_v4 라벨 900장을 촬영 묶음(G00\~G17) 단위로 통�
 - v5는 예외를 G00 하나로 줄여, Train과 같은 촬영 묶음 출신 평가 사진이 각 역할에 6장(G00)뿐입니다.
 - 모든 평가 역할(Val·Test·Bridge)에 클래스 0·1·2·3·5·6이 각각 15박스 이상 들어갑니다.
 - 단, 날짜로 보면 평가 사진 전부가 Train과 같은 날 찍은 사진이고, 소품도 Train(G17)에 모두 있습니다. 평가 점수는 "본 물체를 새로 놓은 장면" 성능입니다 (아래 [한계](#한계와-다음-단계)).
-- 상태: 초안, 팀 확정 전. 분할 파일은 `subject8/manifests/kimchi_v5_draft/`, 배치 기록은 `subject8/manifests/manual_split/` 에 있습니다.
+- 상태: **공식 Dataset Version (2026-10-16 확정, C안 채택)**. 공식 분할 파일은 `subject8/manifests/split_manifest.csv` · `train/val/test/bridge_holdout.csv` 이며, 초안 당시 파일은 `subject8/manifests/kimchi_v5_draft/`, 배치 기록은 `subject8/manifests/manual_split/` 에 있습니다.
 
 ## 데이터
 

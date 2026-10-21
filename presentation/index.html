@@ -612,7 +612,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
   <aside class="notes"><div class="script"><p>Q22·Q24 대응. Pilot 시험 시점 질문은 A8 마지막 항목 참고.</p></div></aside>
 </section>
 
-<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+7">
+<section class="slide" data-id="a8" data-speaker="부록" data-time="0" data-title="A8 예상 질문 24+9">
   <header style="margin-bottom:14px"><div class="kicker">부록 A8 <span class="sep">|</span> 마우스 휠·↑↓로 스크롤</div><h1 style="font-size:46px">예상 질문과 답 — 사실 → 인정 → 조치</h1></header>
   <div class="body scroll" style="overflow:auto;padding-right:10px" tabindex="0" aria-label="예상 질문 목록">
     <table class="t dense" style="font-size:19px" id="tbl-qa">
@@ -621,7 +621,7 @@ body.no-motion *,body.no-motion *:before{animation:none!important;transition:non
     </table>
   </div>
   <footer><div class="fn">하지 말 것: 측정하지 않은 숫자 추정 · "현장에서 쓸 수 있다" · 회사 라벨·기준 비난 · 팀원 한 명에게 책임 · 즉석 재계산 약속(필요하면 "확인 후 서면으로") (소스 9.8)</div></footer>
-  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로, 30·31번은 Final 뒤 진단(exp063)으로 추가.</p></div></aside>
+  <aside class="notes"><div class="script"><p>담당자가 먼저 답하고 막히면 강동연이 받아서 넘긴다. 25번은 저장소 test_report.md 확인으로 추가한 항목. 26~29번은 10-20 Final·Frozen Test 결과로, 30·31번은 Final 뒤 진단(exp063)으로, 32·33번(Bridge Holdout)은 10-21에 추가.</p></div></aside>
 </section>
 
 <section class="slide" data-id="a9" data-speaker="부록" data-time="0" data-title="A9 Final Frozen Test 상세">
@@ -1620,6 +1620,20 @@ WEBVTT
       "파·고추(Class 6)는 같은 조각이 Train·Val에 있다면서요?",
       "맞다(255박스 중 250개가 G00 한 묶음). 그래서 Class 6 점수는 \"본 물체 점수\"로 따로 표시하며, 이 Class를 뺀 평균은 계산하지 않았다.",
       "김동훈"
+    ],
+    [
+      "B",
+      "32",
+      "Bridge Holdout이 뭔가? Test가 있는데 왜 또 남겼나?",
+      "교과 8의 학습·튜닝·모델 선택·Frozen Test 어디에도 쓰지 않고 교과 14용으로 남긴 156장이다(G10·G11·G12 + G00 6장). Test는 교과 8 마지막 채점에 이미 썼고 그 전에 한 번 본 기록도 있다. 교과 14에서는 현장 장비·경량화로 모델이 다시 바뀌므로, 아직 아무도 보지 않은 기준 데이터가 따로 필요하다. 교과 14의 첫 평가는 Final(exp050)을 Bridge에 한 번 돌린 값이다(scripts/17_evaluate_bridge.py --subject14).",
+      "손상우"
+    ],
+    [
+      "B",
+      "33",
+      "Bridge에서 몇 점이 나와야 합격인가? 완전히 새로운 데이터인가?",
+      "합격 점수는 아직 정하지 않았다. 놓침·오탐 허용 범위는 현장 요구를 받아 교과 14에서 정한다. Bridge도 Train과 같은 날·같은 소품으로 찍은 사진이라 \"교과 8이 손대지 않은 사진\"이지 새 현장 데이터는 아니다. 새 조명·새 소품·정상 김치에서의 성능은 교과 14에서 새로 모아 확인한다(docs/handoff_subject14.md 3·5장).",
+      "김석범"
     ],
     [
       "C",

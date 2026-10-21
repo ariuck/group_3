@@ -1,7 +1,8 @@
 # Subject 8 — Dataset Split 정책서 (`split_policy.md`)
 
 > **문서 ID**: S08-DOC-001  
-> **Dataset Version**: `kimchi_v4` (`kimchi_v3` 라벨 + G09 마지막 배치 Val — 7장 변경 이력)  
+> **현행 공식 Dataset Version**: **`kimchi_v5`** (2026-10-16) — Train 558 · Val 104 · Frozen Test 82 · **Bridge Holdout 156장 (G10 · G11 · G12 + G00 6장)**. 분할표 · 근거는 [`kimchi_v5_split.md`](kimchi_v5_split.md), 요약은 7.3장.  
+> **이 문서 2~7.2장**: `kimchi_v1`~`kimchi_v4` 의 기록입니다. 그 안의 Bridge 158장(G10 · G13 · G15)은 v4 까지의 값이며 현행이 아닙니다.  
 > **Split 상태**: `FROZEN`  
 > **Bridge Holdout 상태**: `RESERVED FOR SUBJECT 14`  
 > **대상 데이터**: 교과 7 FINAL 데이터셋 (4K JPG 900장 + YOLO TXT 900개)  
@@ -58,7 +59,7 @@ flowchart TD
     Standard --> Test["Frozen Test (84장)<br>• 최종 성능 평가용 (FROZEN)"]
     G00 --> Test
     
-    Standard --> Bridge["Bridge Holdout (158장)<br>• 교과 14 실전 인계용 (RESERVED)"]
+    Standard --> Bridge["Bridge Holdout (v4 158장 · 현행 v5 156장)<br>• 교과 14 실전 인계용 (RESERVED)"]
     G00 --> Bridge
 
     classDef default fill:#f9f9fb,stroke:#4b5563,stroke-width:1px;
@@ -160,6 +161,8 @@ flowchart TD
 ---
 
 ## 4. 📊 최종 분할 결과 및 클래스별 분포표
+
+> 아래 표는 `kimchi_v4` 결과입니다. 현행 `kimchi_v5` 결과는 7.3장 · [`kimchi_v5_split.md`](kimchi_v5_split.md).
 
 G00·G09·G12 블록 분할 및 15개 묶음 배정 결과 (`kimchi_v4`, 라벨은 `kimchi_v3` 개정본), **모든 역할에 Class 0~6(미사용 4 제외)이 고르게 확보**되었습니다.
 
@@ -277,3 +280,16 @@ G09 시간순 75장
 * 역할이 바뀐 사진: 25장 (Train → Val). Test·Bridge 는 그대로입니다.
 * 재현: `python scripts/03_build_split.py --version kimchi_v4 --copy-files` (라벨 수정본 `data/label_fixes/kimchi_v3/` 를 함께 씀)
 * v3 와 Val 구성이 달라 Validation 점수를 직접 비교하지 않습니다.
+
+### 7.3 `kimchi_v5` (2026-10-16, 현행 공식) — 촬영 묶음 통째 재분할
+
+| 변경 | 이유 | 영향 |
+|---|---|---|
+| 예외 분할을 G00 하나로 줄이고 나머지 17개 묶음은 통째 배정 (C안) | v4 Val 132장 중 83장이 Train 과 같은 촬영 묶음 출신 (누수) | 평가 사진 중 Train 과 같은 묶음: Val 83 → **6** · Test 8 → **6** · Bridge 8 → **6** (G00 6장씩) |
+| Bridge 구성 G10 · G13 · G15 → **G10 · G11 · G12** | Train 을 가장 크게 하면서 평가 역할마다 Class 0·1·2·3·5·6 각 15박스 이상 | Bridge 158 → **156장** (박스 c0 202 · c1 326 · c2 281 · c3 29 · c5 16 · c6 30) |
+| 이물 없는 박스 3개 삭제 (모두 G12 = Bridge) | 육안 확인 | `reports/01_data/label_fixes_kimchi_v5/label_changes_kimchi_v5.csv` |
+
+* 최종: Train **558** · Val **104** · Frozen Test **82** · Bridge Holdout **156** = 900 (`reports/01_data/dataset_summary.csv`).
+* **Bridge Holdout 의 역할**: 교과 8 의 학습 · 튜닝 · 모델 선택 · Frozen Test 어디에도 쓰지 않고 `configs/dataset.yaml` 에도 넣지 않습니다. 교과 14 에서 Final Model 을 처음 보는 사진에 한 번 평가하는 기준점입니다 (`scripts/17_evaluate_bridge.py --subject14`, 교과 8 에서는 실행하지 않음).
+* Bridge 의 합격 점수는 정하지 않았습니다. 놓침(FN) · 오탐(FP) 허용 범위는 교과 14 에서 현장 요구를 받아 정합니다. Bridge 도 Train 과 같은 날 · 같은 소품으로 찍은 사진이므로 "교과 8 이 손대지 않은 사진"이지 새 현장 데이터는 아닙니다 ([`../handoff_subject14.md`](../handoff_subject14.md) 3 · 5장).
+* v4 와 v5 는 Val 구성이 달라 Validation 점수를 직접 비교하지 않습니다.
