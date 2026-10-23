@@ -17,15 +17,13 @@
 | 실제 사진 | `private/photos/` |
 | 발표 서버 | `발표서버 시작.bat` → `start_presentation.ps1` → `serve_deck.py` ([설명서](../docs/presentation/serve_deck.md)) |
 | 이전 판 | Git 기록에만 있음 (2026-10-23 정리: 예전 `backup/` 판·로컬 사본은 삭제) |
-| 생성 스크립트 | `private/tools/` (대본 → 노트·대본 페이지 재생성 등, Git 제외) |
-| 과거 기획문서 | `private/planning/` (현행 내용의 기준으로 쓰지 않음) |
 
 `private/` 전체(사진 · 영상 · 스크립트 · 과거 자료)는 Git 에 올라가지 않습니다 (`.gitignore`).
 팀원은 `git pull` 뒤 **사진과 영상을 파일저장소/USB 로 받아 `private/photos/`, `private/videos/` 에 넣어야** 화면이 다 보입니다. 영상 파일 이름은 바꾸지 않습니다.
 
 ## 실행과 발표
 
-1. `발표서버 시작.bat` 실행 (Windows Python 3 필요). 발표 서버(8765)와 시연 GUI 서버(8010, `subject8/app/server.py`)를 함께 켭니다. 실행 로그 `private/runtime/`.
+1. `발표서버 시작.bat` 실행 (Windows Python 3 필요). 발표 서버(8765)와 시연 GUI 서버(8010, `subject8/app/server.py`)를 함께 켭니다. 실행 로그 `private/runtime/`. 시연 GUI 는 `subject8/.venv` 가 필요하므로 새 PC 에서는 먼저 `cd subject8 && python3 scripts/00_setup.py` 를 실행합니다.
 2. `http://127.0.0.1:8765/index.html#1` 을 열고 `F` 전체화면.
 3. 같은 네트워크의 팀원은 창에 표시된 `http://<이 PC IP>:8765/index.html#1` 로 봅니다 (IP 는 바뀔 수 있음, 서버 PC 가 켜져 있는 동안만).
 4. 서버 없이 `index.html` 을 더블클릭해도 영상과 한국어 자막이 표시됩니다. 파일로 열 때는 HTML에 내장된 자막을 사용하고, 서버 주소에서는 `assets/`의 VTT 파일을 사용합니다. 라이브 GUI는 서버 실행이 필요합니다.
@@ -71,7 +69,7 @@
 
 ## 고칠 때
 
-발표가 끝난 최종본이므로 내용은 그대로 보존합니다. 오탈자 등을 고칠 때는 대본 원본 `assets/speaker_script.json`을 고친 뒤 `private/tools/`의 스크립트로 노트와 `발표대본.html`을 다시 만들고, `git status --short`로 `.jpg`·`.mp4`·`private/`가 없는지 확인한 뒤 파일을 지정해 커밋합니다.
+발표가 끝난 최종본이므로 내용은 그대로 보존합니다. 오탈자 등을 고칠 때는 대본 원본 `assets/speaker_script.json`과 `index.html`·`발표대본.html`을 함께 고치고 (대본 재생성 스크립트는 2026-10-23 정리로 삭제), `git status --short`로 `.jpg`·`.mp4`·`private/`가 없는지 확인한 뒤 파일을 지정해 커밋합니다.
 
 ## 사진 사용 기준
 
