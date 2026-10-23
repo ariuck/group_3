@@ -1,6 +1,6 @@
 # 교과 8 · 객체검출
 
-**2026-10-21 교과 7·8 종료. 현재는 발표자료를 보완합니다.** [종료 현황](../PROJECT_STATUS.md)
+**2026-10-21 교과 7·8 종료 · 2026-10-22 발표 완료.** [종료 현황](../PROJECT_STATUS.md) · [발표자료](presentation/README.md)
 
 **라벨 품질을 바탕으로 모델을 개선하고, 놓치는 이물까지 확인합니다.**
 
@@ -49,6 +49,7 @@ python3 scripts/00_setup.py
 | 분할 정책·실험 운영·시연 | [프로젝트 문서](docs/project/README.md) |
 | 실험·성능·검증 근거 | [보고서](reports/README.md) · [모델 목록](models/README.md) |
 | 종료 범위·미제공·검증 기록 | [프로젝트 종료 현황](../PROJECT_STATUS.md) |
+| 교과 7·8 통합 발표자료 (2026-10-22 발표본) | [발표자료 안내](presentation/README.md) |
 
 <details>
 <summary>개선 과정·평가 조건·구현 상태</summary>
@@ -87,6 +88,7 @@ subject8/
 ├── src/ · scripts/        공통 모듈·단계별 실행
 ├── configs/ · manifests/  설정·데이터 분할 기록
 ├── docs/                   미러 설명서 + project/ 상세 문서
+├── presentation/           교과 7·8 통합 발표자료 (발표 화면·대본·진행표)
 └── reports/ · models/ · runs/   보고서·모델·학습 기록
 ```
 

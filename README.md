@@ -10,7 +10,16 @@ AI Campus · Group 3
 
 **교과 7에서 정답 라벨을 검수하고, 교과 8에서 그 정답으로 객체검출 모델을 학습·평가**한 팀 프로젝트입니다. 교육용으로 가상 생성된 조각김치 이미지 900장을 사용했습니다.
 
-**교과 7·8 종료 · 발표자료 보완 중** — [종료 현황](PROJECT_STATUS.md)
+**교과 7·8 종료 (2026-10-21) · 발표 완료 (2026-10-22)** — [종료 현황](PROJECT_STATUS.md) · [발표자료](subject8/presentation/README.md)
+
+## 저장소 구성
+
+| 폴더 | 교과 | 내용 | 상태 |
+|---|---|---|---|
+| [`subject7/`](subject7/README.md) | 교과 7 | 라벨링 도구 · 900장 전수 교차검수 · 최종 라벨 | 종료 |
+| [`subject8/`](subject8/README.md) | 교과 8 | 객체검출 학습·평가 · 웹 시연 · 교과 7·8 통합 [발표자료](subject8/presentation/README.md) | 종료 · 발표 완료 |
+
+교과 7·8은 하나로 이어진 프로젝트입니다. 교과 8이 교과 7의 최종 라벨을 직접 읽고, `subject8/scripts/00_setup.py` 한 번으로 두 교과의 가상환경(`subject7/.venv` · `subject8/.venv`)과 데이터를 준비합니다. 이후 교과는 `subjectN/` 폴더로 추가하며 교과 7·8과 독립적으로 자기 의존성·가상환경을 둡니다 — [교과별 가상환경과 의존성](CONTRIBUTING.md#교과별-가상환경과-의존성)
 
 ## 핵심 결과
 
@@ -56,16 +65,16 @@ AI Campus · Group 3
 
 ## 발표·문서
 
-[공동 발표자료](presentation/README.md) · [교과 7 코드 문서](subject7/docs/README.md) · [교과 8 코드 문서](subject8/docs/README.md) · [실험·평가 보고서](subject8/reports/README.md)
+[교과 7·8 통합 발표자료](subject8/presentation/README.md) · [교과 7 코드 문서](subject7/docs/README.md) · [교과 8 코드 문서](subject8/docs/README.md) · [실험·평가 보고서](subject8/reports/README.md)
 
 <details>
 <summary>폴더 구조·문서 규칙·공개 범위</summary>
 
 ```text
 group_3/
-├── subject7/       라벨링 도구·검수·QA
-├── subject8/       모델 학습·평가·웹 시연
-└── presentation/   발표자료·대본·진행표
+├── subject7/            교과 7 — 라벨링 도구·검수·QA        (.venv · requirements.txt)
+└── subject8/            교과 8 — 모델 학습·평가·웹 시연     (.venv · requirements.txt)
+    └── presentation/    교과 7·8 통합 발표자료·대본·진행표 (2026-10-22 발표본)
 ```
 
 코드 설명서는 각 교과 폴더를 기준으로 `src/x.py → docs/src/x.md`처럼 같은 경로에 둡니다. 상세 사용법·정책·설계·팀 기록은 `docs/project/`, 검증 결과는 `reports/`에 모읍니다.

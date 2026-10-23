@@ -12,7 +12,7 @@
 | 각 교과의 `docs/<원본 경로>.md` | 원본 파일의 역할·입출력·주요 구성요소·사용법·주의사항 |
 | 각 교과의 `docs/project/` | 상세 가이드·기준서·설계·팀 운영·과정 기록·시연·인계 |
 | 각 교과의 `reports/` | 검증·실험의 결과와 근거 파일 |
-| `presentation/` | 실행 가능한 발표 화면·대본·진행표 |
+| `subject8/presentation/` | 교과 7·8 통합 발표 화면·대본·진행표 (2026-10-22 발표본) |
 
 ## 코드 경로를 그대로 미러링
 
@@ -24,6 +24,7 @@ subject7/src/ui/main_window.py        → subject7/docs/src/ui/main_window.md
 subject7/tests/test_bbox_edit.py      → subject7/docs/tests/test_bbox_edit.md
 subject8/scripts/00_setup.py          → subject8/docs/scripts/00_setup.md
 subject8/app/server.py                → subject8/docs/app/server.md
+subject8/presentation/serve_deck.py   → subject8/docs/presentation/serve_deck.md
 subject8/manifests/…/tools/groups.py   → subject8/docs/manifests/…/tools/groups.md
 ```
 
@@ -51,6 +52,20 @@ subject8/manifests/…/tools/groups.py   → subject8/docs/manifests/…/tools/g
 - `models/README.md`처럼 스크립트가 만드는 문서는 생성 원본을 고쳐 다시 생성합니다.
 - 설계 초안·과거 버전·미완성 기능은 현행 결과와 구분합니다. 후보 TXT 저장과 전체 Auto Label 작업의 완료를 같은 것으로 표현하지 않습니다.
 - 명령어는 어느 폴더에서 실행하는지 적습니다. 공통 README에는 개인 PC의 절대 경로를 기본 실행법으로 넣지 않습니다.
+
+## 교과별 가상환경과 의존성
+
+각 교과는 자기 폴더 안에 `requirements.txt`와 가상환경 `.venv`를 둡니다. 저장소 맨 위에 공용 `.venv`를 만들지 않습니다.
+
+| 교과 | 가상환경 | 의존성 | 준비 |
+|---|---|---|---|
+| 교과 7 | `subject7/.venv` | `subject7/requirements.txt` | [교과 7 README](subject7/README.md) (교과 8 올인원 준비가 함께 만듦) |
+| 교과 8 | `subject8/.venv` | `subject8/requirements.txt` | `cd subject8 && python3 scripts/00_setup.py` |
+
+- 교과 7·8은 하나로 이어진 프로젝트입니다. 교과 8이 `subject7/data/`의 최종 라벨·원본 사진을 직접 읽고, [`00_setup.py`](subject8/docs/scripts/00_setup.md)는 이 두 교과의 가상환경·데이터만 준비합니다.
+- 새 교과(예: `subject9/`)는 교과 7·8과 독립입니다. 자기 폴더 안에 `requirements.txt`·`.venv`·준비 방법(README)을 두고, `subject7/`·`subject8/`의 가상환경이나 `00_setup.py`에 기대지 않습니다. `00_setup.py`에 다른 교과의 단계를 넣지 않습니다.
+- 다른 교과의 결과(라벨·모델 등)를 가져다 쓰면 어느 파일을 어떤 버전으로 쓰는지 그 교과의 README에 적습니다.
+- `.venv/`는 저장소 맨 위 `.gitignore`가 어느 폴더에서든 제외합니다.
 
 ## 커밋 전 확인
 

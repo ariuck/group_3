@@ -53,7 +53,7 @@ class CheckUseTests(unittest.TestCase):
 
     def test_current_videos_are_found_without_populating_legacy_demo_folders(self):
         self.gui()
-        videos = self.root.parent / "presentation/private/videos"
+        videos = self.root / "presentation/private/videos"
         videos.mkdir(parents=True)
         (videos / "one.mp4").write_bytes(b"synthetic video fixture")
         (videos / "two.webm").write_bytes(b"synthetic video fixture")
@@ -63,7 +63,7 @@ class CheckUseTests(unittest.TestCase):
 
     def test_zero_byte_video_is_not_accepted_as_prepared_media(self):
         self.gui()
-        videos = self.root.parent / "presentation/private/videos"
+        videos = self.root / "presentation/private/videos"
         videos.mkdir(parents=True)
         (videos / "one.mp4").write_bytes(b"fixture")
         (videos / "empty.mp4").touch()

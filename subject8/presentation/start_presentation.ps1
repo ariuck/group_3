@@ -1,6 +1,6 @@
 # Single entry point. Run Windows HTTP server directly against the WSL source.
 $ErrorActionPreference = 'Stop'
-$canonical='\\wsl.localhost\Ubuntu\home\user1\group_3\presentation'
+$canonical='\\wsl.localhost\Ubuntu\home\user1\group_3\subject8\presentation'
 if (!(Test-Path -LiteralPath (Join-Path $canonical 'index.html'))) { throw 'WSL Ubuntu presentation source is unavailable.' }
 $runtime=Join-Path $canonical 'private\runtime'
 New-Item -ItemType Directory -Path $runtime -Force | Out-Null
@@ -37,7 +37,7 @@ if (!$demo) {
     }
 }
 $deckResponse=Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8765/index.html' -TimeoutSec 5
-Write-Output 'Source: /home/user1/group_3/presentation'
+Write-Output 'Source: /home/user1/group_3/subject8/presentation'
 Write-Output "Deck: http://127.0.0.1:8765/index.html#1 (HTTP $($deckResponse.StatusCode))"
 Write-Output 'Live GUI demo (Q&A): http://127.0.0.1:8765/index.html#a17'
 if ($demo) { Write-Output "Demo model ready: $($demo.ready)" }

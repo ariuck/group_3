@@ -29,7 +29,7 @@ python tools/check_docs.py ../subject8   # subject8
 | 이름 | 설명 |
 |---|---|
 | `ROOT` | 기본 점검 폴더 (`subject7/`) |
-| `SKIP_DIRS` | 점검하지 않는 폴더: `.git`, `.venv`, `venv`, `__pycache__`, `.pytest_cache`, `data`, `docs`, `runs`, `.vscode`, `.idea` |
+| `SKIP_DIRS` | 점검하지 않는 폴더: `.git`, `.venv`, `venv`, `__pycache__`, `.pytest_cache`, `data`, `docs`, `runs`, `private`(Git 제외 개인 자료 — 예: 발표자료의 `private/tools/`), `.vscode`, `.idea` |
 | `code_files(root)` | 문서가 있어야 하는 `.py` 상대 경로 |
 | `_has_source(root, doc_rel)` | 문서와 같은 경로·이름의 원본 파일(확장자 무관)이 있는가 |
 | `check(root)` | `(코드 목록, 문서 없음, 코드 없는 문서)` |

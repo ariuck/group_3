@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", "data", "docs", "runs", ".vscode", ".idea"}
+SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".pytest_cache", "data", "docs", "runs", "private", ".vscode", ".idea"}
 
 
 def code_files(root=ROOT):
