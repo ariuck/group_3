@@ -272,7 +272,7 @@ def check_use():
     add(A, "후보 TXT → 교과 7 수정·승인 전체 흐름", "MANUAL",
         "도구별 구현과 별개로, 전체 흐름의 독립 시험 기록은 확인되지 않음. 종료 후 개발 예정으로 간주하지 않음")
 
-    videos = PROJECT_ROOT.parent / "presentation" / "private" / "videos"
+    videos = PROJECT_ROOT / "presentation" / "private" / "videos"
     media = [p for p in videos.glob("*") if p.is_file() and p.suffix.lower() in {".mp4", ".mov", ".webm"}
              and p.stat().st_size > 0] if videos.is_dir() else []
     add(A, "발표용 녹화 시연 영상의 로컬 준비", "PASS" if len(media) >= 2 else "MANUAL",
@@ -305,9 +305,9 @@ def check_env():
 
     try:
         out = subprocess.run(["git", "ls-files", "--", ".", ":(exclude)runs"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
-        photos = [f for f in out if re.search(r"\.(jpe?g|png|bmp|webp|heic)$", f, re.I) and "/figures/" not in f and not f.startswith("reports/figures/")]
-        # 발표자료(저장소 맨 위 presentation/)도 본다 — PNG 는 그래프 · 화면 캡처(가짜 샘플 UI)라 허용(2026-10-20 사람이 확인), 사진·영상·PDF 는 막는다
-        pres = subprocess.run(["git", "ls-files", "--", "../presentation"], cwd=PROJECT_ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+        photos = [f for f in out if re.search(r"\.(jpe?g|png|bmp|webp|heic)$", f, re.I) and "/figures/" not in f and not f.startswith(("reports/figures/", "presentation/"))]
+        # 발표자료(subject8/presentation/)는 따로 본다 — PNG 는 그래프 · 화면 캡처(가짜 샘플 UI)라 허용(2026-10-20 사람이 확인), 사진·영상·PDF 는 막는다
+        pres = [f for f in out if f.startswith("presentation/")]
         photos += [f for f in pres if re.search(r"\.(jpe?g|bmp|webp|heic|mp4|mov|pdf)$", f, re.I)]
         weights = [f for f in out if f.endswith(".pt") and not f.startswith("models/")]
         add(A, "회사 사진이 Git 에 추적되지 않는다", "PASS" if not photos else "FAIL", "사진 0장" if not photos else f"{len(photos)}장: {photos[:3]}")

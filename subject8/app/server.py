@@ -14,7 +14,7 @@
 지키는 것
     - Frozen Test · Bridge Holdout 사진은 목록에 없고, 같은 이름의 사진을 올려도 거절한다 (교과 8 규칙)
     - 127.0.0.1 에만 열린다. 올린 사진은 메모리에만 두고 디스크에 저장하지 않는다 (회사 사진 · NDA)
-    - 저장소 맨 위 presentation/ 이 있으면 /presentation/ 으로 같이 열어, 발표 ↔ 시연을 한 주소에서 오간다
+    - subject8/presentation/ 이 있으면 /presentation/ 으로 같이 열어, 발표 ↔ 시연을 한 주소에서 오간다
 """
 import argparse
 import csv
@@ -47,7 +47,7 @@ from src.split_builder import SplitBuilder  # noqa: E402
 from src.train_detector import sha256_short  # noqa: E402
 
 STATIC = Path(__file__).resolve().parent / "static"
-PRESENTATION = REPO_ROOT / "presentation"
+PRESENTATION = PROJECT_ROOT / "presentation"
 PREDICT_CONF = 0.05            # 예측은 이 값으로 한 번만 — 화면의 기준(기본 0.25)은 그 위에서 거른다
 DEFAULT_CONF = 0.25            # 08 · 09 와 같은 기준
 MAX_UPLOAD = 40 * 1024 * 1024

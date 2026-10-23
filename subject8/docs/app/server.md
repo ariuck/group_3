@@ -13,7 +13,7 @@ cd subject8
 .venv/bin/python app/server.py --cpu         # GPU 없이 (느림)
 ```
 
-- 발표자료도 같은 서버가 `http://127.0.0.1:8010/presentation/` 으로 연다 (저장소 맨 위 `presentation/` 이 있을 때). 이렇게 열면 발표 → 시연 → 발표가 한 탭에서 오간다.
+- 발표자료도 같은 서버가 `http://127.0.0.1:8010/presentation/` 으로 연다 (`subject8/presentation/` 이 있을 때). 이렇게 열면 발표 → 시연 → 발표가 한 탭에서 오간다.
 - 발표자료를 파일(더블클릭)로 열어도 부록 A13의 버튼은 `http://127.0.0.1:8010/` 로 간다. 이때 서버가 켜져 있어야 한다.
 - 주소 끝에 `#img=<사진 이름>` 을 붙이면 그 사진을 바로 예측한다 (기존 사진 직접 연결 링크).
 - 끄기: 서버를 켠 터미널에서 `Ctrl+C` (백그라운드로 켰다면 `pkill -f app/server.py`).
@@ -65,7 +65,7 @@ cd subject8
 ## 의존성
 
 - **사용하는 것**: [`src/registry`](../src/registry.md) (`resolve("final")`, `run_args`), [`src/inference`](../src/inference.md) (`load_gt`, `match`), [`src/split_builder`](../src/split_builder.md), [`src/train_detector`](../src/train_detector.md) (`sha256_short`), FastAPI · uvicorn (`requirements.txt`)
-- **사용하는 곳**: 발표자료 [`presentation/index.html`](../../../presentation/README.md) 부록 A13
+- **사용하는 곳**: 발표자료 [`presentation/index.html`](../../presentation/README.md) 부록 A13
 
 ## 주의사항 (보안 · 교과 8 규칙)
 

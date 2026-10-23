@@ -1,9 +1,9 @@
 # 3조 발표자료 — 조각김치 이물검출 (교과 7 + 교과 8)
 
-[전체 프로젝트](../README.md) · [교과 7](../subject7/README.md) · [교과 8](../subject8/README.md)
+[전체 프로젝트](../../README.md) · [교과 7](../../subject7/README.md) · [교과 8](../README.md)
 
-이 폴더는 프로젝트의 통합 발표 결과물입니다. 저장소의 **`presentation/`를 원본으로 수정**하고, 별도 사본과 내용을 섞지 않습니다.
-현재 판: **2026-10-21 · 본편 17장 (시연영상 2개 포함) + 부록 A0~A18** · 말하는 시간 13:05 + 교대 5회 ≈ **13:30** (15분 제한).
+**2026-10-22 발표한 최종본입니다.** 교과 7·8의 통합 발표 결과물이며, 발표 서버가 교과 8 시연 프로그램(`subject8/app/server.py`)과 함께 돌아가므로 `subject8/presentation/`에 둡니다. 이 폴더가 유일한 원본이며 별도 사본을 만들지 않습니다.
+최종판: **본편 17장 (시연영상 2개 포함) + 부록 A0~A18** · 말하는 시간 13:05 + 교대 5회 ≈ **13:30** (15분 제한).
 
 ## 파일
 
@@ -15,8 +15,8 @@
 | 시연영상 | `private/videos/subject7_labeling_20261021.mp4` (6번, 65.7초) · `private/videos/화면 녹화 중 2026-10-21 102056.mp4` (15번, 49초) |
 | 영상 자막 | `assets/video1_labeling.vtt` · `assets/video2_final.vtt` |
 | 실제 사진 | `private/photos/` |
-| 발표 서버 | `발표서버 시작.bat` → `start_presentation.ps1` → `serve_deck.py` |
-| 이전 판 | `backup/` (Git) · `private/archive/` · `private/backups/` |
+| 발표 서버 | `발표서버 시작.bat` → `start_presentation.ps1` → `serve_deck.py` ([설명서](../docs/presentation/serve_deck.md)) |
+| 이전 판 | Git 기록 · `private/archive/` (2026-10-23 정리: 예전 `backup/` → `private/archive/20261023/backup_git/`, 발표 뒤 만든 미완성 대본 초안도 같은 곳) · `private/backups/` |
 | 생성 스크립트 | `private/tools/` (대본 → 노트·대본 페이지 재생성 등, Git 제외) |
 | 과거 기획문서 | `private/planning/` (현행 내용의 기준으로 쓰지 않음) |
 
@@ -69,18 +69,9 @@
 | 운영 · 예상 질문 | A16 재현성 · 보안 · A17 예상 질문 34개 |
 | 지표 읽는 법 | A18 mAP 계산 — IoU 합격선과 confidence 순서 (슬라이더로 직접 움직여 보기, 질문 대응용) |
 
-## 함께 수정하기 (Git)
+## 고칠 때
 
-```bash
-cd ~/group_3 && git pull origin main          # 고치기 전에 항상 최신으로
-# presentation/index.html 수정 → 서버 주소로 열어 확인
-git add presentation && git status --short   # .jpg · .mp4 · private/ 가 없어야 함
-git commit -m "docs(presentation): <슬라이드 번호> <바꾼 것>" && git push origin main
-```
-
-- `index.html` 한 파일을 여럿이 고치므로 **고치기 직전에 pull, 끝나면 바로 push**. 같은 슬라이드를 두 명이 동시에 고치지 않습니다.
-- 대본을 고칠 때는 `assets/speaker_script.json` 을 고친 뒤 `private/tools/` 의 스크립트로 노트와 `발표대본.html` 을 다시 만듭니다 (또는 정리 담당에게 요청).
-- 숫자를 바꿀 때는 아래 대조표의 저장소 파일에서 확인합니다.
+발표가 끝난 최종본이므로 내용은 그대로 보존합니다. 오탈자 등을 고칠 때는 대본 원본 `assets/speaker_script.json`을 고친 뒤 `private/tools/`의 스크립트로 노트와 `발표대본.html`을 다시 만들고, `git status --short`로 `.jpg`·`.mp4`·`private/`가 없는지 확인한 뒤 파일을 지정해 커밋합니다.
 
 ## 사진 사용 기준
 
@@ -113,10 +104,3 @@ git commit -m "docs(presentation): <슬라이드 번호> <바꾼 것>" && git pu
 | 16 | Bridge Holdout 156장 | `docs/project/handoff/subject14_handoff.md` |
 
 계산·표기 메모: Baseline mAP50 원값 0.6875 → 0.688, mAP50-95 0.4695 → 0.470 · 타일링 실험(exp004·010)은 원본 단위 채점값만 사용.
-
-## 발표 전에 팀이 확인할 것
-
-- [ ] 각자 첫 문장(역할 소개)이 사실과 맞는지 — 특히 7번 손상우 · 10번 김동훈
-- [ ] 사진 · 영상을 받아 `private/` 에 넣고 6 · 15번 영상과 자막 재생 확인
-- [ ] Val 0.749 → Test 0.639 질문 답변(부록 A17 Q26~28)을 6명이 같은 말로
-- [ ] 전체 리허설 1회 — 목표 13:30, 실제 시간 기록

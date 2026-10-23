@@ -68,40 +68,42 @@ Class 마다 색이 다르고, 오른쪽 `라벨 목록`에 번호·Class·위�
 
 ## 4. 설치
 
-저장소 루트(`group_3/`)에서 공용 가상환경을 준비합니다. 이미 쓰는 환경이 있으면 그 환경에 의존성을 설치합니다.
+`subject7/` 폴더 안에 교과 7 전용 가상환경(`subject7/.venv`)을 준비합니다. 가상환경은 교과마다 그 폴더 안에 따로 둡니다 (교과 8은 `subject8/.venv`). 교과 8의 올인원 준비(`subject8/scripts/00_setup.py`)를 실행했다면 이미 만들어져 있습니다.
 
 Linux / WSL:
 
 ```bash
+cd subject7
 python3 -m venv .venv
-.venv/bin/python -m pip install -r subject7/requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 Windows PowerShell:
 
 ```powershell
+cd subject7
 py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r subject7/requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
 Tkinter가 없으면 WSL/Ubuntu에서는 `sudo apt install python3-tk`가 필요합니다. 폴더 끌어다 놓기는 `tkinterdnd2` 설치 시 지원합니다.
 
 ## 5. 프로그램 실행
 
-저장소 루트에서 실행합니다. 사진은 Git에 없으므로 `subject7/data/raw/`에 별도로 준비합니다.
+`subject7/` 폴더에서 실행합니다. 사진은 Git에 없으므로 `subject7/data/raw/`에 별도로 준비합니다.
 
 Linux / WSL:
 
 ```bash
 cd subject7
-../.venv/bin/python main.py
+.venv/bin/python main.py
 ```
 
 Windows PowerShell:
 
 ```powershell
 cd subject7
-..\.venv\Scripts\python.exe main.py
+.\.venv\Scripts\python.exe main.py
 ```
 
 이후 예시의 `python`은 위에서 설치한 가상환경의 Python을 뜻합니다.

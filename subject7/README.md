@@ -1,6 +1,6 @@
 # 교과 7 · 라벨링 도구
 
-**2026-10-21 교과 7·8 종료. 현재는 발표자료를 보완합니다.** [종료 현황](../PROJECT_STATUS.md)
+**2026-10-21 교과 7·8 종료 · 2026-10-22 발표 완료.** [종료 현황](../PROJECT_STATUS.md) · [발표자료](../subject8/presentation/README.md)
 
 **라벨을 고치고, 검수 이력을 남기고, 최종 데이터로 만듭니다.**
 
@@ -19,14 +19,16 @@
 
 ## 빠른 시작
 
-Linux / WSL의 **저장소 루트** (`group_3/`)에서 실행합니다. 원본 사진·라벨은 `subject7/data/raw/`에 별도로 준비합니다.
+Linux / WSL의 **`subject7/` 폴더**에서 교과 7 전용 가상환경(`subject7/.venv`)을 만들어 실행합니다. 원본 사진·라벨은 `subject7/data/raw/`에 별도로 준비합니다.
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r subject7/requirements.txt
 cd subject7
-../.venv/bin/python main.py
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python main.py
 ```
+
+교과 8의 올인원 준비(`subject8/scripts/00_setup.py`)를 실행했다면 `subject7/.venv`는 이미 만들어져 있습니다.
 
 Windows 실행·Tkinter 설치·기존 검수 작업 복원은 [상세 가이드](docs/project/guides/labeling.md)에 있습니다.
 

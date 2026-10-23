@@ -12,7 +12,7 @@
 ```text
 docs/
 ├── README.md                문서 진입점
-├── app/ · src/ · scripts/   코드와 같은 경로의 설명서
+├── app/ · src/ · scripts/ · presentation/   코드와 같은 경로의 설명서
 ├── manifests/               분할 분석 도구의 설명서
 └── project/                 가이드·분할 정책·과정·시연·인계
 ```
@@ -23,7 +23,7 @@ Python 문서 대응 검사: `subject8/`에서 `python ../subject7/tools/check_d
 
 | 코드 | 한 줄 설명 |
 |---|---|
-| [`scripts/00_setup.py`](scripts/00_setup.md) | **올인원 준비** — 어느 PC 든 명령 하나로 .venv → 교과 7 복원 → 점검 → v4·v5 학습 폴더 (된 단계는 건너뜀) |
+| [`scripts/00_setup.py`](scripts/00_setup.md) | **올인원 준비 (교과 7·8 전용)** — 어느 PC 든 명령 하나로 교과별 .venv(교과 8·7) → 교과 7 복원 → 점검 → v4·v5 학습 폴더 (된 단계는 건너뜀) |
 | [`scripts/01_check_environment.py`](scripts/01_check_environment.md) | PyTorch·CUDA·YOLO11n 환경 점검 |
 | [`scripts/02_audit_subject7_final.py`](scripts/02_audit_subject7_final.md) | 교과 7 최종본 900장 점검 + Data Leakage 확인 |
 | [`scripts/03_build_split.py`](scripts/03_build_split.md) | 방안 B 분할 + Manifest·`dataset.yaml` |
@@ -38,6 +38,7 @@ Python 문서 대응 검사: `subject8/`에서 `python ../subject7/tools/check_d
 | [`scripts/16_evaluate_final_test.py`](scripts/16_evaluate_final_test.md) | Final Model Frozen Test 평가 (한 번만, Final 확정·선택 기록 후) |
 | [`app/server.py`](app/server.md) | **시연 프로그램** (FastAPI + 브라우저 화면) — 예측·정답 비교·확신도 기준·Val 일괄 채점·후보 TXT; 라이브 시연은 부록 A13 |
 | [`app/report.py`](app/report.md) | 시연 **보고서** HTML (요약 · 기준별 그래프 · Class 별 · 본 사진 · 틀린 박스) — 미리보기 · 저장 · 인쇄(PDF) |
+| [`presentation/serve_deck.py`](presentation/serve_deck.md) | **발표 서버** (8765) — 교과 7·8 통합 발표자료를 LAN 에 열고 `/demo/` 를 시연 프로그램(8010)으로 전달 |
 | [`scripts/17_evaluate_bridge.py`](scripts/17_evaluate_bridge.md) | 보존 Bridge 156장 평가용 기존 도구 (`--subject14` 보호 플래그 · 교과 8에서는 미사용 · 후속 모델·방향 미정) |
 | [`scripts/plot_v5_vs_v4.py`](scripts/plot_v5_vs_v4.md) | `kimchi_v4` → `v5` 달라진 점 그림·CSV (누수 · Class 박스 · Val 점수) |
 | [`scripts/make_split_worksheet.py`](scripts/make_split_worksheet.md) | 수동 분할 준비: 담당자별 작업 시트(CSV) 6개 · 촬영 순서 사진판(JPG) |

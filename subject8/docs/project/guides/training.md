@@ -138,7 +138,7 @@ cd ~/group_3/subject8
 #   subject7/data/raw/이물검출_학습데이터1/images/train/*.jpg …, 이물검출_학습데이터2/…
 cp -r <USB>/이물검출_학습데이터1 <USB>/이물검출_학습데이터2 ../subject7/data/raw/
 
-# 올인원: .venv → 교과 7 복원(work·검수표·final) → 점검 → kimchi_v4·v5 학습 폴더 → Git 과 같은지 확인
+# 올인원: subject8/.venv · subject7/.venv → 교과 7 복원(work·검수표·final) → 점검 → kimchi_v4·v5 학습 폴더 → Git 과 같은지 확인
 python3 scripts/00_setup.py      # 이미 준비된 PC 에서 다시 실행해도 된다 (된 단계는 건너뜀, 약 7초)
 ```
 

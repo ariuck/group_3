@@ -1,6 +1,6 @@
 # 교과 8 · 시연 절차
 
-[← 프로젝트 문서](README.md) · [웹 시연 설명서](../app/server.md) · [발표자료 실행](../../../presentation/README.md)
+[← 프로젝트 문서](README.md) · [웹 시연 설명서](../app/server.md) · [발표자료 실행](../../presentation/README.md)
 
 현재 시연 대상은 **`kimchi_v5` · Final `exp050` (YOLO11s · imgsz 2240)**입니다. 본편 15번에서는 녹화 영상을 재생하고, 라이브 GUI는 질문이 있을 때 부록 A13에서 엽니다. 발표 진행과 영상 파일은 발표 README를 기준으로 준비합니다.
 
