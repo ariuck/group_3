@@ -16,7 +16,7 @@
 | 영상 자막 | `assets/video1_labeling.vtt` · `assets/video2_final.vtt` |
 | 실제 사진 | `private/photos/` |
 | 발표 서버 | `발표서버 시작.bat` → `start_presentation.ps1` → `serve_deck.py` ([설명서](../docs/presentation/serve_deck.md)) |
-| 이전 판 | Git 기록 · `private/archive/` (2026-10-23 정리: 예전 `backup/` → `private/archive/20261023/backup_git/`, 발표 뒤 만든 미완성 대본 초안도 같은 곳) · `private/backups/` |
+| 이전 판 | Git 기록에만 있음 (2026-10-23 정리: 예전 `backup/` 판·로컬 사본은 삭제) |
 | 생성 스크립트 | `private/tools/` (대본 → 노트·대본 페이지 재생성 등, Git 제외) |
 | 과거 기획문서 | `private/planning/` (현행 내용의 기준으로 쓰지 않음) |
 
